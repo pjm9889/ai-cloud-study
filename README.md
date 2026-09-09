@@ -1,9 +1,4 @@
-# AI · 클라우드 실무 학습 기록
+# AI_cloud과정 구글 드라이브 링크
+- 교재 및 시간표
+https://drive.google.com/drive/folders/1i-WnHpuZ8Gjs68DSOT_3XKatW3yyShaG?usp=sharing
 
-## 소개
-비전공자로 시작해 AI 도구로 내 컴퓨터를 다루는 과정을 기록합니다.
-
-## 배운 것
-- Windows 파일·폴더 다루기
-- AI에게 작업 지시하는 법
-- 시스템 정보 점검과 자동화
