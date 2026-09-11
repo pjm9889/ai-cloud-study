@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>시스템 프로세스 대시보드</title>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; margin: 0; background-color: #f4f6f9; color: #333; }
+        header { background: #2c3e50; color: white; padding: 20px; text-align: center; }
+        nav { background: #34495e; padding: 10px; text-align: center; }
+        nav a { color: white; text-decoration: none; margin: 0 15px; font-weight: bold; padding: 5px 10px; border-radius: 4px; transition: background 0.2s; }
+        nav a:hover, nav a.active { background: #1abc9c; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h2 { border-bottom: 2px solid #3498db; padding-bottom: 8px; color: #2c3e50; }
+        .spec-box { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .spec-card { background: #ecf0f1; padding: 15px; border-radius: 6px; border-left: 5px solid #3498db; }
+        .spec-card h4 { margin: 0 0 5px 0; color: #7f8c8d; font-size: 13px; }
+        .spec-card p { margin: 0; font-size: 16px; font-weight: bold; color: #2c3e50; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-size: 14px; }
+        th { background-color: #f8f9fa; color: #2c3e50; }
+        tr:hover { background-color: #f1f2f6; }
+        .progress-bar { background: #e0e0e0; border-radius: 4px; overflow: hidden; height: 10px; width: 100px; display: inline-block; vertical-align: middle; margin-left: 10px; }
+        .progress-fill { background: #e74c3c; height: 100%; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>시스템 리소스 모니터링 대시보드</h1>
+        <p>현재 컴퓨터의 시스템 정보 및 프로세스 메모리 사용 현황</p>
+    </header>
+
+    <nav>
+        <a href="index.html" class="active">대시보드 (메인)</a>
+        <a href="chrome.html">Chrome 설명서</a>
+        <a href="excel.html">Excel 설명서</a>
+    </nav>
+
+    <div class="container">
+        <h2>💻 시스템 기본 사양</h2>
+        <div class="spec-box">
+            <div class="spec-card">
+                <h4>컴퓨터 이름</h4>
+                <p>DESKTOP-96N9HJ3</p>
+            </div>
+            <div class="spec-card">
+                <h4>운영체제 (OS)</h4>
+                <p>Microsoft Windows 11 Home</p>
+            </div>
+            <div class="spec-card">
+                <h4>프로세서 (CPU)</h4>
+                <p>AMD Ryzen AI 7 350</p>
+            </div>
+            <div class="spec-card">
+                <h4>총 메모리 (RAM)</h4>
+                <p>31.28 GB</p>
+            </div>
+            <div class="spec-card">
+                <h4>시스템 가동 시간</h4>
+                <p>3.64 시간</p>
+            </div>
+        </div>
+
+        <h2>📊 메모리 사용 상위 프로세스 현황</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>순위 (Rank)</th>
+                    <th>프로세스 이름</th>
+                    <th>PID</th>
+                    <th>메모리 사용량 (MB)</th>
+                    <th>스레드 수</th>
+                    <th>핸들 수</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>1</strong></td>
+                    <td>chrome</td>
+                    <td>16220</td>
+                    <td>1,036.96 MB <div class="progress-bar"><div class="progress-fill" style="width: 100%;"></div></div></td>
+                    <td>76</td>
+                    <td>3,594</td>
+                </tr>
+                <tr>
+                    <td><strong>2</strong></td>
+                    <td>OneDrive</td>
+                    <td>2520</td>
+                    <td>834.18 MB <div class="progress-bar"><div class="progress-fill" style="width: 80%;"></div></div></td>
+                    <td>39</td>
+                    <td>1,165</td>
+                </tr>
+                <tr>
+                    <td><strong>3</strong></td>
+                    <td>explorer</td>
+                    <td>10380</td>
+                    <td>826.52 MB <div class="progress-bar"><div class="progress-fill" style="width: 80%;"></div></div></td>
+                    <td>399</td>
+                    <td>15,856</td>
+                </tr>
+                <tr>
+                    <td><strong>4</strong></td>
+                    <td>WorkloadsSessionHost</td>
+                    <td>26080</td>
+                    <td>776.02 MB <div class="progress-bar"><div class="progress-fill" style="width: 75%;"></div></div></td>
+                    <td>40</td>
+                    <td>587</td>
+                </tr>
+                <tr>
+                    <td><strong>5</strong></td>
+                    <td>WorkloadsSessionHost</td>
+                    <td>17576</td>
+                    <td>722.72 MB <div class="progress-bar"><div class="progress-fill" style="width: 70%;"></div></div></td>
+                    <td>103</td>
+                    <td>467</td>
+                </tr>
+                <tr>
+                    <td><strong>6</strong></td>
+                    <td>chrome</td>
+                    <td>17912</td>
+                    <td>650.11 MB <div class="progress-bar"><div class="progress-fill" style="width: 63%;"></div></div></td>
+                    <td>58</td>
+                    <td>899</td>
+                </tr>
+                <tr>
+                    <td><strong>7</strong></td>
+                    <td>MsMpEng</td>
+                    <td>3500</td>
+                    <td>568.71 MB <div class="progress-bar"><div class="progress-fill" style="width: 55%;"></div></div></td>
+                    <td>68</td>
+                    <td>1,161</td>
+                </tr>
+                <tr>
+                    <td><strong>8</strong></td>
+                    <td>chrome</td>
+                    <td>21696</td>
+                    <td>567.07 MB <div class="progress-bar"><div class="progress-fill" style="width: 55%;"></div></div></td>
+                    <td>35</td>
+                    <td>457</td>
+                </tr>
+                <tr>
+                    <td><strong>9</strong></td>
+                    <td>msedge</td>
+                    <td>15444</td>
+                    <td>539.41 MB <div class="progress-bar"><div class="progress-fill" style="width: 52%;"></div></div></td>
+                    <td>56</td>
+                    <td>2,413</td>
+                </tr>
+                <tr>
+                    <td><strong>10</strong></td>
+                    <td>chrome</td>
+                    <td>7340</td>
+                    <td>534.17 MB <div class="progress-bar"><div class="progress-fill" style="width: 51%;"></div></div></td>
+                    <td>30</td>
+                    <td>609</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>
