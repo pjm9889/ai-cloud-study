@@ -6,3 +6,7 @@ https://drive.google.com/drive/folders/1i-WnHpuZ8Gjs68DSOT_3XKatW3yyShaG?usp=sha
 # 사용가능한 skill확인 (약간의 개념만 있어도 체크해주세요)
 https://forms.gle/v5oDd2WL4yC37B3cA
 
+
+# gpt링크
+https://chatgpt.com/share/e/6ab241dd-395c-83e8-a032-8f66b58cfe5b
+
