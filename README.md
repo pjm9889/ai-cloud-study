@@ -8,5 +8,4 @@ https://forms.gle/v5oDd2WL4yC37B3cA
 
 
 # gpt링크
-https://chatgpt.com/share/e/6ab241dd-395c-83e8-a032-8f66b58cfe5b
-
+https://app.notion.com/p/_-AI-3e9ddc34afe580509e7ffcf9d1d91b76
