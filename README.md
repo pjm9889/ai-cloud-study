@@ -7,5 +7,5 @@ https://drive.google.com/drive/folders/1i-WnHpuZ8Gjs68DSOT_3XKatW3yyShaG?usp=sha
 https://forms.gle/v5oDd2WL4yC37B3cA
 
 
-# gpt링크
+# 노션링크
 https://app.notion.com/p/_-AI-3e9ddc34afe580509e7ffcf9d1d91b76
