@@ -29,7 +29,7 @@ jobs:
           GABIA_HOST: ${{ secrets.GABIA_HOST }}
           GABIA_USERNAME: ${{ secrets.GABIA_USERNAME }}
           GABIA_PORT: ${{ secrets.GABIA_PORT || 22 }}
-          GABIA_TARGET_DIR: ${{ secrets.GABIA_TARGET_DIR }}
+          GABIA_TARGET_DIR: ${{ secrets.GABIA_TARGET_DIR || '.' }}
         run: |
           set -euo pipefail
           sudo apt-get update -qq
@@ -55,7 +55,7 @@ jobs:
           GABIA_HOST: ${{ secrets.GABIA_HOST }}
           GABIA_USERNAME: ${{ secrets.GABIA_USERNAME }}
           GABIA_PORT: ${{ secrets.GABIA_PORT || 22 }}
-          GABIA_TARGET_DIR: ${{ secrets.GABIA_TARGET_DIR }}
+          GABIA_TARGET_DIR: ${{ secrets.GABIA_TARGET_DIR || '.' }}
         run: |
           set -euo pipefail
           sshpass -e ssh \
