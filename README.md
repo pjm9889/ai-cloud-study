@@ -16,8 +16,11 @@ team3 Git 저장소 → 중앙 배포 서버 → team3.bssbu.co.kr
 
 ## 로컬 실행
 
-프로젝트 루트에서 간단한 정적 서버를 실행하면 됩니다.
+FastAPI 앱으로 실행합니다. 최초 1회 의존성을 설치하세요.
 
 ```powershell
-python -m http.server 5173 --directory C:\bssbu-ai-studio
+python -m pip install -r requirements.txt
+python -m uvicorn app:app --host 127.0.0.1 --port 8080
 ```
+
+브라우저에서 `http://127.0.0.1:8080/`으로 접속합니다.

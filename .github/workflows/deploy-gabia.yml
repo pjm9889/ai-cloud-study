@@ -29,6 +29,19 @@ jobs:
           username: ${{ secrets.GABIA_USERNAME }}
           password: ${{ secrets.GABIA_PASSWORD }}
           port: ${{ secrets.GABIA_PORT || 22 }}
-          source: "index.html,README.md"
+          source: "index.html,app.py,requirements.txt,README.md"
           target: ${{ secrets.GABIA_TARGET_DIR }}
           overwrite: true
+
+      - name: Restart FastAPI application
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.GABIA_HOST }}
+          username: ${{ secrets.GABIA_USERNAME }}
+          password: ${{ secrets.GABIA_PASSWORD }}
+          port: ${{ secrets.GABIA_PORT || 22 }}
+          script: |
+            cd "${{ secrets.GABIA_TARGET_DIR }}"
+            python3 -m pip install --user -r requirements.txt
+            pkill -f "uvicorn app:app" || true
+            nohup python3 -m uvicorn app:app --host 0.0.0.0 --port 8080 > app.log 2>&1 &
