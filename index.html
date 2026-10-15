@@ -118,7 +118,7 @@
         <p class="eyebrow">Project guide</p>
         <h2>프로젝트가이드</h2>
         <p>프로젝트 운영 규칙, Git 사용법, 브랜치 전략, 배포 방법을 한곳에서 관리합니다. 이 탭은 사용자의 프로젝트가이드 Git 저장소와 연결됩니다.</p>
-        <a class="repo" href="https://github.com/your-account/project-guide" target="_blank" rel="noreferrer">프로젝트가이드 Git 열기 ↗</a>
+        <a class="repo" href="https://github.com/pjm9889/ai-cloud-study" target="_blank" rel="noreferrer">관리자 Git 열기 ↗</a>
         <div class="guide-steps"><div class="guide-step"><strong>01 · 저장소 확인</strong><span>조별 저장소와 작업 범위를 확인합니다.</span></div><div class="guide-step"><strong>02 · 작업 규칙</strong><span>브랜치·커밋·Pull Request 규칙을 따릅니다.</span></div><div class="guide-step"><strong>03 · 배포 확인</strong><span>main 반영 후 담당 서브도메인에서 결과를 확인합니다.</span></div></div>
       </div>
     </section>
@@ -128,11 +128,11 @@
     // 중앙 관리 설정의 샘플입니다. 실제 운영에서는 API 또는 중앙 설정 파일로 교체합니다.
     const centralConfig = {
       project: { id: "phase-1", name: "1차 프로젝트" },
-      guide: { name: "프로젝트가이드", repo: "https://github.com/your-account/project-guide", domain: "https://guide.bssbu.co.kr" },
+      guide: { name: "프로젝트가이드", repo: "https://github.com/pjm9889/ai-cloud-study", domain: "https://bssbu.co.kr/#/guide", owner: "관리자" },
       teams: [
-        { id: "team-1", name: "1조", domain: "https://team1.example.com", repo: "https://github.com/team1-account/team1-homepage", description: "브랜드 소개와 첫 화면 경험을 담당합니다.", tasks: [{ name: "메인 랜딩 화면", description: "프로젝트의 첫 인상과 안내 화면", status: "진행 중" }, { name: "반응형 레이아웃", description: "모바일·데스크톱 화면 대응", status: "준비 중" }] },
-        { id: "team-2", name: "2조", domain: "https://team2.example.com", repo: "https://github.com/team2-account/team2-homepage", description: "콘텐츠 탐색과 프로젝트 목록을 담당합니다.", tasks: [{ name: "프로젝트 카드", description: "프로젝트와 조별 작업 탐색 UI", status: "진행 중" }, { name: "검색 기능", description: "작업과 결과물 검색 경험", status: "준비 중" }] },
-        { id: "team-3", name: "3조", domain: "https://team3.example.com", repo: "https://github.com/team3-account/team3-homepage", description: "배포 결과와 운영 상태 화면을 담당합니다.", tasks: [{ name: "배포 상태 표시", description: "조별 서비스 운영 상태 연결", status: "진행 중" }, { name: "운영 대시보드", description: "중앙 관리용 상태 요약 화면", status: "준비 중" }] }
+        { id: "team-1", name: "1조", domain: "https://team1.bssbu.co.kr", repo: "https://github.com/team1-account/team1-homepage", description: "브랜드 소개와 첫 화면 경험을 담당합니다.", tasks: [{ name: "메인 랜딩 화면", description: "프로젝트의 첫 인상과 안내 화면", status: "진행 중" }, { name: "반응형 레이아웃", description: "모바일·데스크톱 화면 대응", status: "준비 중" }] },
+        { id: "team-2", name: "2조", domain: "https://team2.bssbu.co.kr", repo: "https://github.com/team2-account/team2-homepage", description: "콘텐츠 탐색과 프로젝트 목록을 담당합니다.", tasks: [{ name: "프로젝트 카드", description: "프로젝트와 조별 작업 탐색 UI", status: "진행 중" }, { name: "검색 기능", description: "작업과 결과물 검색 경험", status: "준비 중" }] },
+        { id: "team-3", name: "3조", domain: "https://team3.bssbu.co.kr", repo: "https://github.com/team3-account/team3-homepage", description: "배포 결과와 운영 상태 화면을 담당합니다.", tasks: [{ name: "배포 상태 표시", description: "조별 서비스 운영 상태 연결", status: "진행 중" }, { name: "운영 대시보드", description: "중앙 관리용 상태 요약 화면", status: "준비 중" }] }
       ]
     };
     const home = document.querySelector('#home-view');
