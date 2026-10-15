@@ -1,0 +1,34 @@
+name: Deploy to Gabia
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Upload homepage to Gabia
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate homepage
+        shell: bash
+        run: |
+          test -s index.html
+          grep -q '<html' index.html
+
+      - name: Upload files over SSH/SCP
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.GABIA_HOST }}
+          username: ${{ secrets.GABIA_USERNAME }}
+          password: ${{ secrets.GABIA_PASSWORD }}
+          port: ${{ secrets.GABIA_PORT || 22 }}
+          source: "index.html,README.md"
+          target: ${{ secrets.GABIA_TARGET_DIR }}
+          overwrite: true
