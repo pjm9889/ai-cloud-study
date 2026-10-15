@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>가비아 홈 | 프로젝트 허브</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #657088;
+      --line: #e8ebf1;
+      --surface: #fff;
+      --soft: #ffffff;
+      --blue: #2457f5;
+      --navy: #121a2b;
+      --green: #18875d;
+      --shadow: 0 18px 45px rgba(31, 45, 78, .09);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: #ffffff; font-family: Inter, "Noto Sans KR", system-ui, sans-serif; }
+    a { color: inherit; text-decoration: none; }
+    .shell { max-width: 1180px; margin: 0 auto; padding: 28px 24px 64px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 70px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -.04em; }
+    .brand-mark { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 11px; background: var(--blue); color: #fff; font-size: 17px; }
+    .status { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #32be7c; box-shadow: 0 0 0 4px #d9f5e8; }
+    .tabs { display: flex; gap: 8px; overflow-x: auto; margin: -36px 0 54px; padding-bottom: 2px; }
+    .tab { padding: 11px 16px; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); background: #fff; font-size: 13px; font-weight: 700; white-space: nowrap; }
+    .tab:hover, .tab.active { border-color: var(--blue); color: #fff; background: var(--blue); }
+    .hero { max-width: 760px; margin-bottom: 46px; }
+    .eyebrow { margin: 0 0 16px; color: var(--blue); font-size: 13px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(40px, 6vw, 72px); line-height: 1.03; letter-spacing: -.065em; }
+    .hero p { max-width: 600px; margin: 22px 0 0; color: var(--muted); font-size: 17px; line-height: 1.7; }
+    .section-head { display: flex; align-items: end; justify-content: space-between; margin: 0 0 18px; }
+    .section-head h2 { margin: 0; font-size: 21px; letter-spacing: -.04em; }
+    .section-head span { color: var(--muted); font-size: 13px; }
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; box-shadow: var(--shadow); }
+    .project-card { display: block; padding: 28px; transition: transform .2s, box-shadow .2s; }
+    .project-card:hover { transform: translateY(-4px); box-shadow: 0 24px 55px rgba(31, 45, 78, .14); }
+    .project-top { display: flex; justify-content: space-between; gap: 24px; }
+    .project-icon { width: 50px; height: 50px; display: grid; place-items: center; border-radius: 16px; background: #e8edff; color: var(--blue); font-size: 23px; }
+    .badge { height: fit-content; padding: 7px 10px; border-radius: 99px; color: var(--green); background: #e5f7ef; font-size: 12px; font-weight: 800; }
+    .project-card h3 { margin: 24px 0 8px; font-size: 27px; letter-spacing: -.05em; }
+    .project-card p { margin: 0; color: var(--muted); line-height: 1.6; }
+    .meta { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+    .meta strong { color: var(--ink); }
+    .project-view { margin-top: 18px; color: var(--blue); font-size: 14px; font-weight: 800; }
+    .project-view::after { content: " →"; }
+    footer { margin-top: 74px; color: #8a93a6; font-size: 12px; }
+    .hidden { display: none; }
+    .team-layout { display: grid; grid-template-columns: 250px 1fr; gap: 22px; }
+    .back { display: inline-flex; margin-bottom: 20px; color: var(--muted); font-size: 13px; }
+    .team-list { padding: 10px; align-self: start; }
+    .team-button { width: 100%; padding: 15px; border: 0; border-radius: 14px; color: var(--muted); background: transparent; text-align: left; cursor: pointer; font: inherit; }
+    .team-button.active { color: var(--blue); background: #edf1ff; font-weight: 800; }
+    .detail { padding: 30px; }
+    .detail-head { display: flex; align-items: start; justify-content: space-between; gap: 20px; }
+    .detail h2 { margin: 0 0 8px; font-size: 31px; letter-spacing: -.05em; }
+    .detail p { margin: 0; color: var(--muted); line-height: 1.6; }
+    .repo { display: inline-block; padding: 10px 13px; border: 1px solid var(--line); border-radius: 11px; color: var(--blue); font-size: 12px; font-weight: 700; white-space: nowrap; }
+    .task-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 30px; }
+    .task { padding: 19px; border: 1px solid var(--line); border-radius: 16px; }
+    .task h3 { margin: 0 0 8px; font-size: 16px; }
+    .task p { margin: 0 0 15px; font-size: 13px; }
+    .task-foot { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 12px; }
+    .task-status { color: var(--green); font-weight: 800; }
+    .guide-card { padding: 30px; }
+    .guide-card h2 { margin: 0 0 10px; font-size: 31px; letter-spacing: -.05em; }
+    .guide-card p { max-width: 680px; color: var(--muted); line-height: 1.7; }
+    .guide-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 28px; }
+    .guide-step { padding: 18px; border: 1px solid var(--line); border-radius: 15px; }
+    .guide-step strong { display: block; margin-bottom: 7px; }
+    .guide-step span { color: var(--muted); font-size: 13px; line-height: 1.5; }
+    @media (max-width: 700px) { .shell { padding: 22px 16px 46px; } .topbar { margin-bottom: 46px; } .team-layout { grid-template-columns: 1fr; } .team-list { display: flex; overflow: auto; gap: 6px; } .team-button { min-width: 84px; text-align: center; } .detail-head { display: block; } .repo { margin-top: 18px; } .task-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="brand" href="#/"><span class="brand-mark">G</span><span>가비아 홈</span></a>
+      <span class="status"><i class="dot"></i> 중앙 배포 허브</span>
+    </header>
+    <nav class="tabs" id="tabs">
+      <a class="tab" data-route="#/team/team-1" href="#/team/team-1">1조</a>
+      <a class="tab" data-route="#/team/team-2" href="#/team/team-2">2조</a>
+      <a class="tab" data-route="#/team/team-3" href="#/team/team-3">3조</a>
+      <a class="tab" data-route="#/guide" href="#/guide">프로젝트가이드</a>
+    </nav>
+
+    <section id="home-view">
+      <div class="hero">
+        <p class="eyebrow">Project workspace</p>
+        <h1>함께 만들고,<br />한곳에서 확인합니다.</h1>
+        <p>각 조의 Git 저장소에서 관리되는 작업을 프로젝트 단위로 모아보고, 조별 서브도메인으로 바로 이동할 수 있는 중앙 허브입니다.</p>
+      </div>
+      <div class="section-head"><h2>프로젝트</h2><span>1개의 프로젝트</span></div>
+      <a class="card project-card" href="#/team/team-1">
+        <div class="project-top"><div class="project-icon">✦</div><span class="badge">진행 중</span></div>
+        <h3>1차 프로젝트</h3>
+        <p>각 조의 작업을 독립적인 서브도메인으로 운영하는 첫 번째 공동 프로젝트입니다.</p>
+        <div class="meta"><span>참여 조 <strong>3개</strong></span><span>작업 <strong>6개</strong></span><span>업데이트 <strong>오늘</strong></span></div>
+        <div class="project-view">1조부터 작업 보기</div>
+      </a>
+    </section>
+
+    <section id="project-view" class="hidden">
+      <a class="back" href="#/">← 전체 프로젝트</a>
+      <div class="hero" style="margin-bottom: 30px"><p class="eyebrow">Phase 01</p><h1>1차 프로젝트</h1><p>조를 선택하면 해당 조의 작업과 운영 중인 서브도메인을 확인할 수 있습니다.</p></div>
+      <div class="team-layout">
+        <nav class="card team-list" id="team-list"></nav>
+        <article class="card detail" id="team-detail"></article>
+      </div>
+    </section>
+    <section id="guide-view" class="hidden">
+      <a class="back" href="#/">← 메인으로</a>
+      <div class="card guide-card">
+        <p class="eyebrow">Project guide</p>
+        <h2>프로젝트가이드</h2>
+        <p>프로젝트 운영 규칙, Git 사용법, 브랜치 전략, 배포 방법을 한곳에서 관리합니다. 이 탭은 사용자의 프로젝트가이드 Git 저장소와 연결됩니다.</p>
+        <a class="repo" href="https://github.com/your-account/project-guide" target="_blank" rel="noreferrer">프로젝트가이드 Git 열기 ↗</a>
+        <div class="guide-steps"><div class="guide-step"><strong>01 · 저장소 확인</strong><span>조별 저장소와 작업 범위를 확인합니다.</span></div><div class="guide-step"><strong>02 · 작업 규칙</strong><span>브랜치·커밋·Pull Request 규칙을 따릅니다.</span></div><div class="guide-step"><strong>03 · 배포 확인</strong><span>main 반영 후 담당 서브도메인에서 결과를 확인합니다.</span></div></div>
+      </div>
+    </section>
+    <footer>Central project hub · Git repository and deployment links are managed centrally.</footer>
+  </main>
+  <script>
+    // 중앙 관리 설정의 샘플입니다. 실제 운영에서는 API 또는 중앙 설정 파일로 교체합니다.
+    const centralConfig = {
+      project: { id: "phase-1", name: "1차 프로젝트" },
+      guide: { name: "프로젝트가이드", repo: "https://github.com/your-account/project-guide", domain: "https://guide.bssbu.co.kr" },
+      teams: [
+        { id: "team-1", name: "1조", domain: "https://team1.example.com", repo: "https://github.com/team1-account/team1-homepage", description: "브랜드 소개와 첫 화면 경험을 담당합니다.", tasks: [{ name: "메인 랜딩 화면", description: "프로젝트의 첫 인상과 안내 화면", status: "진행 중" }, { name: "반응형 레이아웃", description: "모바일·데스크톱 화면 대응", status: "준비 중" }] },
+        { id: "team-2", name: "2조", domain: "https://team2.example.com", repo: "https://github.com/team2-account/team2-homepage", description: "콘텐츠 탐색과 프로젝트 목록을 담당합니다.", tasks: [{ name: "프로젝트 카드", description: "프로젝트와 조별 작업 탐색 UI", status: "진행 중" }, { name: "검색 기능", description: "작업과 결과물 검색 경험", status: "준비 중" }] },
+        { id: "team-3", name: "3조", domain: "https://team3.example.com", repo: "https://github.com/team3-account/team3-homepage", description: "배포 결과와 운영 상태 화면을 담당합니다.", tasks: [{ name: "배포 상태 표시", description: "조별 서비스 운영 상태 연결", status: "진행 중" }, { name: "운영 대시보드", description: "중앙 관리용 상태 요약 화면", status: "준비 중" }] }
+      ]
+    };
+    const home = document.querySelector('#home-view');
+    const project = document.querySelector('#project-view');
+    const guide = document.querySelector('#guide-view');
+    const tabs = document.querySelector('#tabs');
+    const teamList = document.querySelector('#team-list');
+    const detail = document.querySelector('#team-detail');
+    function renderTeam(teamId) {
+      const team = centralConfig.teams.find(item => item.id === teamId) || centralConfig.teams[0];
+      teamList.innerHTML = centralConfig.teams.map(item => `<button class="team-button ${item.id === team.id ? 'active' : ''}" data-team="${item.id}">${item.name}</button>`).join('');
+      detail.innerHTML = `<div class="detail-head"><div><h2>${team.name}</h2><p>${team.description}</p></div><a class="repo" href="${team.domain}" target="_blank" rel="noreferrer">서브도메인 열기 ↗</a></div><div class="meta"><span>배포 주소 <strong>${team.domain.replace('https://', '')}</strong></span><span>저장소 <strong>연결됨</strong></span></div><div class="task-grid">${team.tasks.map(task => `<div class="task"><h3>${task.name}</h3><p>${task.description}</p><div class="task-foot"><span class="task-status">${task.status}</span><span>Git 연결</span></div></div>`).join('')}</div>`;
+      document.querySelectorAll('[data-team]').forEach(button => button.addEventListener('click', () => renderTeam(button.dataset.team)));
+    }
+    function route() {
+      const path = location.hash || '#/';
+      const isTeam = path.startsWith('#/team/');
+      const isGuide = path === '#/guide';
+      home.classList.toggle('hidden', isTeam || isGuide);
+      project.classList.toggle('hidden', !isTeam);
+      guide.classList.toggle('hidden', !isGuide);
+      tabs.querySelectorAll('.tab').forEach(tab => tab.classList.toggle('active', tab.dataset.route === path));
+      if (isTeam) renderTeam(path.split('/')[2] || 'team-1');
+    }
+    window.addEventListener('hashchange', route); route();
+  </script>
+</body>
+</html>

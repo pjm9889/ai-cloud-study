@@ -1,0 +1,29 @@
+name: Validate website
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check website entrypoint
+        shell: bash
+        run: |
+          test -s index.html
+          grep -q '<html' index.html
+          grep -q '중앙 배포 허브' index.html
+
+      - name: Package static website
+        uses: actions/upload-artifact@v4
+        with:
+          name: gabia-homepage
+          path: |
+            index.html
+            README.md
