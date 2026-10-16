@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="subpage">
+  <a class="back" href="/">← 메인으로</a>
+  <p class="eyebrow">{{ site.project_name }}</p>
+  <h1>프로젝트가이드</h1>
+  <p class="subpage-intro">관리자가 관리하는 메인 홈페이지와 프로젝트 운영 안내입니다.</p>
+  <article class="guide">
+    <section><h2>관리 범위</h2><p>관리자 저장소는 메인 홈페이지와 프로젝트가이드만 관리합니다. 1조·2조·3조의 작업 내용과 Git 저장소는 각 조가 직접 관리합니다.</p></section>
+    <section><h2>조별 운영</h2><p>각 조는 자기 Git 저장소에 push하고 자기 배포 환경에서 자기 서브도메인을 운영합니다.</p></section>
+    <section><h2>배포 주소</h2><div class="guide-links">{% for team in site.teams %}<a href="{{ team.domain }}" target="_blank" rel="noreferrer">{{ team.name }} · {{ team.domain }}</a>{% endfor %}</div></section>
+    <section><h2>관리자 Git</h2><a class="repo" href="{{ site.admin_repository }}" target="_blank" rel="noreferrer">관리자 Git 저장소 열기 ↗</a></section>
+  </article>
+</section>
+{% endblock %}

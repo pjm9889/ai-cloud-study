@@ -47,6 +47,13 @@ jobs:
             -P "$GABIA_PORT" \
             index.html app.py requirements.txt README.md \
             "$GABIA_USERNAME@$GABIA_HOST:$GABIA_TARGET_DIR/"
+          sshpass -e scp -r \
+            -o StrictHostKeyChecking=no \
+            -o HostKeyAlgorithms=+ssh-rsa \
+            -o PubkeyAuthentication=no \
+            -P "$GABIA_PORT" \
+            templates static data \
+            "$GABIA_USERNAME@$GABIA_HOST:$GABIA_TARGET_DIR/"
 
       - name: Restart FastAPI application
         shell: bash

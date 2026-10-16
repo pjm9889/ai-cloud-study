@@ -1,17 +1,30 @@
 # 가비아 홈
 
-메인 프로젝트 카드와 `1조`, `2조`, `3조`, `프로젝트가이드` 탭을 제공하는 정적 홈페이지입니다.
+FastAPI 기반의 관리자 홈페이지입니다. 메인 홈페이지와 프로젝트가이드만 관리하고, 조별 Git과 조별 사이트는 각 조가 직접 운영합니다.
 
 ## 중앙 관리 구조
 
-`index.html` 안의 `centralConfig`가 중앙 관리 설정 샘플입니다. 각 조는 자기 Git 저장소를 관리하고, `프로젝트가이드`는 사용자의 별도 Git 저장소를 연결합니다.
+이 저장소는 관리자용 메인 홈페이지와 프로젝트가이드만 관리합니다. 조별 작업 내용과 조별 Git 저장소는 중앙 저장소에 넣지 않으며, 각 조가 자기 저장소와 서브도메인을 직접 관리합니다.
+
+## 코드 구조
 
 ```text
-메인 홈페이지 저장소 → 가비아 메인 문서 루트 → bssbu.co.kr
-team1 Git 저장소 → 중앙 배포 서버 → team1.bssbu.co.kr
-team2 Git 저장소 → 중앙 배포 서버 → team2.bssbu.co.kr
-team3 Git 저장소 → 중앙 배포 서버 → team3.bssbu.co.kr
-관리자 Git 저장소 → 가비아 메인 문서 루트 → bssbu.co.kr/#/guide
+app.py                 FastAPI 라우팅
+templates/base.html    공통 레이아웃
+templates/home.html    메인 홈페이지
+templates/guide.html   프로젝트가이드
+static/css/site.css    외부 CSS
+data/site.json         관리자 페이지용 설정과 조별 서브도메인 링크
+```
+
+조별 작업 내용은 `data/site.json`에 넣지 않습니다. 중앙 홈페이지는 조별 서브도메인으로 연결만 제공합니다.
+
+```text
+관리자 Git 저장소 → 가비아 메인 서버 → bssbu.co.kr
+관리자 Git 저장소 → 메인 홈페이지의 프로젝트가이드
+1조 Git 저장소 → 1조의 배포 서버 → team1.bssbu.co.kr
+2조 Git 저장소 → 2조의 배포 서버 → team2.bssbu.co.kr
+3조 Git 저장소 → 3조의 배포 서버 → team3.bssbu.co.kr
 ```
 
 ## 로컬 실행
@@ -23,4 +36,4 @@ python -m pip install -r requirements.txt
 python -m uvicorn app:app --host 127.0.0.1 --port 8080
 ```
 
-브라우저에서 `http://127.0.0.1:8080/`으로 접속합니다.
+브라우저에서 `http://127.0.0.1:8080/` 또는 `http://127.0.0.1:8080/guide`로 접속합니다.

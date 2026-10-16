@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">{{ site.project_name }}</p>
+  <h1>{{ site.course_name }}</h1>
+  <p>프로젝트 소식과 조별 작업 사이트를 한곳에서 확인하세요.</p>
+</section>
+<section class="boards" aria-label="프로젝트 소식">
+  {% for board_name, items in [("새소식", site.news), ("이벤트", site.events)] %}
+  <section class="board">
+    <div class="board-head"><h2>{{ board_name }}</h2><a href="/guide">전체 보기 〉</a></div>
+    {% for item in items %}<div class="notice"><span class="tag">{{ item.tag }}</span><span>{{ item.title }}</span><time>{{ item.date }}</time></div>{% endfor %}
+  </section>
+  {% endfor %}
+</section>
+<section class="project-bar">
+  <div class="project-title"><small>{{ site.project_name }}</small><strong>조별 사이트 바로가기</strong></div>
+  <div class="project-tabs">
+    {% for team in site.teams %}<a class="project-tab" href="{{ team.domain }}" target="_blank" rel="noreferrer">{{ team.name }}</a>{% endfor %}
+    <a class="project-tab" href="/guide">프로젝트가이드</a>
+  </div>
+</section>
+{% endblock %}

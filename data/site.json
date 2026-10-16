@@ -1,0 +1,21 @@
+{
+  "site_name": "청년취업사관학교 새싹",
+  "course_name": "AI클라우드 과정(부성순강사)",
+  "project_name": "1차 프로젝트",
+  "admin_repository": "https://github.com/pjm9889/ai-cloud-study",
+  "teams": [
+    {"id": "team-1", "name": "1조", "domain": "https://team1.bssbu.co.kr"},
+    {"id": "team-2", "name": "2조", "domain": "https://team2.bssbu.co.kr"},
+    {"id": "team-3", "name": "3조", "domain": "https://team3.bssbu.co.kr"}
+  ],
+  "news": [
+    {"tag": "업데이트", "title": "1차 프로젝트 홈페이지를 시작했습니다.", "date": "2026.10.15"},
+    {"tag": "안내", "title": "각 조는 자기 Git 저장소와 서브도메인을 관리합니다.", "date": "2026.10.15"},
+    {"tag": "진행", "title": "메인 홈페이지 구조를 확장형으로 전환했습니다.", "date": "2026.10.15"}
+  ],
+  "events": [
+    {"tag": "진행중", "title": "1차 프로젝트 조별 사이트를 확인하세요.", "date": "2026.10.15"},
+    {"tag": "진행중", "title": "main 반영 후 가비아 자동 배포가 실행됩니다.", "date": "2026.10.15"},
+    {"tag": "예정", "title": "각 조별 서브도메인 배포를 준비합니다.", "date": "2026.10.16"}
+  ]
+}

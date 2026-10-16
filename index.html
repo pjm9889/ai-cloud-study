@@ -4,109 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>청년취업사관학교 새싹 | 1차 프로젝트</title>
-  <style>
-    :root { --ink:#111827; --blue:#1769aa; --line:#dedede; --muted:#777; --light:#f6f7f8; }
-    * { box-sizing:border-box; }
-    body { margin:0; color:var(--ink); background:#fff; font-family:Arial,"Noto Sans KR",sans-serif; }
-    a { color:inherit; text-decoration:none; }
-    .wrap { max-width:1210px; margin:0 auto; padding:0 24px; }
-    .header { border-bottom:1px solid #e6e6e6; }
-    .header-inner { min-height:79px; display:flex; align-items:center; gap:40px; }
-    .logo { font-size:30px; font-weight:800; letter-spacing:-.06em; white-space:nowrap; }
-    .main-nav { display:flex; align-items:center; gap:24px; font-size:16px; font-weight:700; }
-    .main-nav a:hover, .main-nav a.active { color:var(--blue); }
-    .account { margin-left:auto; display:flex; align-items:center; gap:13px; color:#777; font-size:12px; white-space:nowrap; }
-    .account button { padding:7px 12px; border:0; color:#fff; background:#9ca3af; font-size:12px; font-weight:700; }
-    .hero { padding:46px 0 30px; }
-    .hero h1 { margin:0 0 11px; font-size:34px; letter-spacing:-.06em; }
-    .hero p { margin:0; color:var(--muted); font-size:15px; }
-    .boards { display:grid; grid-template-columns:1fr 1fr; gap:36px; padding-bottom:48px; }
-    .board-head { display:flex; align-items:center; justify-content:space-between; border-bottom:2px solid #555; padding-bottom:14px; }
-    .board-head h2 { margin:0; font-size:27px; letter-spacing:-.07em; }
-    .more { color:var(--muted); font-size:13px; }
-    .more::after { content:' 〉'; color:var(--blue); }
-    .notice { display:grid; grid-template-columns:70px 1fr 88px; align-items:center; gap:10px; min-height:48px; border-bottom:1px solid #eee; font-size:14px; }
-    .tag { width:70px; padding:6px 4px; color:#fff; background:#666; text-align:center; font-size:12px; font-weight:700; }
-    .notice-title { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .date { color:#999; text-align:right; font-size:12px; }
-    .project-bar { border-top:1px solid #c8dced; border-bottom:1px solid #c8dced; background:#eef6fc; }
-    .project-inner { display:flex; align-items:center; justify-content:space-between; gap:28px; min-height:118px; }
-    .project-title { min-width:190px; }
-    .project-title small { display:block; margin-bottom:9px; color:var(--blue); font-size:20px; font-weight:800; letter-spacing:-.06em; }
-    .project-title strong { font-size:24px; letter-spacing:-.07em; }
-    .project-tabs { display:flex; flex:1; justify-content:flex-end; gap:10px; }
-    .project-tab { min-width:130px; padding:17px 20px; border:1px solid #d8d8d8; background:#fff; color:#333; text-align:center; font-size:14px; font-weight:700; }
-    .project-tab:hover, .project-tab.active { border-color:var(--blue); color:#fff; background:var(--blue); }
-    .footer { padding:27px 0 50px; color:#999; font-size:12px; }
-    .hidden { display:none !important; }
-    .subpage { padding:42px 0 70px; }
-    .back { display:inline-block; margin-bottom:24px; color:var(--muted); font-size:13px; }
-    .subpage h1 { margin:0 0 9px; font-size:32px; letter-spacing:-.06em; }
-    .subpage-intro { margin:0 0 28px; color:var(--muted); font-size:14px; }
-    .team-layout { display:grid; grid-template-columns:170px 1fr; gap:28px; }
-    .team-list { border-top:2px solid #555; }
-    .team-button { width:100%; padding:15px 12px; border:0; border-bottom:1px solid #eee; background:#fff; color:#555; text-align:left; cursor:pointer; font:inherit; }
-    .team-button.active { color:var(--blue); font-weight:700; }
-    .detail { border-top:2px solid #555; }
-    .detail-head { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:18px 0; border-bottom:1px solid #eee; }
-    .detail h2 { margin:0 0 7px; font-size:25px; letter-spacing:-.06em; }
-    .detail p { margin:0; color:var(--muted); font-size:14px; }
-    .repo { padding:9px 12px; border:1px solid #cfcfcf; color:var(--blue); font-size:12px; white-space:nowrap; }
-    .meta { display:flex; gap:22px; padding:16px 0; color:#888; font-size:12px; }
-    .meta strong { color:#333; }
-    .task-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-    .task { padding:18px; border:1px solid #e5e5e5; }
-    .task h3 { margin:0 0 8px; font-size:15px; }
-    .task p { margin:0 0 18px; font-size:13px; line-height:1.5; }
-    .task-foot { display:flex; justify-content:space-between; color:#999; font-size:12px; }
-    .task-status { color:var(--blue); font-weight:700; }
-    .guide { max-width:820px; border-top:2px solid #555; }
-    .guide-section { padding:21px 0; border-bottom:1px solid #eee; }
-    .guide-section h2 { margin:0 0 9px; font-size:19px; }
-    .guide-section p { margin:0; color:#666; font-size:14px; line-height:1.7; }
-    @media (max-width:800px) { .header-inner { flex-wrap:wrap; gap:18px; padding:20px 0; } .account { width:100%; margin-left:0; } .main-nav { order:3; width:100%; overflow:auto; gap:18px; } .boards { grid-template-columns:1fr; gap:30px; } .project-inner { display:block; padding:25px 0; } .project-tabs { justify-content:flex-start; flex-wrap:wrap; margin-top:18px; } .team-layout { grid-template-columns:1fr; gap:20px; } .team-list { display:flex; overflow:auto; border-top:0; border-bottom:1px solid #eee; } .team-button { min-width:85px; border-bottom:0; text-align:center; } .task-grid { grid-template-columns:1fr; } }
-  </style>
 </head>
 <body>
-  <header class="header">
-    <div class="wrap header-inner">
-      <a class="logo" href="#/">청년취업사관학교 새싹</a>
-      <nav class="main-nav" id="main-nav">
-        <a href="#/team/team-1" data-route="#/team/team-1">1조</a>
-        <a href="#/team/team-2" data-route="#/team/team-2">2조</a>
-        <a href="#/team/team-3" data-route="#/team/team-3">3조</a>
-        <a href="#/guide" data-route="#/guide">프로젝트가이드</a>
-      </nav>
-      <div class="account"><span>관리자님</span><button type="button">My 프로젝트</button><button type="button">관리센터</button></div>
-    </div>
-  </header>
-
-  <main class="wrap">
-    <section id="home-view">
-      <div class="hero"><h1>AI클라우드 과정(부성순강사)</h1><p>1차 프로젝트 소식과 조별 작업을 한곳에서 확인하세요.</p></div>
-      <div class="boards">
-        <section><div class="board-head"><h2>새소식</h2><a class="more" href="#/guide">전체 보기</a></div><div class="notice"><span class="tag">업데이트</span><span class="notice-title">1차 프로젝트 홈페이지를 시작했습니다.</span><span class="date">2026.10.15</span></div><div class="notice"><span class="tag">안내</span><span class="notice-title">각 조별 Git 저장소와 배포 구조를 안내합니다.</span><span class="date">2026.10.15</span></div><div class="notice"><span class="tag">진행</span><span class="notice-title">메인 페이지 로컬 테스트를 진행 중입니다.</span><span class="date">2026.10.15</span></div></section>
-        <section><div class="board-head"><h2>이벤트</h2><a class="more" href="#/guide">전체 보기</a></div><div class="notice"><span class="tag">진행중</span><span class="notice-title">1차 프로젝트 조별 작업을 확인하세요.</span><span class="date">2026.10.15</span></div><div class="notice"><span class="tag">진행중</span><span class="notice-title">main 반영 후 자동 배포를 준비합니다.</span><span class="date">2026.10.15</span></div><div class="notice"><span class="tag">예정</span><span class="notice-title">가비아 메인 홈페이지 배포 예정입니다.</span><span class="date">2026.10.16</span></div></section>
-      </div>
-      <section class="project-bar"><div class="project-inner"><div class="project-title"><small>1차 프로젝트</small><strong>조별 작업 바로가기</strong></div><div class="project-tabs"><a class="project-tab" href="#/team/team-1">1조</a><a class="project-tab" href="#/team/team-2">2조</a><a class="project-tab" href="#/team/team-3">3조</a><a class="project-tab" href="#/guide">프로젝트가이드</a></div></div></section>
-    </section>
-
-    <section id="project-view" class="hidden subpage"><a class="back" href="#/">← 메인으로</a><h1>1차 프로젝트</h1><p class="subpage-intro">각 조의 Git 저장소와 작업 현황을 확인합니다.</p><div class="team-layout"><nav class="team-list" id="team-list"></nav><article class="detail" id="team-detail"></article></div></section>
-
-    <section id="guide-view" class="hidden subpage"><a class="back" href="#/">← 메인으로</a><h1>프로젝트가이드</h1><p class="subpage-intro">관리자가 관리하는 1차 프로젝트 운영 안내입니다.</p><article class="guide"><div class="guide-section"><h2>프로젝트 운영</h2><p>메인 홈페이지와 프로젝트가이드는 관리자 저장소에서 관리합니다. 조별 작업은 각 조의 Git 저장소에서 관리하며, main 반영 후 담당 페이지에 배포합니다.</p></div><div class="guide-section"><h2>Git 작업 순서</h2><p>작업 브랜치를 만들고 변경 내용을 커밋한 뒤 Pull Request를 통해 검토합니다. 승인된 내용만 main 브랜치에 반영합니다.</p></div><div class="guide-section"><h2>배포 주소</h2><p>메인: bssbu.co.kr · 1조: team1.bssbu.co.kr · 2조: team2.bssbu.co.kr · 3조: team3.bssbu.co.kr</p></div><div class="guide-section"><a class="repo" href="https://github.com/pjm9889/ai-cloud-study" target="_blank" rel="noreferrer">관리자 Git 저장소 열기 ↗</a></div></article></section>
+  <main>
+    <h1>청년취업사관학교 새싹</h1>
+    <p>FastAPI 서버를 실행하면 실제 홈페이지가 열립니다.</p>
+    <nav><a href="/">메인</a> <a href="/guide">프로젝트가이드</a></nav>
   </main>
-  <footer class="wrap footer">청년취업사관학교 새싹 · 1차 프로젝트 메인 홈페이지</footer>
-
-  <script>
-    const centralConfig = { teams: [
-      { id:'team-1', name:'1조', domain:'https://team1.bssbu.co.kr', repo:'https://github.com/team1-account/team1-homepage', description:'브랜드 소개와 첫 화면 경험을 담당합니다.', tasks:[{name:'메인 랜딩 화면', description:'프로젝트의 첫 인상과 안내 화면', status:'진행 중'},{name:'반응형 레이아웃', description:'모바일·데스크톱 화면 대응', status:'준비 중'}] },
-      { id:'team-2', name:'2조', domain:'https://team2.bssbu.co.kr', repo:'https://github.com/team2-account/team2-homepage', description:'콘텐츠 탐색과 프로젝트 목록을 담당합니다.', tasks:[{name:'프로젝트 카드', description:'프로젝트와 조별 작업 탐색 UI', status:'진행 중'},{name:'검색 기능', description:'작업과 결과물 검색 경험', status:'준비 중'}] },
-      { id:'team-3', name:'3조', domain:'https://team3.bssbu.co.kr', repo:'https://github.com/team3-account/team3-homepage', description:'배포 결과와 운영 상태 화면을 담당합니다.', tasks:[{name:'배포 상태 표시', description:'조별 서비스 운영 상태 연결', status:'진행 중'},{name:'운영 대시보드', description:'중앙 관리용 상태 요약 화면', status:'준비 중'}] }
-    ]};
-    const home=document.querySelector('#home-view'), project=document.querySelector('#project-view'), guide=document.querySelector('#guide-view'), teamList=document.querySelector('#team-list'), detail=document.querySelector('#team-detail');
-    function renderTeam(id){ const team=centralConfig.teams.find(item=>item.id===id)||centralConfig.teams[0]; teamList.innerHTML=centralConfig.teams.map(item=>`<button class="team-button ${item.id===team.id?'active':''}" data-team="${item.id}">${item.name}</button>`).join(''); detail.innerHTML=`<div class="detail-head"><div><h2>${team.name}</h2><p>${team.description}</p></div><a class="repo" href="${team.domain}" target="_blank" rel="noreferrer">서브도메인 열기 ↗</a></div><div class="meta"><span>배포 주소 <strong>${team.domain.replace('https://','')}</strong></span><span>저장소 <strong>연결 예정</strong></span></div><div class="task-grid">${team.tasks.map(task=>`<div class="task"><h3>${task.name}</h3><p>${task.description}</p><div class="task-foot"><span class="task-status">${task.status}</span><span>Git 작업</span></div></div>`).join('')}</div>`; document.querySelectorAll('[data-team]').forEach(button=>button.addEventListener('click',()=>renderTeam(button.dataset.team))); }
-    function route(){ const path=location.hash||'#/'; const isTeam=path.startsWith('#/team/'), isGuide=path==='#/guide'; home.classList.toggle('hidden',isTeam||isGuide); project.classList.toggle('hidden',!isTeam); guide.classList.toggle('hidden',!isGuide); document.querySelectorAll('[data-route]').forEach(item=>item.classList.toggle('active',item.dataset.route===path)); if(isTeam) renderTeam(path.split('/')[2]||'team-1'); }
-    window.addEventListener('hashchange',route); route();
-  </script>
 </body>
 </html>

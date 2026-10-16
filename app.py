@@ -1,25 +1,49 @@
+import json
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 
 BASE_DIR = Path(__file__).resolve().parent
-app = FastAPI(title="청년취업사관학교 새싹")
+DATA_FILE = BASE_DIR / "data" / "site.json"
+
+with DATA_FILE.open(encoding="utf-8") as file:
+    site = json.load(file)
+
+app = FastAPI(title=site["site_name"])
+app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
+templates = Jinja2Templates(directory=BASE_DIR / "templates")
+
+
+def render(request: Request, template: str, **context):
+    return templates.TemplateResponse(
+        request=request,
+        name=template,
+        context={"site": site, **context},
+    )
 
 
 @app.get("/")
-async def index() -> FileResponse:
-    return FileResponse(BASE_DIR / "index.html")
+async def home(request: Request):
+    return render(request, "home.html", page_title="메인")
 
 
-@app.get("/{asset:path}")
-async def assets(asset: str) -> FileResponse:
-    requested = (BASE_DIR / asset).resolve()
-    try:
-        requested.relative_to(BASE_DIR)
-    except ValueError as exc:
-        raise HTTPException(status_code=404, detail="Not found") from exc
-    if not requested.is_file():
-        raise HTTPException(status_code=404, detail="Not found")
-    return FileResponse(requested)
+@app.get("/guide")
+async def guide(request: Request):
+    return render(request, "guide.html", page_title="프로젝트가이드")
+
+
+@app.get("/guide.html")
+async def guide_html():
+    return RedirectResponse(url="/guide", status_code=308)
+
+
+@app.get("/team/{team_id}")
+async def team_redirect(team_id: str):
+    team = next((item for item in site["teams"] if item["id"] == team_id), None)
+    if team is None:
+        raise HTTPException(status_code=404, detail="조를 찾을 수 없습니다.")
+    return RedirectResponse(url=team["domain"], status_code=307)
