@@ -56,7 +56,7 @@ jobs:
             -o PubkeyAuthentication=no \
             -P "$GABIA_PORT" \
             public/guide/index.html \
-            "$GABIA_USERNAME@$GABIA_HOST:$GABIA_TARGET_DIR/guide/"
+            "$GABIA_USERNAME@$GABIA_HOST:$GABIA_TARGET_DIR/guide-index.html"
           sshpass -e scp \
             -o StrictHostKeyChecking=no \
             -o HostKeyAlgorithms=+ssh-rsa \
@@ -76,7 +76,7 @@ jobs:
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-            "test -s '$GABIA_TARGET_DIR/guide/index.html'"
+            "mkdir -p -- '$GABIA_TARGET_DIR/guide' && mv -f -- '$GABIA_TARGET_DIR/guide-index.html' '$GABIA_TARGET_DIR/guide/index.html' && test -s '$GABIA_TARGET_DIR/guide/index.html'"
 
       - name: Verify public pages
         run: |
