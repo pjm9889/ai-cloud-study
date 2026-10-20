@@ -37,8 +37,8 @@ async def guide(request: Request):
 
 
 @app.get("/guide.html")
-async def guide_html():
-    return RedirectResponse(url="/guide", status_code=308)
+async def guide_html(request: Request):
+    return render(request, "guide.html", page_title="프로젝트가이드")
 
 
 @app.get("/team/{team_id}")
