@@ -48,7 +48,7 @@ jobs:
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -P "$GABIA_PORT" \
-            public/index.html public/guide.html \
+            public/index.html public/guide.html public/guide \
             "$GABIA_USERNAME@$GABIA_HOST:$GABIA_TARGET_DIR/"
           sshpass -e scp -r \
             -o StrictHostKeyChecking=no \
