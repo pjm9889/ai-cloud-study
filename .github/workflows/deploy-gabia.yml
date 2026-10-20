@@ -48,8 +48,28 @@ jobs:
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -P "$GABIA_PORT" \
-            public/index.html public/guide.html public/guide \
+            public/index.html \
             "$GABIA_USERNAME@$GABIA_HOST:$GABIA_TARGET_DIR/"
+          sshpass -e scp \
+            -o StrictHostKeyChecking=no \
+            -o HostKeyAlgorithms=+ssh-rsa \
+            -o PubkeyAuthentication=no \
+            -P "$GABIA_PORT" \
+            public/guide.html \
+            "$GABIA_USERNAME@$GABIA_HOST:$GABIA_TARGET_DIR/"
+          sshpass -e scp \
+            -o StrictHostKeyChecking=no \
+            -o HostKeyAlgorithms=+ssh-rsa \
+            -o PubkeyAuthentication=no \
+            -P "$GABIA_PORT" \
+            public/guide \
+            "$GABIA_USERNAME@$GABIA_HOST:$GABIA_TARGET_DIR/"
+          sshpass -e ssh \
+            -o StrictHostKeyChecking=no \
+            -o HostKeyAlgorithms=+ssh-rsa \
+            -o PubkeyAuthentication=no \
+            -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
+            "test -s '$GABIA_TARGET_DIR/guide.html' && test -s '$GABIA_TARGET_DIR/guide'"
           sshpass -e scp -r \
             -o StrictHostKeyChecking=no \
             -o HostKeyAlgorithms=+ssh-rsa \
