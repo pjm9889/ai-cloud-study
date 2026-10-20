@@ -91,4 +91,4 @@ jobs:
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-            "cd '$GABIA_TARGET_DIR' && curl -fsS http://127.0.0.1:8080/guide | grep -q '프로젝트가이드'"
+            "cd '$GABIA_TARGET_DIR' && (curl -fsS http://127.0.0.1:8080/guide | grep -q '프로젝트가이드' || (echo '--- remote directory ---'; pwd; ls -la; echo '--- app.py markers ---'; grep -n 'FastAPI\|프로젝트 허브' app.py || true; echo '--- processes ---'; ps -ef | grep -E 'python|uvicorn' | grep -v grep || true; echo '--- app.log ---'; tail -80 app.log 2>/dev/null || true; exit 1))"
