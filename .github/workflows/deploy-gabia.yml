@@ -78,7 +78,7 @@ jobs:
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-            "cd '$GABIA_TARGET_DIR'; python3 -m pip install --user -r requirements.txt; python3 -c 'import main, uvicorn; print(\"imports ok\")'; pids=\$(fuser 8080/tcp 2>/dev/null || true); for pid in \$pids; do kill -9 \$pid || true; done; pids=\$(ps -eo pid=,args= | awk '\$2==\"python3\" && \$3==\"-m\" && \$4==\"uvicorn\" && \$5==\"main:app\" {print \$1}'); for pid in \$pids; do kill -9 \$pid || true; done; sleep 3; nohup python3 -m uvicorn main:app --host 0.0.0.0 --port 8080 > app.log 2>&1 < /dev/null &"
+            "cd '$GABIA_TARGET_DIR'; python3 -m pip install --user -r requirements.txt; python3 -c 'import main, uvicorn; print(\"imports ok\")'; python3 -c 'import os,signal; me=os.getpid(); [os.kill(int(p),signal.SIGKILL) for p in os.listdir(\"/proc\") if p.isdigit() and int(p)!=me and os.path.basename(os.readlink(f\"/proc/{p}/exe\"))==\"python3\" and b\"uvicorn\" in open(f\"/proc/{p}/cmdline\",\"rb\").read()]' || true; sleep 3; nohup python3 -m uvicorn main:app --host 0.0.0.0 --port 8080 > app.log 2>&1 < /dev/null &"
 
       - name: Verify running application
         shell: bash
