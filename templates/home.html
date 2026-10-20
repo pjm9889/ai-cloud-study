@@ -1,66 +1,1829 @@
-{% extends "base.html" %}
-{% block content %}
-<div class="home-design">
-  <section class="home-hero">
-    <div class="home-hero-copy">
-      <span class="home-badge">2026 PROJECT · AI &amp; CLOUD</span>
-      <h1>현장에서 바로 쓰는<br><em>AI 실무 강의</em></h1>
-      <p>LLM, RAG, 에이전트 구축부터 프로젝트 설계와 배포까지<br>실제 결과물을 만들며 학습합니다.</p>
-      <div class="home-actions">
-        <a class="home-primary" href="#lecture-materials">교안 둘러보기 <b>→</b></a>
-        <a class="home-secondary" href="/guide">프로젝트 가이드</a>
-      </div>
-      <div class="home-facts">
-        <span><b>PART A</b> RAG 기반 검사 시스템</span>
-        <span><b>PART B</b> LLM &amp; 에이전트</span>
-      </div>
-    </div>
-    <div class="code-preview" aria-label="강의 실습 미리보기">
-      <div class="code-window-head"><i></i><i></i><i></i><span>agent_workflow.py</span></div>
-      <pre><code><b>from</b> project <b>import</b> Agent
-
-agent = Agent(
-    model=<em>"LLM"</em>,
-    tools=[<em>"search"</em>, <em>"rag"</em>]
-)
-
-result = agent.run(
-    <em>"프로젝트 설계 원칙을 검사해줘"</em>
-)</code></pre>
-      <div class="code-result"><strong>✓</strong><span>학습 결과를 프로젝트에 바로 적용합니다.</span></div>
-    </div>
-  </section>
-
-  <section class="home-section" id="lecture-materials">
-    <div class="home-section-heading">
-      <div><span>LECTURE MATERIALS</span><h2>강의교안</h2></div>
-      <p>파트별 학습 자료를 순서대로 확인하세요.</p>
-    </div>
-    <div class="track-grid">
-      <a class="track-card track-a" href="/part-a">
-        <div class="track-label">01 · PART A</div>
-        <h3>RAG 기반<br>검사 시스템</h3>
-        <p>A0 프로젝트 베이스<br>설계 원칙 · 규칙 기반 탐지</p>
-        <strong>교안 보기 <b>→</b></strong>
-      </a>
-      <a class="track-card track-b" href="/part-b">
-        <div class="track-label">02 · PART B</div>
-        <h3>LLM &amp; 에이전트<br>설계</h3>
-        <p>에이전트 구조와 실습<br>파트 B 강의교안</p>
-        <strong>교안 보기 <b>→</b></strong>
-      </a>
-      <a class="track-card track-guide" href="/lecture-guide">
-        <div class="track-label">03 · GUIDE</div>
-        <h3>전체 강의<br>구성 가이드</h3>
-        <p>파트 A·B 전체 커리큘럼<br>학습 순서와 설계 원칙</p>
-        <strong>가이드 보기 <b>→</b></strong>
-      </a>
-    </div>
-  </section>
-
-  <section class="home-project">
-    <div><span>PROJECT HUB</span><h2>1차 프로젝트</h2><p>강의에서 배운 내용을 실제 프로젝트로 연결하세요.</p></div>
-    <a href="/guide">프로젝트 가이드 보기 <b>→</b></a>
-  </section>
-</div>
-{% endblock %}
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>BSSBU AI Studio</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1"></script>
+    <style>
+      :root {
+        font-family: Inter, system-ui, sans-serif;
+        color: #eef7ff;
+        background: #07111f;
+        --line: #254661;
+        --muted: #91a9bd;
+        --cyan: #61e1d1;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at 12% 0, #183c65, transparent 36%),
+          radial-gradient(circle at 90% 20%, #382758, transparent 30%), #07111f;
+      }
+      button {
+        font: inherit;
+        cursor: pointer;
+      }
+      .wrap {
+        width: min(1240px, 100%);
+        margin: auto;
+        padding: 24px;
+      }
+      .top,
+      .dash-head,
+      .box-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+      }
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .mark {
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 15px;
+        background: linear-gradient(135deg, #2376bf, #167e75);
+        font-weight: 900;
+      }
+      .logo small {
+        display: block;
+        color: #91b4d2;
+        font-size: 0.66rem;
+        letter-spacing: 0.18em;
+      }
+      .btn {
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        padding: 10px 14px;
+        color: #fff;
+        background: #102943;
+        font-weight: 750;
+      }
+      .primary {
+        border-color: #3a83c7;
+        background: #216fb8;
+      }
+      .hero {
+        padding: 82px 0 44px;
+        max-width: 780px;
+      }
+      .eyebrow {
+        color: #78bcff;
+        font-size: 0.7rem;
+        font-weight: 800;
+        letter-spacing: 0.18em;
+      }
+      .hero h1 {
+        margin: 14px 0;
+        font-size: clamp(2.6rem, 7vw, 6rem);
+        line-height: 0.96;
+        letter-spacing: -0.075em;
+      }
+      .hero h1 span {
+        color: var(--cyan);
+      }
+      p {
+        color: var(--muted);
+        line-height: 1.6;
+      }
+      .label {
+        display: flex;
+        justify-content: space-between;
+        margin: 18px 0 12px;
+      }
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+      .card {
+        min-height: 270px;
+        padding: 24px;
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        color: #eff7ff;
+        text-align: left;
+        background: linear-gradient(145deg, #132a43e8, #0b1728e8);
+        transition: 0.2s;
+      }
+      .card:hover {
+        transform: translateY(-7px);
+        border-color: #68b1ff;
+      }
+      .card-top {
+        display: flex;
+        justify-content: space-between;
+      }
+      .icon {
+        display: grid;
+        place-items: center;
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
+        background: #1b6095;
+        font-size: 0.9rem;
+        font-weight: 900;
+      }
+      .card:nth-child(2) .icon {
+        background: #45479a;
+      }
+      .card:nth-child(3) .icon {
+        background: #7b3d84;
+      }
+      .card:nth-child(4) .icon {
+        background: #b26a2c;
+      }
+      .tag {
+        padding: 5px 8px;
+        height: max-content;
+        border: 1px solid #31526e;
+        border-radius: 99px;
+        color: #8fb0c9;
+        font-size: 0.68rem;
+      }
+      .card h2 {
+        margin: 32px 0 10px;
+      }
+      .card p {
+        max-width: 250px;
+        font-size: 0.87rem;
+      }
+      .cta {
+        display: block;
+        margin-top: 22px;
+        color: #84c5ff;
+        font-size: 0.78rem;
+        font-weight: 800;
+      }
+      .muted {
+        opacity: 0.7;
+      }
+      .dash {
+        display: none;
+      }
+      .dash.open {
+        display: block;
+      }
+      .home.hide {
+        display: none;
+      }
+      .dash-head {
+        margin: 28px 0 18px;
+      }
+      .dash-head h1 {
+        margin: 6px 0;
+        font-size: clamp(1.8rem, 4vw, 3.2rem);
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+      .stat,
+      .box {
+        border: 1px solid var(--line);
+        border-radius: 15px;
+        background: linear-gradient(145deg, #112740ee, #0b1929ee);
+        box-shadow: 0 14px 38px #0003;
+      }
+      .stat {
+        padding: 15px;
+      }
+      .stat label {
+        display: block;
+        color: var(--muted);
+        font-size: 0.72rem;
+      }
+      .stat strong {
+        display: block;
+        margin-top: 8px;
+        font-size: 1.35rem;
+      }
+      .stat em {
+        display: block;
+        margin-top: 3px;
+        color: #71dfbf;
+        font-size: 0.7rem;
+        font-style: normal;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.4fr) minmax(300px, 0.7fr);
+        gap: 14px;
+      }
+      .box {
+        padding: 16px;
+      }
+      .box h2,
+      .box h3 {
+        margin: 0;
+        font-size: 1rem;
+      }
+      .box p {
+        margin: 4px 0;
+        font-size: 0.75rem;
+      }
+      .stage {
+        position: relative;
+        min-height: 420px;
+        overflow: hidden;
+        border: 1px solid #214d70;
+        border-radius: 12px;
+        background: #02060b;
+      }
+      .stage video,
+      .stage canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+      .stage video {
+        opacity: 0;
+      }
+      .stage canvas {
+        z-index: 2;
+      }
+      .stage canvas {
+        pointer-events: none;
+      }
+      .warning-banner {
+        display: none;
+        margin-top: 10px;
+        padding: 12px 14px;
+        border: 1px solid #d56c6c;
+        border-radius: 10px;
+        color: #fff;
+        background: #6d2028;
+        font-weight: 800;
+      }
+      .warning-banner.show {
+        display: block;
+      }
+      .empty {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        text-align: center;
+        color: #7190aa;
+      }
+      .empty b {
+        display: block;
+        margin-bottom: 8px;
+        color: #c5e3f5;
+      }
+      .controls,
+      .filters,
+      .chat-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+      .status {
+        color: #9db8cf;
+        font-size: 0.76rem;
+      }
+      .filters {
+        padding: 10px;
+        border: 1px solid #234b6a;
+        border-radius: 10px;
+        background: #091b2b;
+      }
+      .filters label {
+        color: #a9c4d8;
+        font-size: 0.75rem;
+      }
+      .filters select {
+        padding: 7px;
+        border: 1px solid #2a5472;
+        border-radius: 7px;
+        color: #fff;
+        background: #071523;
+      }
+      .object-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        margin-top: 9px;
+        min-height: 30px;
+      }
+      .chip {
+        padding: 7px 9px;
+        border: 1px solid #265a7e;
+        border-radius: 8px;
+        color: #c7e6ff;
+        background: #102f48;
+        font-size: 0.75rem;
+      }
+      .chip.active {
+        border-color: #61e1d1;
+        background: #17636b;
+        color: #fff;
+      }
+      .chip i {
+        color: var(--cyan);
+        font-style: normal;
+        margin-left: 4px;
+      }
+      .side {
+        display: grid;
+        gap: 14px;
+        align-content: start;
+      }
+      .chat {
+        height: 420px;
+        display: flex;
+        flex-direction: column;
+      }
+      .chat-log {
+        flex: 1;
+        overflow: auto;
+        display: grid;
+        align-content: start;
+        gap: 7px;
+        padding: 10px 0;
+      }
+      .bubble {
+        max-width: 94%;
+        padding: 9px 10px;
+        border-radius: 9px;
+        color: #dbefff;
+        background: #15334f;
+        font-size: 0.76rem;
+        line-height: 1.5;
+        white-space: pre-wrap;
+      }
+      .bubble.user {
+        justify-self: end;
+        background: #195f82;
+      }
+      .chat-input {
+        min-width: 0;
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #2a4d6c;
+        border-radius: 8px;
+        outline: none;
+        color: #fff;
+        background: #071523;
+      }
+      .events {
+        max-height: 150px;
+        overflow: auto;
+        display: grid;
+        gap: 6px;
+        margin-top: 10px;
+      }
+      .event {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        color: #a9c1d5;
+        font-size: 0.72rem;
+      }
+      .event time {
+        color: #69849c;
+      }
+      .small {
+        display: flex;
+        gap: 7px;
+        margin-top: 11px;
+      }
+      .small > * {
+        flex: 1;
+      }
+      .notice,
+      .summary {
+        margin-top: 12px;
+        padding: 11px;
+        border-radius: 9px;
+        color: #bceee2;
+        background: #0e3037;
+        font-size: 0.75rem;
+        line-height: 1.55;
+      }
+      .summary {
+        display: none;
+        color: #d8efff;
+        background: #102e49;
+        border: 1px solid #2c5f82;
+        white-space: pre-wrap;
+      }
+      .summary.show {
+        display: block;
+      }
+      .summary-head {
+        display: flex;
+        justify-content: space-between;
+        color: #7fe5d2;
+        font-weight: 800;
+      }
+      .vision {
+        display: none;
+      }
+      .vision.open {
+        display: block;
+      }
+      .vision-tabs {
+        display: flex;
+        gap: 8px;
+        margin: 18px 0;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--line);
+      }
+      .vision-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin: 18px 0 14px;
+      }
+      .vision-stat {
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: linear-gradient(145deg, #112740ee, #0b1929ee);
+      }
+      .vision-stat label {
+        display: block;
+        color: var(--muted);
+        font-size: 0.72rem;
+      }
+      .vision-stat strong {
+        display: block;
+        margin-top: 8px;
+        font-size: 1.25rem;
+      }
+      .vision-stat em {
+        display: block;
+        margin-top: 3px;
+        color: #71dfbf;
+        font-size: 0.7rem;
+        font-style: normal;
+      }
+      .vision-tab.active {
+        border-color: #61e1d1;
+        background: #17636b;
+      }
+      .vision-panel {
+        display: none;
+      }
+      .vision-panel.active {
+        display: block;
+      }
+      .upload-zone {
+        padding: 34px;
+        border: 1px dashed #467899;
+        border-radius: 14px;
+        text-align: center;
+        background: #0b2033;
+      }
+      .upload-zone input {
+        margin-top: 14px;
+        color: #c8e5f7;
+      }
+      .vision-controls {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin: 16px 0;
+      }
+      .vision-controls label {
+        color: var(--muted);
+        font-size: 0.76rem;
+      }
+      .vision-controls input[type="range"] {
+        width: 100%;
+        accent-color: #61e1d1;
+      }
+      .vision-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+        gap: 14px;
+      }
+      .vision-group {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #0b1d30;
+      }
+      .vision-group h3 {
+        margin: 0;
+        padding: 10px 12px;
+        font-size: 0.9rem;
+      }
+      .vision-group small {
+        display: block;
+        padding: 0 12px 8px;
+        color: var(--muted);
+      }
+      .vision-thumb {
+        width: 100%;
+        aspect-ratio: 1.2;
+        object-fit: contain;
+        background: #fff;
+        cursor: pointer;
+      }
+      .vision-empty {
+        padding: 24px;
+        color: var(--muted);
+        text-align: center;
+      }
+      .admin {
+        display: none;
+      }
+      .admin.open {
+        display: block;
+      }
+      .admin-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+      .admin textarea,
+      .admin input[type="text"],
+      .admin input[type="password"] {
+        width: 100%;
+        padding: 11px;
+        border: 1px solid #2a4d6c;
+        border-radius: 8px;
+        color: #fff;
+        background: #071523;
+      }
+      .admin textarea {
+        min-height: 220px;
+        resize: vertical;
+        font-family: ui-monospace, monospace;
+      }
+      .admin-result {
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 8px;
+        color: #bceee2;
+        background: #0e3037;
+        white-space: pre-wrap;
+        font-size: 0.76rem;
+      }
+      .top-actions {
+        display: flex;
+        gap: 8px;
+      }
+      @media (max-width: 900px) {
+        .cards {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        .stats {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .vision-stats {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .admin-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 560px) {
+        .wrap {
+          padding: 17px 13px;
+        }
+        .top,
+        .dash-head {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+        .actions {
+          width: 100%;
+        }
+        .actions button {
+          flex: 1;
+        }
+        .stage {
+          min-height: 285px;
+        }
+        .cards {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <header class="top">
+        <div class="logo">
+          <div class="mark">AI</div>
+          <div><small>BSSBU.CO.KR</small><b>AI STUDIO</b></div>
+        </div>
+        <div class="top-actions">
+          <button class="btn" id="adminLink">관리자</button
+          ><button class="btn" id="homeLink">Workspace ↗</button>
+        </div>
+      </header>
+      <section class="home" id="home">
+        <div class="hero">
+          <div class="eyebrow">BSSBU / INTELLIGENCE WORKSPACE</div>
+          <h1>현실의 장면을<br /><span>데이터로 바꾸다.</span></h1>
+          <p>
+            카메라, 비전, 언어 모델을 한곳에서 실험하는 AI 플레이그라운드입니다.
+            YOLO 객체 인식과 GPT 해석을 함께 시작해보세요.
+          </p>
+        </div>
+        <div class="label">
+          <b>AI MODULES</b><small>3 modules · one workspace</small>
+        </div>
+        <section class="cards">
+          <button class="card" id="yoloCard">
+            <div class="card-top">
+              <div class="icon">YOLO</div>
+              <span class="tag">LIVE</span>
+            </div>
+            <h2>YOLO</h2>
+            <p>
+              객체를 찾고, 선택한 객체를 블러·모자이크·강조 처리하며 GPT가
+              장면을 해석합니다.
+            </p>
+            <span class="cta">관제 대시보드 열기 →</span></button
+          ><button class="card" id="visionCard">
+            <div class="card-top">
+              <div class="icon">VIS</div>
+              <span class="tag">BETA</span>
+            </div>
+            <h2>비전</h2>
+            <p>
+              사진을 올리면 전이학습 분류 라벨과 신뢰도 기준으로 항목을 나누고,
+              흰 배경 카드로 정리합니다.
+            </p>
+            <span class="cta">사진 정리 워크스페이스 열기 →</span></button
+          ><button class="card muted" disabled>
+            <div class="card-top">
+              <div class="icon">LLM</div>
+              <span class="tag">SOON</span>
+            </div>
+            <h2>LLM</h2>
+            <p>언어 모델과 대화형 AI를 위한 독립 모듈을 준비하고 있습니다.</p>
+            <span class="cta">준비 중</span>
+          </button>
+          <button class="card" id="mcpCard">
+            <div class="card-top">
+              <div class="icon">MCP</div>
+              <span class="tag">LOCKED</span>
+            </div>
+            <h2>네이버 블로그 MCP</h2>
+            <p>
+              상품소개를 표준화하고 네이버 블로그 초안을 관리합니다. 클릭하면
+              MCP 전용 비밀번호 인증이 필요합니다.
+            </p>
+            <span class="cta">MCP 열기 →</span>
+          </button>
+        </section>
+      </section>
+      <section class="admin" id="admin">
+        <div class="dash-head">
+          <div>
+            <div class="eyebrow">ADMIN / CONFIGURATION / DATA</div>
+            <h1>관리자 운영센터</h1>
+            <p>전이학습 그룹 규칙을 수정하고 자연어로 SQLite를 관리합니다.</p>
+          </div>
+          <button class="btn" id="adminBackBtn">← 3개 모듈</button>
+        </div>
+        <section class="box" id="adminLoginBox">
+          <h2>관리자 인증</h2>
+          <p>학습용 관리자 비밀번호: <code>1234</code></p>
+          <div class="controls">
+            <input
+              id="adminPassword"
+              type="password"
+              placeholder="관리자 비밀번호"
+            /><button class="btn primary" id="adminLoginBtn">인증</button
+            ><span class="status" id="adminStatus">인증 대기</span>
+          </div>
+        </section>
+        <div class="admin-grid" id="adminTools" style="display: none">
+          <section class="box">
+            <h2>그룹 분류 규칙</h2>
+            <p>카테고리 이름과 전이학습 라벨 키워드를 JSON으로 수정합니다.</p>
+            <textarea id="categoryRulesEditor" spellcheck="false"></textarea>
+            <div class="controls">
+              <button class="btn primary" id="saveRulesBtn">
+                분류 규칙 저장</button
+              ><span class="status">저장 후 새 사진부터 적용</span>
+            </div>
+            <div class="admin-result" id="rulesResult"></div>
+          </section>
+          <section class="box">
+            <h2>자연어 → SQL</h2>
+            <p>
+              “세션 목록을 최근순으로 보여줘”처럼 입력하면 GPT가 SQL을 만들고,
+              확인 후 실행합니다.
+            </p>
+            <textarea
+              id="sqlPrompt"
+              spellcheck="false"
+              placeholder="예: 최근에 저장된 세션 10개를 최신순으로 보여줘"
+            ></textarea>
+            <textarea
+              id="generatedSql"
+              spellcheck="false"
+              placeholder="생성된 SQL이 여기에 표시됩니다. 실행 전에 꼭 확인하세요."
+            ></textarea>
+            <div class="controls">
+              <button class="btn primary" id="generateSqlBtn">SQL 생성</button>
+              <button class="btn" id="executeSqlBtn">생성 SQL 실행</button>
+            </div>
+            <div class="admin-result" id="sqlResult"></div>
+          </section>
+        </div>
+      </section>
+      <section class="vision" id="vision">
+        <div class="dash-head">
+          <div>
+            <div class="eyebrow">VISION / TRANSFER LEARNING / ORGANIZER</div>
+            <h1>사진 항목 정리 워크스페이스</h1>
+            <p>
+              Airbnb 자료처럼 비슷한 사진을 자동으로 묶고, 밝기·대비를 조정해 흰
+              배경 카드로 정리합니다.
+            </p>
+          </div>
+          <button class="btn" id="visionBackBtn">← 3개 모듈</button>
+        </div>
+        <section class="vision-stats">
+          <div class="vision-stat">
+            <label>전이학습 모델</label
+            ><strong id="visionModelMetric">준비 중</strong
+            ><em>MobileNet ImageNet</em>
+          </div>
+          <div class="vision-stat">
+            <label>업로드 사진</label><strong id="visionCountMetric">0</strong
+            ><em>브라우저 로컬 처리</em>
+          </div>
+          <div class="vision-stat">
+            <label>분류 항목</label><strong id="visionCategoryMetric">0</strong
+            ><em id="visionCategoryText">분류 대기</em>
+          </div>
+          <div class="vision-stat">
+            <label>인사이트</label><strong id="visionInsightMetric">대기</strong
+            ><em id="visionInsightMetricText">사진을 클릭하세요</em>
+          </div>
+        </section>
+        <div class="vision-tabs">
+          <button class="btn vision-tab active" data-tab="upload">
+            1. 업로드·정리</button
+          ><button class="btn vision-tab" data-tab="adjust">2. 사진 보정</button
+          ><button class="btn vision-tab" data-tab="groups">
+            3. 그룹 결과
+          </button>
+        </div>
+        <section class="vision-panel active" data-panel="upload">
+          <div class="box">
+            <h2>사진 업로드</h2>
+            <p>
+              MobileNet 전이학습 모델의 ImageNet 분류 라벨을 숙소 자료용 상위
+              카테고리로 묶습니다. 원래 분류 라벨과 신뢰도도 함께 보이며, 유사도
+              계산은 사용하지 않습니다.
+            </p>
+            <div class="upload-zone">
+              <b>사진을 여러 장 선택하세요</b><br /><span class="status"
+                >브라우저 안에서 처리되며 원본은 서버로 업로드하지
+                않습니다.</span
+              ><br /><input
+                id="visionFiles"
+                type="file"
+                accept="image/*"
+                multiple
+              />
+            </div>
+            <div class="controls">
+              <button class="btn primary" id="groupBtn">
+                전이학습 분류로 정리</button
+              ><span class="status" id="visionStatus"
+                >MobileNet 모델 대기 중</span
+              >
+            </div>
+          </div>
+        </section>
+        <section class="vision-panel" data-panel="adjust">
+          <div class="box">
+            <h2>사진 보정</h2>
+            <p>
+              전체 사진에 동일한 보정값을 적용해 카드형 결과를 미리 봅니다.
+              배경은 흰색으로 통일됩니다.
+            </p>
+            <div class="vision-controls">
+              <label
+                >밝기
+                <input
+                  id="brightness"
+                  type="range"
+                  min="50"
+                  max="160"
+                  value="100"
+                /><output id="brightnessValue">100%</output></label
+              ><label
+                >대비
+                <input
+                  id="contrast"
+                  type="range"
+                  min="50"
+                  max="180"
+                  value="100"
+                /><output id="contrastValue">100%</output></label
+              ><label
+                >채도
+                <input
+                  id="saturation"
+                  type="range"
+                  min="0"
+                  max="180"
+                  value="100"
+                /><output id="saturationValue">100%</output></label
+              >
+            </div>
+            <div class="vision-grid" id="adjustGrid">
+              <div class="vision-empty">업로드한 사진이 여기에 표시됩니다.</div>
+            </div>
+          </div>
+        </section>
+        <section class="vision-panel" data-panel="groups">
+          <div class="box">
+            <div class="box-head">
+              <div>
+                <h2>같은 항목 그룹 결과</h2>
+                <p>
+                  MobileNet이 반환한 분류 항목별로 흰색 배경 카드에 정리합니다.
+                  사진을 클릭하면 수치 기반 GPT 인사이트를 생성합니다.
+                </p>
+              </div>
+              <button class="btn" id="visionSaveBtn">정리 결과 저장</button>
+            </div>
+            <div class="vision-grid" id="groupGrid">
+              <div class="vision-empty">
+                먼저 사진을 업로드하고 AI 그룹화를 실행하세요.
+              </div>
+            </div>
+            <div class="summary" id="visionInsightBox">
+              <div class="summary-head">
+                <span id="visionInsightTitle">이미지 인사이트</span
+                ><span id="visionInsightStatus"></span>
+              </div>
+              <div id="visionInsightText">그룹 결과에서 사진을 클릭하세요.</div>
+            </div>
+          </div>
+        </section>
+      </section>
+      <section class="dash" id="dash">
+        <div class="dash-head">
+          <div>
+            <div class="eyebrow">YOLO / COCO-SSD / OPERATIONS</div>
+            <h1>객체 인식 관제 대시보드</h1>
+            <p>실시간 탐지 · 선택 객체 영상 처리 · GPT 상황 해석 · DB 저장</p>
+          </div>
+          <div class="actions">
+            <button class="btn" id="backBtn">← 3개 모듈</button
+            ><button class="btn primary" id="saveTop">세션 저장</button>
+          </div>
+        </div>
+        <section class="stats">
+          <div class="stat">
+            <label>모델 상태</label><strong id="modelMetric">대기 중</strong
+            ><em>COCO-SSD · 브라우저 추론</em>
+          </div>
+          <div class="stat">
+            <label>현재 탐지 수</label><strong id="countMetric">0</strong
+            ><em id="classMetric">객체 없음</em>
+          </div>
+          <div class="stat">
+            <label>분석 프레임</label><strong id="frameMetric">0</strong
+            ><em>실시간 세션 기준</em>
+          </div>
+          <div class="stat">
+            <label>세션 상태</label><strong id="sessionMetric">준비</strong
+            ><em id="sessionIdMetric">새 세션</em>
+          </div>
+        </section>
+        <section class="grid">
+          <section class="box">
+            <div class="box-head">
+              <div>
+                <h2>YOLO / COCO 객체 인식</h2>
+                <p>탐지 객체를 선택해 영상 표시 방식을 바꿀 수 있습니다.</p>
+              </div>
+              <button class="btn primary" id="startBtn">카메라 시작</button>
+            </div>
+            <div class="stage">
+              <video id="video" autoplay muted playsinline></video
+              ><canvas id="canvas"></canvas>
+              <div class="empty" id="stageEmpty">
+                <div>
+                  <b>카메라 스트림 대기 중</b
+                  ><span>유효한 HTTPS 주소에서 카메라를 시작하세요.</span>
+                </div>
+              </div>
+            </div>
+            <div class="warning-banner" id="noPersonWarning">
+              ⚠ 경고: 사람이 감지되지 않았습니다.
+            </div>
+            <div class="controls">
+              <button class="btn" id="stopBtn">중지</button
+              ><button class="btn" id="saveBtn">DB에 저장</button
+              ><button class="btn primary" id="summaryBtn">GPT 상황요약</button
+              ><span class="status" id="status">모델을 불러오는 중입니다…</span>
+            </div>
+            <div class="filters">
+              <label>선택 객체 처리</label
+              ><select id="effect">
+                <option value="none">원본 유지</option>
+                <option value="blur">선택 객체 블러</option>
+                <option value="mosaic">선택 객체 모자이크</option>
+                <option value="spotlight">선택 객체만 남기기</option></select
+              ><span class="status">아래 칩을 클릭해 대상 선택</span>
+            </div>
+            <div class="summary" id="summaryBox">
+              <div class="summary-head">
+                <span>GPT 분석 결과</span><span id="summaryTime"></span>
+              </div>
+              <div id="summaryText"></div>
+            </div>
+            <div class="objects">
+              <div class="box-head">
+                <h3>현재 탐지 객체</h3>
+                <p id="lastSeen">최근 갱신 없음</p>
+              </div>
+              <div class="object-list" id="objectList">
+                <span class="chip">아직 탐지된 객체가 없습니다.</span>
+              </div>
+            </div>
+          </section>
+          <aside class="side">
+            <section class="box chat">
+              <h3>GPT 자유 대화</h3>
+              <p>
+                YOLO에 한정하지 않고 무엇이든 질문하세요. 상황요약은 현재 장면을
+                해석하는 별도 기능입니다.
+              </p>
+              <div class="chat-log" id="chatLog">
+                <div class="bubble">
+                  안녕하세요. 현재 장면 분석이나 다른 주제까지 무엇이든
+                  물어보세요.
+                </div>
+              </div>
+              <div class="chat-row">
+                <input
+                  class="chat-input"
+                  id="chatInput"
+                  placeholder="예: 파이썬으로 API 서버 만드는 법 알려줘"
+                /><button class="btn primary" id="chatSend">전송</button>
+              </div>
+            </section>
+            <section class="box">
+              <h3>세션 이벤트</h3>
+              <p>탐지와 저장 이력을 기록합니다.</p>
+              <div class="events" id="eventLog">
+                <div class="event">
+                  <span>세션이 준비되었습니다.</span><time>now</time>
+                </div>
+              </div>
+              <div class="small">
+                <button class="btn primary" id="finishBtn">종료 및 저장</button
+                ><button class="btn" id="clearBtn">초기화</button>
+              </div>
+              <div class="notice">
+                저장 버튼을 누르면 세션·탐지·대화가 서버 SQLite DB에 기록됩니다.
+              </div>
+            </section>
+          </aside>
+        </section>
+      </section>
+    </main>
+    <script>
+      const $ = (s) => document.querySelector(s),
+        home = $("#home"),
+        dash = $("#dash"),
+        vision = $("#vision"),
+        admin = $("#admin"),
+        video = $("#video"),
+        canvas = $("#canvas"),
+        ctx = canvas.getContext("2d");
+      let model,
+        stream,
+        running = false,
+        frames = 0,
+        sessionId = null,
+        lastDetections = [],
+        events = [],
+        messages = [],
+        selected = "",
+        audioCtx = null,
+        lastWarningAt = 0,
+        noPersonFrames = 0,
+        visionModel,
+        visionItems = [];
+      const colors = ["#5eead4", "#93c5fd", "#f9a8d4", "#fde68a", "#c4b5fd"];
+      function esc(v) {
+        return String(v).replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+      }
+      function log(text) {
+        events.unshift({ text, time: new Date().toLocaleTimeString("ko-KR") });
+        $("#eventLog").innerHTML = events
+          .slice(0, 18)
+          .map(
+            (e) =>
+              `<div class="event"><span>${esc(e.text)}</span><time>${e.time}</time></div>`,
+          )
+          .join("");
+      }
+      function openDash() {
+        home.classList.add("hide");
+        dash.classList.add("open");
+        load();
+      }
+      function goHome() {
+        stop("대시보드 종료");
+        dash.classList.remove("open");
+        home.classList.remove("hide");
+      }
+      function openVision() {
+        home.classList.add("hide");
+        vision.classList.add("open");
+        loadVisionModel();
+      }
+      function closeVision() {
+        vision.classList.remove("open");
+        home.classList.remove("hide");
+      }
+      function openAdmin() {
+        home.classList.add("hide");
+        admin.classList.add("open");
+      }
+      function closeAdmin() {
+        admin.classList.remove("open");
+        home.classList.remove("hide");
+      }
+      $("#yoloCard").onclick = openDash;
+      $("#visionCard").onclick = openVision;
+      $("#mcpCard").onclick = () => { window.location.href = "/mcp"; };
+      $("#adminLink").onclick = () => { window.location.href = "/admin"; };
+      $("#backBtn").onclick = goHome;
+      $("#visionBackBtn").onclick = closeVision;
+      $("#adminBackBtn").onclick = closeAdmin;
+      $("#homeLink").onclick = () =>
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      async function load() {
+        if (model) return;
+        $("#status").textContent = "COCO 모델을 불러오는 중…";
+        model = await cocoSsd.load();
+        $("#modelMetric").textContent = "준비 완료";
+        $("#status").textContent = "모델 준비 완료. 카메라를 시작하세요.";
+        log("COCO-SSD 모델 준비 완료");
+      }
+      async function loadVisionModel() {
+        if (visionModel) return;
+        $("#visionStatus").textContent =
+          "전이학습 백본(MobileNet)을 불러오는 중…";
+        visionModel = await mobilenet.load({ version: 2, alpha: 1.0 });
+        $("#visionModelMetric").textContent = "준비 완료";
+        $("#visionStatus").textContent = "모델 준비 완료. 사진을 선택하세요.";
+      }
+      function imageFromFile(file) {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = URL.createObjectURL(file);
+        });
+      }
+      function visionFilter() {
+        return `brightness(${$("#brightness").value}%) contrast(${$("#contrast").value}%) saturate(${$("#saturation").value}%)`;
+      }
+      let visionCategoryRules = [
+        [
+          "욕실·위생",
+          ["toilet", "bathtub", "shower", "washbasin", "soap", "towel"],
+        ],
+        [
+          "주방·식음료",
+          [
+            "dishwasher",
+            "microwave",
+            "oven",
+            "stove",
+            "refrigerator",
+            "coffee",
+            "espresso",
+            "plate",
+            "cup",
+            "bottle",
+            "kitchen",
+          ],
+        ],
+        [
+          "객실·가구",
+          [
+            "sofa",
+            "couch",
+            "bed",
+            "desk",
+            "table",
+            "chair",
+            "wardrobe",
+            "pillow",
+            "lamp",
+            "lampshade",
+            "furniture",
+            "studio couch",
+          ],
+        ],
+        [
+          "전자·생활기기",
+          [
+            "television",
+            "remote",
+            "laptop",
+            "computer",
+            "keyboard",
+            "mouse",
+            "monitor",
+            "phone",
+            "camera",
+            "printer",
+            "speaker",
+          ],
+        ],
+        [
+          "야외·자연",
+          [
+            "tree",
+            "mountain",
+            "flower",
+            "garden",
+            "lawn",
+            "beach",
+            "cliff",
+            "seashore",
+            "park",
+          ],
+        ],
+        [
+          "이동·차량",
+          [
+            "car",
+            "taxi",
+            "bus",
+            "truck",
+            "bicycle",
+            "motorcycle",
+            "train",
+            "boat",
+          ],
+        ],
+        [
+          "사람·동물",
+          ["person", "man", "woman", "child", "dog", "cat", "bird", "horse"],
+        ],
+      ];
+      function classifyVisionCategory(predictions) {
+        const labels = predictions.map((p) => p.className.toLowerCase());
+        for (const [category, words] of visionCategoryRules) {
+          if (
+            labels.some((label) => words.some((word) => label.includes(word)))
+          )
+            return category;
+        }
+        return "기타·장식";
+      }
+      function renderVisionItems(target, items) {
+        target.innerHTML = items.length
+          ? items
+              .map(
+                (item, index) =>
+                  `<div class="vision-group"><img class="vision-thumb" data-vision-index="${index}" src="${item.src}" style="filter:${visionFilter()}"><h3>${esc(item.name)}</h3><small>${esc(item.category || "분류 대기")} · ${esc(item.sourceLabel || "-")} · ${item.confidence ? Math.round(item.confidence * 100) + "%" : "-"}</small></div>`,
+              )
+              .join("")
+          : '<div class="vision-empty">업로드한 사진이 여기에 표시됩니다.</div>';
+        target
+          .querySelectorAll("[data-vision-index]")
+          .forEach(
+            (el) =>
+              (el.onclick = () =>
+                showVisionInsight(Number(el.dataset.visionIndex))),
+          );
+      }
+      async function readVisionFiles(files) {
+        visionItems = [];
+        for (const file of files) {
+          const img = await imageFromFile(file);
+          const predictions = await visionModel.classify(img, 3);
+          const top = predictions[0] || { className: "미분류", probability: 0 };
+          visionItems.push({
+            name: file.name,
+            src: img.src,
+            img,
+            category: classifyVisionCategory(predictions),
+            sourceLabel: top.className,
+            confidence: top.probability,
+            predictions,
+          });
+        }
+        renderVisionItems($("#adjustGrid"), visionItems);
+        $("#visionStatus").textContent =
+          `${visionItems.length}장 분류 완료. ImageNet 분류 항목을 확인하세요.`;
+        $("#visionCountMetric").textContent = visionItems.length;
+        $("#visionCategoryMetric").textContent = new Set(
+          visionItems.map((item) => item.category),
+        ).size;
+        $("#visionCategoryText").textContent =
+          [...new Set(visionItems.map((item) => item.category))]
+            .slice(0, 2)
+            .join(" · ") || "분류 대기";
+        groupVisionItems(true);
+      }
+      function groupVisionItems(switchTab = true) {
+        const grouped = new Map();
+        visionItems.forEach((item) => {
+          const key = item.category || "기타·장식";
+          if (!grouped.has(key)) grouped.set(key, []);
+          grouped.get(key).push(item);
+        });
+        const groups = [...grouped.entries()];
+        $("#groupGrid").innerHTML = groups.length
+          ? groups
+              .map(
+                ([category, group]) =>
+                  `<div class="vision-group"><h3>${esc(category)} · ${group.length}장</h3>${group.map((item) => `<img class="vision-thumb" data-vision-name="${esc(item.name)}" src="${item.src}" style="filter:${visionFilter()}"><small>${esc(item.name)} · ${Math.round(item.confidence * 100)}%</small>`).join("")}</div>`,
+              )
+              .join("")
+          : '<div class="vision-empty">먼저 사진을 업로드하세요.</div>';
+        $("#groupGrid")
+          .querySelectorAll("[data-vision-name]")
+          .forEach(
+            (el) =>
+              (el.onclick = () =>
+                showVisionInsight(
+                  visionItems.findIndex(
+                    (item) => item.name === el.dataset.visionName,
+                  ),
+                )),
+          );
+        if (switchTab) document.querySelector('[data-tab="groups"]').click();
+        $("#visionStatus").textContent =
+          `${groups.length}개 ImageNet 분류 항목으로 정리되었습니다.`;
+        $("#visionCategoryMetric").textContent = groups.length;
+        $("#visionCategoryText").textContent =
+          groups
+            .map(([category]) => category)
+            .slice(0, 2)
+            .join(" · ") || "분류 대기";
+      }
+      async function showVisionInsight(index) {
+        const item = visionItems[index];
+        if (!item) return;
+        const side = 320,
+          ratio = Math.min(
+            side / item.img.naturalWidth,
+            side / item.img.naturalHeight,
+            1,
+          );
+        const c = document.createElement("canvas");
+        c.width = Math.max(1, Math.round(item.img.naturalWidth * ratio));
+        c.height = Math.max(1, Math.round(item.img.naturalHeight * ratio));
+        const cx = c.getContext("2d");
+        cx.fillStyle = "#fff";
+        cx.fillRect(0, 0, c.width, c.height);
+        cx.drawImage(item.img, 0, 0, c.width, c.height);
+        const { data, width, height } = cx.getImageData(
+          0,
+          0,
+          c.width,
+          c.height,
+        );
+        const hist = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        let sum = 0,
+          sum2 = 0,
+          sat = 0,
+          edges = 0,
+          pixels = width * height;
+        const lum = new Float32Array(pixels);
+        for (let p = 0, i = 0; p < pixels; p++, i += 4) {
+          const r = data[i],
+            g = data[i + 1],
+            b = data[i + 2];
+          const l = 0.299 * r + 0.587 * g + 0.114 * b;
+          lum[p] = l;
+          sum += l;
+          sum2 += l * l;
+          sat += Math.max(r, g, b) - Math.min(r, g, b);
+          hist[Math.min(15, Math.floor(l / 16))]++;
+        }
+        for (let y = 0; y < height - 1; y++)
+          for (let x = 0; x < width - 1; x++) {
+            const p = y * width + x;
+            if (
+              Math.abs(lum[p] - lum[p + 1]) +
+                Math.abs(lum[p] - lum[p + width]) >
+              70
+            )
+              edges++;
+          }
+        const stats = {
+          classification: item.category,
+          confidence: Number(item.confidence.toFixed(3)),
+          top_predictions: item.predictions.map((p) => ({
+            label: p.className,
+            confidence: Number(p.probability.toFixed(3)),
+          })),
+          width,
+          height,
+          mean_luminance: Number((sum / pixels).toFixed(2)),
+          luminance_std: Number(
+            Math.sqrt(Math.max(0, sum2 / pixels - (sum / pixels) ** 2)).toFixed(
+              2,
+            ),
+          ),
+          mean_saturation: Number((sat / pixels).toFixed(2)),
+          luminance_histogram_16bins: hist,
+          edge_density: Number((edges / pixels).toFixed(4)),
+        };
+        $("#visionInsightBox").classList.add("show");
+        $("#visionInsightMetric").textContent = "생성 중";
+        $("#visionInsightMetricText").textContent = item.name;
+        $("#visionInsightTitle").textContent =
+          `${item.name} · ${item.category}`;
+        $("#visionInsightStatus").textContent = "수치 분석 중";
+        $("#visionInsightText").textContent =
+          "OpenCV 계열 이미지 통계와 전이학습 분류 결과를 GPT가 해석하고 있습니다…";
+        try {
+          const d = await api("/api/chat", {
+            message: `이미지 자체는 전송하지 않았다. 아래 OpenCV 계열 수치와 전이학습 분류 결과만 보고 실무적인 인사이트를 한국어로 설명해줘. 밝기/노출, 명암, 채도, 디테일(엣지), 분류 신뢰도를 해석하고 사진 보정이나 정리에서 권장할 다음 행동을 3~5문장으로 답해줘. 수치: ${JSON.stringify(stats)}`,
+            kind: "vision_insight",
+            ...context(),
+          });
+          $("#visionInsightText").textContent = d.reply;
+          $("#visionInsightStatus").textContent = "GPT 인사이트";
+          $("#visionInsightMetric").textContent = "완료";
+        } catch (e) {
+          $("#visionInsightText").textContent =
+            `GPT 인사이트를 만들 수 없습니다: ${e.message}`;
+        }
+      }
+      $("#visionFiles").onchange = async (e) => {
+        try {
+          await loadVisionModel();
+          if (e.target.files.length) await readVisionFiles([...e.target.files]);
+        } catch (error) {
+          $("#visionStatus").textContent =
+            `전이학습 분류 실패: ${error.message}`;
+          console.error(error);
+        }
+      };
+      $("#groupBtn").onclick = groupVisionItems;
+      ["brightness", "contrast", "saturation"].forEach(
+        (id) =>
+          ($(`#${id}`).oninput = () => {
+            $(`#${id}Value`).textContent = `${$(`#${id}`).value}%`;
+            renderVisionItems($("#adjustGrid"), visionItems);
+            if (visionItems.length) groupVisionItems(false);
+          }),
+      );
+      document.querySelectorAll(".vision-tab").forEach(
+        (button) =>
+          (button.onclick = () => {
+            document
+              .querySelectorAll(".vision-tab")
+              .forEach((b) => b.classList.toggle("active", b === button));
+            document
+              .querySelectorAll(".vision-panel")
+              .forEach((p) =>
+                p.classList.toggle(
+                  "active",
+                  p.dataset.panel === button.dataset.tab,
+                ),
+              );
+          }),
+      );
+      let adminKey = "";
+      const rulesObject = () =>
+        Object.fromEntries(
+          visionCategoryRules.map(([name, words]) => [name, words]),
+        );
+      $("#adminLoginBtn").onclick = async () => {
+        adminKey = $("#adminPassword").value;
+        try {
+          const r = await fetch("/api/admin/categories", {
+            headers: { "X-Admin-Password": adminKey },
+          });
+          const d = await r.json();
+          if (!r.ok) throw Error(d.detail || "인증 실패");
+          if (Object.keys(d.rules || {}).length)
+            visionCategoryRules = Object.entries(d.rules);
+          $("#categoryRulesEditor").value = JSON.stringify(
+            rulesObject(),
+            null,
+            2,
+          );
+          $("#adminTools").style.display = "grid";
+          $("#adminStatus").textContent = "인증 완료";
+        } catch (e) {
+          $("#adminStatus").textContent = e.message;
+        }
+      };
+      $("#saveRulesBtn").onclick = async () => {
+        try {
+          const rules = JSON.parse($("#categoryRulesEditor").value);
+          const r = await fetch("/api/admin/categories", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Admin-Password": adminKey,
+            },
+            body: JSON.stringify({ rules }),
+          });
+          const d = await r.json();
+          if (!r.ok) throw Error(d.detail || "저장 실패");
+          visionCategoryRules = Object.entries(d.rules);
+          $("#rulesResult").textContent =
+            `저장 완료: ${Object.keys(d.rules).length}개 카테고리`;
+        } catch (e) {
+          $("#rulesResult").textContent = `규칙 저장 실패: ${e.message}`;
+        }
+      };
+      $("#generateSqlBtn").onclick = async () => {
+        try {
+          const r = await fetch("/api/admin/text-to-sql", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Admin-Password": adminKey,
+            },
+            body: JSON.stringify({
+              prompt: $("#sqlPrompt").value,
+            }),
+          });
+          const d = await r.json();
+          if (!r.ok) throw Error(d.detail || "SQL 생성 실패");
+          $("#generatedSql").value = d.sql;
+          $("#sqlResult").textContent =
+            "SQL 생성 완료. 내용을 확인한 뒤 실행하세요.";
+        } catch (e) {
+          $("#sqlResult").textContent = `SQL 생성 실패: ${e.message}`;
+        }
+      };
+      $("#executeSqlBtn").onclick = async () => {
+        try {
+          const r = await fetch("/api/admin/execute-sql", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Admin-Password": adminKey,
+            },
+            body: JSON.stringify({ sql: $("#generatedSql").value }),
+          });
+          const d = await r.json();
+          if (!r.ok) throw Error(d.detail || "SQL 실행 실패");
+          $("#sqlResult").textContent = d.rows
+            ? `조회 완료: ${d.row_count}행\n${JSON.stringify(d.rows, null, 2)}`
+            : d.message || `실행 완료: ${d.row_count}행 처리`;
+        } catch (e) {
+          $("#sqlResult").textContent = `SQL 실행 실패: ${e.message}`;
+        }
+      };
+      function drawEffect(p) {
+        const [x, y, w, h] = p.bbox,
+          e = $("#effect").value;
+        if (e === "blur") {
+          ctx.save();
+          ctx.filter = "blur(12px)";
+          ctx.drawImage(video, x, y, w, h, x, y, w, h);
+          ctx.restore();
+        } else if (e === "mosaic") {
+          const s = 12,
+            tmp = document.createElement("canvas");
+          tmp.width = Math.max(1, w / s);
+          tmp.height = Math.max(1, h / s);
+          tmp
+            .getContext("2d")
+            .drawImage(video, x, y, w, h, 0, 0, tmp.width, tmp.height);
+          ctx.imageSmoothingEnabled = false;
+          ctx.drawImage(tmp, 0, 0, tmp.width, tmp.height, x, y, w, h);
+          ctx.imageSmoothingEnabled = true;
+        } else if (e === "spotlight") {
+          ctx.fillStyle = "rgba(255,255,255,.9)";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(video, x, y, w, h, x, y, w, h);
+        }
+      }
+      function render(ps) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const effect = $("#effect").value;
+        // 캔버스에 원본 프레임을 먼저 올려야 효과 레이어가 뒤의 video 요소에 가려지지 않습니다.
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const targets = selected ? ps.filter((p) => p.class === selected) : [];
+        if (effect === "spotlight" && targets.length) {
+          ctx.fillStyle = "rgba(255,255,255,.92)";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          targets.forEach((p) => {
+            const [x, y, w, h] = p.bbox;
+            ctx.drawImage(video, x, y, w, h, x, y, w, h);
+          });
+        } else if (effect !== "none") {
+          targets.forEach(drawEffect);
+        }
+        ctx.lineWidth = Math.max(2, canvas.width / 360);
+        ctx.font = `${Math.max(14, canvas.width / 48)}px system-ui`;
+        ps.forEach((p, i) => {
+          const [x, y, w, h] = p.bbox,
+            c = colors[i % colors.length];
+          ctx.strokeStyle = c;
+          ctx.strokeRect(x, y, w, h);
+          ctx.fillStyle = c;
+          const l = `${p.class} ${Math.round(p.score * 100)}%`,
+            tw = ctx.measureText(l).width + 12;
+          ctx.fillRect(x, Math.max(0, y - 27), tw, 27);
+          ctx.fillStyle = "#06101c";
+          ctx.fillText(l, x + 6, Math.max(19, y - 8));
+        });
+      }
+      $("#effect").onchange = () => {
+        const name = $("#effect").selectedOptions[0].textContent;
+        $("#status").textContent =
+          name === "원본 유지"
+            ? "원본 표시 중"
+            : selected
+              ? `${selected} 객체에 ${name} 적용 중`
+              : "적용할 객체를 아래 칩에서 먼저 선택하세요";
+        log($("#status").textContent);
+      };
+      function warnIfNoPerson(ps) {
+        const hasPerson = ps.some((p) => p.class === "person");
+        const now = Date.now();
+        if (hasPerson) {
+          noPersonFrames = 0;
+          $("#noPersonWarning").classList.remove("show");
+          return;
+        }
+        noPersonFrames++;
+        if (running && noPersonFrames >= 8) {
+          $("#noPersonWarning").classList.add("show");
+        }
+        if (running && noPersonFrames >= 8 && now - lastWarningAt > 8000) {
+          lastWarningAt = now;
+          if (audioCtx) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = "square";
+            osc.frequency.value = 740;
+            gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(
+              0.18,
+              audioCtx.currentTime + 0.03,
+            );
+            gain.gain.exponentialRampToValueAtTime(
+              0.0001,
+              audioCtx.currentTime + 0.42,
+            );
+            osc.connect(gain).connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.45);
+          }
+          if ("speechSynthesis" in window) {
+            speechSynthesis.cancel();
+            const voice = new SpeechSynthesisUtterance(
+              "경고. 사람이 감지되지 않았습니다.",
+            );
+            voice.lang = "ko-KR";
+            voice.rate = 1.05;
+            voice.pitch = 0.65;
+            voice.volume = 0.9;
+            speechSynthesis.speak(voice);
+          }
+          log("경고음: 사람이 감지되지 않았습니다.");
+        }
+      }
+      async function detect() {
+        if (!running || !model) return;
+        if (video.readyState >= 2) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ps = (await model.detect(video)).filter((p) => p.score > 0.55);
+          warnIfNoPerson(ps);
+          frames++;
+          $("#frameMetric").textContent = frames;
+          lastDetections = ps.map((p) => ({
+            label: p.class,
+            score: Number(p.score.toFixed(3)),
+            bbox: p.bbox.map((n) => Number(n.toFixed(1))),
+          }));
+          render(ps);
+          const cnt = {};
+          ps.forEach((p) => (cnt[p.class] = (cnt[p.class] || 0) + 1));
+          const keys = Object.keys(cnt);
+          if (!selected && keys.length) selected = keys[0];
+          $("#countMetric").textContent = ps.length;
+          $("#classMetric").textContent = keys.length
+            ? keys.join(" · ")
+            : "객체 없음";
+          $("#objectList").innerHTML = keys.length
+            ? keys
+                .map(
+                  (k) =>
+                    `<button class="chip ${k === selected ? "active" : ""}" data-object="${esc(k)}">${esc(k)} <i>${cnt[k]}개</i></button>`,
+                )
+                .join("")
+            : '<span class="chip">현재 객체 없음</span>';
+          document.querySelectorAll("[data-object]").forEach(
+            (b) =>
+              (b.onclick = () => {
+                selected =
+                  selected === b.dataset.object ? "" : b.dataset.object;
+                log(selected ? `${selected} 객체 선택` : "객체 선택 해제");
+                if ($("#effect").value !== "none") {
+                  $("#status").textContent = selected
+                    ? `${selected} 객체에 ${$("#effect").selectedOptions[0].textContent} 적용 중`
+                    : "적용할 객체를 아래 칩에서 먼저 선택하세요";
+                }
+              }),
+          );
+          if (frames % 20 === 0)
+            $("#lastSeen").textContent =
+              "최근 " + new Date().toLocaleTimeString("ko-KR");
+        }
+        requestAnimationFrame(detect);
+      }
+      $("#startBtn").onclick = async () => {
+        await load();
+        try {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          await audioCtx.resume();
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" },
+            audio: false,
+          });
+          video.srcObject = stream;
+          running = true;
+          $("#stageEmpty").style.display = "none";
+          $("#sessionMetric").textContent = "분석 중";
+          $("#status").textContent = "실시간 객체 인식 중…";
+          log("카메라 분석 시작");
+          detect();
+        } catch (e) {
+          $("#status").textContent =
+            "카메라 권한 또는 유효한 HTTPS 연결을 확인하세요.";
+          log("카메라 시작 실패");
+        }
+      };
+      $("#stopBtn").onclick = () => stop("카메라 분석 중지");
+      function stop(msg = "중지됨") {
+        running = false;
+        noPersonFrames = 0;
+        $("#noPersonWarning").classList.remove("show");
+        if (stream) stream.getTracks().forEach((t) => t.stop());
+        stream = null;
+        $("#sessionMetric").textContent = "일시 정지";
+        $("#status").textContent = msg;
+        log(msg);
+      }
+      async function api(path, body) {
+        const r = await fetch(path, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          }),
+          d = await r.json();
+        if (!r.ok) throw Error(d.detail || "API 오류");
+        return d;
+      }
+      function context() {
+        return {
+          session_id: sessionId,
+          detections: lastDetections,
+          events: events.slice(0, 12),
+          messages,
+        };
+      }
+      async function save(finalized = false) {
+        try {
+          const d = await api("/api/sessions", { ...context(), finalized });
+          sessionId = d.session_id;
+          $("#sessionIdMetric").textContent = sessionId;
+          $("#status").textContent = "SQLite DB에 저장되었습니다.";
+          log(finalized ? "세션 종료 및 저장 완료" : "세션 저장 완료");
+        } catch (e) {
+          $("#status").textContent = "DB 저장 실패: " + e.message;
+        }
+      }
+      $("#saveBtn").onclick = () => save(false);
+      $("#saveTop").onclick = () => save(false);
+      $("#finishBtn").onclick = async () => {
+        stop("세션 종료");
+        await save(true);
+      };
+      async function ask(message, kind = "chat") {
+        const b = document.createElement("div");
+        b.className = "bubble";
+        b.textContent = "GPT가 답변 중…";
+        $("#chatLog").appendChild(b);
+        try {
+          const d = await api("/api/chat", { message, kind, ...context() });
+          b.textContent = d.reply;
+          messages.push({ role: "assistant", content: d.reply });
+        } catch (e) {
+          b.textContent =
+            "GPT 모듈을 사용할 수 없습니다. 서버 .env를 확인하세요.";
+        }
+      }
+      $("#summaryBtn").onclick = async () => {
+        const box = $("#summaryBox"),
+          text = $("#summaryText");
+        box.classList.add("show");
+        text.textContent = "현재 장면을 GPT가 해석하는 중…";
+        try {
+          const d = await api("/api/chat", {
+            message:
+              "현재 카메라 탐지 결과와 이벤트를 바탕으로 운영자 관점에서 상황을 요약해줘. 단순한 객체 목록 반복은 피하고, 장면의 의미, 주의할 점, 다음 행동을 3~5문장으로 설명해줘.",
+            kind: "summary",
+            ...context(),
+          });
+          text.textContent = d.reply;
+          $("#summaryTime").textContent = new Date().toLocaleTimeString(
+            "ko-KR",
+          );
+          messages.push({
+            role: "assistant",
+            content: "[상황요약] " + d.reply,
+          });
+          log("GPT 상황요약 생성 완료");
+        } catch (e) {
+          text.textContent =
+            "GPT 상황요약을 만들 수 없습니다. 서버 설정을 확인하세요.";
+        }
+      };
+      $("#clearBtn").onclick = () => {
+        if (running) stop();
+        frames = 0;
+        lastDetections = [];
+        events = [];
+        messages = [];
+        sessionId = null;
+        selected = "";
+        noPersonFrames = 0;
+        $("#noPersonWarning").classList.remove("show");
+        $("#frameMetric").textContent = "0";
+        $("#countMetric").textContent = "0";
+        $("#classMetric").textContent = "객체 없음";
+        $("#sessionMetric").textContent = "준비";
+        $("#sessionIdMetric").textContent = "새 세션";
+        $("#summaryBox").classList.remove("show");
+        $("#summaryText").textContent = "";
+        $("#chatLog").innerHTML =
+          '<div class="bubble">안녕하세요. 현재 장면 분석이나 다른 주제까지 무엇이든 물어보세요.</div>';
+        log("새 세션으로 초기화");
+      };
+      $("#chatSend").onclick = send;
+      $("#chatInput").onkeydown = (e) => {
+        if (e.key === "Enter") send();
+      };
+      function send() {
+        const i = $("#chatInput"),
+          m = i.value.trim();
+        if (!m) return;
+        const b = document.createElement("div");
+        b.className = "bubble user";
+        b.textContent = m;
+        $("#chatLog").appendChild(b);
+        messages.push({ role: "user", content: m });
+        i.value = "";
+        ask(m, "chat");
+      }
+    </script>
+  </body>
+</html>
