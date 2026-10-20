@@ -103,6 +103,8 @@ async def lectures_part_a_a0(request: Request):
     return templates.TemplateResponse(request=request, name='lectures/a0.html', context={'site': site, 'page_title': 'A0 강의교안'})
 @app.get('/lectures/part-b')
 @app.get('/lectures/part-b/')
+@app.get('/part-b')
+@app.get('/part-b/')
 async def lectures_part_b(request: Request):
     return templates.TemplateResponse(request=request, name='lectures/part_b.html', context={'site': site, 'page_title': '파트 B 강의교안'})
 @app.get('/lectures/guide')
