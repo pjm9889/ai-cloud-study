@@ -58,7 +58,7 @@ jobs:
             templates static data \
             "$GABIA_USERNAME@$GABIA_HOST:$GABIA_TARGET_DIR/"
 
-      - name: Restart Flask application
+      - name: Restart FastAPI application
         shell: bash
         env:
           SSHPASS: ${{ secrets.GABIA_PASSWORD }}
