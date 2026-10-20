@@ -73,7 +73,7 @@ jobs:
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-            "cd '$GABIA_TARGET_DIR' && python3 -m pip install --user -r requirements.txt && python3 -c 'import main, uvicorn, gunicorn; print(\"imports ok\")' && (fuser -k 8080/tcp || true) && (pkill -f 'gunicorn' || true) && (pkill -f 'uvicorn' || true) && (pkill -f '[m]ain.py' || true) && (pkill -f '[a]pp.py' || true) && nohup python3 -m gunicorn -w 2 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8080 main:app --access-logfile app-access.log --error-logfile app.log --daemon"
+            "cd '$GABIA_TARGET_DIR' && python3 -m pip install --user -r requirements.txt && python3 -c 'import main, uvicorn; print(\"imports ok\")' && (fuser -k 8080/tcp || true) && nohup python3 -m uvicorn main:app --host 0.0.0.0 --port 8080 > app.log 2>&1 < /dev/null &"
 
       - name: Verify running application
         shell: bash
@@ -85,13 +85,13 @@ jobs:
           GABIA_TARGET_DIR: ${{ secrets.GABIA_TARGET_DIR || '.' }}
         run: |
           set -euo pipefail
-          sleep 10
+          sleep 8
           sshpass -e ssh \
             -o StrictHostKeyChecking=no \
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-            "cd '$GABIA_TARGET_DIR' && (curl -fsS http://127.0.0.1:8080/guide | grep -q '프로젝트가이드' || (echo '--- remote directory ---'; pwd; ls -la; echo '--- app.py markers ---'; grep -n 'FastAPI\|프로젝트 허브' app.py || true; echo '--- processes ---'; ps -ef | grep -E 'python|uvicorn' | grep -v grep || true; echo '--- app.log ---'; tail -80 app.log 2>/dev/null || true; exit 1))"
+            "cd '$GABIA_TARGET_DIR' && (curl -fsS http://127.0.0.1:8080/guide | grep -q '프로젝트가이드' || (echo '--- remote directory ---'; pwd; ls -la; echo '--- main markers ---'; grep -n 'FastAPI\|프로젝트 허브' main.py || true; echo '--- processes ---'; ps -ef | grep -E 'python|uvicorn' | grep -v grep || true; echo '--- app.log ---'; tail -80 app.log 2>/dev/null || true; exit 1))"
 
       - name: Collect Gabia diagnostics
         if: always()
