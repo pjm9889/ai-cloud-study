@@ -13,6 +13,7 @@ with (BASE_DIR / "data" / "site.json").open(encoding="utf-8") as file:
 
 env = Environment(loader=FileSystemLoader(BASE_DIR / "templates"))
 env.globals["url_for"] = lambda endpoint, **kwargs: "/static/css/site.css"
+css = (BASE_DIR / "static" / "css" / "site.css").read_text(encoding="utf-8")
 
 OUTPUT_DIR.mkdir(exist_ok=True)
 (OUTPUT_DIR / "static" / "css").mkdir(parents=True, exist_ok=True)
@@ -24,5 +25,6 @@ for template_name, output_name, page_title in (
 ):
     html = env.get_template(template_name).render(site=site, page_title=page_title)
     html = html.replace('href="/guide"', 'href="guide.html"')
+    html = html.replace('<link rel="stylesheet" href="/static/css/site.css" />', f"<style>\n{css}\n</style>")
     (OUTPUT_DIR / output_name).write_text(html, encoding="utf-8")
 
