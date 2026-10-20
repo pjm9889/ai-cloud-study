@@ -92,3 +92,29 @@ jobs:
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
             "cd '$GABIA_TARGET_DIR' && (curl -fsS http://127.0.0.1:8080/guide | grep -q '프로젝트가이드' || (echo '--- remote directory ---'; pwd; ls -la; echo '--- app.py markers ---'; grep -n 'FastAPI\|프로젝트 허브' app.py || true; echo '--- processes ---'; ps -ef | grep -E 'python|uvicorn' | grep -v grep || true; echo '--- app.log ---'; tail -80 app.log 2>/dev/null || true; exit 1))"
+
+      - name: Collect Gabia diagnostics
+        if: always()
+        shell: bash
+        env:
+          SSHPASS: ${{ secrets.GABIA_PASSWORD }}
+          GABIA_HOST: ${{ secrets.GABIA_HOST }}
+          GABIA_USERNAME: ${{ secrets.GABIA_USERNAME }}
+          GABIA_PORT: ${{ secrets.GABIA_PORT || 22 }}
+          GABIA_TARGET_DIR: ${{ secrets.GABIA_TARGET_DIR || '.' }}
+        run: |
+          set +e
+          sshpass -e ssh \
+            -o StrictHostKeyChecking=no \
+            -o HostKeyAlgorithms=+ssh-rsa \
+            -o PubkeyAuthentication=no \
+            -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
+            "cd '$GABIA_TARGET_DIR'; echo '--- directory ---'; pwd; ls -la; echo '--- app markers ---'; grep -n 'FastAPI\|프로젝트 허브' app.py; echo '--- processes ---'; ps -ef | grep -E 'python|uvicorn' | grep -v grep; echo '--- local guide ---'; curl -i http://127.0.0.1:8080/guide; echo '--- app.log ---'; tail -100 app.log" > gabia-diagnostic.txt 2>&1
+          cat gabia-diagnostic.txt
+
+      - name: Upload Gabia diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gabia-diagnostic
+          path: gabia-diagnostic.txt
