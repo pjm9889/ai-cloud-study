@@ -19,8 +19,11 @@ jobs:
       - name: Validate homepage
         shell: bash
         run: |
-          test -s index.html
-          grep -q '<html' index.html
+          test -s app.py
+          test -s requirements.txt
+          test -d templates
+          test -d static
+          test -d data
 
       - name: Upload files over SSH/SCP
         shell: bash
@@ -45,7 +48,7 @@ jobs:
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -P "$GABIA_PORT" \
-            index.html app.py requirements.txt README.md \
+            app.py requirements.txt \
             "$GABIA_USERNAME@$GABIA_HOST:$GABIA_TARGET_DIR/"
           sshpass -e scp -r \
             -o StrictHostKeyChecking=no \
