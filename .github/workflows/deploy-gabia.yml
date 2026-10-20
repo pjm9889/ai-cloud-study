@@ -22,10 +22,10 @@ jobs:
           python3 -m pip install --quiet jinja2
           python3 build_static.py
           test -s public/index.html
-          test -s public/guide/index.html
+          test -s public/guide.html
           test -s public/static/css/site.css
 
-      - name: Upload files over SSH/SCP
+      - name: Upload static pages over SSH/SCP
         shell: bash
         env:
           SSHPASS: ${{ secrets.GABIA_PASSWORD }}
@@ -42,55 +42,18 @@ jobs:
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-            "if [ -f '$GABIA_TARGET_DIR/guide' ]; then mv -f -- '$GABIA_TARGET_DIR/guide' '$GABIA_TARGET_DIR/guide.legacy'; fi; mkdir -p -- '$GABIA_TARGET_DIR/guide'"
+            "mkdir -p -- '$GABIA_TARGET_DIR'"
           sshpass -e scp \
             -o StrictHostKeyChecking=no \
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -P "$GABIA_PORT" \
-            public/index.html \
-            "$GABIA_USERNAME@$GABIA_HOST:$GABIA_TARGET_DIR/"
-          sshpass -e scp \
-            -o StrictHostKeyChecking=no \
-            -o HostKeyAlgorithms=+ssh-rsa \
-            -o PubkeyAuthentication=no \
-            -P "$GABIA_PORT" \
-            public/guide/index.html \
-            "$GABIA_USERNAME@$GABIA_HOST:$GABIA_TARGET_DIR/guide-index.html"
-          sshpass -e scp \
-            -o StrictHostKeyChecking=no \
-            -o HostKeyAlgorithms=+ssh-rsa \
-            -o PubkeyAuthentication=no \
-            -P "$GABIA_PORT" \
-            app.py requirements.txt server.py \
+            public/index.html public/guide.html \
             "$GABIA_USERNAME@$GABIA_HOST:$GABIA_TARGET_DIR/"
           sshpass -e scp -r \
             -o StrictHostKeyChecking=no \
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -P "$GABIA_PORT" \
-            templates static data \
+            public/static \
             "$GABIA_USERNAME@$GABIA_HOST:$GABIA_TARGET_DIR/"
-          sshpass -e ssh \
-            -o StrictHostKeyChecking=no \
-            -o HostKeyAlgorithms=+ssh-rsa \
-            -o PubkeyAuthentication=no \
-            -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-            "mkdir -p -- '$GABIA_TARGET_DIR/guide' && mv -f -- '$GABIA_TARGET_DIR/guide-index.html' '$GABIA_TARGET_DIR/guide/index.html' && test -s '$GABIA_TARGET_DIR/guide/index.html'"
-
-      - name: Start and verify FastAPI application
-        shell: bash
-        env:
-          SSHPASS: ${{ secrets.GABIA_PASSWORD }}
-          GABIA_HOST: ${{ secrets.GABIA_HOST }}
-          GABIA_USERNAME: ${{ secrets.GABIA_USERNAME }}
-          GABIA_PORT: ${{ secrets.GABIA_PORT || 22 }}
-          GABIA_TARGET_DIR: ${{ secrets.GABIA_TARGET_DIR || '.' }}
-        run: |
-          set -euo pipefail
-          sshpass -e ssh \
-            -o StrictHostKeyChecking=no \
-            -o HostKeyAlgorithms=+ssh-rsa \
-            -o PubkeyAuthentication=no \
-            -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-            "cd '$GABIA_TARGET_DIR' && (if [ -f app.pid ]; then kill \$(cat app.pid) 2>/dev/null || true; fi; if command -v fuser >/dev/null 2>&1; then fuser -k 8080/tcp 2>/dev/null || true; fi; nohup python3 server.py > app.log 2>&1 < /dev/null & echo \$! > app.pid) && for attempt in 1 2 3 4 5 6 7 8 9 10; do if python3 -c \"import urllib.request; data=urllib.request.urlopen('http://127.0.0.1:8080/guide').read(); assert '프로젝트가이드'.encode() in data\"; then exit 0; fi; sleep 2; done; echo '--- app.log ---'; tail -100 app.log; exit 1"
