@@ -43,20 +43,15 @@ jobs:
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
             "mkdir -p -- '$GABIA_TARGET_DIR'"
-          sshpass -e scp \
-            -o StrictHostKeyChecking=no \
-            -o HostKeyAlgorithms=+ssh-rsa \
-            -o PubkeyAuthentication=no \
-            -P "$GABIA_PORT" \
+          tar -czf - \
             app.py main.py gpt_module.py naver_blog_routes.py admin.html mcp.html requirements.txt README.md \
-            "$GABIA_USERNAME@$GABIA_HOST:$GABIA_TARGET_DIR/"
-          sshpass -e scp -r \
-            -o StrictHostKeyChecking=no \
-            -o HostKeyAlgorithms=+ssh-rsa \
-            -o PubkeyAuthentication=no \
-            -P "$GABIA_PORT" \
-            templates static data \
-            "$GABIA_USERNAME@$GABIA_HOST:$GABIA_TARGET_DIR/"
+            templates static data/site.json \
+            | sshpass -e ssh \
+              -o StrictHostKeyChecking=no \
+              -o HostKeyAlgorithms=+ssh-rsa \
+              -o PubkeyAuthentication=no \
+              -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
+              "cd '$GABIA_TARGET_DIR' && tar -xzf -"
 
       - name: Restart FastAPI application
         shell: bash
@@ -119,16 +114,3 @@ jobs:
           name: gabia-diagnostic
           path: gabia-diagnostic.txt
 
-      - name: Publish diagnostics for repair
-        if: failure()
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git switch --orphan gabia-diagnostic
-          git rm -rf .
-          cp gabia-diagnostic.txt README.md
-          git add gabia-diagnostic.txt README.md
-          git commit -m "Record Gabia startup diagnostic"
-          git push origin HEAD:gabia-diagnostic --force
