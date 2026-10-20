@@ -58,7 +58,7 @@ jobs:
             templates static data \
             "$GABIA_USERNAME@$GABIA_HOST:$GABIA_TARGET_DIR/"
 
-      - name: Restart FastAPI application
+      - name: Restart Flask application
         shell: bash
         env:
           SSHPASS: ${{ secrets.GABIA_PASSWORD }}
@@ -73,4 +73,4 @@ jobs:
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-            "cd '$GABIA_TARGET_DIR' && python3 -m pip install --user -r requirements.txt && (pkill -f '[u]vicorn app:app' || true) && nohup python3 -m uvicorn app:app --host 0.0.0.0 --port 8080 > app.log 2>&1 &"
+            "cd '$GABIA_TARGET_DIR' && python3 -m pip install --user -r requirements.txt && (pkill -f '[p]ython3 app.py' || true) && nohup python3 app.py > app.log 2>&1 < /dev/null &"
