@@ -22,7 +22,7 @@ jobs:
           python3 -m pip install --quiet jinja2
           python3 build_static.py
           test -s public/index.html
-          test -s public/guide.html
+          test -s public/guide/index.html
           test -s public/static/css/site.css
 
       - name: Upload files over SSH/SCP
