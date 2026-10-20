@@ -45,6 +45,7 @@ a { color:inherit; text-decoration:none; }
 .guide-table { width:100%; border-collapse:collapse; min-width:620px; color:#555; font-size:13px; line-height:1.6; }
 .guide-table th, .guide-table td { padding:11px 12px; border:1px solid #e5e7eb; text-align:left; vertical-align:top; }
 .guide-table th { background:#f3f7fb; color:#374151; font-weight:800; }
+.guide-divider { margin:52px 0 0; border:0; border-top:1px solid #d8e3ec; }
 .guide-links { display:grid; gap:8px; }
 .guide-links a, .repo { color:var(--blue); font-size:14px; }
 .footer { padding-top:27px; padding-bottom:50px; color:#999; font-size:12px; }

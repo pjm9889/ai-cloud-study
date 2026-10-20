@@ -19,12 +19,12 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 (OUTPUT_DIR / "static" / "css").mkdir(parents=True, exist_ok=True)
 shutil.copy2(BASE_DIR / "static" / "css" / "site.css", OUTPUT_DIR / "static" / "css" / "site.css")
 
-for template_name, output_name, page_title in (
-    ("home.html", "index.html", "메인"),
-    ("guide.html", "guide.html", "프로젝트가이드"),
-):
-    html = env.get_template(template_name).render(site=site, page_title=page_title)
-    html = html.replace('href="/guide"', 'href="guide.html"')
-    html = html.replace('<link rel="stylesheet" href="/static/css/site.css" />', f"<style>\n{css}\n</style>")
-    (OUTPUT_DIR / output_name).write_text(html, encoding="utf-8")
+home_html = env.get_template("home.html").render(site=site, page_title="메인")
+guide_html = env.get_template("guide.html").render(site=site, page_title="프로젝트가이드")
+guide_content = guide_html.split('<main class="container">', 1)[1].split("</main>", 1)[0]
+home_html = home_html.replace('href="/guide"', 'href="#project-guide"')
+home_html = home_html.replace('<link rel="stylesheet" href="/static/css/site.css" />', f"<style>\n{css}\n</style>")
+home_html = home_html.replace('</main>', f'<hr class="guide-divider" />{guide_content}</main>')
+(OUTPUT_DIR / "index.html").write_text(home_html, encoding="utf-8")
+(OUTPUT_DIR / "guide.html").write_text(guide_html.replace('<link rel="stylesheet" href="/static/css/site.css" />', f"<style>\n{css}\n</style>"), encoding="utf-8")
 
