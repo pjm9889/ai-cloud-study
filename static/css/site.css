@@ -36,6 +36,15 @@ a { color:inherit; text-decoration:none; }
 .guide section { padding:21px 0; border-bottom:1px solid #eee; }
 .guide h2 { margin:0 0 9px; font-size:19px; }
 .guide p { margin:0; color:#666; font-size:14px; line-height:1.7; }
+.project-guide { max-width:1100px; }
+.guide-source, .guide-note { margin:18px 0; padding:13px 16px; background:#f7fafc; color:#59636e; font-size:13px; line-height:1.7; }
+.guide-source a { color:var(--blue); font-weight:700; }
+.guide ul, .guide ol { margin:0; padding-left:22px; color:#666; font-size:14px; line-height:1.9; }
+.guide h3 { margin:25px 0 12px; font-size:17px; }
+.guide-table-wrap { overflow-x:auto; margin-top:18px; }
+.guide-table { width:100%; border-collapse:collapse; min-width:620px; color:#555; font-size:13px; line-height:1.6; }
+.guide-table th, .guide-table td { padding:11px 12px; border:1px solid #e5e7eb; text-align:left; vertical-align:top; }
+.guide-table th { background:#f3f7fb; color:#374151; font-weight:800; }
 .guide-links { display:grid; gap:8px; }
 .guide-links a, .repo { color:var(--blue); font-size:14px; }
 .footer { padding-top:27px; padding-bottom:50px; color:#999; font-size:12px; }
