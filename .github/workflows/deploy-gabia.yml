@@ -100,14 +100,14 @@ jobs:
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-            "cd '$GABIA_TARGET_DIR' && python3 -m pip install --user -r requirements.txt && (pkill -f '[u]vicorn app:app' || true) && nohup python3 -m uvicorn app:app --host 0.0.0.0 --port 8080 > app.log 2>&1 &"
-          sleep 3
+            "cd '$GABIA_TARGET_DIR' && python3 -m pip install --user -r requirements.txt && (pkill -u \"\\$(id -u)\" -f 'python3 -m uvicorn app:app' || true) && nohup python3 -m uvicorn app:app --host 0.0.0.0 --port 8080 > app.log 2>&1 < /dev/null & echo \\$(date +%s) > app.pid"
+          sleep 5
           sshpass -e ssh \
             -o StrictHostKeyChecking=no \
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-            "python3 -c \"import urllib.request; data=urllib.request.urlopen('http://127.0.0.1:8080/guide.html').read(); assert '프로젝트가이드'.encode() in data\""
+            "cd '$GABIA_TARGET_DIR' && python3 -c \"import urllib.request; data=urllib.request.urlopen('http://127.0.0.1:8080/guide.html').read(); assert '프로젝트가이드'.encode() in data\" || (echo '--- remote process ---'; ps -fu \$(id -u); echo '--- app.log ---'; tail -100 app.log; exit 1)"
           sshpass -e scp -r \
             -o StrictHostKeyChecking=no \
             -o HostKeyAlgorithms=+ssh-rsa \
