@@ -78,8 +78,19 @@ jobs:
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
             "mkdir -p -- '$GABIA_TARGET_DIR/guide' && mv -f -- '$GABIA_TARGET_DIR/guide-index.html' '$GABIA_TARGET_DIR/guide/index.html' && test -s '$GABIA_TARGET_DIR/guide/index.html'"
 
-      - name: Verify public pages
+      - name: Start and verify FastAPI application
+        shell: bash
+        env:
+          SSHPASS: ${{ secrets.GABIA_PASSWORD }}
+          GABIA_HOST: ${{ secrets.GABIA_HOST }}
+          GABIA_USERNAME: ${{ secrets.GABIA_USERNAME }}
+          GABIA_PORT: ${{ secrets.GABIA_PORT || 22 }}
+          GABIA_TARGET_DIR: ${{ secrets.GABIA_TARGET_DIR || '.' }}
         run: |
           set -euo pipefail
-          sleep 5
-          curl --fail --silent --show-error --location https://bssbu.co.kr/guide/ | grep -q '프로젝트가이드'
+          sshpass -e ssh \
+            -o StrictHostKeyChecking=no \
+            -o HostKeyAlgorithms=+ssh-rsa \
+            -o PubkeyAuthentication=no \
+            -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
+            "cd '$GABIA_TARGET_DIR' && python3 -m pip install --user -r requirements.txt && (if [ -f app.pid ]; then kill \$(cat app.pid) 2>/dev/null || true; fi; nohup python3 -m uvicorn app:app --host 0.0.0.0 --port 8080 > app.log 2>&1 < /dev/null & echo \$! > app.pid) && sleep 3 && python3 -c \"import urllib.request; data=urllib.request.urlopen('http://127.0.0.1:8080/guide').read(); assert '프로젝트가이드'.encode() in data\" || (echo '--- app.log ---'; tail -100 app.log; exit 1)"
