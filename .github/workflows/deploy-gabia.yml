@@ -47,6 +47,7 @@ jobs:
           files = [
               'main.py', 'index.html', 'gpt_module.py', 'naver_blog_routes.py',
               'admin.html', 'mcp.html', 'requirements.txt', 'README.md',
+              'templates/home.html',
           ]
           with zipfile.ZipFile('gabia-deploy.zip', 'w', zipfile.ZIP_DEFLATED) as z:
               for path in files:
