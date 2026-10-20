@@ -127,3 +127,18 @@ jobs:
           name: gabia-diagnostic
           path: gabia-diagnostic.txt
 
+      - name: Publish diagnostic snapshot
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          cp gabia-diagnostic.txt "$RUNNER_TEMP/gabia-diagnostic.txt"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch --orphan gabia-diagnostic
+          git rm -rf . >/dev/null 2>&1 || true
+          cp "$RUNNER_TEMP/gabia-diagnostic.txt" gabia-diagnostic.txt
+          git add gabia-diagnostic.txt
+          git commit -m "Record Gabia deployment diagnostic" >/dev/null 2>&1 || true
+          git push origin HEAD:gabia-diagnostic --force
+
