@@ -42,7 +42,7 @@ jobs:
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-            "mkdir -p -- '$GABIA_TARGET_DIR/guide'"
+            "if [ -f '$GABIA_TARGET_DIR/guide' ]; then mv -f -- '$GABIA_TARGET_DIR/guide' '$GABIA_TARGET_DIR/guide.legacy'; fi; mkdir -p -- '$GABIA_TARGET_DIR/guide'"
           sshpass -e scp \
             -o StrictHostKeyChecking=no \
             -o HostKeyAlgorithms=+ssh-rsa \
