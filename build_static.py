@@ -21,10 +21,8 @@ shutil.copy2(BASE_DIR / "static" / "css" / "site.css", OUTPUT_DIR / "static" / "
 
 home_html = env.get_template("home.html").render(site=site, page_title="메인")
 guide_html = env.get_template("guide.html").render(site=site, page_title="프로젝트가이드")
-guide_content = guide_html.split('<main class="container">', 1)[1].split("</main>", 1)[0]
-home_html = home_html.replace('href="/guide"', 'href="#project-guide"')
+home_html = home_html.replace('href="/guide"', 'href="guide.html"')
 home_html = home_html.replace('<link rel="stylesheet" href="/static/css/site.css" />', f"<style>\n{css}\n</style>")
-home_html = home_html.replace('</main>', f'<hr class="guide-divider" />{guide_content}</main>')
 (OUTPUT_DIR / "index.html").write_text(home_html, encoding="utf-8")
 (OUTPUT_DIR / "guide.html").write_text(guide_html.replace('<link rel="stylesheet" href="/static/css/site.css" />', f"<style>\n{css}\n</style>"), encoding="utf-8")
 
