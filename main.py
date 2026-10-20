@@ -10,20 +10,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, RedirectResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from gpt_module import GPTModule
 from naver_blog_routes import router as naver_blog_router
 
 BASE = Path(__file__).resolve().parent; DB_PATH = BASE / 'data' / 'sessions.db'; CATEGORY_PATH = BASE / 'data' / 'category_rules.json'; DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-app = FastAPI(title='BSSBU 프로젝트 허브'); gpt = GPTModule()
-SITE_PATH = BASE / 'data' / 'site.json'
-site = json.loads(SITE_PATH.read_text(encoding='utf-8')) if SITE_PATH.exists() else {}
-app.mount('/static', StaticFiles(directory=str(BASE / 'static')), name='static')
-app.mount('/lectures/files', StaticFiles(directory=str(BASE / 'lecture_materials')), name='lecture-files')
-templates = Jinja2Templates(directory=str(BASE / 'templates'))
+app = FastAPI(title='BSSBU Vision Ops'); gpt = GPTModule()
 app.include_router(naver_blog_router)
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', '')
 
@@ -78,55 +71,7 @@ def validate_admin_sql(sql: str):
         raise HTTPException(status_code=400, detail='안전을 위해 DROP/ALTER/ATTACH/DETACH/VACUUM/REINDEX는 실행할 수 없습니다.')
     return statement
 @app.get('/')
-async def home(request: Request):
-    return templates.TemplateResponse(request=request, name='home.html', context={'site': site, 'page_title': '메인'})
-@app.get('/guide')
-@app.get('/guide/')
-async def guide(request: Request):
-    return templates.TemplateResponse(request=request, name='guide.html', context={'site': site, 'page_title': '프로젝트가이드'})
-@app.get('/guide.html')
-async def guide_html():
-    from fastapi.responses import RedirectResponse
-    return RedirectResponse('/guide', status_code=308)
-@app.get('/lectures')
-@app.get('/lectures/')
-async def lectures_home(request: Request):
-    from fastapi.responses import RedirectResponse
-    return RedirectResponse('/#lecture-materials', status_code=307)
-@app.get('/lectures/part-a')
-@app.get('/lectures/part-a/')
-async def lectures_part_a(request: Request):
-    return templates.TemplateResponse(request=request, name='lectures/part_a.html', context={'site': site, 'page_title': '파트 A 강의교안'})
-@app.get('/lectures/part-a/a0')
-@app.get('/lectures/part-a/a0/')
-async def lectures_part_a_a0(request: Request):
-    return templates.TemplateResponse(request=request, name='lectures/a0.html', context={'site': site, 'page_title': 'A0 강의교안'})
-@app.get('/lectures/part-b')
-@app.get('/lectures/part-b/')
-@app.get('/part-b')
-@app.get('/part-b/')
-async def lectures_part_b(request: Request):
-    return templates.TemplateResponse(request=request, name='lectures/part_b.html', context={'site': site, 'page_title': '파트 B 강의교안'})
-@app.get('/lectures/guide')
-@app.get('/lectures/guide/')
-async def lectures_guide(request: Request):
-    return RedirectResponse('/lectures/files/0-커리큘럼_웹페이지설계원칙검사에이전트.html', status_code=307)
-@app.get('/part-a')
-@app.get('/part-a/')
-async def public_part_a(request: Request):
-    return templates.TemplateResponse(request=request, name='lectures/part_a.html', context={'site': site, 'page_title': '파트 A 강의교안'})
-@app.get('/part-a-a0')
-@app.get('/part-a-a0/')
-async def public_part_a_a0(request: Request):
-    return templates.TemplateResponse(request=request, name='lectures/a0.html', context={'site': site, 'page_title': 'A0 강의교안'})
-@app.get('/lecture-guide')
-@app.get('/lecture-guide/')
-async def public_lecture_guide():
-    return FileResponse(BASE / 'lecture_materials' / '0-커리큘럼_웹페이지설계원칙검사에이전트.html')
-@app.get('/a0-part01')
-@app.get('/a0-part01/')
-async def public_a0_part01():
-    return FileResponse(BASE / 'lecture_materials' / 'A0_Part01.html')
+async def home(): return FileResponse(BASE / 'index.html')
 @app.get('/admin')
 async def admin_page(): return FileResponse(BASE / 'admin.html')
 @app.get('/mcp')
@@ -212,4 +157,3 @@ async def save_session(payload: SessionPayload):
 async def chat(payload: ChatPayload):
     try: return {'ok':True,'reply':await gpt.reply(payload.message,payload.detections,payload.events,payload.messages,payload.kind)}
     except RuntimeError as exc: raise HTTPException(status_code=503, detail=str(exc))
-
