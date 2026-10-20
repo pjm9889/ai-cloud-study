@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   deploy:
@@ -118,3 +118,17 @@ jobs:
         with:
           name: gabia-diagnostic
           path: gabia-diagnostic.txt
+
+      - name: Publish diagnostics for repair
+        if: failure()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch --orphan gabia-diagnostic
+          git rm -rf .
+          cp gabia-diagnostic.txt README.md
+          git add gabia-diagnostic.txt README.md
+          git commit -m "Record Gabia startup diagnostic"
+          git push origin HEAD:gabia-diagnostic --force
