@@ -10,23 +10,22 @@ permissions:
 
 jobs:
   deploy:
-    name: Upload backup FastAPI app to Gabia
+    name: Upload homepage to Gabia
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate backup application
+      - name: Validate homepage
         shell: bash
         run: |
-          python3 -m py_compile main.py gpt_module.py naver_blog_routes.py
-          test -s index.html
-          test -s admin.html
-          test -s mcp.html
-          test -s guide.html
+          test -s app.py
           test -s requirements.txt
+          test -s templates/home.html
+          test -s templates/guide.html
+          test -s data/site.json
 
-      - name: Upload backup application files
+      - name: Upload files over SSH/SCP
         shell: bash
         env:
           SSHPASS: ${{ secrets.GABIA_PASSWORD }}
@@ -43,17 +42,23 @@ jobs:
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-            "mkdir -p -- '$GABIA_TARGET_DIR/data'"
+            "mkdir -p -- '$GABIA_TARGET_DIR'"
           sshpass -e scp \
             -o StrictHostKeyChecking=no \
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -P "$GABIA_PORT" \
-            main.py gpt_module.py naver_blog_routes.py requirements.txt \
-            index.html admin.html mcp.html guide.html \
+            app.py requirements.txt README.md \
+            "$GABIA_USERNAME@$GABIA_HOST:$GABIA_TARGET_DIR/"
+          sshpass -e scp -r \
+            -o StrictHostKeyChecking=no \
+            -o HostKeyAlgorithms=+ssh-rsa \
+            -o PubkeyAuthentication=no \
+            -P "$GABIA_PORT" \
+            templates static data \
             "$GABIA_USERNAME@$GABIA_HOST:$GABIA_TARGET_DIR/"
 
-      - name: Restart backup FastAPI application
+      - name: Restart Flask application
         shell: bash
         env:
           SSHPASS: ${{ secrets.GABIA_PASSWORD }}
@@ -68,4 +73,4 @@ jobs:
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-            "cd '$GABIA_TARGET_DIR' && python3 -m pip install --user -r requirements.txt && (pkill -f '[u]vicorn main:app' || true) && nohup python3 -m uvicorn main:app --host 0.0.0.0 --port 8080 > app.log 2>&1 &"
+            "cd '$GABIA_TARGET_DIR' && python3 -m pip install --user -r requirements.txt && (pkill -f '[p]ython3 app.py' || true) && nohup python3 app.py > app.log 2>&1 < /dev/null &"
