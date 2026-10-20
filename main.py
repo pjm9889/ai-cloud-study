@@ -109,6 +109,22 @@ async def lectures_part_b(request: Request):
 @app.get('/lectures/guide/')
 async def lectures_guide(request: Request):
     return RedirectResponse('/lectures/files/0-커리큘럼_웹페이지설계원칙검사에이전트.html', status_code=307)
+@app.get('/part-a')
+@app.get('/part-a/')
+async def public_part_a(request: Request):
+    return templates.TemplateResponse(request=request, name='lectures/part_a.html', context={'site': site, 'page_title': '파트 A 강의교안'})
+@app.get('/part-a-a0')
+@app.get('/part-a-a0/')
+async def public_part_a_a0(request: Request):
+    return templates.TemplateResponse(request=request, name='lectures/a0.html', context={'site': site, 'page_title': 'A0 강의교안'})
+@app.get('/lecture-guide')
+@app.get('/lecture-guide/')
+async def public_lecture_guide():
+    return FileResponse(BASE / 'lecture_materials' / '0-커리큘럼_웹페이지설계원칙검사에이전트.html')
+@app.get('/a0-part01')
+@app.get('/a0-part01/')
+async def public_a0_part01():
+    return FileResponse(BASE / 'lecture_materials' / 'A0_Part01.html')
 @app.get('/admin')
 async def admin_page(): return FileResponse(BASE / 'admin.html')
 @app.get('/mcp')
