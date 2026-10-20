@@ -21,9 +21,11 @@ shutil.copy2(BASE_DIR / "static" / "css" / "site.css", OUTPUT_DIR / "static" / "
 
 home_html = env.get_template("home.html").render(site=site, page_title="메인")
 guide_html = env.get_template("guide.html").render(site=site, page_title="프로젝트가이드")
-home_html = home_html.replace('href="/guide"', 'href="guide.html"')
+home_html = home_html.replace('href="/guide"', 'href="guide/"')
 home_html = home_html.replace('<link rel="stylesheet" href="/static/css/site.css" />', f"<style>\n{css}\n</style>")
 (OUTPUT_DIR / "index.html").write_text(home_html, encoding="utf-8")
-(OUTPUT_DIR / "guide.html").write_text(guide_html.replace('<link rel="stylesheet" href="/static/css/site.css" />', f"<style>\n{css}\n</style>"), encoding="utf-8")
-(OUTPUT_DIR / "guide").write_text(guide_html.replace('<link rel="stylesheet" href="/static/css/site.css" />', f"<style>\n{css}\n</style>"), encoding="utf-8")
+guide_html = guide_html.replace('href="guide.html"', 'href="./"')
+guide_html = guide_html.replace('<link rel="stylesheet" href="/static/css/site.css" />', f"<style>\n{css}\n</style>")
+(OUTPUT_DIR / "guide").mkdir(parents=True, exist_ok=True)
+(OUTPUT_DIR / "guide" / "index.html").write_text(guide_html, encoding="utf-8")
 
