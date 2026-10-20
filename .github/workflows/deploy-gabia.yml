@@ -43,15 +43,28 @@ jobs:
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
             "mkdir -p -- '$GABIA_TARGET_DIR'"
-          tar -czf - \
-            app.py main.py gpt_module.py naver_blog_routes.py admin.html mcp.html requirements.txt README.md \
-            templates static data/site.json \
+          python3 - <<'PY'
+          import zipfile
+          files = [
+              'app.py', 'main.py', 'gpt_module.py', 'naver_blog_routes.py',
+              'admin.html', 'mcp.html', 'requirements.txt', 'README.md',
+              'data/site.json',
+          ]
+          with zipfile.ZipFile('gabia-deploy.zip', 'w', zipfile.ZIP_DEFLATED) as z:
+              for path in files:
+                  z.write(path, path)
+              for root in ('templates', 'static'):
+                  for path in __import__('pathlib').Path(root).rglob('*'):
+                      if path.is_file():
+                          z.write(path, path.as_posix())
+          PY
+          base64 -w 0 gabia-deploy.zip \
             | sshpass -e ssh \
               -o StrictHostKeyChecking=no \
               -o HostKeyAlgorithms=+ssh-rsa \
               -o PubkeyAuthentication=no \
               -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-              "cd '$GABIA_TARGET_DIR' && tar -xzf -"
+              "cd '$GABIA_TARGET_DIR' && python3 -c 'import sys,zipfile,io,base64; zipfile.ZipFile(io.BytesIO(base64.b64decode(sys.stdin.buffer.read()))).extractall(\".\")'"
 
       - name: Restart FastAPI application
         shell: bash
