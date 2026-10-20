@@ -1,0 +1,872 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A0 강의교안</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf9f6;
+    --surface: #ffffff;
+    --ink: #1c1b19;
+    --quiet: #55534e;
+    --line: #dcd9d2;
+    --edge: #a9a69e;
+    --accent: #2f6fde;
+    --accent-soft: rgba(47, 111, 222, 0.10);
+    --warn: #b4561f;
+    --warn-soft: rgba(180, 86, 31, 0.10);
+    --good: #2e7d4f;
+    --good-soft: rgba(46, 125, 79, 0.10);
+    --crit: #c0392b;
+    --code-bg: #f3f1ec;
+    --banner-bg: #1f2a44;
+    --banner-ink: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1a1a19;
+      --surface: #232322;
+      --ink: #ecebe7;
+      --quiet: #b0aea7;
+      --line: #3a3936;
+      --edge: #6e6c66;
+      --accent: #7aa7ff;
+      --accent-soft: rgba(122, 167, 255, 0.14);
+      --warn: #f0a06a;
+      --warn-soft: rgba(240, 160, 106, 0.14);
+      --good: #6fcf97;
+      --good-soft: rgba(111, 207, 151, 0.14);
+      --crit: #e57368;
+      --code-bg: #2b2b29;
+      --banner-bg: #111827;
+      --banner-ink: #ecebe7;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "Noto Sans KR", system-ui, -apple-system, sans-serif;
+    font-size: 17px; line-height: 1.75;
+  }
+
+  /* ── 배너 ── */
+  .banner { background: var(--banner-bg); color: var(--banner-ink); }
+  .banner-in { max-width: 1320px; margin: 0 auto; padding: 14px 24px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 24px; }
+  .banner .org { font-size: 17px; font-weight: 700; }
+  .banner .who { font-size: 15px; opacity: 0.9; }
+  .banner a { color: inherit; }
+
+  /* ── 레이아웃: 본문 + 우측 목차 ── */
+  .layout { max-width: 1320px; margin: 0 auto; padding: 32px 24px 96px; display: grid; grid-template-columns: minmax(0, 1fr) 272px; gap: 40px; align-items: start; }
+  .side { position: sticky; top: 24px; order: 2; max-height: calc(100vh - 48px); overflow-y: auto; }
+  .tabs { display: flex; flex-direction: column; gap: 2px; }
+  .tabs .group { font-size: 14px; font-weight: 700; color: var(--quiet); margin: 18px 0 6px 4px; }
+  .tabs .group:first-child { margin-top: 0; }
+  .tabs button {
+    all: unset; cursor: pointer; display: block;
+    font-size: 16px; line-height: 1.45; color: var(--ink);
+    padding: 10px 14px; border-radius: 8px; border: 1px solid transparent;
+  }
+  .tabs button .no { color: var(--accent); font-weight: 700; margin-right: 6px; }
+  .tabs button:hover { background: var(--surface); border-color: var(--line); }
+  .tabs button[aria-selected="true"] { background: var(--accent-soft); border-color: var(--accent); font-weight: 700; }
+  .tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ── 본문 ── */
+  main { min-width: 0; }
+  .panel[hidden] { display: none; }
+  .crumb { font-size: 15px; font-weight: 700; color: var(--accent); letter-spacing: 0.02em; margin-bottom: 4px; }
+  h1 { font-size: 36px; line-height: 1.3; margin: 4px 0 14px; letter-spacing: -0.02em; }
+  .lead { font-size: 19px; margin: 12px 0 0; }
+  h2 { font-size: 28px; line-height: 1.35; margin: 0 0 16px; letter-spacing: -0.01em; }
+  h2::before { content: "■ "; color: var(--accent); }
+  h3 { font-size: 22px; margin: 36px 0 12px; }
+  h3::before { content: "▶ "; color: var(--accent); font-size: 0.8em; }
+  p { margin: 8px 0; }
+  .sub { color: var(--quiet); font-size: 16px; }
+  .key { font-size: 19px; font-weight: 600; padding: 14px 20px; margin: 16px 0 24px; border-left: 4px solid var(--accent); background: var(--accent-soft); border-radius: 8px; }
+  code { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 15px; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; }
+  pre { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 15px; background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; overflow-x: auto; line-height: 1.6; margin: 12px 0; }
+  pre code { background: none; padding: 0; }
+
+  .badge { display: inline-block; font-size: 14px; font-weight: 700; color: #fff; background: var(--accent); padding: 0 7px; border-radius: 5px; margin-left: 6px; line-height: 1.5; vertical-align: 1px; }
+  .stage { display: inline-block; font-size: 14px; font-weight: 700; padding: 0 7px; border-radius: 5px; border: 1px solid var(--accent); color: var(--accent); white-space: nowrap; line-height: 1.5; }
+  .stage.later { border-color: var(--edge); color: var(--quiet); }
+  .num { font-weight: 700; color: var(--accent); white-space: nowrap; }
+
+  /* ── 표 ── */
+  .table-wrap { margin: 14px 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); overflow: hidden; }
+  table { border-collapse: collapse; width: 100%; font-size: 16px; }
+  th, td { text-align: left; vertical-align: top; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  th { font-weight: 700; color: var(--quiet); font-size: 15px; white-space: nowrap; background: var(--bg); }
+  tr:last-child td { border-bottom: none; }
+  td.nowrap { white-space: nowrap; }
+  td.nowrap .sub { white-space: normal; font-size: 14px; line-height: 1.5; margin-top: 4px; min-width: 150px; max-width: 220px; }
+  tr.new td { background: var(--accent-soft); }
+
+  /* ── HTML 도형 공통 ── */
+  .fig { margin: 20px 0; padding: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+  .fig-title { font-size: 18px; font-weight: 700; margin: 0 0 14px; }
+  .fig-label { font-size: 14px; font-weight: 700; color: var(--quiet); margin: 16px 0 8px; }
+  .fig-label:first-of-type { margin-top: 0; }
+  .node { position: relative; border: 1.5px solid var(--edge); border-radius: 10px; padding: 12px 14px; background: var(--surface); }
+  .node.main { border-color: var(--accent); border-width: 2px; background: var(--accent-soft); }
+  .node.newb { border-color: var(--accent); border-width: 2px; }
+  .node.bad { border-color: var(--warn); background: var(--warn-soft); }
+  .node .t { font-size: 17px; font-weight: 700; line-height: 1.4; }
+  .node .d { font-size: 15px; color: var(--quiet); line-height: 1.5; margin-top: 4px; }
+  .node .tag { position: absolute; top: -11px; right: 10px; font-size: 14px; font-weight: 700; color: #fff; background: var(--accent); border-radius: 5px; padding: 0 7px; line-height: 1.5; }
+  .node ul { margin: 6px 0 0; padding-left: 20px; font-size: 16px; }
+  .node ul li { margin: 3px 0; }
+  .node .foot { font-size: 14px; color: var(--quiet); margin-top: 10px; }
+  .node.bad .t { color: var(--warn); }
+  .node.main .t.acc { color: var(--accent); }
+
+  /* 가로 흐름: 노드 → 노드 */
+  .flow { display: flex; align-items: stretch; }
+  .flow > .node { flex: 1 1 0; min-width: 0; text-align: center; }
+  .flow.left > .node { text-align: left; }
+  .arr { flex: none; width: 32px; display: grid; place-items: center; color: var(--edge); font-size: 20px; font-weight: 700; }
+  .arr::before { content: "→"; }
+  .band { margin-top: 14px; padding: 10px 14px; border: 1.5px solid var(--good); background: var(--good-soft); border-radius: 10px; font-size: 16px; }
+
+  /* V-모델 */
+  .vm { display: grid; grid-template-columns: 1fr 170px 1fr; gap: 12px 0; align-items: center; }
+  .vm .node { text-align: center; }
+  .vm .l2 { margin-left: 14%; }
+  .vm .r2 { margin-right: 14%; }
+  .vm .link { text-align: center; font-size: 14px; color: var(--quiet); border-top: 2px dashed var(--edge); padding-top: 4px; margin: 0 8px; }
+  .vm .impl { grid-column: 1 / -1; justify-self: center; width: 40%; }
+  .vm-head { display: grid; grid-template-columns: 1fr 170px 1fr; font-size: 14px; font-weight: 700; color: var(--quiet); margin-bottom: 8px; }
+  .vm-head span:last-child { text-align: right; }
+
+  /* ── 목업 ── */
+  .mock { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); margin: 18px 0; }
+  .mock-bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--bg); border-bottom: 1px solid var(--line); }
+  .mock-bar .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--line); flex: none; }
+  .mock-bar .url { flex: 1; min-width: 0; margin-left: 8px; font-size: 14px; color: var(--quiet); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 2px 10px; font-family: "JetBrains Mono", monospace; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .mock-body { padding: 20px; }
+  .mock-title { font-size: 20px; font-weight: 700; margin: 0 0 12px; }
+  .mock-input { display: flex; gap: 8px; margin-bottom: 16px; }
+  .mock-input .field { flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-family: "JetBrains Mono", monospace; font-size: 15px; background: var(--bg); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .mock-input .btn { background: var(--accent); color: #fff; border-radius: 8px; padding: 8px 18px; font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .mock-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+  .mock-summary .cell { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+  .mock-summary .k { font-size: 14px; color: var(--quiet); }
+  .mock-summary .v { font-size: 22px; font-weight: 700; }
+  .mock-summary .v.small { font-size: 17px; padding-top: 4px; }
+  .mock-tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--line); margin-bottom: 14px; flex-wrap: wrap; }
+  .mock-tabs span { font-size: 15px; padding: 6px 12px; border-bottom: 2px solid transparent; color: var(--quiet); }
+  .mock-tabs span.on { border-color: var(--accent); color: var(--ink); font-weight: 700; }
+  .vcard { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+  .vcard .top { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .sev { font-size: 14px; font-weight: 700; padding: 0 8px; border-radius: 5px; color: #fff; line-height: 1.6; }
+  .sev.critical { background: var(--crit); }
+  .sev.major { background: var(--warn); }
+  .rid { font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 15px; }
+  .wc { font-size: 14px; color: var(--quiet); }
+  .vcard .msg { font-weight: 600; margin: 2px 0 8px; }
+  .vcard .el { font-family: "JetBrains Mono", monospace; font-size: 14px; background: var(--code-bg); border-radius: 6px; padding: 6px 10px; overflow-x: auto; white-space: nowrap; margin-bottom: 10px; }
+  .vgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .vbox { border: 1px dashed var(--line); border-radius: 8px; padding: 10px 12px; font-size: 15px; }
+  .vbox .h { font-size: 14px; font-weight: 700; color: var(--quiet); margin-bottom: 4px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .vbox.later { opacity: 0.65; }
+  .score { font-family: "JetBrains Mono", monospace; font-size: 14px; color: var(--quiet); }
+
+  .roadmap { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; align-items: center; }
+  .roadmap .chip { font-size: 14px; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--quiet); }
+  .roadmap .chip.on { border: 2px solid var(--accent); color: var(--accent); font-weight: 700; background: var(--accent-soft); }
+  .roadmap .sep { color: var(--quiet); margin: 0 6px; }
+
+  /* ── 태블릿 이하: 목차를 상단 가로 탭으로 ── */
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 16px 16px 64px; }
+    .side { order: 0; position: sticky; top: 0; z-index: 5; max-height: none; overflow: visible; background: var(--bg); padding: 8px 0; border-bottom: 1px solid var(--line); min-width: 0; }
+    .tabs { flex-direction: row; overflow-x: auto; gap: 6px; scrollbar-width: thin; }
+    .tabs .group { display: none; }
+    .tabs button { white-space: nowrap; font-size: 15px; padding: 8px 12px; border-color: var(--line); background: var(--surface); }
+  }
+
+  /* ── 모바일: 도형은 세로로, 표는 카드로 ── */
+  @media (max-width: 760px) {
+    body { font-size: 16px; }
+    h1 { font-size: 27px; }
+    h2 { font-size: 23px; }
+    h3 { font-size: 19px; }
+    .lead, .key { font-size: 17px; }
+    .key { padding: 12px 16px; }
+    .fig { padding: 16px; }
+
+    .flow { flex-direction: column; }
+    .flow > .node { flex: none; }
+    .arr { width: auto; height: 28px; }
+    .arr::before { content: "↓"; }
+
+    .vm, .vm-head { grid-template-columns: 1fr; }
+    .vm-head { display: none; }
+    .vm .l2, .vm .r2 { margin: 0; }
+    .vm .impl { width: 100%; }
+    .vm .link { border-top: none; border-left: 2px dashed var(--edge); text-align: left; padding: 2px 0 2px 12px; margin: 0 0 0 24px; }
+    .vm .gap { height: 10px; }
+
+    .mock-body { padding: 14px; }
+    .mock-summary { grid-template-columns: 1fr 1fr; }
+    .vgrid { grid-template-columns: 1fr; }
+
+    table.cards, table.cards tbody, table.cards tr, table.cards td { display: block; width: 100%; }
+    table.cards { font-size: 15px; }
+    table.cards thead { display: none; }
+    table.cards tr { padding: 10px 14px; border-bottom: 1px solid var(--line); }
+    table.cards tr:last-child { border-bottom: none; }
+    table.cards td { border: none; padding: 3px 0; white-space: normal; }
+    table.cards td::before { content: attr(data-label); display: block; font-size: 14px; font-weight: 700; color: var(--quiet); }
+    table.cards td[data-label=""]::before { display: none; }
+    table.cards td:first-child { font-weight: 700; font-size: 16px; }
+    table.cards td:first-child::before { display: none; }
+  }
+
+  /* ── 약자 · 링크 ── */
+  abbr[data-full] { text-decoration: underline dotted var(--edge); text-underline-offset: 3px; cursor: help; }
+  .exp { color: var(--quiet); font-size: 0.92em; }
+  a { color: var(--accent); }
+  a.doc { text-decoration: none; border-bottom: 1px solid var(--accent); }
+  a.doc::after { content: " ↗"; font-size: 0.85em; }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); max-width: min(560px, calc(100vw - 32px)); background: var(--ink); color: var(--bg); font-size: 15px; line-height: 1.5; padding: 12px 16px; border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); z-index: 50; }
+  .toast[hidden] { display: none; }
+  .toast b { display: block; font-size: 16px; }
+
+  @media print {
+    .side { display: none; }
+    .layout { display: block; }
+    .panel[hidden] { display: block; }
+    .panel { margin-bottom: 48px; break-inside: avoid-page; }
+    body { background: #fff; }
+  }
+</style>
+</head>
+<body>
+
+<div class="banner">
+  <div class="banner-in">
+    <div class="org">청년취업사관학교 AI_클라우드과정(2026년)</div>
+    <div class="who">강사 부성순 · <a href="mailto:bakpak@empas.com">bakpak@empas.com</a></div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <aside class="side">
+    <div class="tabs" role="tablist" aria-label="A0 목차" aria-orientation="vertical">
+      <div class="group">Part 0. 한눈에 보기</div>
+      <button role="tab" id="tab-p0" aria-controls="p0" aria-selected="true"><span class="no">A0</span>프로젝트 베이스</button>
+      <button role="tab" id="tab-p0-1" aria-controls="p0-1" aria-selected="false" tabindex="-1"><span class="no">0.1</span>무엇을 해결하나</button>
+      <button role="tab" id="tab-p0-2" aria-controls="p0-2" aria-selected="false" tabindex="-1"><span class="no">0.2</span>학습 목표</button>
+      <button role="tab" id="tab-p0-3" aria-controls="p0-3" aria-selected="false" tabindex="-1"><span class="no">0.3</span>주요 기술</button>
+      <button role="tab" id="tab-p0-4" aria-controls="p0-4" aria-selected="false" tabindex="-1"><span class="no">0.4</span>Part 구성</button>
+
+      <div class="group">Part 1. 프로젝트 소개와 설계 원칙</div>
+      <button role="tab" id="tab-p1-1" aria-controls="p1-1" aria-selected="false" tabindex="-1"><span class="no">1.1</span>어떤 프로젝트인가</button>
+      <button role="tab" id="tab-p1-2" aria-controls="p1-2" aria-selected="false" tabindex="-1"><span class="no">1.2</span>왜 기획했나</button>
+      <button role="tab" id="tab-p1-3" aria-controls="p1-3" aria-selected="false" tabindex="-1"><span class="no">1.3</span>어디까지 확장되나</button>
+      <button role="tab" id="tab-p1-4" aria-controls="p1-4" aria-selected="false" tabindex="-1"><span class="no">1.4</span>설계 원칙</button>
+      <button role="tab" id="tab-p1-5" aria-controls="p1-5" aria-selected="false" tabindex="-1"><span class="no">1.5</span>요구사항 명세 (SRS)</button>
+
+      <div class="group">부록</div>
+      <button role="tab" id="tab-gloss" aria-controls="gloss" aria-selected="false" tabindex="-1"><span class="no">※</span>용어집 (약자 원어)</button>
+    </div>
+  </aside>
+
+  <main>
+
+  <!-- ============================== Part 0 ============================== -->
+
+  <section class="panel" id="p0" role="tabpanel" aria-labelledby="tab-p0">
+    <div class="crumb">PART A · RAG 편 · A0</div>
+    <h1>A0. 프로젝트 베이스<br>설계 원칙 · 규칙 기반 탐지 · 키워드 검색</h1>
+    <p class="lead">과정 전체의 베이스를 다진다. 요구사항·가이드 규칙·정답셋을 정하고, 첫 검사기(규칙 기반)와 첫 검색기(TF-IDF·BM25)를 만들어 이후 모든 단계의 기준선을 잡는다.</p>
+    <div class="key">A0의 결과물은 "규칙으로 위반을 찾고, BM25로 근거 규칙을 찾고, 정답셋으로 채점하는" 첫 번째 검사 시스템이다.</div>
+
+    <h3>과정 속 위치</h3>
+    <div class="roadmap">
+      <span class="chip on">A0 베이스</span><span class="chip">A1 LLM</span><span class="chip">A2 벡터</span><span class="chip">A3 저장소</span><span class="chip">A4 RAG</span><span class="chip">A5 고도화</span><span class="chip">A6 지속배포</span><span class="chip">A7 캡스톤</span>
+      <span class="sep">→</span>
+      <span class="chip">B1 에이전트</span><span class="chip">B2 LangGraph</span><span class="chip">B3 로컬LLM</span><span class="chip">B4 OCR</span><span class="chip">B5 MCP</span><span class="chip">B6 멀티</span><span class="chip">B7 캡스톤</span>
+    </div>
+    <p>A0의 정답셋 필드, 규칙 구조, 분류 체계는 B7까지 그대로 쓴다. Part 7의 BM25는 A3(OpenSearch)와 A5(하이브리드 검색)로 확장된다.</p>
+  </section>
+
+  <section class="panel" id="p0-1" role="tabpanel" aria-labelledby="tab-p0-1" hidden>
+    <div class="crumb">Part 0 · 한눈에 보기</div>
+    <h2>0.1 무엇을 해결하나</h2>
+    <div class="fig">
+      <div class="fig-title">사람의 검토를 근거 있는 자동 검사로 바꾼다</div>
+      <div class="flow left">
+        <div class="node bad">
+          <div class="t">사람이 눈으로 검토</div>
+          <ul><li>기준이 사람마다 다르다</li><li>무엇을 놓쳤는지 모른다</li><li>왜 위반인지 근거가 없다</li></ul>
+        </div>
+        <div class="arr" aria-hidden="true"></div>
+        <div class="node main">
+          <div class="t acc">A0 검사 시스템</div>
+          <ul><li>버전 관리되는 규칙 (Part 5)</li><li>정답셋 채점 (Part 2, 8)</li><li>BM25로 근거 규칙 검색 (Part 7)</li></ul>
+        </div>
+      </div>
+      <div class="band">A0에서 잰 수치가 A1~B7 모든 단계의 기준선이 된다</div>
+    </div>
+  </section>
+
+  <section class="panel" id="p0-2" role="tabpanel" aria-labelledby="tab-p0-2" hidden>
+    <div class="crumb">Part 0 · 한눈에 보기</div>
+    <h2>0.2 학습 목표</h2>
+    <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>목표</th><th>결과물</th></tr></thead>
+    <tbody>
+    <tr><td>1</td><td>요구사항을 수치와 검증 방법으로 정의한다</td><td>SRS (기능·비기능 요구사항)</td></tr>
+    <tr><td>2</td><td>가이드 규칙을 WCAG 근거와 함께 구조화한다</td><td>규칙 YAML, 분류 체계, 정답셋</td></tr>
+    <tr><td>3</td><td>Kiwi로 한국어 텍스트를 토큰화한다</td><td>품사 필터·사용자 사전을 적용한 토크나이저</td></tr>
+    <tr><td>4</td><td>규칙 기반 탐지기를 만들고 재설계한다</td><td>함수형 v1 → Rules as Code v2 엔진</td></tr>
+    <tr><td>5</td><td>TF-IDF와 BM25로 가이드 규칙을 검색한다</td><td>키워드 검색기, 두 방식 순위 비교</td></tr>
+    <tr><td>6</td><td>정답셋으로 성능을 측정한다</td><td>정밀도·재현율·Recall@k 기준선 리포트</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section class="panel" id="p0-3" role="tabpanel" aria-labelledby="tab-p0-3" hidden>
+    <div class="crumb">Part 0 · 한눈에 보기</div>
+    <h2>0.3 주요 기술</h2>
+    <div class="fig">
+      <div class="fig-title">검사와 검색이 하나의 파이프라인으로 이어진다</div>
+
+      <div class="fig-label">검사 · 검색 흐름</div>
+      <div class="flow">
+        <div class="node"><div class="t">테스트 사이트</div><div class="d">위반을 심은 HTML</div></div>
+        <div class="arr" aria-hidden="true"></div>
+        <div class="node"><div class="t">Playwright</div><div class="d">DOM에서 텍스트·속성 추출</div></div>
+        <div class="arr" aria-hidden="true"></div>
+        <div class="node newb"><span class="tag">NEW</span><div class="t">Kiwi</div><div class="d">형태소 분석 → 토큰</div></div>
+        <div class="arr" aria-hidden="true"></div>
+        <div class="node main"><div class="t">규칙 엔진</div><div class="d">YAML 규칙 실행 → 위반 탐지</div></div>
+        <div class="arr" aria-hidden="true"></div>
+        <div class="node newb"><span class="tag">NEW</span><div class="t">키워드 검색</div><div class="d">TF-IDF · BM25 → 근거 규칙</div></div>
+      </div>
+
+      <div class="fig-label">규칙 공급</div>
+      <div class="flow">
+        <div class="node"><div class="t">Git</div><div class="d">규칙 원본 YAML</div></div>
+        <div class="arr" aria-hidden="true"></div>
+        <div class="node"><div class="t">Pydantic</div><div class="d">규칙 스키마 검증</div></div>
+        <div class="arr" aria-hidden="true"></div>
+        <div class="node"><div class="t">MySQL</div><div class="d">규칙 버전 스냅샷</div></div>
+        <div class="arr" aria-hidden="true"></div>
+        <div class="node main"><div class="t">규칙 엔진</div><div class="d">버전이 붙은 규칙으로 판정</div></div>
+      </div>
+
+      <div class="fig-label">채점</div>
+      <div class="flow">
+        <div class="node"><div class="t">탐지 · 검색 결과</div><div class="d">위반 + 근거 규칙</div></div>
+        <div class="arr" aria-hidden="true"></div>
+        <div class="node"><div class="t">평가 실행기</div><div class="d">정답셋과 비교</div></div>
+        <div class="arr" aria-hidden="true"></div>
+        <div class="node"><div class="t">기준선 리포트</div><div class="d">정밀도 · 재현율 · Recall@k</div></div>
+      </div>
+    </div>
+
+    <p class="sub">NEW 표시는 이 과정에서 처음 다루는 기술이다. 나머지는 이 프로젝트에서 맡는 역할만 다룬다.</p>
+
+    <div class="table-wrap"><table>
+    <thead><tr><th>기술</th><th>역할</th><th>설명</th></tr></thead>
+    <tbody>
+    <tr class="new"><td class="nowrap"><strong>Kiwi</strong><span class="badge">NEW</span></td><td>한국어 토큰화</td><td>한국어 형태소 분석기(<code>kiwipiepy</code>). 문장을 형태소·품사·위치 단위로 쪼갠다. pip 설치만으로 동작하고 Java가 필요 없다. 사용자 사전으로 <code>aria-label</code> 같은 도메인 단어를 한 토큰으로 고정할 수 있다. 규칙 엔진과 BM25 양쪽의 입력을 만든다.</td></tr>
+    <tr class="new"><td class="nowrap"><strong>BM25</strong><span class="badge">NEW</span></td><td>근거 규칙 검색</td><td>TF-IDF를 개선한 랭킹 함수. 단어 빈도가 늘어도 점수가 일정 수준에서 포화되고(k1), 긴 문서가 유리해지지 않도록 길이를 보정한다(b). Elasticsearch·OpenSearch의 기본 점수 방식이다. <code>rank-bm25</code>로 구현하고 직접 계산한 값과 대조한다.</td></tr>
+    <tr><td class="nowrap"><strong>TF-IDF</strong></td><td>검색 기준선</td><td>scikit-learn <code>TfidfVectorizer</code>. BM25와 같은 질의로 순위를 비교하는 기준선</td></tr>
+    <tr><td class="nowrap"><strong>Playwright</strong></td><td>DOM 추출</td><td>렌더링된 페이지에서 alt, 링크 문구, 레이블, 에러 메시지 추출</td></tr>
+    <tr><td class="nowrap"><strong>YAML · Pydantic</strong></td><td>규칙 정의 · 검증</td><td>규칙 원본은 YAML, 로드 시 Pydantic 스키마로 필드·연산자 검증</td></tr>
+    <tr><td class="nowrap"><strong>Git</strong></td><td>규칙 형상 관리</td><td>규칙 변경을 PR로 리뷰하고 이력 보존</td></tr>
+    <tr><td class="nowrap"><strong>MySQL · SQLAlchemy</strong></td><td>버전·결과 저장</td><td>규칙 버전 스냅샷, 정답셋, 탐지 결과. WCAG ↔ 규칙 ↔ 결과의 조인 관계</td></tr>
+    <tr><td class="nowrap"><strong>FastAPI · Jinja2</strong></td><td>테스트 사이트</td><td>위반을 심은 페이지 (완성본 제공)</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section class="panel" id="p0-4" role="tabpanel" aria-labelledby="tab-p0-4" hidden>
+    <div class="crumb">Part 0 · 한눈에 보기</div>
+    <h2>0.4 Part 구성</h2>
+    <div class="table-wrap"><table>
+    <thead><tr><th>Part</th><th>주제</th><th>결과물</th></tr></thead>
+    <tbody>
+    <tr><td>Part 1</td><td>프로젝트 소개와 설계 원칙</td><td>프로젝트 목업, 확장 범위, SRS, ADR-001</td></tr>
+    <tr><td>Part 2</td><td>가이드 규칙과 정답셋</td><td>규칙 YAML(image · link · form), 정답셋 CSV</td></tr>
+    <tr><td>Part 3</td><td>Kiwi 형태소 분석</td><td>토크나이저 모듈</td></tr>
+    <tr><td>Part 4</td><td>규칙 v1: 함수로 만들기</td><td>함수형 탐지기, 첫 정밀도·재현율</td></tr>
+    <tr><td>Part 5</td><td>규칙 v2: Rules as Code</td><td>YAML 규칙 엔진, MySQL 스냅샷</td></tr>
+    <tr><td>Part 6</td><td>메타데이터 분류</td><td>DOM 요소 → component 분류기</td></tr>
+    <tr><td>Part 7</td><td>키워드 검색: TF-IDF · BM25</td><td>근거 규칙 검색기, Recall@k 비교</td></tr>
+    <tr><td>Part 8</td><td>평가와 한계</td><td>A0 기준선 리포트, 규칙이 실패하는 사례</td></tr>
+    <tr><td>실습</td><td>button 컴포넌트 추가</td><td>규칙 → WCAG 매핑 → 위반 → 정답셋 → 재평가</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <!-- ============================== Part 1 ============================== -->
+
+  <section class="panel" id="p1-1" role="tabpanel" aria-labelledby="tab-p1-1" hidden>
+    <div class="crumb">Part 1 · 프로젝트 소개와 설계 원칙</div>
+    <h2>1.1 어떤 프로젝트인가</h2>
+    <div class="key">웹페이지 URL을 넣으면, 설계 원칙 위반을 찾고 각 위반에 근거 규칙을 붙여 돌려주는 검사 시스템이다.</div>
+
+    <h3>웹페이지 작업의 두 가지 기준</h3>
+    <p>프론트엔드 작업물은 두 종류의 기준을 동시에 지켜야 한다. 이 프로젝트는 둘 다를 검사 규칙으로 바꾼다.</p>
+    <div class="table-wrap"><table>
+    <thead><tr><th>구분</th><th>국제·국가 표준</th><th>사내 디자인 가이드</th></tr></thead>
+    <tbody>
+    <tr><td class="nowrap"><b>만드는 곳</b></td><td>W3C, 국가 기관, 표준화 기구</td><td>회사의 디자인·프론트엔드 팀</td></tr>
+    <tr><td class="nowrap"><b>목적</b></td><td>누구나 쓸 수 있는 웹 (접근성, 호환성)</td><td>제품 전체의 일관된 화면과 경험</td></tr>
+    <tr><td class="nowrap"><b>효력</b></td><td>법·인증·조달 요건과 연결</td><td>팀 내부 약속, 리뷰 기준</td></tr>
+    <tr><td class="nowrap"><b>표현 방식</b></td><td>"텍스트 대비 4.5:1 이상"처럼 결과 기준</td><td>"본문 #333, 버튼 높이 44px"처럼 구체적 값</td></tr>
+    <tr><td class="nowrap"><b>관계</b></td><td>최소 기준</td><td>표준과 같거나 더 엄격해야 한다</td></tr>
+    </tbody></table></div>
+
+    <h3>표준 문서와 담긴 내용</h3>
+    <p class="sub">문서 이름을 누르면 원문이 열린다.</p>
+    <div class="table-wrap"><table>
+    <thead><tr><th>문서</th><th>만든 곳</th><th>담긴 내용</th><th>이 프로젝트에서</th></tr></thead>
+    <tbody>
+    <tr><td class="nowrap"><a class="doc" href="https://www.w3.org/TR/WCAG22/" target="_blank" rel="noopener"><b>WCAG 2.2</b></a><div class="sub">Web Content Accessibility Guidelines</div></td><td>W3C</td><td>웹 접근성 국제 표준. 4원칙(인식·운용·이해·견고) 아래 성공 기준 80여 개를 A·AA·AAA 등급으로 정의. 예: 대체 텍스트(1.1.1), 명도 대비(1.4.3), 키보드 조작(2.1.1), 링크 목적(2.4.4), 입력 레이블(3.3.2)</td><td>모든 규칙의 근거 조항. 목표 등급은 AA</td></tr>
+    <tr><td class="nowrap"><a class="doc" href="https://www.bizinfo.go.kr/biz/bizd/selectBIZD130View.do" target="_blank" rel="noopener"><b>KWCAG 2.2</b></a><div class="sub">Korean Web Content Accessibility Guidelines · 국가표준 KS X OT0003:2022</div></td><td>국내 (과학기술정보통신부 소관)</td><td>WCAG를 국내 실정에 맞게 반영한 한국형 지침. 4원칙·14지침·33검사항목. 웹 접근성 품질인증 심사 기준</td><td>국내 서비스 기준선, 공공·인증 대상일 때 필수</td></tr>
+    <tr><td class="nowrap"><a class="doc" href="https://www.w3.org/TR/wai-aria-1.2/" target="_blank" rel="noopener"><b>WAI-ARIA 1.2</b></a><div class="sub">Web Accessibility Initiative – Accessible Rich Internet Applications</div></td><td>W3C</td><td>모달·탭·토스트 같은 커스텀 컴포넌트의 역할(role), 상태(aria-expanded 등), 이름(aria-label)을 보조기술에 알리는 방법</td><td>링크·버튼의 aria-label 판정, 이후 모달·토스트 규칙</td></tr>
+    <tr><td class="nowrap"><a class="doc" href="https://html.spec.whatwg.org/" target="_blank" rel="noopener"><b>HTML 표준</b></a><div class="sub">HTML Living Standard</div></td><td>WHATWG</td><td>요소의 의미와 올바른 사용. <code>&lt;button&gt;</code>, <code>&lt;label&gt;</code>, <code>&lt;nav&gt;</code>, <code>&lt;main&gt;</code> 같은 시맨틱 요소</td><td>DOM 추출과 component 분류의 기준</td></tr>
+    <tr><td class="nowrap"><a class="doc" href="https://www.etsi.org/human-factors-accessibility/en-301-549-v3-the-harmonized-european-standard-for-ict-accessibility" target="_blank" rel="noopener"><b>EN 301 549</b></a><div class="sub">European Norm 301 549</div></td><td>유럽 표준화 기구</td><td>유럽 접근성법(EAA)의 기준 표준. 웹 부분은 WCAG 2.1 AA를 그대로 참조</td><td>해외 서비스로 확장할 때의 기준</td></tr>
+    </tbody></table></div>
+
+    <h3>사내 디자인 가이드에 담기는 내용</h3>
+    <p class="sub">표준이 "무엇을 만족해야 하는가"라면, 가이드는 "우리 제품에서는 이렇게 한다"를 정한다.</p>
+    <div class="table-wrap"><table>
+    <thead><tr><th>영역</th><th>가이드 내용 예</th><th>연결된 표준</th></tr></thead>
+    <tbody>
+    <tr><td class="nowrap"><b>색상 · 대비</b></td><td>텍스트·배경 색 조합 목록, 보조 텍스트 최소 색상</td><td>WCAG 1.4.3, 1.4.11</td></tr>
+    <tr><td class="nowrap"><b>타이포그래피</b></td><td>글자 크기 단계, 줄 간격, 200% 확대 시 레이아웃 유지</td><td>WCAG 1.4.4, 1.4.12</td></tr>
+    <tr><td class="nowrap"><b>버튼 · 링크</b></td><td>최소 터치 크기 44px, 포커스 표시 스타일, 링크 문구 작성법</td><td>WCAG 2.5.8, 2.4.7, 2.4.4</td></tr>
+    <tr><td class="nowrap"><b>폼</b></td><td>레이블 위치, placeholder 사용 금지 범위, 에러 문구 형식</td><td>WCAG 3.3.1, 3.3.2, 3.3.3</td></tr>
+    <tr><td class="nowrap"><b>이미지 · 아이콘</b></td><td>alt 작성 원칙, 장식 이미지 처리, 아이콘 버튼 이름</td><td>WCAG 1.1.1</td></tr>
+    <tr><td class="nowrap"><b>컴포넌트</b></td><td>모달·토스트·탭의 동작, 포커스 이동, 사용할 공통 컴포넌트</td><td>WCAG 2.1.2, 4.1.2, WAI-ARIA</td></tr>
+    <tr><td class="nowrap"><b>문구 (UX 라이팅)</b></td><td>버튼·에러·안내 문구의 어조와 형식</td><td>WCAG 3.3.3, UX 휴리스틱</td></tr>
+    </tbody></table></div>
+    <p class="sub">가이드는 표준을 대신하지 않는다. 가이드에 "보조 텍스트 #AAA"라고 적으면 흰 배경에서 대비 기준(4.5:1)을 넘지 못해, 가이드를 지켰는데 표준은 어기는 일이 생긴다. 그래서 A0의 모든 가이드 규칙에는 WCAG 조항이 붙는다.</p>
+
+    <h3>지키지 않으면 생기는 문제</h3>
+    <div class="table-wrap"><table>
+    <thead><tr><th>영역</th><th>문제</th><th>예</th></tr></thead>
+    <tbody>
+    <tr><td class="nowrap"><b>사용자</b></td><td>장애인·고령자가 서비스를 쓰지 못한다</td><td>스크린리더가 alt="이미지"만 읽어 배너 내용을 알 수 없음. 키보드 사용자가 모달 안에 갇힘. 저시력 사용자가 연회색 글자를 못 읽음</td></tr>
+    <tr><td class="nowrap"><b>법 (국내)</b></td><td><a href="https://www.law.go.kr/법령/장애인차별금지및권리구제등에관한법률" target="_blank" rel="noopener">장애인차별금지법</a>상 웹 접근성 의무 위반</td><td>국가인권위원회 권고 → 법무부 시정명령, 시정명령 불이행 시 3천만 원 이하 과태료. 악의적 차별은 형사처벌 대상. <a href="https://www.law.go.kr/법령/지능정보화기본법" target="_blank" rel="noopener">지능정보화 기본법</a>도 접근성 준수를 요구</td></tr>
+    <tr><td class="nowrap"><b>법 (해외)</b></td><td><a href="https://eur-lex.europa.eu/eli/dir/2019/882/oj" target="_blank" rel="noopener">유럽 접근성법(EAA)</a> 위반</td><td>2025년 6월 28일부터 EU 대상 전자상거래·금융 등 서비스에 적용. 회원국별 벌금, 시장 퇴출 가능</td></tr>
+    <tr><td class="nowrap"><b>사업</b></td><td>매출·기회 손실</td><td>결제 폼에서 막힌 사용자 이탈, 웹 접근성 인증이 필요한 공공 사업 참여 불가</td></tr>
+    <tr><td class="nowrap"><b>개발</b></td><td>비용 증가</td><td>화면마다 다른 패턴으로 유지보수 부담, 배포 후 발견된 위반은 수정 범위와 비용이 커짐</td></tr>
+    </tbody></table></div>
+
+    <h3>그래서 이 프로젝트가 하는 일</h3>
+    <p>표준과 사내 가이드를 <b>검사 규칙</b>으로 바꾸고, 페이지를 자동으로 검사해 위반마다 <b>근거 규칙</b>을 붙인다. 지금까지 사람이 눈으로 하던 판정을 같은 기준·같은 결과로 반복할 수 있게 만드는 것이 목표다.</p>
+
+    <h3>완성된 모습 (목업)</h3>
+    <div class="mock" role="img" aria-label="검사 리포트 화면 목업">
+      <div class="mock-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">report.example/inspections/1042</span></div>
+      <div class="mock-body">
+        <div class="mock-title">설계 원칙 검사 리포트</div>
+        <div class="mock-input"><div class="field">https://shop.example/products</div><div class="btn">검사</div></div>
+        <div class="mock-summary">
+          <div class="cell"><div class="k">검사한 요소</div><div class="v">38</div></div>
+          <div class="cell"><div class="k">위반</div><div class="v">5</div></div>
+          <div class="cell"><div class="k">규칙 세트</div><div class="v small">guide v1.3</div></div>
+          <div class="cell"><div class="k">검사 방식</div><div class="v small">규칙 + BM25</div></div>
+        </div>
+        <div class="mock-tabs"><span class="on">접근성 (WCAG · 가이드) <span class="stage">A0</span></span><span>UX 휴리스틱 <span class="stage later">B6</span></span></div>
+
+        <div class="vcard">
+          <div class="top"><span class="sev critical">critical</span><span class="rid">IMG-001</span><span class="wc">WCAG 1.1.1 · image</span></div>
+          <div class="msg">대체 텍스트가 이미지 내용을 설명하지 않음</div>
+          <div class="el">&lt;img src="banner_01.png" alt="이미지"&gt;</div>
+          <div class="vgrid">
+            <div class="vbox"><div class="h">근거 가이드 <span class="stage">A0 · BM25</span></div>
+              1. IMG-001 대체 텍스트는 이미지의 목적을 설명한다 <span class="score">7.42</span><br>
+              2. IMG-003 장식 이미지는 alt="" 로 둔다 <span class="score">3.18</span></div>
+            <div class="vbox later"><div class="h">수정 제안 <span class="stage later">A4 · RAG</span></div>
+              alt="여름 신상품 30% 할인 배너"처럼 배너 문구와 목적을 적는다</div>
+          </div>
+        </div>
+
+        <div class="vcard">
+          <div class="top"><span class="sev major">major</span><span class="rid">LINK-001</span><span class="wc">WCAG 2.4.4 · link</span></div>
+          <div class="msg">링크 문구만으로 이동 목적을 알 수 없음</div>
+          <div class="el">&lt;a href="/policy/shipping"&gt;더보기&lt;/a&gt;</div>
+          <div class="vgrid">
+            <div class="vbox"><div class="h">근거 가이드 <span class="stage">A0 · BM25</span></div>
+              1. LINK-001 링크 문구는 목적지를 드러낸다 <span class="score">6.95</span></div>
+            <div class="vbox later"><div class="h">수정 제안 <span class="stage later">A4 · RAG</span></div>
+              "배송 정책 더보기" 또는 aria-label 추가</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="sub">배지는 그 기능이 들어오는 단계다. A0은 파란 배지(규칙 탐지 + BM25 근거)까지 만들고, 회색 배지는 이후 단계에서 붙는다. 수치는 목업용 예시다.</p>
+
+    <h3>요소 하나가 처리되는 과정</h3>
+    <div class="table-wrap"><table>
+    <thead><tr><th>단계</th><th>처리</th><th>예: &lt;a&gt;더보기&lt;/a&gt;</th></tr></thead>
+    <tbody>
+    <tr><td><span class="num">① 추출</span></td><td>Playwright로 렌더링된 DOM에서 요소와 텍스트 수집</td><td>component=link, text="더보기"</td></tr>
+    <tr><td><span class="num">② 토큰화</span></td><td>Kiwi 형태소 분석 + 품사 필터</td><td>[더/MAG, 보/VV] → {더, 보}</td></tr>
+    <tr><td><span class="num">③ 탐지</span></td><td>규칙 엔진이 YAML 규칙 실행</td><td>{더, 보} ⊆ 모호어 사전 → LINK-001 위반</td></tr>
+    <tr><td><span class="num">④ 근거 검색</span></td><td>BM25로 가이드 규칙 순위 매기기</td><td>LINK-001 1위</td></tr>
+    <tr><td><span class="num">⑤ 기록</span></td><td>규칙 버전과 함께 결과 저장, 정답셋으로 채점</td><td>guide v1.3, 정답과 일치 → TP</td></tr>
+    </tbody></table></div>
+
+    <p class="sub">참고: <a href="https://www.w3.org/TR/WCAG22/">WCAG 2.2 (W3C)</a> · <a href="https://yozm.wishket.com/magazine/detail/1942">KWCAG 구성과 웹 접근성 품질마크</a> · <a href="https://www.nepla.ai/wiki/it-정보-방송통신/기타/장애인차별금지법과-웹접근성-준수-의무-1509xg246nol">장애인차별금지법과 웹 접근성 의무</a> · <a href="https://www.acquia.com/blog/european-accessibility-act-and-en-301-549-your-complete-compliance-guide">EAA와 EN 301 549</a></p>
+  </section>
+
+  <section class="panel" id="p1-2" role="tabpanel" aria-labelledby="tab-p1-2" hidden>
+    <div class="crumb">Part 1 · 프로젝트 소개와 설계 원칙</div>
+    <h2>1.2 왜 기획했나</h2>
+    <div class="key">프론트엔드 검수에서 반복되는 여섯 가지 문제를 하나씩 시스템으로 바꾸려고 기획했다.</div>
+
+    <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>현장에서 겪는 문제</th><th>원인</th><th>이 프로젝트의 대응</th><th>단계</th></tr></thead>
+    <tbody>
+    <tr><td><span class="num">①</span></td><td>같은 "더보기" 링크를 리뷰어 A는 통과, B는 반려</td><td>판정 기준이 사람 머릿속에 있음</td><td>가이드 규칙을 YAML로 명문화하고 규칙 엔진이 같은 기준으로 판정</td><td><span class="stage">A0</span></td></tr>
+    <tr><td><span class="num">②</span></td><td>자동 검사 도구는 통과했는데 접근성 민원 발생</td><td>도구는 alt 속성의 <b>존재</b>만 확인. 차트에 alt="아름다운 풍경"처럼 내용과 다른 문구는 판단 못 함</td><td>형태소 기반 의미 규칙(A0), 맥락은 LLM 판단(A1)</td><td><span class="stage">A0</span> <span class="stage later">A1</span></td></tr>
+    <tr><td><span class="num">③</span></td><td>"위반입니다"만 받고 개발자가 근거·수정법을 따로 찾음</td><td>지적에 근거 문서가 연결돼 있지 않음</td><td>BM25로 근거 규칙 검색(A0), RAG로 근거 인용 설명·수정안(A4)</td><td><span class="stage">A0</span> <span class="stage later">A4</span></td></tr>
+    <tr><td><span class="num">④</span></td><td>가이드 개정 후 예전 검사 결과와 비교가 안 됨</td><td>어느 버전 규칙으로 판정했는지 기록이 없음</td><td>규칙은 Git 원본, 판정마다 MySQL 버전 스냅샷 기록</td><td><span class="stage">A0</span></td></tr>
+    <tr><td><span class="num">⑤</span></td><td>"검사가 얼마나 잘 잡냐"는 질문에 답을 못 함</td><td>정답이 정해진 평가 데이터가 없음</td><td>위반을 심은 테스트 사이트 + 정답셋 → 정밀도·재현율</td><td><span class="stage">A0</span></td></tr>
+    <tr><td><span class="num">⑥</span></td><td>배포 직전 수작업 검수가 병목</td><td>PR마다 사람이 직접 확인</td><td>CI 평가 관문(A6), PR에 검사 결과 코멘트(B6)</td><td><span class="stage later">A6</span> <span class="stage later">B6</span></td></tr>
+    </tbody></table></div>
+
+    <h3>기존 도구와의 차이</h3>
+    <div class="table-wrap"><table>
+    <thead><tr><th>항목</th><th>자동 검사 도구 (axe-core, Lighthouse)</th><th>이 프로젝트</th></tr></thead>
+    <tbody>
+    <tr><td class="nowrap"><b>판정 기준</b></td><td>WCAG 중 기계적으로 확인 가능한 항목</td><td>WCAG + 사내 가이드 규칙 + UX 휴리스틱(B6)</td></tr>
+    <tr><td class="nowrap"><b>텍스트 의미</b></td><td>대부분 존재 여부만 확인</td><td>형태소 규칙 → LLM 맥락 판단</td></tr>
+    <tr><td class="nowrap"><b>근거</b></td><td>룰 ID와 일반 설명</td><td>사내 가이드 규칙 검색 + 인용</td></tr>
+    <tr><td class="nowrap"><b>품질 측정</b></td><td>없음</td><td>정답셋 기반 정밀도·재현율, 매 변경마다 회귀 확인</td></tr>
+    </tbody></table></div>
+    <p class="sub">axe-core는 대체하는 대상이 아니라 B1에서 에이전트의 도구로 함께 쓴다.</p>
+  </section>
+
+  <section class="panel" id="p1-3" role="tabpanel" aria-labelledby="tab-p1-3" hidden>
+    <div class="crumb">Part 1 · 프로젝트 소개와 설계 원칙</div>
+    <h2>1.3 어디까지 확장되나</h2>
+    <div class="key">A0의 규칙 검사기가 같은 정답셋 위에서 RAG → 운영 → 에이전트 순으로 커진다.</div>
+
+    <div class="fig">
+      <div class="fig-title">같은 검사 시스템이 네 단계에 걸쳐 커진다</div>
+      <div class="flow left">
+        <div class="node main">
+          <div class="t acc">A0 베이스</div>
+          <ul><li>규칙 기반 탐지</li><li>BM25 근거 검색</li><li>정답셋 채점</li><li>규칙 버전 관리</li></ul>
+          <div class="foot">해결: ① ② ③ ④ ⑤</div>
+        </div>
+        <div class="arr" aria-hidden="true"></div>
+        <div class="node">
+          <div class="t">A1~A5 RAG</div>
+          <ul><li>LLM 맥락 판단</li><li>벡터 · 하이브리드 검색</li><li>근거 인용 설명</li><li>수정안 생성</li></ul>
+          <div class="foot">해결: ② ③ 심화</div>
+        </div>
+        <div class="arr" aria-hidden="true"></div>
+        <div class="node">
+          <div class="t">A6 운영</div>
+          <ul><li>k3s 배포 · GitOps</li><li>평가 관문 CI/CD</li><li>추적성 매트릭스</li><li>관측성 (Grafana)</li></ul>
+          <div class="foot">해결: ④ ⑤ ⑥</div>
+        </div>
+        <div class="arr" aria-hidden="true"></div>
+        <div class="node">
+          <div class="t">B 에이전트</div>
+          <ul><li>LangGraph 실패 대응</li><li>OCR 이미지 텍스트</li><li>MCP · PR 코멘트</li><li>UX 휴리스틱 검사</li></ul>
+          <div class="foot">해결: ② ⑥ 심화</div>
+        </div>
+      </div>
+      <div class="band">모든 단계는 A0 정답셋으로 채점하고, 직전 단계를 기준선으로 비교한다</div>
+    </div>
+    <p class="sub">①~⑥은 1.2의 문제 번호다.</p>
+
+    <h3>확장 축</h3>
+    <div class="table-wrap"><table>
+    <thead><tr><th>축</th><th>A0</th><th>최종 (B7)</th></tr></thead>
+    <tbody>
+    <tr><td class="nowrap"><b>검사 대상</b></td><td>image · link · form (+ 실습 button)</td><td>모든 UI 컴포넌트, 이미지 속 텍스트</td></tr>
+    <tr><td class="nowrap"><b>판단 기준</b></td><td>WCAG + 사내 가이드 규칙</td><td>+ UX 휴리스틱 (Nielsen, Fitts, Hick, 게슈탈트)</td></tr>
+    <tr><td class="nowrap"><b>판단 방식</b></td><td>규칙 + 키워드 검색</td><td>규칙 + LLM + RAG + 독립 검증 에이전트</td></tr>
+    <tr><td class="nowrap"><b>입력</b></td><td>테스트 사이트 URL</td><td>PR 변경분, 외부 PDF·HWP 가이드 문서</td></tr>
+    <tr><td class="nowrap"><b>출력</b></td><td>위반 목록 + 근거 규칙</td><td>근거·수정안이 붙은 PR 코멘트</td></tr>
+    <tr><td class="nowrap"><b>실행 환경</b></td><td>로컬 Python</td><td>k3s 배포, CI 관문, AWS 이전 설계</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section class="panel" id="p1-4" role="tabpanel" aria-labelledby="tab-p1-4" hidden>
+    <div class="crumb">Part 1 · 프로젝트 소개와 설계 원칙</div>
+    <h2>1.4 설계 원칙</h2>
+    <div class="key">모든 판단은 근거를 가지고, 모든 근거는 추적되고, 모든 결과는 검증된다.</div>
+
+    <div class="table-wrap"><table>
+    <thead><tr><th>원칙</th><th>의미</th><th>A0 구현</th><th>이후 확장</th></tr></thead>
+    <tbody>
+    <tr><td class="nowrap"><b>근거</b></td><td>모든 탐지에 규칙 ID와 WCAG 조항이 붙는다</td><td>규칙의 <code>wcag</code> 필드, BM25 근거 검색</td><td>LLM 응답의 규칙 ID 실존 검증(A1), 인용 정확도(A4)</td></tr>
+    <tr><td class="nowrap"><b>추적</b></td><td>조항 → 규칙 → 위반 → 결과가 이어진다</td><td>판정마다 규칙 버전 기록</td><td>추적성 매트릭스(A6), 결과에 프롬프트·모델 버전 기록(B6)</td></tr>
+    <tr><td class="nowrap"><b>검증</b></td><td>기준선 대비 수치로 말한다</td><td>정답셋 정밀도·재현율·Recall@k</td><td>평가 배포 관문(A6), 독립 검증 에이전트(B6)</td></tr>
+    </tbody></table></div>
+
+    <h3>반복 패턴</h3>
+    <p>v1을 만들어 측정하고, 그 수치를 근거로 v2를 설계한다.</p>
+    <div class="table-wrap"><table>
+    <thead><tr><th>대상</th><th>v1</th><th>측정으로 드러나는 문제</th><th>v2</th><th>단계</th></tr></thead>
+    <tbody>
+    <tr><td>규칙</td><td>Python 함수</td><td>규칙 추가마다 코드 수정, 문서와 코드 불일치</td><td>Rules as Code (YAML + 엔진)</td><td class="nowrap">A0</td></tr>
+    <tr><td>검색</td><td>ChromaDB</td><td>키워드 검색 부재, 운영 한계</td><td>OpenSearch 하이브리드</td><td class="nowrap">A3 → A5</td></tr>
+    <tr><td>에이전트</td><td>단순 스크립트</td><td>실패 시 전체 중단, 비용 통제 불가</td><td>LangGraph 워크플로우</td><td class="nowrap">A4 → B2</td></tr>
+    <tr><td>역할</td><td>단일 그래프</td><td>접근성·UX 판단이 한 프롬프트에 섞임</td><td>멀티에이전트</td><td class="nowrap">B2 → B6</td></tr>
+    </tbody></table></div>
+
+    <h3>설계 결정 기록 (ADR)</h3>
+    <p>결정 하나와 버린 대안, 그 이유를 남긴다. 첫 ADR은 규칙 저장 위치다.</p>
+<pre><code># ADR-001. 가이드 규칙의 원본은 Git의 YAML 파일로 둔다
+
+## 맥락
+규칙이 바뀌면 탐지 결과가 바뀐다.
+변경 이력과 과거 결과 재현이 필요하다. (문제 ④)
+
+## 결정
+원본은 Git의 YAML, PR 리뷰 후 병합.
+병합된 규칙은 버전을 붙여 MySQL에 스냅샷 저장.
+
+## 검토한 대안
+- MySQL에 직접 저장: 변경 이력·리뷰 절차를 따로 만들어야 함
+- MongoDB에 문서로 저장: 규칙은 WCAG·위반·결과와 조인 관계라 맞지 않음
+
+## 결과
+- 규칙 변경이 코드 리뷰가 됨
+- 결과에 규칙 버전이 남아 재현 가능 (NFR-01, NFR-02)
+- A6에서 규칙 변경 PR이 평가 CI를 실행하는 기반</code></pre>
+  </section>
+
+  <section class="panel" id="p1-5" role="tabpanel" aria-labelledby="tab-p1-5" hidden>
+    <div class="crumb">Part 1 · 프로젝트 소개와 설계 원칙</div>
+    <h2>1.5 요구사항 명세 (SRS)</h2>
+    <div class="key">모든 요구사항에는 수치 기준과 검증 방법이 붙는다. 검증할 수 없으면 요구사항이 아니다.</div>
+
+    <h3>기능 요구사항</h3>
+    <div class="table-wrap"><table>
+    <thead><tr><th>ID</th><th>요구사항</th><th>근거</th><th>검증 방법</th></tr></thead>
+    <tbody>
+    <tr><td class="nowrap">FR-01</td><td>이미지 대체 텍스트의 누락·무의미함을 탐지한다</td><td>WCAG 1.1.1</td><td>정답셋 image 항목 정밀도·재현율</td></tr>
+    <tr><td class="nowrap">FR-02</td><td>목적을 알 수 없는 링크 문구를 탐지한다</td><td>WCAG 2.4.4</td><td>정답셋 link 항목 정밀도·재현율</td></tr>
+    <tr><td class="nowrap">FR-03</td><td>레이블 없는 입력 필드를 탐지한다</td><td>WCAG 3.3.2</td><td>정답셋 form 항목 정밀도·재현율</td></tr>
+    <tr><td class="nowrap">FR-04</td><td>수정 방법을 안내하지 않는 에러 메시지를 탐지한다</td><td>WCAG 3.3.3</td><td>정답셋 form 항목 정밀도·재현율</td></tr>
+    <tr><td class="nowrap">FR-05</td><td>탐지된 위반마다 관련 가이드 규칙을 검색해 근거로 붙인다</td><td>원칙: 근거</td><td>정답셋 기준 Recall@k</td></tr>
+    <tr><td class="nowrap">FR-06</td><td>모든 결과에 규칙 ID, 규칙 버전, WCAG 조항을 포함한다</td><td>원칙: 근거·추적</td><td>결과 스키마 검사 통과율 100%</td></tr>
+    </tbody></table></div>
+
+    <h3>비기능 요구사항</h3>
+    <p class="sub">수치는 초기 목표값이며, 측정 후 조정하고 ADR로 남긴다.</p>
+    <div class="table-wrap"><table>
+    <thead><tr><th>ID</th><th>구분</th><th>요구사항과 수치 기준</th><th>검증 방법</th><th>검증 시점</th></tr></thead>
+    <tbody>
+    <tr><td class="nowrap">NFR-01</td><td>재현성</td><td>같은 규칙 버전과 같은 입력이면 결과가 100% 같다</td><td>반복 실행 비교</td><td class="nowrap">A0, 매 배포</td></tr>
+    <tr><td class="nowrap">NFR-02</td><td>추적성</td><td>모든 규칙이 WCAG 조항 1개 이상과 연결된다</td><td>스키마 검증, 조항 커버율</td><td class="nowrap">A0, A6</td></tr>
+    <tr><td class="nowrap">NFR-03</td><td>성능</td><td>규칙 검사는 페이지 1장당 5초 이내 (LLM 제외)</td><td>실행 시간 p95</td><td class="nowrap">A0, 배포 #1</td></tr>
+    <tr><td class="nowrap">NFR-04</td><td>비용</td><td>페이지당 LLM 비용 상한을 정하고 지킨다 (A0은 0원)</td><td>토큰 집계</td><td class="nowrap">A1~</td></tr>
+    <tr><td class="nowrap">NFR-05</td><td>가용성</td><td>검색 엔진·LLM이 죽어도 규칙 결과만으로 부분 리포트를 낸다</td><td>장애 주입 테스트</td><td class="nowrap">B2</td></tr>
+    <tr><td class="nowrap">NFR-06</td><td>품질 회귀</td><td>어떤 변경도 이전 기준선의 재현율을 떨어뜨리지 않는다</td><td>평가 CI 관문</td><td class="nowrap">A6~</td></tr>
+    </tbody></table></div>
+
+    <h3>요구사항과 검증의 짝 (V-모델)</h3>
+    <div class="fig">
+      <div class="fig-title">요구사항의 각 층은 같은 높이의 검증과 짝을 이룬다</div>
+      <div class="vm-head"><span>설계 (내려가며)</span><span></span><span>검증 (올라오며)</span></div>
+      <div class="vm">
+        <div class="node"><div class="t">시스템 요구사항</div><div class="d">SRS: 기능 + 비기능</div></div>
+        <div class="link">NFR-01~06</div>
+        <div class="node"><div class="t">시스템 검증</div><div class="d">배포 후 NFR · SLO 확인</div></div>
+
+        <div class="node l2"><div class="t">설계</div><div class="d">가이드 규칙 · 분류 체계</div></div>
+        <div class="link">FR-01~06</div>
+        <div class="node r2"><div class="t">통합 검증</div><div class="d">정답셋 평가</div></div>
+
+        <div class="node main impl"><div class="t">구현</div><div class="d">규칙 엔진 · 검색기</div></div>
+      </div>
+    </div>
+    <p class="sub">점선은 "이 요구사항은 저 단계에서 검증한다"는 짝이다. 위 표의 검증 방법·검증 시점 열이 이 짝을 글로 쓴 것이다.</p>
+  </section>
+
+  <!-- ============================== 부록 ============================== -->
+  <section class="panel" id="gloss" role="tabpanel" aria-labelledby="tab-gloss" hidden>
+    <div class="crumb">부록</div>
+    <h2>용어집 (약자 원어)</h2>
+    <div class="key">본문의 약자는 탭마다 처음 나올 때 원어를 함께 적고, 이후에는 점선 밑줄로 표시한다. 점선 밑줄을 누르면 원어와 뜻이 보인다.</div>
+    <div class="table-wrap"><table id="gloss-table">
+    <thead><tr><th>약자</th><th>원어</th><th>뜻</th><th>나오는 곳</th></tr></thead>
+    <tbody></tbody></table></div>
+  </section>
+
+  </main>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+<script>
+(function () {
+  // ── 약자 원어 표기 ──
+  const GLOSS = {
+    "SRS": ["Software Requirements Specification", "소프트웨어 요구사항 명세서"],
+    "FR": ["Functional Requirement", "기능 요구사항"],
+    "NFR": ["Non-Functional Requirement", "비기능 요구사항"],
+    "ADR": ["Architecture Decision Record", "설계 결정 기록"],
+    "WCAG": ["Web Content Accessibility Guidelines", "웹 콘텐츠 접근성 지침 (W3C)"],
+    "KWCAG": ["Korean Web Content Accessibility Guidelines", "한국형 웹 콘텐츠 접근성 지침"],
+    "W3C": ["World Wide Web Consortium", "웹 표준을 만드는 국제 기구"],
+    "WAI-ARIA": ["Web Accessibility Initiative – Accessible Rich Internet Applications", "동적 UI의 역할·상태를 보조기술에 알리는 명세"],
+    "WHATWG": ["Web Hypertext Application Technology Working Group", "HTML 표준을 관리하는 단체"],
+    "EAA": ["European Accessibility Act", "유럽 접근성법"],
+    "EN 301 549": ["European Norm 301 549", "유럽 ICT 접근성 표준"],
+    "EU": ["European Union", "유럽연합"],
+    "HTML": ["HyperText Markup Language", "웹 문서 마크업 언어"],
+    "DOM": ["Document Object Model", "브라우저가 만든 문서 구조 트리"],
+    "URL": ["Uniform Resource Locator", "웹 주소"],
+    "YAML": ["YAML Ain't Markup Language", "사람이 읽기 쉬운 데이터 표현 형식"],
+    "CSV": ["Comma-Separated Values", "쉼표로 구분한 표 데이터 파일"],
+    "UI": ["User Interface", "사용자 인터페이스"],
+    "UX": ["User Experience", "사용자 경험"],
+    "TF-IDF": ["Term Frequency – Inverse Document Frequency", "단어 빈도와 희귀도로 매기는 가중치"],
+    "BM25": ["Best Matching 25 (Okapi BM25)", "빈도 포화·문서 길이 보정을 더한 검색 순위 함수"],
+    "Recall@k": ["Recall at k", "상위 k개 결과 안에 정답이 들어온 비율"],
+    "TP": ["True Positive", "정답과 일치한 탐지"],
+    "LLM": ["Large Language Model", "대규모 언어 모델"],
+    "RAG": ["Retrieval-Augmented Generation", "검색 증강 생성"],
+    "OCR": ["Optical Character Recognition", "광학 문자 인식"],
+    "MCP": ["Model Context Protocol", "AI 모델과 외부 도구를 연결하는 프로토콜"],
+    "PR": ["Pull Request", "코드 변경 검토 요청"],
+    "CI/CD": ["Continuous Integration / Continuous Delivery", "지속적 통합 · 배포"],
+    "CI": ["Continuous Integration", "지속적 통합"],
+    "GitOps": ["Git Operations", "Git 저장소 상태를 클러스터에 자동 반영하는 운영 방식"],
+    "k3s": ["Lightweight Kubernetes", "경량 쿠버네티스 배포판"],
+    "AWS": ["Amazon Web Services", "아마존 클라우드"],
+    "SLO": ["Service Level Objective", "서비스 수준 목표"],
+    "p95": ["95th percentile", "95번째 백분위수 (요청 95%가 이 값 이하)"],
+    "AA": ["Level AA", "WCAG 적합성 등급 (A < AA < AAA)"]
+  };
+  const keys = Object.keys(GLOSS).sort(function (a, b) { return b.length - a.length; });
+  const esc = function (k) { return k.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&'); };
+  const RE = new RegExp('(?<![A-Za-z0-9@/\\-])(' + keys.map(esc).join('|') + ')(?![A-Za-z0-9/]|-[A-Za-z])', 'g');
+  const SKIP = 'code, pre, script, style, abbr, .tabs, .mock, #gloss, .toast';
+  const NO_EXPAND = 'a, h1, h2, h3, h4, th, .fig, .stage, .badge, .tag, .roadmap, .crumb, .num, .sev';
+  const where = {};
+
+  document.querySelectorAll('main .panel').forEach(function (panel) {
+    if (panel.id === 'gloss') return;
+    const seen = new Set();
+    const tabLabel = document.querySelector('[aria-controls="' + panel.id + '"] .no').textContent;
+    const walker = document.createTreeWalker(panel, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (n) {
+        if (!n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        return n.parentElement.closest(SKIP) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(function (node) {
+      const text = node.nodeValue;
+      RE.lastIndex = 0;
+      if (!RE.test(text)) return;
+      RE.lastIndex = 0;
+      const noExpand = !!node.parentElement.closest(NO_EXPAND);
+      const frag = document.createDocumentFragment();
+      let last = 0, m;
+      while ((m = RE.exec(text))) {
+        const k = m[1];
+        frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+        const ab = document.createElement('abbr');
+        ab.textContent = k;
+        ab.title = GLOSS[k][0] + ' · ' + GLOSS[k][1];
+        ab.dataset.full = k;
+        frag.appendChild(ab);
+        (where[k] = where[k] || new Set()).add(tabLabel);
+        const beforeHyphen = text.charAt(m.index + k.length) === '-';
+        if (!noExpand && !beforeHyphen && !seen.has(k)) {
+          seen.add(k);
+          const inParen = text.charAt(m.index - 1) === '(';
+          const ex = document.createElement('span');
+          ex.className = 'exp';
+          ex.textContent = inParen ? ', ' + GLOSS[k][0] : ' (' + GLOSS[k][0] + ')';
+          frag.appendChild(ex);
+        }
+        last = m.index + k.length;
+      }
+      frag.appendChild(document.createTextNode(text.slice(last)));
+      node.parentNode.replaceChild(frag, node);
+    });
+  });
+
+  // 용어집 표 생성
+  const tbody = document.querySelector('#gloss-table tbody');
+  Object.keys(GLOSS).sort(function (a, b) { return a.toLowerCase().localeCompare(b.toLowerCase()); }).forEach(function (k) {
+    const tr = document.createElement('tr');
+    [k, GLOSS[k][0], GLOSS[k][1], where[k] ? Array.from(where[k]).join(', ') : '—'].forEach(function (v, i) {
+      const td = document.createElement('td');
+      td.textContent = v;
+      if (i === 0) td.className = 'nowrap';
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+
+  // 약자를 누르면 원어 표시 (터치 화면 대응)
+  const toast = document.getElementById('toast');
+  let timer;
+  document.addEventListener('click', function (e) {
+    const ab = e.target.closest('abbr[data-full]');
+    if (!ab || ab.closest('a')) return;
+    const g = GLOSS[ab.dataset.full];
+    toast.innerHTML = '';
+    const b = document.createElement('b'); b.textContent = ab.dataset.full + ' · ' + g[0];
+    toast.appendChild(b); toast.appendChild(document.createTextNode(g[1]));
+    toast.hidden = false;
+    clearTimeout(timer); timer = setTimeout(function () { toast.hidden = true; }, 3500);
+  });
+
+  // 모바일 카드형 표: 각 칸에 열 제목을 붙인다
+  document.querySelectorAll('.table-wrap table').forEach(function (t) {
+    const heads = Array.from(t.querySelectorAll('thead th')).map(function (th) { return th.textContent.trim(); });
+    if (heads.length < 3) return;
+    t.classList.add('cards');
+    t.querySelectorAll('tbody tr').forEach(function (tr) {
+      Array.from(tr.children).forEach(function (td, i) { td.setAttribute('data-label', heads[i] || ''); });
+    });
+  });
+
+  // 탭
+  const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+  function select(i, focus) {
+    tabs.forEach(function (t, j) {
+      const on = i === j;
+      t.setAttribute('aria-selected', on);
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+    });
+    if (focus) tabs[i].focus({ preventScroll: true });
+    const list = tabs[i].parentElement;
+    if (list.scrollWidth > list.clientWidth) {
+      list.scrollLeft = tabs[i].offsetLeft - list.offsetLeft - 16;
+    }
+    history.replaceState(null, '', '#' + tabs[i].getAttribute('aria-controls'));
+    window.scrollTo({ top: 0 });
+  }
+  tabs.forEach(function (t, i) {
+    t.addEventListener('click', function () { select(i); });
+    t.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); select((i + 1) % tabs.length, true); }
+      if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { e.preventDefault(); select((i - 1 + tabs.length) % tabs.length, true); }
+    });
+  });
+  const start = tabs.findIndex(function (t) { return '#' + t.getAttribute('aria-controls') === location.hash; });
+  select(start > -1 ? start : 0);
+  window.addEventListener('load', function () { window.scrollTo({ top: 0 }); });
+})();
+</script>
+</body>
+</html>

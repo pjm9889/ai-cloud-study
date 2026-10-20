@@ -1,0 +1,910 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>커리큘럼 · 웹페이지 설계 원칙 검사 에이전트</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf9f6;
+    --surface: #ffffff;
+    --ink: #1c1b19;
+    --quiet: #55534e;
+    --line: #dcd9d2;
+    --edge: #a9a69e;
+    --accent: #2f6fde;
+    --accent-soft: rgba(47, 111, 222, 0.10);
+    --warn: #b4561f;
+    --warn-soft: rgba(180, 86, 31, 0.10);
+    --good: #2e7d4f;
+    --good-soft: rgba(46, 125, 79, 0.10);
+    --crit: #c0392b;
+    --code-bg: #f3f1ec;
+    --banner-bg: #1f2a44;
+    --banner-ink: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1a1a19;
+      --surface: #232322;
+      --ink: #ecebe7;
+      --quiet: #b0aea7;
+      --line: #3a3936;
+      --edge: #6e6c66;
+      --accent: #7aa7ff;
+      --accent-soft: rgba(122, 167, 255, 0.14);
+      --warn: #f0a06a;
+      --warn-soft: rgba(240, 160, 106, 0.14);
+      --good: #6fcf97;
+      --good-soft: rgba(111, 207, 151, 0.14);
+      --crit: #e57368;
+      --code-bg: #2b2b29;
+      --banner-bg: #111827;
+      --banner-ink: #ecebe7;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "Noto Sans KR", system-ui, -apple-system, sans-serif;
+    font-size: 17px; line-height: 1.75;
+  }
+
+  /* ── 배너 ── */
+  .banner { background: var(--banner-bg); color: var(--banner-ink); }
+  .banner-in { max-width: 1320px; margin: 0 auto; padding: 14px 24px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 24px; }
+  .banner .org { font-size: 17px; font-weight: 700; }
+  .banner .who { font-size: 15px; opacity: 0.9; }
+  .banner a { color: inherit; }
+
+  /* ── 레이아웃: 본문 + 우측 목차 ── */
+  .layout { max-width: 1320px; margin: 0 auto; padding: 32px 24px 96px; display: grid; grid-template-columns: minmax(0, 1fr) 272px; gap: 40px; align-items: start; }
+  .side { position: sticky; top: 24px; order: 2; max-height: calc(100vh - 48px); overflow-y: auto; }
+  .tabs { display: flex; flex-direction: column; gap: 2px; }
+  .tabs .group { font-size: 14px; font-weight: 700; color: var(--quiet); margin: 18px 0 6px 4px; }
+  .tabs .group:first-child { margin-top: 0; }
+  .tabs button {
+    all: unset; cursor: pointer; display: block;
+    font-size: 16px; line-height: 1.45; color: var(--ink);
+    padding: 10px 14px; border-radius: 8px; border: 1px solid transparent;
+  }
+  .tabs button .no { color: var(--accent); font-weight: 700; margin-right: 6px; }
+  .tabs button:hover { background: var(--surface); border-color: var(--line); }
+  .tabs button[aria-selected="true"] { background: var(--accent-soft); border-color: var(--accent); font-weight: 700; }
+  .tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ── 본문 ── */
+  main { min-width: 0; }
+  .panel[hidden] { display: none; }
+  .crumb { font-size: 15px; font-weight: 700; color: var(--accent); letter-spacing: 0.02em; margin-bottom: 4px; }
+  h1 { font-size: 36px; line-height: 1.3; margin: 4px 0 14px; letter-spacing: -0.02em; }
+  .lead { font-size: 19px; margin: 12px 0 0; }
+  h2 { font-size: 28px; line-height: 1.35; margin: 0 0 16px; letter-spacing: -0.01em; }
+  h2::before { content: "■ "; color: var(--accent); }
+  h3 { font-size: 22px; margin: 36px 0 12px; }
+  h3::before { content: "▶ "; color: var(--accent); font-size: 0.8em; }
+  p { margin: 8px 0; }
+  .sub { color: var(--quiet); font-size: 16px; }
+  .key { font-size: 19px; font-weight: 600; padding: 14px 20px; margin: 16px 0 24px; border-left: 4px solid var(--accent); background: var(--accent-soft); border-radius: 8px; }
+  code { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 15px; background: var(--code-bg); padding: 1px 6px; border-radius: 4px; }
+  pre { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 15px; background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; overflow-x: auto; line-height: 1.6; margin: 12px 0; }
+  pre code { background: none; padding: 0; }
+
+  .badge { display: inline-block; font-size: 14px; font-weight: 700; color: #fff; background: var(--accent); padding: 0 7px; border-radius: 5px; margin-left: 6px; line-height: 1.5; vertical-align: 1px; }
+  .stage { display: inline-block; font-size: 14px; font-weight: 700; padding: 0 7px; border-radius: 5px; border: 1px solid var(--accent); color: var(--accent); white-space: nowrap; line-height: 1.5; }
+  .stage.later { border-color: var(--edge); color: var(--quiet); }
+  .num { font-weight: 700; color: var(--accent); white-space: nowrap; }
+
+  /* ── 표 ── */
+  .table-wrap { margin: 14px 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); overflow: hidden; }
+  table { border-collapse: collapse; width: 100%; font-size: 16px; }
+  th, td { text-align: left; vertical-align: top; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  th { font-weight: 700; color: var(--quiet); font-size: 15px; white-space: nowrap; background: var(--bg); }
+  tr:last-child td { border-bottom: none; }
+  td.nowrap { white-space: nowrap; }
+  td.nowrap .sub { white-space: normal; font-size: 14px; line-height: 1.5; margin-top: 4px; min-width: 150px; max-width: 220px; }
+  tr.new td { background: var(--accent-soft); }
+
+  /* ── HTML 도형 공통 ── */
+  .fig { margin: 20px 0; padding: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+  .fig-title { font-size: 18px; font-weight: 700; margin: 0 0 14px; }
+  .fig-label { font-size: 14px; font-weight: 700; color: var(--quiet); margin: 16px 0 8px; }
+  .fig-label:first-of-type { margin-top: 0; }
+  .node { position: relative; border: 1.5px solid var(--edge); border-radius: 10px; padding: 12px 14px; background: var(--surface); }
+  .node.main { border-color: var(--accent); border-width: 2px; background: var(--accent-soft); }
+  .node.newb { border-color: var(--accent); border-width: 2px; }
+  .node.bad { border-color: var(--warn); background: var(--warn-soft); }
+  .node .t { font-size: 17px; font-weight: 700; line-height: 1.4; }
+  .node .d { font-size: 15px; color: var(--quiet); line-height: 1.5; margin-top: 4px; }
+  .node .tag { position: absolute; top: -11px; right: 10px; font-size: 14px; font-weight: 700; color: #fff; background: var(--accent); border-radius: 5px; padding: 0 7px; line-height: 1.5; }
+  .node ul { margin: 6px 0 0; padding-left: 20px; font-size: 16px; }
+  .node ul li { margin: 3px 0; }
+  .node .foot { font-size: 14px; color: var(--quiet); margin-top: 10px; }
+  .node.bad .t { color: var(--warn); }
+  .node.main .t.acc { color: var(--accent); }
+
+  /* 가로 흐름: 노드 → 노드 */
+  .flow { display: flex; align-items: stretch; }
+  .flow > .node { flex: 1 1 0; min-width: 0; text-align: center; }
+  .flow.left > .node { text-align: left; }
+  .arr { flex: none; width: 32px; display: grid; place-items: center; color: var(--edge); font-size: 20px; font-weight: 700; }
+  .arr::before { content: "→"; }
+  .band { margin-top: 14px; padding: 10px 14px; border: 1.5px solid var(--good); background: var(--good-soft); border-radius: 10px; font-size: 16px; }
+
+  /* V-모델 */
+  .vm { display: grid; grid-template-columns: 1fr 170px 1fr; gap: 12px 0; align-items: center; }
+  .vm .node { text-align: center; }
+  .vm .l2 { margin-left: 14%; }
+  .vm .r2 { margin-right: 14%; }
+  .vm .link { text-align: center; font-size: 14px; color: var(--quiet); border-top: 2px dashed var(--edge); padding-top: 4px; margin: 0 8px; }
+  .vm .impl { grid-column: 1 / -1; justify-self: center; width: 40%; }
+  .vm-head { display: grid; grid-template-columns: 1fr 170px 1fr; font-size: 14px; font-weight: 700; color: var(--quiet); margin-bottom: 8px; }
+  .vm-head span:last-child { text-align: right; }
+
+  /* ── 목업 ── */
+  .mock { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); margin: 18px 0; }
+  .mock-bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--bg); border-bottom: 1px solid var(--line); }
+  .mock-bar .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--line); flex: none; }
+  .mock-bar .url { flex: 1; min-width: 0; margin-left: 8px; font-size: 14px; color: var(--quiet); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 2px 10px; font-family: "JetBrains Mono", monospace; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .mock-body { padding: 20px; }
+  .mock-title { font-size: 20px; font-weight: 700; margin: 0 0 12px; }
+  .mock-input { display: flex; gap: 8px; margin-bottom: 16px; }
+  .mock-input .field { flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-family: "JetBrains Mono", monospace; font-size: 15px; background: var(--bg); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .mock-input .btn { background: var(--accent); color: #fff; border-radius: 8px; padding: 8px 18px; font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .mock-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+  .mock-summary .cell { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+  .mock-summary .k { font-size: 14px; color: var(--quiet); }
+  .mock-summary .v { font-size: 22px; font-weight: 700; }
+  .mock-summary .v.small { font-size: 17px; padding-top: 4px; }
+  .mock-tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--line); margin-bottom: 14px; flex-wrap: wrap; }
+  .mock-tabs span { font-size: 15px; padding: 6px 12px; border-bottom: 2px solid transparent; color: var(--quiet); }
+  .mock-tabs span.on { border-color: var(--accent); color: var(--ink); font-weight: 700; }
+  .vcard { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+  .vcard .top { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .sev { font-size: 14px; font-weight: 700; padding: 0 8px; border-radius: 5px; color: #fff; line-height: 1.6; }
+  .sev.critical { background: var(--crit); }
+  .sev.major { background: var(--warn); }
+  .rid { font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 15px; }
+  .wc { font-size: 14px; color: var(--quiet); }
+  .vcard .msg { font-weight: 600; margin: 2px 0 8px; }
+  .vcard .el { font-family: "JetBrains Mono", monospace; font-size: 14px; background: var(--code-bg); border-radius: 6px; padding: 6px 10px; overflow-x: auto; white-space: nowrap; margin-bottom: 10px; }
+  .vgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .vbox { border: 1px dashed var(--line); border-radius: 8px; padding: 10px 12px; font-size: 15px; }
+  .vbox .h { font-size: 14px; font-weight: 700; color: var(--quiet); margin-bottom: 4px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .vbox.later { opacity: 0.65; }
+  .score { font-family: "JetBrains Mono", monospace; font-size: 14px; color: var(--quiet); }
+
+  .roadmap { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; align-items: center; }
+  .roadmap .chip { font-size: 14px; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--quiet); }
+  .roadmap .chip.on { border: 2px solid var(--accent); color: var(--accent); font-weight: 700; background: var(--accent-soft); }
+  .roadmap .sep { color: var(--quiet); margin: 0 6px; }
+
+  /* ── 태블릿 이하: 목차를 상단 가로 탭으로 ── */
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 16px 16px 64px; }
+    .side { order: 0; position: sticky; top: 0; z-index: 5; max-height: none; overflow: visible; background: var(--bg); padding: 8px 0; border-bottom: 1px solid var(--line); min-width: 0; }
+    .tabs { flex-direction: row; overflow-x: auto; gap: 6px; scrollbar-width: thin; }
+    .tabs .group { display: none; }
+    .tabs button { white-space: nowrap; font-size: 15px; padding: 8px 12px; border-color: var(--line); background: var(--surface); }
+  }
+
+  /* ── 모바일: 도형은 세로로, 표는 카드로 ── */
+  @media (max-width: 760px) {
+    body { font-size: 16px; }
+    h1 { font-size: 27px; }
+    h2 { font-size: 23px; }
+    h3 { font-size: 19px; }
+    .lead, .key { font-size: 17px; }
+    .key { padding: 12px 16px; }
+    .fig { padding: 16px; }
+
+    .flow { flex-direction: column; }
+    .flow > .node { flex: none; }
+    .arr { width: auto; height: 28px; }
+    .arr::before { content: "↓"; }
+
+    .vm, .vm-head { grid-template-columns: 1fr; }
+    .vm-head { display: none; }
+    .vm .l2, .vm .r2 { margin: 0; }
+    .vm .impl { width: 100%; }
+    .vm .link { border-top: none; border-left: 2px dashed var(--edge); text-align: left; padding: 2px 0 2px 12px; margin: 0 0 0 24px; }
+    .vm .gap { height: 10px; }
+
+    .mock-body { padding: 14px; }
+    .mock-summary { grid-template-columns: 1fr 1fr; }
+    .vgrid { grid-template-columns: 1fr; }
+
+    table.cards, table.cards tbody, table.cards tr, table.cards td { display: block; width: 100%; }
+    table.cards { font-size: 15px; }
+    table.cards thead { display: none; }
+    table.cards tr { padding: 10px 14px; border-bottom: 1px solid var(--line); }
+    table.cards tr:last-child { border-bottom: none; }
+    table.cards td { border: none; padding: 3px 0; white-space: normal; }
+    table.cards td::before { content: attr(data-label); display: block; font-size: 14px; font-weight: 700; color: var(--quiet); }
+    table.cards td[data-label=""]::before { display: none; }
+    table.cards td:first-child { font-weight: 700; font-size: 16px; }
+    table.cards td:first-child::before { display: none; }
+  }
+
+  /* ── 약자 · 링크 ── */
+  abbr[data-full] { text-decoration: underline dotted var(--edge); text-underline-offset: 3px; cursor: help; }
+  .exp { color: var(--quiet); font-size: 0.92em; }
+  a { color: var(--accent); }
+  a.doc { text-decoration: none; border-bottom: 1px solid var(--accent); }
+  a.doc::after { content: " ↗"; font-size: 0.85em; }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); max-width: min(560px, calc(100vw - 32px)); background: var(--ink); color: var(--bg); font-size: 15px; line-height: 1.5; padding: 12px 16px; border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); z-index: 50; }
+  .toast[hidden] { display: none; }
+  .toast b { display: block; font-size: 16px; }
+
+  /* ── 인프라 도형 ── */
+  .infra-host { border: 1.5px solid var(--edge); border-radius: 12px; padding: 14px; }
+  .infra-name { font-size: 16px; font-weight: 700; margin-bottom: 10px; }
+  .infra-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 16px; align-items: start; }
+  .infra-ext { display: grid; gap: 12px; }
+  .infra-note { font-size: 14px; color: var(--quiet); line-height: 1.6; }
+  .infra-vm { border: 1.5px dashed var(--edge); border-radius: 12px; padding: 14px; }
+  .infra-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .infra-grid .wide { grid-column: 1 / -1; }
+  .arr.plus::before { content: "+"; }
+  @media (max-width: 760px) {
+    .infra-cols, .infra-grid { grid-template-columns: 1fr; }
+    .infra-note { order: -1; }
+    .arr.plus::before { content: "+"; }
+  }
+
+  @media print {
+    .side { display: none; }
+    .layout { display: block; }
+    .panel[hidden] { display: block; }
+    .panel { margin-bottom: 48px; break-inside: avoid-page; }
+    body { background: #fff; }
+  }
+</style>
+</head>
+<body>
+
+<div class="banner">
+  <div class="banner-in">
+    <div class="org">청년취업사관학교 AI_클라우드과정(2026년)</div>
+    <div class="who">강사 부성순 · <a href="mailto:bakpak@empas.com">bakpak@empas.com</a></div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <aside class="side">
+    <div class="tabs" role="tablist" aria-label="커리큘럼 목차" aria-orientation="vertical">
+      <div class="group">과정</div>
+      <button role="tab" id="tab-ov" aria-controls="ov" aria-selected="true"><span class="no">C1</span>과정 개요</button>
+      <button role="tab" id="tab-roles" aria-controls="roles" aria-selected="false" tabindex="-1"><span class="no">C2</span>직군별 산출물</button>
+
+      <div class="group">Part A · RAG 편</div>
+      <button role="tab" id="tab-a1" aria-controls="a1" aria-selected="false" tabindex="-1"><span class="no">A</span>아티클 구성</button>
+      <button role="tab" id="tab-a2" aria-controls="a2" aria-selected="false" tabindex="-1"><span class="no">A+</span>아티클별 핵심 · 실습</button>
+
+      <div class="group">Part B · 에이전트 편</div>
+      <button role="tab" id="tab-b1" aria-controls="b1" aria-selected="false" tabindex="-1"><span class="no">B</span>아티클 구성 · 설계서</button>
+      <button role="tab" id="tab-b2" aria-controls="b2" aria-selected="false" tabindex="-1"><span class="no">B+</span>아티클별 핵심 · 실습</button>
+
+      <div class="group">공통 설계</div>
+      <button role="tab" id="tab-std" aria-controls="std" aria-selected="false" tabindex="-1"><span class="no">D1</span>표준 · 가이드 매핑</button>
+      <button role="tab" id="tab-ev" aria-controls="ev" aria-selected="false" tabindex="-1"><span class="no">D2</span>평가 체계</button>
+      <button role="tab" id="tab-dp" aria-controls="dp" aria-selected="false" tabindex="-1"><span class="no">D3</span>배포와 인프라</button>
+      <button role="tab" id="tab-cache" aria-controls="cache" aria-selected="false" tabindex="-1"><span class="no">D4</span>캐시 전략</button>
+
+      <div class="group">부록</div>
+      <button role="tab" id="tab-prep" aria-controls="prep" aria-selected="false" tabindex="-1"><span class="no">※</span>사전 준비와 범위</button>
+      <button role="tab" id="tab-gloss" aria-controls="gloss" aria-selected="false" tabindex="-1"><span class="no">※</span>용어집 (약자 원어)</button>
+    </div>
+  </aside>
+
+  <main>
+
+  <!-- ============================== 과정 ============================== -->
+  <section class="panel" id="ov" role="tabpanel" aria-labelledby="tab-ov">
+    <div class="crumb">웹페이지 설계 원칙 검사 에이전트 · 커리큘럼</div>
+    <h1>웹페이지 설계 원칙 검사 에이전트<br>커리큘럼</h1>
+    <p class="lead">공통 소재는 "웹페이지가 설계 원칙(WCAG·디자인 가이드·UI/UX 이론)을 지키는지 검사하는 RAG 에이전트"이고, 같은 소재로 직무마다 다른 역량이 증명되는 포트폴리오가 나오게 설계한 과정이다.</p>
+    <div class="key">모든 판단은 근거를 가지고, 모든 근거는 추적되고, 모든 결과는 검증된다.</div>
+
+    <h3>과정 원칙</h3>
+    <div class="table-wrap"><table>
+    <thead><tr><th>항목</th><th>내용</th></tr></thead>
+    <tbody>
+    <tr><td class="nowrap"><b>반복 패턴</b></td><td>빠르게 만든다 → 측정한다 → 근거를 갖고 재설계한다. 규칙 v1→v2, ChromaDB→OpenSearch, 파이프라인→ReAct→LangGraph, 단일→멀티에이전트</td></tr>
+    <tr><td class="nowrap"><b>대상 직군</b></td><td>시스템 엔지니어, AI 클라우드, 데브옵스, 데이터 분석가</td></tr>
+    <tr><td class="nowrap"><b>진행 방식</b></td><td>코드는 완성본 제공. 강의는 설계 판단과 측정에 집중. 처음 보는 기술(Kiwi, BM25 등)은 자세히, 이미 아는 기술은 역할만</td></tr>
+    <tr><td class="nowrap"><b>언어</b></td><td>전 과정 Python. 화면은 FastAPI + Jinja2</td></tr>
+    <tr><td class="nowrap"><b>문서 규칙</b></td><td>탭마다 약자 첫 등장에 원어 병기, 용어집 제공, 표준 문서는 원문 링크</td></tr>
+    </tbody></table></div>
+
+    <h3>전체 구성</h3>
+    <div class="table-wrap"><table>
+    <thead><tr><th>파트</th><th>아티클</th><th>강의</th><th>실습</th><th>합계</th></tr></thead>
+    <tbody>
+    <tr><td><b>Part A · RAG 편</b></td><td>A0~A7 (8개)</td><td>44h</td><td>28h</td><td>72h</td></tr>
+    <tr><td><b>Part B · 에이전트 편</b></td><td>B1~B7 (7개)</td><td>46h</td><td>26h</td><td>72h</td></tr>
+    <tr class="new"><td><b>전체</b></td><td>15개</td><td>90h</td><td>54h</td><td>144h</td></tr>
+    </tbody></table></div>
+
+    <h3>과정의 흐름</h3>
+    <div class="fig">
+      <div class="fig-title">같은 검사 시스템이 네 단계에 걸쳐 커진다</div>
+      <div class="flow left">
+        <div class="node main"><div class="t acc">A0 베이스</div><ul><li>규칙 기반 탐지</li><li>BM25 근거 검색</li><li>정답셋 채점</li></ul></div>
+        <div class="arr" aria-hidden="true"></div>
+        <div class="node"><div class="t">A1~A5 RAG</div><ul><li>LLM 맥락 판단</li><li>하이브리드 검색</li><li>근거 인용 · 수정안</li></ul></div>
+        <div class="arr" aria-hidden="true"></div>
+        <div class="node"><div class="t">A6 운영</div><ul><li>평가 관문 CI/CD</li><li>GitOps · 관측성</li><li>추적성 매트릭스</li></ul></div>
+        <div class="arr" aria-hidden="true"></div>
+        <div class="node"><div class="t">B 에이전트</div><ul><li>LangGraph 설계</li><li>OCR · MCP</li><li>멀티에이전트 · UX</li></ul></div>
+      </div>
+      <div class="band">모든 단계는 A0 정답셋으로 채점하고, 직전 단계를 기준선으로 비교한다</div>
+    </div>
+  </section>
+
+  <section class="panel" id="roles" role="tabpanel" aria-labelledby="tab-roles" hidden>
+    <div class="crumb">과정</div>
+    <h2>직군별 포트폴리오 산출물</h2>
+    <div class="key">공통 소재는 하나, 직군마다 같은 시스템의 다른 층을 포트폴리오 중심에 둔다.</div>
+    <div class="table-wrap"><table>
+    <thead><tr><th>직군</th><th>증명하는 역량</th><th>대표 산출물</th><th>주로 만들어지는 곳</th></tr></thead>
+    <tbody>
+    <tr><td class="nowrap"><b>시스템 엔지니어</b></td><td>요구사항에서 검증까지 추적되는 설계</td><td>SRS, 추적성 매트릭스, FMEA, 인터페이스 정의서, 에이전트 설계서, 표준·가이드 매핑표, Rules as Code 형상 관리</td><td>A0, A6, B1, B2, B5, B7</td></tr>
+    <tr><td class="nowrap"><b>AI 클라우드</b></td><td>모델·자원·비용을 근거로 배치하는 능력</td><td>자원·비용 모델, 모델 배치 근거, 캐시 전략과 절감 효과, 외부 엔드포인트 패턴, Terraform 초안과 월 비용 추정</td><td>A1, B3, B4, B7</td></tr>
+    <tr><td class="nowrap"><b>데브옵스</b></td><td>품질이 보장되는 지속 배포</td><td>Helm 차트, Argo CD GitOps, 평가 관문 CI/CD, 6회 배포 이력, 섀도 배포·롤백, 관측성 스택, 캐시 지표</td><td>A1, A4, A6, B2, B5, B6</td></tr>
+    <tr><td class="nowrap"><b>데이터 분석가</b></td><td>실험을 설계하고 결과를 믿을 수 있게 해석</td><td>성능 계보 리포트, 부트스트랩 신뢰구간 실험 분석, TF-IDF vs BM25 비교, 정확도-비용 곡선, MongoDB 위반 패턴 집계, 운영 데이터 분석</td><td>A0, A5, A6, A7, B3, B7</td></tr>
+    </tbody></table></div>
+    <p class="sub">힘을 빼는 영역: 프론트(Jinja2 리포트 뷰어는 최소한, 테스트 사이트는 완성본 제공), 백엔드 API 설계 자체, LangChain·LangGraph 문법.</p>
+  </section>
+
+  <!-- ============================== Part A ============================== -->
+  <section class="panel" id="a1" role="tabpanel" aria-labelledby="tab-a1" hidden>
+    <div class="crumb">Part A · RAG 편</div>
+    <h2>Part A 아티클 구성</h2>
+    <div class="key">규칙 기반에서 출발해 근거 있는 RAG 검사 파이프라인을 완성하고, 세 번의 점진 배포로 운영 가능한 서비스까지 만든다.</div>
+    <p class="sub">지식 자료는 TXT·Markdown·YAML·CSV로 한정한다. PDF·HWP는 Part B의 B4에서 다룬다.</p>
+    <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>아티클</th><th>강의</th><th>실습</th><th>주요 기술</th><th>배포</th></tr></thead>
+    <tbody>
+    <tr><td class="nowrap"><b>A0</b></td><td>프로젝트 베이스: 설계 원칙 · 규칙 기반 탐지 · 키워드 검색</td><td>3h</td><td>3h</td><td>Kiwi<span class="badge">NEW</span>, BM25(rank-bm25)<span class="badge">NEW</span>, TF-IDF(scikit-learn), Pydantic, YAML, Git, MySQL, SQLAlchemy, Playwright</td><td></td></tr>
+    <tr><td class="nowrap"><b>A1</b></td><td>생성형AI · LLM 기초</td><td>8h</td><td>4h</td><td>OpenAI API(구조화 출력), tiktoken, HF tokenizers</td><td><span class="stage">#1 뼈대</span></td></tr>
+    <tr><td class="nowrap"><b>A2</b></td><td>벡터 · 유사도 이해</td><td>5h</td><td>2h</td><td>NumPy, scikit-learn, UMAP, Plotly, OpenAI 임베딩, BGE-M3</td><td></td></tr>
+    <tr><td class="nowrap"><b>A3</b></td><td>벡터DB · MongoDB · OpenSearch</td><td>7h</td><td>3h</td><td>ChromaDB, Pinecone, MongoDB, OpenSearch(Nori, k-NN)</td><td></td></tr>
+    <tr><td class="nowrap"><b>A4</b></td><td>RAG 파이프라인 + 에이전트 v1</td><td>8h</td><td>4h</td><td>LangChain(로더, 스플리터, LCEL), ChromaDB, MongoDB</td><td><span class="stage">#2 데이터 계층</span></td></tr>
+    <tr><td class="nowrap"><b>A5</b></td><td>RAG 고도화 · 평가 · 서비스</td><td>7h</td><td>4h</td><td>BM25Retriever+Kiwi, EnsembleRetriever, OpenSearch 하이브리드, RAGAS, FastAPI+Jinja2</td><td></td></tr>
+    <tr><td class="nowrap"><b>A6</b></td><td>평가 자동화 · 추적성 · 지속 배포</td><td>6h</td><td>6h</td><td>GitHub Actions, Argo CD, Helm, Loki, OpenTelemetry·Tempo, Grafana</td><td><span class="stage">#3 평가 관문 + GitOps</span></td></tr>
+    <tr><td class="nowrap"><b>A7</b></td><td>중간 캡스톤</td><td>—</td><td>2h</td><td>pandas</td><td></td></tr>
+    </tbody></table></div>
+
+    <h3>A0 Part 구성</h3>
+    <div class="table-wrap"><table>
+    <thead><tr><th>Part</th><th>주제</th><th>결과물</th></tr></thead>
+    <tbody>
+    <tr><td>Part 0</td><td>한눈에 보기</td><td>학습 목표, 주요 기술, Part 구성</td></tr>
+    <tr><td>Part 1</td><td>프로젝트 소개와 설계 원칙</td><td>웹 작업 기준(표준·가이드), 프로젝트 목업, 기획 배경, 확장 범위, SRS, ADR-001</td></tr>
+    <tr><td>Part 2</td><td>가이드 규칙과 정답셋</td><td>표준·가이드 매핑표, 규칙 YAML(image · link · form), 테스트 HTML, 정답셋 CSV</td></tr>
+    <tr><td>Part 3</td><td>Kiwi 형태소 분석</td><td>품사 필터·사용자 사전을 적용한 토크나이저 모듈</td></tr>
+    <tr><td>Part 4</td><td>규칙 v1: 함수로 만들기</td><td>함수형 탐지기, 첫 정밀도·재현율</td></tr>
+    <tr><td>Part 5</td><td>규칙 v2: Rules as Code</td><td>YAML 규칙 엔진, MySQL 버전 스냅샷, 버전 기반 캐시 키 원칙</td></tr>
+    <tr><td>Part 6</td><td>메타데이터 분류</td><td>DOM 요소 → component 분류기</td></tr>
+    <tr><td>Part 7</td><td>키워드 검색: TF-IDF · BM25</td><td>근거 규칙 검색기, k1·b 변화 실험, Recall@k 비교</td></tr>
+    <tr><td>Part 8</td><td>평가와 한계</td><td>A0 기준선 리포트, 규칙이 실패하는 사례</td></tr>
+    <tr><td>실습</td><td>button 컴포넌트 추가</td><td>매핑 → 규칙 → 위반 → 정답셋 → 재평가</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section class="panel" id="a2" role="tabpanel" aria-labelledby="tab-a2" hidden>
+    <div class="crumb">Part A · RAG 편</div>
+    <h2>Part A 아티클별 핵심 · 실습</h2>
+    <div class="key">각 아티클은 직전 아티클의 결과를 기준선으로 삼고, 실습은 앞 결과물을 입력으로 받는다.</div>
+    <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>핵심 내용</th><th>통합 실습</th></tr></thead>
+    <tbody>
+    <tr><td class="nowrap"><b>A0</b></td><td>웹 작업 기준(표준·가이드)과 SRS. 표준·가이드 매핑 후 규칙 YAML과 정답셋. Kiwi 토큰화(품사·사용자 사전). 규칙 v1(함수) → v2(Rules as Code). DOM → component 메타데이터 분류. Kiwi 토큰으로 TF-IDF·BM25 직접 계산해 근거 규칙 검색</td><td>button 컴포넌트를 매핑 → 규칙 → 테스트 페이지 위반 → 정답셋까지 추가하고 재평가</td></tr>
+    <tr><td class="nowrap"><b>A1</b></td><td>트랜스포머 개념(토큰 → 임베딩 → 어텐션 → 다음 토큰, 인코더 vs 디코더). 토큰화 계층 지도(Kiwi / Nori / HF 토크나이저 / tiktoken). 규칙이 놓친 사례를 LLM이 판단하는 프롬프트, 구조화 출력과 규칙 ID 실존 검증. LLM 응답 캐시와 프롬프트 캐싱</td><td>규칙 + LLM 판단으로 정답셋 재평가, 재현율 상승분·새 오탐·캐시 절감 정리. 배포 #1</td></tr>
+    <tr><td class="nowrap"><b>A2</b></td><td>코사인 유사도·거리 직접 계산. A0의 TF-IDF 벡터와 임베딩 비교, 어텐션이 내적 기반 유사도라는 연결. 가이드 규칙 임베딩을 component별로 시각화. HF 토크나이저로 BGE-M3 sparse 가중치 해석</td><td>OpenAI 임베딩 vs BGE-M3 시각화 비교, 한국어 가이드 구분력 판단</td></tr>
+    <tr><td class="nowrap"><b>A3</b></td><td>벡터 저장소 세 유형(임베디드 Chroma / 관리형 Pinecone / 검색엔진형 OpenSearch). MongoDB 기초와 집계. MySQL·MongoDB·벡터DB 역할 분리 ADR. OpenSearch 인덱스 매핑, Nori, 사용자 사전. 임베딩 캐시와 바뀐 청크만 재색인</td><td>필터 없음 / 하드 필터 / 실패 시 필터 해제 재검색 비교</td></tr>
+    <tr><td class="nowrap"><b>A4</b></td><td>색인·질의 파이프라인. 탐지된 위반에서 질의를 만들어 가이드를 검색하고 근거를 인용한 설명·수정안 생성. 에이전트 v1을 바이브코딩으로 연결하고 불편 메모 작성</td><td>테스트 사이트 전체로 근거 붙은 리포트 생성, 검증 차단율 기록. 배포 #2</td></tr>
+    <tr><td class="nowrap"><b>A5</b></td><td>청킹 전략(고정, 오버랩, 재귀, 규칙 1개 = 청크 1개), HF 토크나이저 기준 청크 크기. A0의 BM25를 하이브리드에 투입: 애플리케이션 레벨(EnsembleRetriever)과 엔진 레벨(OpenSearch 검색 파이프라인) 비교. Chroma → OpenSearch 이전. 검색 결과 캐시</td><td>청킹 × 검색 구성 실험표와 최종 구성 ADR, 신뢰구간 분석 리포트</td></tr>
+    <tr><td class="nowrap"><b>A6</b></td><td>정답셋 평가를 배포 관문으로, Argo CD GitOps, 추적성 매트릭스, 오탐 피드백 루프, 관측성 스택 통일, 캐시 적중률·절감 지표</td><td>품질 하락 변경을 넣어 배포 차단 확인, Grafana로 추적, 추적성 매트릭스로 원인 규칙 찾기. 배포 #3</td></tr>
+    <tr><td class="nowrap"><b>A7</b></td><td>A0~A6 성능 계보 리포트, ADR 색인, Part A README, Part B로 넘기는 목록(불편 메모, 미해결 실패 사례)</td><td>중간 포트폴리오 패키징</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <!-- ============================== Part B ============================== -->
+  <section class="panel" id="b1" role="tabpanel" aria-labelledby="tab-b1" hidden>
+    <div class="crumb">Part B · 에이전트 편</div>
+    <h2>Part B 아티클 구성 · 설계서</h2>
+    <div class="key">Part A 파이프라인을 기준선으로 제대로 설계된 에이전트 시스템으로 재설계한다. 각 아티클은 에이전트 설계서의 영역을 채우는 단위다.</div>
+    <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>아티클</th><th>강의</th><th>실습</th><th>설계 영역</th><th>주요 기술</th><th>배포</th></tr></thead>
+    <tbody>
+    <tr><td class="nowrap"><b>B1</b></td><td>에이전트 개념 · 설계</td><td>8h</td><td>2h</td><td>① ② ④</td><td>LangChain 에이전트, OpenAI API, Playwright, axe-core, HTML·CSS 문법 검사기(Nu Html Checker, W3C CSS 검사기), Pydantic</td><td></td></tr>
+    <tr><td class="nowrap"><b>B2</b></td><td>LangGraph 워크플로우 설계</td><td>10h</td><td>4h</td><td>③ ⑤ ⑥</td><td>LangGraph, MongoDB 체크포인터, HF tokenizers</td><td><span class="stage">#4 섀도 배포</span></td></tr>
+    <tr><td class="nowrap"><b>B3</b></td><td>로컬 LLM · 모델 배치 설계</td><td>6h</td><td>2h</td><td>⑨</td><td>Ollama, LangChain Ollama 연동, HF tokenizers</td><td></td></tr>
+    <tr><td class="nowrap"><b>B4</b></td><td>문서 처리 · OCR</td><td>2h</td><td>8h</td><td>④ 확장</td><td>PyMuPDF, pdfplumber, pyhwp, OpenCV, Tesseract, EasyOCR/PaddleOCR, Ollama 비전 모델</td><td></td></tr>
+    <tr><td class="nowrap"><b>B5</b></td><td>MCP 도구 인터페이스 · 보안</td><td>8h</td><td>3h</td><td>④ ⑧</td><td>MCP Python SDK, LangChain MCP 어댑터, GitHub MCP, NetworkPolicy</td><td><span class="stage">#5 도구 계층</span></td></tr>
+    <tr><td class="nowrap"><b>B6</b></td><td>멀티에이전트 · 서빙</td><td>10h</td><td>3h</td><td>② 재검토 ⑦ ⑩ ⑪</td><td>LangGraph 멀티에이전트, FastAPI, Docker, k3s, Grafana</td><td><span class="stage">#6 전체 시스템</span></td></tr>
+    <tr><td class="nowrap"><b>B7</b></td><td>최종 캡스톤</td><td>2h</td><td>4h</td><td>전체</td><td>Terraform, pandas</td><td>AWS 이전 설계</td></tr>
+    </tbody></table></div>
+
+    <h3>에이전트 설계서 11개 영역</h3>
+    <div class="table-wrap"><table>
+    <thead><tr><th>영역</th><th>답해야 할 질문</th></tr></thead>
+    <tbody>
+    <tr><td class="nowrap">① 책임과 자율성</td><td>무엇을 에이전트가 결정하고, 무엇은 사람이나 결정론적 코드에 맡기는가</td></tr>
+    <tr><td class="nowrap">② 아키텍처 패턴</td><td>파이프라인 / 워크플로우 / 에이전트 / 멀티에이전트 중 왜 이것인가</td></tr>
+    <tr><td class="nowrap">③ 상태와 메모리</td><td>무엇을 상태로 들고 가고, 무엇을 영속화하고, 무엇을 버리는가</td></tr>
+    <tr><td class="nowrap">④ 도구 계약</td><td>도구 단위, 입출력 스키마, 에러 의미, 읽기/쓰기 구분, 멱등성</td></tr>
+    <tr><td class="nowrap">⑤ 제어 흐름</td><td>분기 기준, 반복 종료 조건, 단계·토큰·시간 예산</td></tr>
+    <tr><td class="nowrap">⑥ 실패 설계</td><td>실패 모드별 대응, 재시도, 부분 결과로의 저하</td></tr>
+    <tr><td class="nowrap">⑦ 검증과 가드레일</td><td>출력 검증, 독립 검증자, 사람 승인 지점</td></tr>
+    <tr><td class="nowrap">⑧ 보안</td><td>최소 권한, 검사 대상 웹페이지를 통한 프롬프트 주입 방어</td></tr>
+    <tr><td class="nowrap">⑨ 모델 배치</td><td>어느 단계에 어떤 모델을, 정확도-비용 근거로</td></tr>
+    <tr><td class="nowrap">⑩ 관측과 평가</td><td>결과뿐 아니라 경로(trajectory) 평가, 트레이싱</td></tr>
+    <tr><td class="nowrap">⑪ 버전과 재현성</td><td>규칙·프롬프트·모델·도구 버전을 결과와 캐시 키에 기록</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section class="panel" id="b2" role="tabpanel" aria-labelledby="tab-b2" hidden>
+    <div class="crumb">Part B · 에이전트 편</div>
+    <h2>Part B 아티클별 핵심 · 실습</h2>
+    <div class="key">파이프라인(기준선) → ReAct(자율성 극단) → LangGraph(설계된 자율성) → 멀티에이전트 순으로 설계를 바꾸고, 바꿀 때마다 근거 수치를 남긴다.</div>
+    <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>핵심 내용</th><th>통합 실습</th></tr></thead>
+    <tbody>
+    <tr><td class="nowrap"><b>B1</b></td><td>자율성 수준 결정. Part A 기능과 외부 검사 도구(axe-core, 문법 검사기)를 도구로 감싸고, 도구 단위를 두 가지로 만들어 비교. 도구 설명문이 경로에 미치는 영향</td><td>설계서 ①②④ + Part A 파이프라인 vs ReAct 비교 + FMEA 초안</td></tr>
+    <tr><td class="nowrap"><b>B2</b></td><td>FMEA 표 → 상태 다이어그램 → 코드 순서. Pydantic 상태 스키마, 노드별 읽기·쓰기 필드표. check_type 기반 비용 인지 라우팅, 검증 실패 재시도, 필터 실패 재검색, 반복마다 종료 조건과 예산. 노드 결과 캐시, 체크포인트, Human-in-the-loop</td><td>설계서 ③⑤⑥ + 장애 주입 시 저하 확인. 배포 #4</td></tr>
+    <tr><td class="nowrap"><b>B3</b></td><td>트랜스포머 운영 관점(파라미터, 양자화, 컨텍스트 길이, KV 캐시). 노드별 요구 능력 정의 후 로컬/OpenAI 배치. Ollama는 OpenSearch와 같은 외부 엔드포인트 패턴</td><td>설계서 ⑨ + 노드별 정확도-비용 곡선과 배치표</td></tr>
+    <tr><td class="nowrap"><b>B4</b></td><td>텍스트 PDF vs 스캔 PDF, HWP vs HWPX, OpenCV 전처리, OCR 파이프라인. 외부 가이드 문서를 지식에 추가하고, 이미지 속 텍스트 검사(WCAG 1.4.5) 구현. 전통 OCR vs 로컬 비전 모델 비교</td><td>실제 PDF·HWP로 추출 → 정제 → 청킹 → 색인, 텍스트 이미지 위반 탐지 구현</td></tr>
+    <tr><td class="nowrap"><b>B5</b></td><td>도구 계약을 MCP 서버 인터페이스로 공개, 읽기/쓰기 도구 분리와 승인 단계, 프롬프트 주입 방어. 다른 MCP 클라이언트에서 재사용</td><td>설계서 ⑧ + 주입 사례 방어 전후 비교. 배포 #5</td></tr>
+    <tr><td class="nowrap"><b>B6</b></td><td>멀티에이전트 필요성부터 재검토. 접근성 / UX 휴리스틱(Nielsen, Fitts, Hick, 게슈탈트) / 수정 제안 / 독립 검증 에이전트. PR → 검사 → PR 코멘트</td><td>UX 휴리스틱 사람 라벨링 + 설계서 완성 + 전 과정 시연. 배포 #6</td></tr>
+    <tr><td class="nowrap"><b>B7</b></td><td>전 과정 성능 계보, 설계서 최종본, ADR 색인, 직군별 README, Terraform 초안과 월 비용 추정</td><td>최종 포트폴리오 패키징</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <!-- ============================== 공통 설계 ============================== -->
+  <section class="panel" id="std" role="tabpanel" aria-labelledby="tab-std" hidden>
+    <div class="crumb">공통 설계</div>
+    <h2>표준 · 가이드 매핑</h2>
+    <div class="key">테스트 HTML과 정답셋을 만들기 전에, 사내 가이드 규칙과 표준 조항을 먼저 매핑한다. 모든 위반은 "어느 가이드 규칙의 어느 표준 조항 위반"으로 표현돼야 하기 때문이다.</div>
+
+    <h3>기준 문서</h3>
+    <p class="sub">문서 이름을 누르면 원문이 열린다.</p>
+    <div class="table-wrap"><table>
+    <thead><tr><th>문서</th><th>만든 곳</th><th>담긴 내용</th><th>이 과정에서</th></tr></thead>
+    <tbody>
+    <tr><td class="nowrap"><a class="doc" href="https://www.w3.org/TR/WCAG22/" target="_blank" rel="noopener"><b>WCAG 2.2</b></a><div class="sub">Web Content Accessibility Guidelines</div></td><td>W3C</td><td>웹 접근성 국제 표준. 4원칙 아래 성공 기준 80여 개를 A·AA·AAA 등급으로 정의</td><td>모든 규칙의 근거 조항. 목표 등급 AA</td></tr>
+    <tr><td class="nowrap"><a class="doc" href="https://www.bizinfo.go.kr/biz/bizd/selectBIZD130View.do" target="_blank" rel="noopener"><b>KWCAG 2.2</b></a><div class="sub">Korean Web Content Accessibility Guidelines · 국가표준 KS X OT0003:2022</div></td><td>국내</td><td>WCAG를 국내 실정에 맞게 반영. 4원칙·14지침·33검사항목. 웹 접근성 품질인증 심사 기준</td><td>국내 기준선. 마크업 오류 방지 항목 확인 필요</td></tr>
+    <tr><td class="nowrap"><a class="doc" href="https://www.w3.org/TR/wai-aria-1.2/" target="_blank" rel="noopener"><b>WAI-ARIA 1.2</b></a></td><td>W3C</td><td>커스텀 컴포넌트의 역할·상태·이름을 보조기술에 알리는 명세</td><td>aria-label 판정, 모달·토스트 규칙</td></tr>
+    <tr><td class="nowrap"><a class="doc" href="https://html.spec.whatwg.org/" target="_blank" rel="noopener"><b>HTML 표준</b></a><div class="sub">HTML Living Standard</div></td><td>WHATWG</td><td>요소의 의미와 올바른 사용, 시맨틱 요소</td><td>DOM 추출, component 분류, 문법 검사 기준</td></tr>
+    <tr><td class="nowrap"><a class="doc" href="https://www.w3.org/Style/CSS/" target="_blank" rel="noopener"><b>CSS 표준</b></a></td><td>W3C</td><td>스타일시트 문법과 속성</td><td>CSS 문법 검사 기준</td></tr>
+    <tr><td class="nowrap"><a class="doc" href="https://www.etsi.org/human-factors-accessibility/en-301-549-v3-the-harmonized-european-standard-for-ict-accessibility" target="_blank" rel="noopener"><b>EN 301 549</b></a><div class="sub">European Norm 301 549</div></td><td>유럽 표준화 기구</td><td>EAA의 기준 표준. 웹 부분은 WCAG 2.1 AA 참조</td><td>해외 서비스 확장 시 기준</td></tr>
+    </tbody></table></div>
+
+    <h3>매핑 순서</h3>
+    <div class="fig">
+      <div class="fig-title">매핑이 끝나야 테스트 HTML과 정답셋을 만든다</div>
+      <div class="flow">
+        <div class="node"><div class="t">① 표준 조항 추리기</div><div class="d">A0 범위 WCAG · KWCAG 조항</div></div>
+        <div class="arr" aria-hidden="true"></div>
+        <div class="node"><div class="t">② 가이드 규칙 작성</div><div class="d">조항별 "우리는 이렇게 한다"</div></div>
+        <div class="arr" aria-hidden="true"></div>
+        <div class="node main"><div class="t">③ 매핑표 검증</div><div class="d">커버율 · 표준보다 느슨한 곳</div></div>
+        <div class="arr" aria-hidden="true"></div>
+        <div class="node"><div class="t">④ 테스트 HTML</div><div class="d">규칙별 위반 · 정상 사례</div></div>
+        <div class="arr" aria-hidden="true"></div>
+        <div class="node"><div class="t">⑤ 정답셋</div><div class="d">위반을 규칙 ID로 라벨링</div></div>
+      </div>
+    </div>
+
+    <h3>매핑표 항목</h3>
+    <div class="table-wrap"><table>
+    <thead><tr><th>항목</th><th>예</th><th>쓰이는 곳</th></tr></thead>
+    <tbody>
+    <tr><td class="nowrap"><b>가이드 규칙 ID</b></td><td>IMG-001</td><td>규칙 YAML, 정답셋, 탐지 결과</td></tr>
+    <tr><td class="nowrap"><b>규칙 내용</b></td><td>대체 텍스트는 이미지의 목적을 설명한다</td><td>BM25 검색 대상 문서</td></tr>
+    <tr><td class="nowrap"><b>WCAG 조항 · 등급 · 링크</b></td><td>1.1.1 · A · W3C 해설 페이지</td><td>근거 표시, 커버율 계산</td></tr>
+    <tr><td class="nowrap"><b>KWCAG 검사항목</b></td><td>적절한 대체 텍스트 제공</td><td>국내 기준 대응</td></tr>
+    <tr><td class="nowrap"><b>엄격도</b></td><td>표준과 동일 / 표준보다 엄격</td><td>가이드가 느슨한 곳 찾기</td></tr>
+    <tr><td class="nowrap"><b>검사 방식</b></td><td>규칙 · 문법 검사기 · LLM · 사람</td><td>B2 비용 인지 라우팅(check_type)</td></tr>
+    <tr><td class="nowrap"><b>테스트 사례 수</b></td><td>위반 3, 정상 2</td><td>정답셋 균형 확인</td></tr>
+    </tbody></table></div>
+
+    <h3>문법 검사기</h3>
+    <p>HTML·CSS 문법 검사는 axe-core와 같은 결정론적 자동 도구 층이다. 문법만 보고 의미는 판단하지 않는다.</p>
+    <div class="table-wrap"><table>
+    <thead><tr><th>도구</th><th>검사 대상</th><th>쓰이는 곳</th></tr></thead>
+    <tbody>
+    <tr><td class="nowrap"><a class="doc" href="https://validator.kldp.org/" target="_blank" rel="noopener"><b>HTML 마크업 검사기</b></a><div class="sub">W3C 마크업 검사기 한국어 미러 (KLDP)</div></td><td>닫히지 않은 태그, 중복 id, 잘못된 속성</td><td>A0 Part 2 테스트 HTML 품질 확인, B1 에이전트 도구</td></tr>
+    <tr><td class="nowrap"><a class="doc" href="https://css-validator.org/validator.ko.html" target="_blank" rel="noopener"><b>CSS 검사기</b></a><div class="sub">W3C CSS 검사 서비스</div></td><td>CSS 2.1·3 문법, 미디어 타입별 검사</td><td>A0 Part 2 테스트 사이트 품질 확인, B1 에이전트 도구</td></tr>
+    </tbody></table></div>
+    <p class="sub">자동화에는 웹사이트 대신 W3C 배포 검사기(HTML은 Nu Html Checker)를 로컬·Docker로 실행한다. 반복 호출 제한을 피하고 결과를 JSON으로 받기 위해서다.</p>
+  </section>
+
+  <section class="panel" id="ev" role="tabpanel" aria-labelledby="tab-ev" hidden>
+    <div class="crumb">공통 설계</div>
+    <h2>평가 체계</h2>
+    <div class="key">평가는 A0에서 먼저 깔고, 모든 아티클은 직전 아티클을 기준선으로 표준 지표 + 자체 지표 + 부트스트랩 신뢰구간으로 마무리한다.</div>
+
+    <h3>정답셋 필드 (A0에서 전체 설계)</h3>
+    <div class="table-wrap"><table>
+    <thead><tr><th>필드</th><th>쓰이는 곳</th></tr></thead>
+    <tbody>
+    <tr><td>위반 규칙 ID</td><td>탐지 정밀도·재현율 (전 과정)</td></tr>
+    <tr><td>관련 가이드 규칙 ID</td><td>검색 Recall@k, MRR (A0 BM25~)</td></tr>
+    <tr><td>참조 설명·수정안</td><td>생성 품질 (A4~)</td></tr>
+    <tr><td>기대 도구 호출 경로</td><td>경로 평가 (B1~)</td></tr>
+    <tr><td>텍스트 이미지 여부</td><td>OCR 검사 평가 (B4)</td></tr>
+    <tr><td>프롬프트 주입 여부</td><td>보안 평가 (B5)</td></tr>
+    <tr><td>UX 휴리스틱 사람 라벨</td><td>UX 판단 평가 (B6)</td></tr>
+    <tr><td>난이도·유형 태그</td><td>유형별 분석 (규칙 / 맥락 필요 / 시각 판단 필요)</td></tr>
+    </tbody></table></div>
+
+    <h3>공통 평가 도구</h3>
+    <div class="table-wrap"><table>
+    <thead><tr><th>항목</th><th>내용</th></tr></thead>
+    <tbody>
+    <tr><td class="nowrap"><b>평가 실행기</b></td><td>어떤 구성이든 같은 정답셋으로 같은 형식의 결과 산출. 캐시 끄기 옵션 제공</td></tr>
+    <tr><td class="nowrap"><b>결과 저장</b></td><td>요약 수치는 MySQL, 항목별 원본은 MongoDB</td></tr>
+    <tr><td class="nowrap"><b>리포트 템플릿</b></td><td>pandas 기준선 비교표, 부트스트랩 신뢰구간, 실패 사례 3개 분석</td></tr>
+    <tr><td class="nowrap"><b>합격 기준</b></td><td>이전 기준선보다 나빠지지 않을 것 + 아티클별 목표치</td></tr>
+    <tr><td class="nowrap"><b>실습 공통 요구</b></td><td>제공 지표 실행 + 자체 지표 1개 직접 설계 + 분석 리포트</td></tr>
+    </tbody></table></div>
+
+    <h3>Part A 평가 요소</h3>
+    <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>표준 지표</th><th>자체 지표</th><th>기준선</th></tr></thead>
+    <tbody>
+    <tr><td class="nowrap"><b>A0</b></td><td>정밀도, 재현율, F1, 혼동 행렬, Recall@k</td><td>WCAG 조항 커버율, TF-IDF vs BM25 순위 차이</td><td>최초 기준선</td></tr>
+    <tr><td class="nowrap"><b>A1</b></td><td>정밀도, 재현율, F1</td><td>근거 유효율, 스키마 준수율, 반복 일관성, 페이지당 토큰·비용, 캐시 적중률, 배포 환경 일치성</td><td>A0 규칙 기반</td></tr>
+    <tr><td class="nowrap"><b>A2</b></td><td>실루엣 점수, 최근접 이웃 정확도</td><td>동의어-비관련어 유사도 마진</td><td>A0 TF-IDF 벡터</td></tr>
+    <tr><td class="nowrap"><b>A3</b></td><td>Recall@k, MRR, nDCG, 지연 p50/p95</td><td>질의 분류 정확도, 필터 오분류 재현율 손실, MongoDB-벡터DB 연결 무결성</td><td>필터 없는 dense 검색</td></tr>
+    <tr><td class="nowrap"><b>A4</b></td><td>RAGAS(충실도, 답변 관련성, 컨텍스트 정밀도·재현율)</td><td>인용 정확도, 수정안 재검사 통과율, 검증 차단율</td><td>검색 없는 LLM 판단</td></tr>
+    <tr><td class="nowrap"><b>A5</b></td><td>위 지표 전체 + 신뢰구간</td><td>청크 잘림률, 구성별 비용·지연</td><td>A4 기본 RAG</td></tr>
+    <tr><td class="nowrap"><b>A6</b></td><td>CI 차단 정확도, 지연 p95, 오류율</td><td>피드백 후 오탐 감소율, 추적성 완결성, SLO 준수율, 캐시 절감액</td><td>피드백 없는 A5</td></tr>
+    </tbody></table></div>
+
+    <h3>Part B 평가 요소</h3>
+    <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>표준 지표</th><th>자체 지표</th><th>기준선</th></tr></thead>
+    <tbody>
+    <tr><td class="nowrap"><b>B1</b></td><td>작업 성공률</td><td>도구 호출 정확도, 불필요 호출 수, 작업당 단계 수</td><td>Part A 최종 파이프라인</td></tr>
+    <tr><td class="nowrap"><b>B2</b></td><td>작업 성공률</td><td>장애 시 우아한 저하율, 예산 초과 종료율, 섀도 비교 차이</td><td>B1 ReAct</td></tr>
+    <tr><td class="nowrap"><b>B3</b></td><td>노드별 정확도, 지연</td><td>정확도-비용 곡선, 로컬-API 일치율, 컨텍스트 초과 사전 차단 수</td><td>전 노드 OpenAI</td></tr>
+    <tr><td class="nowrap"><b>B4</b></td><td>CER, WER, 표 셀 추출 정확도</td><td>파서별 검색 품질 영향, 텍스트 이미지 위반 탐지 정밀도·재현율, 문서당 처리 시간</td><td>텍스트 추출만</td></tr>
+    <tr><td class="nowrap"><b>B5</b></td><td>도구 계약 테스트 통과율</td><td>프롬프트 주입 공격 성공률, 승인 없는 쓰기 차단율</td><td>방어 없는 상태</td></tr>
+    <tr><td class="nowrap"><b>B6</b></td><td>종단 간 정밀도·재현율, 지연, 비용</td><td>UX 판단 사람 일치도(코헨 카파), 독립 검증자 오류 포착률, 재실행 재현율</td><td>B2 단일 그래프</td></tr>
+    <tr><td class="nowrap"><b>B7</b></td><td>정답셋 전체 최종 평가</td><td>전 구간 기준선 유지 여부</td><td>전 아티클</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section class="panel" id="dp" role="tabpanel" aria-labelledby="tab-dp" hidden>
+    <div class="crumb">공통 설계</div>
+    <h2>배포와 인프라</h2>
+    <div class="key">시스템은 6번의 점진 배포로 자란다. 매 배포는 새로 생긴 것만 올리고 환경 일치성을 검증한다. #2부터 Helm, #3부터 Argo CD GitOps로 관리한다.</div>
+
+    <div class="fig">
+      <div class="fig-title">앱은 k3s 안에, 검색 엔진과 로컬 LLM은 클러스터 밖에 둔다</div>
+      <div class="infra">
+        <div class="infra-host">
+          <div class="infra-name">Windows 호스트</div>
+          <div class="infra-cols">
+            <div class="infra-ext">
+              <div class="node"><div class="t">OpenSearch (Docker)</div><div class="d">Nori BM25 + k-NN 하이브리드 검색 (A3~)</div></div>
+              <div class="node"><div class="t">Ollama</div><div class="d">로컬 LLM · 비전 모델 (B3~)</div></div>
+              <div class="infra-note">← k3s에서 Service + Endpoints로 연결<br>AWS 관리형 서비스와 같은 구조</div>
+            </div>
+            <div class="infra-vm">
+              <div class="infra-name">Multipass VM · k3s</div>
+              <div class="infra-grid">
+                <div class="node"><div class="t">FastAPI</div><div class="d">검사 API · 리포트 뷰어</div></div>
+                <div class="node main"><div class="t">검사 워커 · 에이전트</div><div class="d">규칙 · RAG · LangGraph</div></div>
+                <div class="node"><div class="t">MCP 서버</div><div class="d">도구 계층 (B5~)</div></div>
+                <div class="node"><div class="t">Argo CD</div><div class="d">Git 상태 자동 동기화 (A6~)</div></div>
+                <div class="node"><div class="t">MySQL</div><div class="d">규칙 스냅샷 · 작업 · 정답셋</div></div>
+                <div class="node"><div class="t">MongoDB</div><div class="d">원본 · 청크 · 피드백 · 캐시</div></div>
+                <div class="node wide"><div class="t">관측성 스택</div><div class="d">Prometheus · Loki · Tempo · Grafana</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3>배포 6회</h3>
+    <div class="table-wrap"><table>
+    <thead><tr><th>배포</th><th>시점</th><th>새로 올라가는 것</th><th>확인 요소</th></tr></thead>
+    <tbody>
+    <tr><td class="nowrap"><b>#1</b></td><td>A1</td><td>테스트 사이트, 규칙 검사 API, MySQL, OpenAI 키 Secret</td><td>환경 일치성, 스모크 테스트, 토큰 패널</td></tr>
+    <tr><td class="nowrap"><b>#2</b></td><td>A4</td><td>MongoDB, ChromaDB 서버, RAG 워커, MySQL 작업 큐, OpenSearch 외부 연결, Helm 도입</td><td>검색 지연, 페이지당 비용</td></tr>
+    <tr><td class="nowrap"><b>#3</b></td><td>A6</td><td>OpenSearch 하이브리드, 평가 배포 관문, Argo CD, Loki·Tempo, 캐시 지표</td><td>품질 하락 시 배포 차단, SLO, 롤백</td></tr>
+    <tr><td class="nowrap"><b>#4</b></td><td>B2</td><td>LangGraph 에이전트, MongoDB 체크포인터</td><td>섀도 비교, 장애 시 저하</td></tr>
+    <tr><td class="nowrap"><b>#5</b></td><td>B5</td><td>Ollama 연결, OCR 워커, MCP 서버, NetworkPolicy</td><td>계약 테스트, 주입 차단, 권한 격리</td></tr>
+    <tr><td class="nowrap"><b>#6</b></td><td>B6</td><td>멀티에이전트 전체, PR 연동</td><td>에이전트 지표 관문, 롤백</td></tr>
+    </tbody></table></div>
+    <p class="sub">배포 중 미리 겪게 될 문제: Kiwi 모델 파일로 커지는 이미지, 클러스터 안 HF 토크나이저 캐시(#1), Pod에서 Windows 호스트로의 네트워크·방화벽과 상태 저장 볼륨(#2), Tesseract 한국어 데이터를 포함한 이미지 크기(#5).</p>
+
+    <h3>저장소 역할</h3>
+    <div class="table-wrap"><table>
+    <thead><tr><th>저장소</th><th>역할</th></tr></thead>
+    <tbody>
+    <tr><td class="nowrap"><b>Git</b></td><td>가이드 규칙 원본(YAML), 표준·가이드 매핑표. 변경 PR이 평가 CI와 GitOps 동기화를 시작</td></tr>
+    <tr><td class="nowrap"><b>MySQL</b></td><td>규칙 버전 스냅샷, 검사 작업 큐, 정답셋, 추적성 관계</td></tr>
+    <tr><td class="nowrap"><b>MongoDB</b></td><td>원본 문서, 청크 원문, axe·문법 검사 결과, DOM 스냅샷, LLM 원본 응답, 피드백, LangGraph 체크포인트, 캐시(TTL 인덱스)</td></tr>
+    <tr><td class="nowrap"><b>ChromaDB</b></td><td>A3~A4 프로토타입용 벡터 저장소</td></tr>
+    <tr><td class="nowrap"><b>OpenSearch</b></td><td>서비스용 검색 인덱스 (Nori BM25 + k-NN)</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <section class="panel" id="cache" role="tabpanel" aria-labelledby="tab-cache" hidden>
+    <div class="crumb">공통 설계</div>
+    <h2>캐시 전략</h2>
+    <div class="key">캐시 키에 버전을 넣는다. 규칙·모델·프롬프트가 바뀌면 키가 달라져 예전 결과는 자동으로 무효가 된다.</div>
+
+    <div class="fig">
+      <div class="fig-title">캐시 키 = 입력 해시 + 버전</div>
+      <div class="flow">
+        <div class="node"><div class="t">입력 해시</div><div class="d">텍스트 · 요소 · DOM · 프롬프트 · 청크</div></div>
+        <div class="arr plus" aria-hidden="true"></div>
+        <div class="node"><div class="t">버전</div><div class="d">규칙 · 도구 · 모델 · 프롬프트 · 인덱스</div></div>
+        <div class="arr" aria-hidden="true"></div>
+        <div class="node main"><div class="t">캐시 키</div><div class="d">같은 키면 재사용, 다르면 새로 계산</div></div>
+      </div>
+      <div class="band">삭제 로직 없이 무효화된다 · NFR-01 재현성과 같은 원리</div>
+    </div>
+
+    <h3>계층별 캐시</h3>
+    <div class="table-wrap"><table>
+    <thead><tr><th>대상</th><th>캐시 키</th><th>효과</th><th>도입</th></tr></thead>
+    <tbody>
+    <tr><td class="nowrap"><b>Kiwi 형태소 분석</b></td><td>텍스트 해시</td><td>반복 문구("더보기" 등) 재분석 생략</td><td>A0 (메모리 LRU)</td></tr>
+    <tr><td class="nowrap"><b>규칙 판정 결과</b></td><td>요소 해시 + 규칙 버전</td><td>같은 요소 재검사 생략</td><td>A0 Part 5</td></tr>
+    <tr><td class="nowrap"><b>LLM 응답</b></td><td>프롬프트 해시 + 모델 + 온도</td><td>비용·지연 감소</td><td>A1</td></tr>
+    <tr><td class="nowrap"><b>LLM 프롬프트 캐싱</b></td><td>공통 앞부분(지침·규칙)</td><td>입력 토큰 비용 감소. 프롬프트를 "고정 지침 → 변하는 입력" 순서로 설계</td><td>A1</td></tr>
+    <tr><td class="nowrap"><b>임베딩</b></td><td>청크 해시 + 임베딩 모델</td><td>바뀐 청크만 재색인</td><td>A3, A5</td></tr>
+    <tr><td class="nowrap"><b>검색 결과</b></td><td>질의 + 인덱스 버전</td><td>같은 질의 재검색 생략</td><td>A5</td></tr>
+    <tr><td class="nowrap"><b>axe · 문법 검사</b></td><td>DOM 해시 + 도구 버전</td><td>외부 도구 호출 감소</td><td>B1</td></tr>
+    <tr><td class="nowrap"><b>그래프 노드 결과</b></td><td>노드 입력 + 노드 버전</td><td>재시도·재실행 시 앞 단계 생략</td><td>B2</td></tr>
+    </tbody></table></div>
+
+    <h3>저장소와 운영</h3>
+    <div class="table-wrap"><table>
+    <thead><tr><th>항목</th><th>내용</th></tr></thead>
+    <tbody>
+    <tr><td class="nowrap"><b>저장소</b></td><td>처음에는 인프라를 늘리지 않는다. 프로세스 메모리(LRU) + MongoDB(TTL 인덱스)로 시작</td></tr>
+    <tr><td class="nowrap"><b>확장</b></td><td>여러 워커가 공유하거나 속도가 부족해지면 Redis로 이전. 이전 결정은 ADR로 남김</td></tr>
+    <tr><td class="nowrap"><b>평가 오염 방지</b></td><td>평가 실행기는 캐시 끄기 옵션 제공. 키에 버전이 있어 대부분 막히지만, 새 프롬프트 평가 시 예전 응답을 채점하지 않도록 명시적으로 확인</td></tr>
+    <tr><td class="nowrap"><b>쓰지 않는 것</b></td><td>의미 기반 캐시(비슷한 입력이면 같은 답). 검사 결과가 틀릴 수 있어 정확히 같은 입력만 재사용</td></tr>
+    <tr><td class="nowrap"><b>지표</b></td><td>캐시 적중률, 절약한 토큰·비용, 적중/미적중 지연. Grafana 패널(A6)</td></tr>
+    <tr><td class="nowrap"><b>요구사항</b></td><td>SRS 비용·성능 비기능 요구사항에 캐시 목표(적중률, 절감액) 추가</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <!-- ============================== 부록 ============================== -->
+  <section class="panel" id="prep" role="tabpanel" aria-labelledby="tab-prep" hidden>
+    <div class="crumb">부록</div>
+    <h2>사전 준비와 범위</h2>
+    <h3>사전 준비 (강의 시간 외)</h3>
+    <ul>
+      <li>OpenSearch Docker 설치(Windows), Nori 플러그인</li>
+      <li>Ollama 설치(Windows)</li>
+      <li>Multipass VM과 k3s 클러스터, MySQL·MongoDB 기본 설치</li>
+      <li>수강 전제: Python, 데이터클래스, 정규식, HTTP·HTML 기초, Docker·k3s 기본 경험</li>
+    </ul>
+    <h3>과정에서 다루지 않는 것</h3>
+    <ul>
+      <li>형태소 분석기 내부 원리와 토크나이저 학습 (사용법과 선택 근거만)</li>
+      <li>트랜스포머 수식 유도 (개념, 짧은 NumPy 시연, 운영 영향만)</li>
+      <li>실제 AWS 이전 (B7에서 Terraform 초안과 비용 추정까지, 이전은 과정 후)</li>
+    </ul>
+    <h3>아직 정할 것</h3>
+    <ul>
+      <li>Windows PC GPU 유무: B3·B4의 로컬 모델 선택 범위를 결정</li>
+      <li>KWCAG 2.2 검사항목 원문 명칭: Part 2 매핑표 작성 시 확인</li>
+    </ul>
+  </section>
+
+  <section class="panel" id="gloss" role="tabpanel" aria-labelledby="tab-gloss" hidden>
+    <div class="crumb">부록</div>
+    <h2>용어집 (약자 원어)</h2>
+    <div class="key">본문의 약자는 탭마다 처음 나올 때 원어를 함께 적고, 이후에는 점선 밑줄로 표시한다. 점선 밑줄을 누르면 원어와 뜻이 보인다.</div>
+    <div class="table-wrap"><table id="gloss-table">
+    <thead><tr><th>약자</th><th>원어</th><th>뜻</th><th>나오는 곳</th></tr></thead>
+    <tbody></tbody></table></div>
+  </section>
+
+  </main>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+<script>
+(function () {
+  // ── 약자 원어 표기 ──
+  const GLOSS = {
+    "MRR": ["Mean Reciprocal Rank", "정답이 처음 나온 순위의 역수 평균"],
+    "nDCG": ["normalized Discounted Cumulative Gain", "순위를 반영한 검색 품질 지표"],
+    "F1": ["F1 score", "정밀도와 재현율의 조화 평균"],
+    "FMEA": ["Failure Mode and Effects Analysis", "고장 모드 영향 분석"],
+    "CER": ["Character Error Rate", "문자 오류율"],
+    "WER": ["Word Error Rate", "단어 오류율"],
+    "HF": ["Hugging Face", "모델·토크나이저 공유 플랫폼"],
+    "KV": ["Key-Value", "어텐션 계산 결과를 저장해 재사용하는 캐시(KV 캐시)"],
+    "LRU": ["Least Recently Used", "가장 오래 안 쓴 항목부터 버리는 캐시 방식"],
+    "TTL": ["Time To Live", "데이터 유효 기간"],
+    "CSS": ["Cascading Style Sheets", "웹 문서 스타일 언어"],
+    "PDF": ["Portable Document Format", "문서 파일 형식"],
+    "HWPX": ["Hangul Word Processor XML", "한글 문서 개방형 형식"],
+    "HWP": ["Hangul Word Processor", "한글 문서 형식"],
+    "SDK": ["Software Development Kit", "개발 도구 모음"],
+    "API": ["Application Programming Interface", "프로그램 간 호출 규약"],
+    "LCEL": ["LangChain Expression Language", "LangChain 체인 구성 문법"],
+    "RAGAS": ["Retrieval Augmented Generation Assessment", "RAG 품질 평가 도구"],
+    "ReAct": ["Reasoning + Acting", "생각과 행동을 번갈아 하는 에이전트 패턴"],
+    "UMAP": ["Uniform Manifold Approximation and Projection", "고차원 데이터 시각화용 차원 축소"],
+    "BGE-M3": ["BAAI General Embedding M3", "다국어 임베딩 모델"],
+    "k-NN": ["k-Nearest Neighbors", "가장 가까운 k개 이웃 검색"],
+    "VM": ["Virtual Machine", "가상 머신"],
+    "GPU": ["Graphics Processing Unit", "그래픽 처리 장치"],
+    "ICT": ["Information and Communication Technology", "정보통신기술"],
+    "p50": ["50th percentile (median)", "중앙값"],
+    "SRS": ["Software Requirements Specification", "소프트웨어 요구사항 명세서"],
+    "FR": ["Functional Requirement", "기능 요구사항"],
+    "NFR": ["Non-Functional Requirement", "비기능 요구사항"],
+    "ADR": ["Architecture Decision Record", "설계 결정 기록"],
+    "WCAG": ["Web Content Accessibility Guidelines", "웹 콘텐츠 접근성 지침 (W3C)"],
+    "KWCAG": ["Korean Web Content Accessibility Guidelines", "한국형 웹 콘텐츠 접근성 지침"],
+    "W3C": ["World Wide Web Consortium", "웹 표준을 만드는 국제 기구"],
+    "WAI-ARIA": ["Web Accessibility Initiative – Accessible Rich Internet Applications", "동적 UI의 역할·상태를 보조기술에 알리는 명세"],
+    "WHATWG": ["Web Hypertext Application Technology Working Group", "HTML 표준을 관리하는 단체"],
+    "EAA": ["European Accessibility Act", "유럽 접근성법"],
+    "EN 301 549": ["European Norm 301 549", "유럽 ICT 접근성 표준"],
+    "EU": ["European Union", "유럽연합"],
+    "HTML": ["HyperText Markup Language", "웹 문서 마크업 언어"],
+    "DOM": ["Document Object Model", "브라우저가 만든 문서 구조 트리"],
+    "URL": ["Uniform Resource Locator", "웹 주소"],
+    "YAML": ["YAML Ain't Markup Language", "사람이 읽기 쉬운 데이터 표현 형식"],
+    "CSV": ["Comma-Separated Values", "쉼표로 구분한 표 데이터 파일"],
+    "UI": ["User Interface", "사용자 인터페이스"],
+    "UX": ["User Experience", "사용자 경험"],
+    "TF-IDF": ["Term Frequency – Inverse Document Frequency", "단어 빈도와 희귀도로 매기는 가중치"],
+    "BM25": ["Best Matching 25 (Okapi BM25)", "빈도 포화·문서 길이 보정을 더한 검색 순위 함수"],
+    "Recall@k": ["Recall at k", "상위 k개 결과 안에 정답이 들어온 비율"],
+    "TP": ["True Positive", "정답과 일치한 탐지"],
+    "LLM": ["Large Language Model", "대규모 언어 모델"],
+    "RAG": ["Retrieval-Augmented Generation", "검색 증강 생성"],
+    "OCR": ["Optical Character Recognition", "광학 문자 인식"],
+    "MCP": ["Model Context Protocol", "AI 모델과 외부 도구를 연결하는 프로토콜"],
+    "PR": ["Pull Request", "코드 변경 검토 요청"],
+    "CI/CD": ["Continuous Integration / Continuous Delivery", "지속적 통합 · 배포"],
+    "CI": ["Continuous Integration", "지속적 통합"],
+    "GitOps": ["Git Operations", "Git 저장소 상태를 클러스터에 자동 반영하는 운영 방식"],
+    "k3s": ["Lightweight Kubernetes", "경량 쿠버네티스 배포판"],
+    "AWS": ["Amazon Web Services", "아마존 클라우드"],
+    "SLO": ["Service Level Objective", "서비스 수준 목표"],
+    "p95": ["95th percentile", "95번째 백분위수 (요청 95%가 이 값 이하)"],
+    "AA": ["Level AA", "WCAG 적합성 등급 (A < AA < AAA)"]
+  };
+  const keys = Object.keys(GLOSS).sort(function (a, b) { return b.length - a.length; });
+  const esc = function (k) { return k.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&'); };
+  const RE = new RegExp('(?<![A-Za-z0-9@/\\-])(' + keys.map(esc).join('|') + ')(?![A-Za-z0-9/]|-[A-Za-z])', 'g');
+  const SKIP = 'code, pre, script, style, abbr, .tabs, .mock, #gloss, .toast';
+  const NO_EXPAND = 'a, h1, h2, h3, h4, th, .fig, .stage, .badge, .tag, .roadmap, .crumb, .num, .sev';
+  const where = {};
+
+  document.querySelectorAll('main .panel').forEach(function (panel) {
+    if (panel.id === 'gloss') return;
+    const seen = new Set();
+    const tabLabel = document.querySelector('[aria-controls="' + panel.id + '"] .no').textContent;
+    const walker = document.createTreeWalker(panel, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (n) {
+        if (!n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        return n.parentElement.closest(SKIP) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(function (node) {
+      const text = node.nodeValue;
+      RE.lastIndex = 0;
+      if (!RE.test(text)) return;
+      RE.lastIndex = 0;
+      const noExpand = !!node.parentElement.closest(NO_EXPAND);
+      const frag = document.createDocumentFragment();
+      let last = 0, m;
+      while ((m = RE.exec(text))) {
+        const k = m[1];
+        frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+        const ab = document.createElement('abbr');
+        ab.textContent = k;
+        ab.title = GLOSS[k][0] + ' · ' + GLOSS[k][1];
+        ab.dataset.full = k;
+        frag.appendChild(ab);
+        (where[k] = where[k] || new Set()).add(tabLabel);
+        const beforeHyphen = text.charAt(m.index + k.length) === '-';
+        if (!noExpand && !beforeHyphen && !seen.has(k)) {
+          seen.add(k);
+          const inParen = text.charAt(m.index - 1) === '(';
+          const ex = document.createElement('span');
+          ex.className = 'exp';
+          ex.textContent = inParen ? ', ' + GLOSS[k][0] : ' (' + GLOSS[k][0] + ')';
+          frag.appendChild(ex);
+        }
+        last = m.index + k.length;
+      }
+      frag.appendChild(document.createTextNode(text.slice(last)));
+      node.parentNode.replaceChild(frag, node);
+    });
+  });
+
+  // 용어집 표 생성
+  const tbody = document.querySelector('#gloss-table tbody');
+  Object.keys(GLOSS).filter(function (k) { return where[k]; }).sort(function (a, b) { return a.toLowerCase().localeCompare(b.toLowerCase()); }).forEach(function (k) {
+    const tr = document.createElement('tr');
+    [k, GLOSS[k][0], GLOSS[k][1], where[k] ? Array.from(where[k]).join(', ') : '—'].forEach(function (v, i) {
+      const td = document.createElement('td');
+      td.textContent = v;
+      if (i === 0) td.className = 'nowrap';
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+
+  // 약자를 누르면 원어 표시 (터치 화면 대응)
+  const toast = document.getElementById('toast');
+  let timer;
+  document.addEventListener('click', function (e) {
+    const ab = e.target.closest('abbr[data-full]');
+    if (!ab || ab.closest('a')) return;
+    const g = GLOSS[ab.dataset.full];
+    toast.innerHTML = '';
+    const b = document.createElement('b'); b.textContent = ab.dataset.full + ' · ' + g[0];
+    toast.appendChild(b); toast.appendChild(document.createTextNode(g[1]));
+    toast.hidden = false;
+    clearTimeout(timer); timer = setTimeout(function () { toast.hidden = true; }, 3500);
+  });
+
+  // 모바일 카드형 표: 각 칸에 열 제목을 붙인다
+  document.querySelectorAll('.table-wrap table').forEach(function (t) {
+    const heads = Array.from(t.querySelectorAll('thead th')).map(function (th) { return th.textContent.trim(); });
+    if (heads.length < 3) return;
+    t.classList.add('cards');
+    t.querySelectorAll('tbody tr').forEach(function (tr) {
+      Array.from(tr.children).forEach(function (td, i) { td.setAttribute('data-label', heads[i] || ''); });
+    });
+  });
+
+  // 탭
+  const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+  function select(i, focus) {
+    tabs.forEach(function (t, j) {
+      const on = i === j;
+      t.setAttribute('aria-selected', on);
+      t.tabIndex = on ? 0 : -1;
+      document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+    });
+    if (focus) tabs[i].focus({ preventScroll: true });
+    const list = tabs[i].parentElement;
+    if (list.scrollWidth > list.clientWidth) {
+      list.scrollLeft = tabs[i].offsetLeft - list.offsetLeft - 16;
+    }
+    history.replaceState(null, '', '#' + tabs[i].getAttribute('aria-controls'));
+    window.scrollTo({ top: 0 });
+  }
+  tabs.forEach(function (t, i) {
+    t.addEventListener('click', function () { select(i); });
+    t.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); select((i + 1) % tabs.length, true); }
+      if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { e.preventDefault(); select((i - 1 + tabs.length) % tabs.length, true); }
+    });
+  });
+  const start = tabs.findIndex(function (t) { return '#' + t.getAttribute('aria-controls') === location.hash; });
+  select(start > -1 ? start : 0);
+  window.addEventListener('load', function () { window.scrollTo({ top: 0 }); });
+})();
+</script>
+</body>
+</html>

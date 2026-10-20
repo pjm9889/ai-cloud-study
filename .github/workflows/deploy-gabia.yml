@@ -57,6 +57,9 @@ jobs:
                   for path in __import__('pathlib').Path(root).rglob('*'):
                       if path.is_file():
                           z.write(path, path.as_posix())
+              for path in __import__('pathlib').Path('lecture_materials').rglob('*'):
+                  if path.is_file():
+                      z.write(path, path.as_posix())
           PY
           base64 -w 0 gabia-deploy.zip \
             | sshpass -e ssh \

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="subpage lecture-hub">
+  <a class="back" href="/">← 메인으로</a>
+  <p class="eyebrow">강의교안</p>
+  <h1>LLM &amp; 에이전트 강의교안</h1>
+  <p class="subpage-intro">파트 A와 파트 B, 그리고 전체 강의 구성 가이드를 단계별 페이지로 확인하세요.</p>
+  <div class="lecture-cards">
+    <a class="lecture-card" href="/lectures/part-a"><span class="lecture-number">01</span><strong>파트 A</strong><small>파트 A 강의교안 보기</small></a>
+    <a class="lecture-card" href="/lectures/part-b"><span class="lecture-number">02</span><strong>파트 B</strong><small>파트 B 강의교안 보기</small></a>
+    <a class="lecture-card" href="/lectures/guide"><span class="lecture-number">03</span><strong>가이드문서</strong><small>전체 커리큘럼 및 구성 보기</small></a>
+  </div>
+</section>
+{% endblock %}

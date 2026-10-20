@@ -48,5 +48,18 @@ a { color:inherit; text-decoration:none; }
 .guide-divider { margin:52px 0 0; border:0; border-top:1px solid #d8e3ec; }
 .guide-links { display:grid; gap:8px; }
 .guide-links a, .repo { color:var(--blue); font-size:14px; }
+.lecture-cards { display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-top:30px; }
+.lecture-card { min-height:170px; padding:24px; border:1px solid #c8dced; background:var(--soft); display:flex; flex-direction:column; justify-content:space-between; }
+.lecture-card:hover { border-color:var(--blue); background:#e5f2fb; }
+.lecture-number { color:var(--blue); font-size:13px; font-weight:800; }
+.lecture-card strong { font-size:24px; letter-spacing:-.06em; }
+.lecture-card small, .lecture-list small { color:var(--muted); font-size:13px; }
+.lecture-list { display:grid; gap:10px; max-width:820px; margin-top:30px; }
+.lecture-list a { display:grid; grid-template-columns:90px 1fr auto; align-items:center; gap:16px; padding:18px 20px; border:1px solid #d8e3ec; background:#fff; }
+.lecture-list a:hover { border-color:var(--blue); background:#f7fbfe; }
+.lecture-list span { color:var(--blue); font-weight:800; }
+.lecture-list strong { font-size:16px; }
+.lecture-empty { margin-top:30px; padding:28px; border:1px dashed #c8dced; color:var(--muted); text-align:center; }
 .footer { padding-top:27px; padding-bottom:50px; color:#999; font-size:12px; }
 @media (max-width:800px) { .header-inner { flex-wrap:wrap; gap:16px; padding:20px 0; } .account { width:100%; margin-left:0; } .main-nav { order:3; width:100%; overflow:auto; } .boards { grid-template-columns:1fr; gap:30px; } .project-bar { display:block; } .project-tabs { justify-content:flex-start; flex-wrap:wrap; margin-top:18px; } }
+@media (max-width:800px) { .lecture-cards { grid-template-columns:1fr; } .lecture-list a { grid-template-columns:70px 1fr; } .lecture-list small { grid-column:2; } }

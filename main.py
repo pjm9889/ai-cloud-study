@@ -22,6 +22,7 @@ app = FastAPI(title='BSSBU 프로젝트 허브'); gpt = GPTModule()
 SITE_PATH = BASE / 'data' / 'site.json'
 site = json.loads(SITE_PATH.read_text(encoding='utf-8')) if SITE_PATH.exists() else {}
 app.mount('/static', StaticFiles(directory=str(BASE / 'static')), name='static')
+app.mount('/lectures/files', StaticFiles(directory=str(BASE / 'lecture_materials')), name='lecture-files')
 templates = Jinja2Templates(directory=str(BASE / 'templates'))
 app.include_router(naver_blog_router)
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', '')
@@ -87,6 +88,22 @@ async def guide(request: Request):
 async def guide_html():
     from fastapi.responses import RedirectResponse
     return RedirectResponse('/guide', status_code=308)
+@app.get('/lectures')
+@app.get('/lectures/')
+async def lectures_home(request: Request):
+    return templates.TemplateResponse(request=request, name='lectures/index.html', context={'site': site, 'page_title': 'LLM & 에이전트 강의교안'})
+@app.get('/lectures/part-a')
+@app.get('/lectures/part-a/')
+async def lectures_part_a(request: Request):
+    return templates.TemplateResponse(request=request, name='lectures/part_a.html', context={'site': site, 'page_title': '파트 A 강의교안'})
+@app.get('/lectures/part-b')
+@app.get('/lectures/part-b/')
+async def lectures_part_b(request: Request):
+    return templates.TemplateResponse(request=request, name='lectures/part_b.html', context={'site': site, 'page_title': '파트 B 강의교안'})
+@app.get('/lectures/guide')
+@app.get('/lectures/guide/')
+async def lectures_guide(request: Request):
+    return templates.TemplateResponse(request=request, name='lectures/guide.html', context={'site': site, 'page_title': '강의 구성 가이드'})
 @app.get('/admin')
 async def admin_page(): return FileResponse(BASE / 'admin.html')
 @app.get('/mcp')
