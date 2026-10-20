@@ -13,18 +13,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check backup FastAPI entrypoint
+      - name: Check website entrypoint
         shell: bash
         run: |
           test -s index.html
           grep -q '<html' index.html
-          test -s main.py
-          test -s admin.html
-          test -s mcp.html
-          test -s guide.html
-          grep -q "@app.get('/admin')" main.py
-          grep -q "@app.get('/mcp')" main.py
-          grep -q "@app.get('/guide')" main.py
+          grep -q '청년취업사관학교 새싹' index.html
+          grep -q '프로젝트가이드' index.html
 
       - name: Package static website
         uses: actions/upload-artifact@v4
