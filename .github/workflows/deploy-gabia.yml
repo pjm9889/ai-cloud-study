@@ -48,7 +48,7 @@ jobs:
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -P "$GABIA_PORT" \
-            public/index.html public/guide.html gabia_app.py \
+            public/index.html public/guide.html app.py requirements.txt \
             "$GABIA_USERNAME@$GABIA_HOST:$GABIA_TARGET_DIR/"
           sshpass -e scp -r \
             -o StrictHostKeyChecking=no \
@@ -57,8 +57,15 @@ jobs:
             -P "$GABIA_PORT" \
             public/static \
             "$GABIA_USERNAME@$GABIA_HOST:$GABIA_TARGET_DIR/"
+          sshpass -e scp -r \
+            -o StrictHostKeyChecking=no \
+            -o HostKeyAlgorithms=+ssh-rsa \
+            -o PubkeyAuthentication=no \
+            -P "$GABIA_PORT" \
+            templates static data \
+            "$GABIA_USERNAME@$GABIA_HOST:$GABIA_TARGET_DIR/"
 
-      - name: Start and verify Gabia web application
+      - name: Start and verify FastAPI application
         shell: bash
         env:
           SSHPASS: ${{ secrets.GABIA_PASSWORD }}
@@ -73,4 +80,4 @@ jobs:
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-            "cd '$GABIA_TARGET_DIR' && (if [ -f gabia.pid ]; then kill \$(cat gabia.pid) 2>/dev/null || true; fi; if command -v fuser >/dev/null 2>&1; then fuser -k 8080/tcp 2>/dev/null || true; fi; nohup python3 gabia_app.py > gabia.log 2>&1 < /dev/null & echo \$! > gabia.pid) && sleep 3 && python3 -c \"import urllib.request; data=urllib.request.urlopen('http://127.0.0.1:8080/guide').read(); assert '프로젝트가이드'.encode() in data\" || (echo '--- gabia.log ---'; tail -100 gabia.log; exit 1)"
+            "cd '$GABIA_TARGET_DIR' && python3 -m pip install --user -r requirements.txt && (if [ -f fastapi.pid ]; then kill \$(cat fastapi.pid) 2>/dev/null || true; fi; if command -v fuser >/dev/null 2>&1; then fuser -k 8080/tcp 2>/dev/null || true; fi; nohup python3 -m uvicorn app:app --host 0.0.0.0 --port 8080 > fastapi.log 2>&1 < /dev/null & echo \$! > fastapi.pid) && sleep 5 && python3 -c \"import urllib.request; data=urllib.request.urlopen('http://127.0.0.1:8080/guide').read(); assert '프로젝트가이드'.encode() in data\" || (echo '--- fastapi.log ---'; tail -100 fastapi.log; exit 1)"
