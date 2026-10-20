@@ -18,8 +18,8 @@ jobs:
         run: |
           test -s index.html
           grep -q '<html' index.html
-          grep -q 'BSSBU AI Studio' index.html
-          grep -q '이미지 인사이트' index.html
+          grep -q '청년취업사관학교 새싹' index.html
+          grep -q '프로젝트가이드' index.html
 
       - name: Package static website
         uses: actions/upload-artifact@v4

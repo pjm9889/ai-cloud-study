@@ -19,9 +19,11 @@ jobs:
       - name: Validate homepage
         shell: bash
         run: |
-          test -s main.py
-          test -s index.html
+          test -s app.py
           test -s requirements.txt
+          test -s templates/home.html
+          test -s templates/guide.html
+          test -s data/site.json
 
       - name: Upload files over SSH/SCP
         shell: bash
@@ -31,7 +33,6 @@ jobs:
           GABIA_USERNAME: ${{ secrets.GABIA_USERNAME }}
           GABIA_PORT: ${{ secrets.GABIA_PORT || 22 }}
           GABIA_TARGET_DIR: ${{ secrets.GABIA_TARGET_DIR || '.' }}
-          GABIA_ENV: ${{ secrets.GABIA_ENV }}
         run: |
           set -euo pipefail
           sudo apt-get update -qq
@@ -42,28 +43,22 @@ jobs:
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
             "mkdir -p -- '$GABIA_TARGET_DIR'"
-          if [ -n "${GABIA_ENV:-}" ]; then
-            printf '%s' "$GABIA_ENV" | base64 -w 0 \
-              | sshpass -e ssh \
-                -o StrictHostKeyChecking=no \
-                -o HostKeyAlgorithms=+ssh-rsa \
-                -o PubkeyAuthentication=no \
-                -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-                "cd '$GABIA_TARGET_DIR' && base64 -d > .env && chmod 600 .env"
-          fi
           python3 - <<'PY'
           import zipfile
-          from pathlib import Path
           files = [
-              'main.py', 'index.html', 'gpt_module.py', 'naver_blog_routes.py',
+              'app.py', 'main.py', 'gpt_module.py', 'naver_blog_routes.py',
               'admin.html', 'mcp.html', 'requirements.txt', 'README.md',
-              'templates/home.html',
+              'data/site.json',
           ]
           with zipfile.ZipFile('gabia-deploy.zip', 'w', zipfile.ZIP_DEFLATED) as z:
               for path in files:
                   z.write(path, path)
-              for path in Path('data').glob('*'):
-                  if path.is_file() and path.suffix.lower() in {'.jpg', '.jpeg', '.png'}:
+              for root in ('templates', 'static'):
+                  for path in __import__('pathlib').Path(root).rglob('*'):
+                      if path.is_file():
+                          z.write(path, path.as_posix())
+              for path in __import__('pathlib').Path('lecture_materials').rglob('*'):
+                  if path.is_file():
                       z.write(path, path.as_posix())
           PY
           base64 -w 0 gabia-deploy.zip \
@@ -89,7 +84,7 @@ jobs:
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-            "cd '$GABIA_TARGET_DIR'; python3 -m pip install --user -r requirements.txt; python3 -c 'import main, uvicorn; print(\"imports ok\")'; if command -v supervisorctl >/dev/null 2>&1; then supervisorctl stop all || true; sleep 2; supervisorctl start all; else killall -9 python3 || true; sleep 3; nohup python3 -m uvicorn main:app --host 0.0.0.0 --port 8080 > app.log 2>&1 < /dev/null & fi"
+            "cd '$GABIA_TARGET_DIR'; python3 -m pip install --user -r requirements.txt; python3 -c 'import main, uvicorn; print(\"imports ok\")'; pids=\$(ps -eo pid=,args= | awk '\$2==\"python3\" && \$3==\"-m\" && \$4==\"uvicorn\" && \$5==\"main:app\" {print \$1}'); for pid in \$pids; do kill \$pid || true; done; sleep 2; nohup python3 -m uvicorn main:app --host 0.0.0.0 --port 8080 > app.log 2>&1 < /dev/null &"
 
       - name: Verify running application
         shell: bash
@@ -107,7 +102,7 @@ jobs:
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-            "cd '$GABIA_TARGET_DIR' && (curl -fsS http://127.0.0.1:8080/ | grep -q 'BSSBU AI Studio' || (echo '--- remote directory ---'; pwd; ls -la; echo '--- main markers ---'; grep -n 'BSSBU Vision Ops\|BSSBU AI Studio' main.py index.html || true; echo '--- processes ---'; ps -ef | grep -E 'python|uvicorn' | grep -v grep || true; echo '--- app.log ---'; tail -80 app.log 2>/dev/null || true; exit 1))"
+            "cd '$GABIA_TARGET_DIR' && (curl -fsS http://127.0.0.1:8080/guide | grep -q '프로젝트가이드' || (echo '--- remote directory ---'; pwd; ls -la; echo '--- main markers ---'; grep -n 'FastAPI\|프로젝트 허브' main.py || true; echo '--- processes ---'; ps -ef | grep -E 'python|uvicorn' | grep -v grep || true; echo '--- app.log ---'; tail -80 app.log 2>/dev/null || true; exit 1))"
 
       - name: Collect Gabia diagnostics
         if: always()

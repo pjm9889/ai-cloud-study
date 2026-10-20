@@ -39,3 +39,4 @@ class GPTModule:
             with urllib.request.urlopen(req,timeout=45) as response: data=json.loads(response.read().decode())
             return data['choices'][0]['message']['content'].strip()
         except (urllib.error.HTTPError,urllib.error.URLError,KeyError,json.JSONDecodeError) as exc: raise RuntimeError(f'GPT 요청 실패: {exc}') from exc
+

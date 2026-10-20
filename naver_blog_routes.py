@@ -117,3 +117,4 @@ def mark_publish_ready(draft_id: str, request: Request) -> dict:
             _write(items)
             return item
     raise HTTPException(status_code=404, detail="초안을 찾을 수 없습니다.")
+
