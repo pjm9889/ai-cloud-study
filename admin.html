@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BSSBU 관리자 운영센터</title>
+  <style>
+    :root{color-scheme:dark;font-family:Inter,system-ui,sans-serif;background:#07111f;color:#eaf4ff}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 10% 0,#12365b 0,#07111f 48%);min-height:100vh}
+    main{max-width:1100px;margin:auto;padding:42px 20px 70px}.eyebrow{color:#6dd5ff;font-size:12px;letter-spacing:.14em;font-weight:800}
+    h1{font-size:clamp(30px,5vw,54px);margin:10px 0}h2{margin:0 0 8px}p{color:#9fb5cb;line-height:1.6}
+    .top{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:24px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .box{background:rgba(13,31,53,.92);border:1px solid #214c73;border-radius:20px;padding:22px;box-shadow:0 18px 50px #0003}
+    .wide{grid-column:1/-1}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}input,textarea{width:100%;background:#071a2d;border:1px solid #2c618b;color:#eaf4ff;border-radius:10px;padding:12px;font:inherit;margin:8px 0}textarea{min-height:150px;resize:vertical}.small{min-height:80px}
+    button{border:0;border-radius:10px;padding:11px 16px;background:#235f95;color:#fff;font-weight:800;cursor:pointer}button.primary{background:#168bd0}.muted{font-size:13px;color:#7f9ab2}.status{white-space:pre-wrap;color:#8cdcff}.hidden{display:none}.danger{color:#ffb3b3}
+    @media(max-width:760px){.top{display:block}.grid{grid-template-columns:1fr}.wide{grid-column:auto}}
+  </style>
+</head>
+<body>
+<main>
+  <div class="top"><div><div class="eyebrow">BSSBU / ADMIN / CONTROL CENTER</div><h1>관리자 운영센터</h1><p>전이학습 그룹 규칙과 SQLite를 자연어로 관리합니다.</p></div><button onclick="location.href='/'">메인으로</button></div>
+  <section class="box" id="loginBox"><h2>관리자 인증</h2><p>학습용 관리자 비밀번호: <code>1234</code></p><div class="row"><input id="password" type="password" placeholder="관리자 비밀번호" style="max-width:300px"><button class="primary" id="login">인증</button><span class="status" id="loginStatus">인증 대기</span></div></section>
+  <div class="grid hidden" id="tools">
+    <section class="box"><h2>그룹 분류 규칙</h2><p>전이학습 라벨 키워드를 JSON으로 수정합니다.</p><textarea id="rules"></textarea><div class="row"><button class="primary" id="saveRules">분류 규칙 저장</button><span class="status" id="rulesStatus"></span></div></section>
+    <section class="box"><h2>자연어 → SQL</h2><p>예: “최근 저장된 세션 10개를 최신순으로 보여줘”</p><textarea id="prompt" class="small" placeholder="SQLite에 하고 싶은 작업을 자연어로 입력하세요"></textarea><textarea id="sql" class="small" placeholder="GPT가 생성한 SQL이 표시됩니다. 실행 전 확인하세요."></textarea><div class="row"><button class="primary" id="makeSql">SQL 생성</button><button id="runSql">생성 SQL 실행</button></div><div class="status" id="sqlStatus"></div></section>
+    <section class="box wide"><h2>실행 결과</h2><pre id="result" class="muted">아직 실행한 SQL이 없습니다.</pre><p class="danger">안전을 위해 DROP·ALTER·ATTACH 등의 명령은 실행할 수 없습니다.</p></section>
+    <section class="box wide"><h2>SQLite 데이터 브라우저</h2><p>현재 <code>data/sessions.db</code>에 저장된 YOLO 세션과 관리자 데이터를 확인합니다.</p><div class="row"><select id="table" style="min-width:220px"></select><button id="loadDb">DB 새로고침</button></div><pre id="dbResult" class="muted">인증 후 DB 새로고침을 눌러주세요.</pre></section>
+  </div>
+</main>
+<script>
+const $=s=>document.querySelector(s); let key='';
+const fallback={"욕실·위생":["toilet","bathtub","shower","sink"],"주방·식음료":["kitchen","oven","stove","refrigerator","cup","bottle"],"객실·가구":["bed","chair","couch","table","desk"],"전자·생활기기":["laptop","computer","cell phone","camera","tv"],"야외·자연":["tree","plant","flower","mountain","beach"],"이동·차량":["car","truck","bus","bicycle","motorcycle"],"사람·동물":["person","dog","cat","bird"]};
+async function call(url,opts={}){opts.headers={...(opts.headers||{}),"X-Admin-Password":key};const r=await fetch(url,opts);const d=await r.json();if(!r.ok)throw Error(d.detail||'요청 실패');return d}
+$('#login').onclick=async()=>{key=$('#password').value;try{const d=await call('/api/admin/categories');$('#rules').value=JSON.stringify(Object.keys(d.rules||{}).length?d.rules:fallback,null,2);$('#tools').classList.remove('hidden');$('#loginStatus').textContent='인증 완료';loadDb();}catch(e){$('#loginStatus').textContent=e.message}};
+$('#saveRules').onclick=async()=>{try{const d=await call('/api/admin/categories',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rules:JSON.parse($('#rules').value)})});$('#rulesStatus').textContent=`저장 완료: ${Object.keys(d.rules).length}개 카테고리`;}catch(e){$('#rulesStatus').textContent=e.message}};
+$('#makeSql').onclick=async()=>{try{const d=await call('/api/admin/text-to-sql',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:$('#prompt').value})});$('#sql').value=d.sql;$('#sqlStatus').textContent='생성 완료. SQL을 확인하세요.';}catch(e){$('#sqlStatus').textContent=e.message}};
+$('#runSql').onclick=async()=>{try{const d=await call('/api/admin/execute-sql',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sql:$('#sql').value})});$('#result').textContent=d.rows?JSON.stringify(d.rows,null,2):(d.message||`처리 행: ${d.row_count}`);}catch(e){$('#result').textContent='실행 실패: '+e.message}};
+async function loadDb(){try{const selected=$('#table').value;const d=await call('/api/admin/database'+(selected?'?table='+encodeURIComponent(selected):''));$('#table').innerHTML=d.tables.map(t=>`<option>${t}</option>`).join('');if(d.table)$('#table').value=d.table;$('#dbResult').textContent=JSON.stringify({table:d.table,columns:d.columns,rows:d.rows},null,2);}catch(e){$('#dbResult').textContent='DB 조회 실패: '+e.message}}
+$('#loadDb').onclick=loadDb;
+</script>
+</body></html>
