@@ -19,11 +19,11 @@ jobs:
       - name: Validate homepage
         shell: bash
         run: |
-          test -s app.py
-          test -s requirements.txt
-          test -d templates
-          test -d static
-          test -d data
+          python3 -m pip install --quiet jinja2
+          python3 build_static.py
+          test -s public/index.html
+          test -s public/guide.html
+          test -s public/static/css/site.css
 
       - name: Upload files over SSH/SCP
         shell: bash
@@ -48,29 +48,12 @@ jobs:
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -P "$GABIA_PORT" \
-            app.py requirements.txt \
+            public/index.html public/guide.html \
             "$GABIA_USERNAME@$GABIA_HOST:$GABIA_TARGET_DIR/"
           sshpass -e scp -r \
             -o StrictHostKeyChecking=no \
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -P "$GABIA_PORT" \
-            templates static data \
+            public/static \
             "$GABIA_USERNAME@$GABIA_HOST:$GABIA_TARGET_DIR/"
-
-      - name: Restart FastAPI application
-        shell: bash
-        env:
-          SSHPASS: ${{ secrets.GABIA_PASSWORD }}
-          GABIA_HOST: ${{ secrets.GABIA_HOST }}
-          GABIA_USERNAME: ${{ secrets.GABIA_USERNAME }}
-          GABIA_PORT: ${{ secrets.GABIA_PORT || 22 }}
-          GABIA_TARGET_DIR: ${{ secrets.GABIA_TARGET_DIR || '.' }}
-        run: |
-          set -euo pipefail
-          sshpass -e ssh \
-            -o StrictHostKeyChecking=no \
-            -o HostKeyAlgorithms=+ssh-rsa \
-            -o PubkeyAuthentication=no \
-            -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-            "cd '$GABIA_TARGET_DIR' && python3 -m pip install --user -r requirements.txt && (pkill -f '[u]vicorn app:app' || true) && nohup python3 -m uvicorn app:app --host 0.0.0.0 --port 8080 > app.log 2>&1 &"
