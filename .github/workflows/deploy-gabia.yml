@@ -31,6 +31,7 @@ jobs:
           GABIA_USERNAME: ${{ secrets.GABIA_USERNAME }}
           GABIA_PORT: ${{ secrets.GABIA_PORT || 22 }}
           GABIA_TARGET_DIR: ${{ secrets.GABIA_TARGET_DIR || '.' }}
+          GABIA_ENV: ${{ secrets.GABIA_ENV }}
         run: |
           set -euo pipefail
           sudo apt-get update -qq
@@ -41,6 +42,15 @@ jobs:
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
             "mkdir -p -- '$GABIA_TARGET_DIR'"
+          if [ -n "${GABIA_ENV:-}" ]; then
+            printf '%s' "$GABIA_ENV" | base64 -w 0 \
+              | sshpass -e ssh \
+                -o StrictHostKeyChecking=no \
+                -o HostKeyAlgorithms=+ssh-rsa \
+                -o PubkeyAuthentication=no \
+                -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
+                "cd '$GABIA_TARGET_DIR' && base64 -d > .env && chmod 600 .env"
+          fi
           python3 - <<'PY'
           import zipfile
           from pathlib import Path
