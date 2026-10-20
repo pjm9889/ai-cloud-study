@@ -1,24 +1,66 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="hero">
-  <p class="eyebrow">{{ site.project_name }}</p>
-  <h1>{{ site.course_name }}</h1>
-  <p>프로젝트 소식과 조별 작업 사이트를 한곳에서 확인하세요.</p>
-</section>
-<section class="boards" aria-label="프로젝트 소식">
-  {% for board_name, items in [("새소식", site.news), ("이벤트", site.events)] %}
-  <section class="board">
-    <div class="board-head"><h2>{{ board_name }}</h2><a href="/guide">전체 보기 〉</a></div>
-    {% for item in items %}<div class="notice"><span class="tag">{{ item.tag }}</span><span>{{ item.title }}</span><time>{{ item.date }}</time></div>{% endfor %}
+<div class="home-design">
+  <section class="home-hero">
+    <div class="home-hero-copy">
+      <span class="home-badge">2026 PROJECT · AI &amp; CLOUD</span>
+      <h1>현장에서 바로 쓰는<br><em>AI 실무 강의</em></h1>
+      <p>LLM, RAG, 에이전트 구축부터 프로젝트 설계와 배포까지<br>실제 결과물을 만들며 학습합니다.</p>
+      <div class="home-actions">
+        <a class="home-primary" href="#lecture-materials">교안 둘러보기 <b>→</b></a>
+        <a class="home-secondary" href="/guide">프로젝트 가이드</a>
+      </div>
+      <div class="home-facts">
+        <span><b>PART A</b> RAG 기반 검사 시스템</span>
+        <span><b>PART B</b> LLM &amp; 에이전트</span>
+      </div>
+    </div>
+    <div class="code-preview" aria-label="강의 실습 미리보기">
+      <div class="code-window-head"><i></i><i></i><i></i><span>agent_workflow.py</span></div>
+      <pre><code><b>from</b> project <b>import</b> Agent
+
+agent = Agent(
+    model=<em>"LLM"</em>,
+    tools=[<em>"search"</em>, <em>"rag"</em>]
+)
+
+result = agent.run(
+    <em>"프로젝트 설계 원칙을 검사해줘"</em>
+)</code></pre>
+      <div class="code-result"><strong>✓</strong><span>학습 결과를 프로젝트에 바로 적용합니다.</span></div>
+    </div>
   </section>
-  {% endfor %}
-</section>
-<section class="project-bar">
-  <div class="project-title"><small>{{ site.project_name }}</small><strong>조별 사이트 바로가기</strong></div>
-  <div class="project-tabs">
-    {% for team in site.teams %}<a class="project-tab" href="{{ team.domain }}" target="_blank" rel="noreferrer">{{ team.name }}</a>{% endfor %}
-    <a class="project-tab" href="/guide">프로젝트가이드</a>
-    <a class="project-tab" href="/lectures">LLM &amp; 에이전트<br>강의교안 보기</a>
-  </div>
-</section>
+
+  <section class="home-section" id="lecture-materials">
+    <div class="home-section-heading">
+      <div><span>LECTURE MATERIALS</span><h2>강의교안</h2></div>
+      <p>파트별 학습 자료를 순서대로 확인하세요.</p>
+    </div>
+    <div class="track-grid">
+      <a class="track-card track-a" href="/lectures/part-a">
+        <div class="track-label">01 · PART A</div>
+        <h3>RAG 기반<br>검사 시스템</h3>
+        <p>A0 프로젝트 베이스<br>설계 원칙 · 규칙 기반 탐지</p>
+        <strong>교안 보기 <b>→</b></strong>
+      </a>
+      <a class="track-card track-b" href="/lectures/part-b">
+        <div class="track-label">02 · PART B</div>
+        <h3>LLM &amp; 에이전트<br>설계</h3>
+        <p>에이전트 구조와 실습<br>파트 B 강의교안</p>
+        <strong>교안 보기 <b>→</b></strong>
+      </a>
+      <a class="track-card track-guide" href="/lectures/guide">
+        <div class="track-label">03 · GUIDE</div>
+        <h3>전체 강의<br>구성 가이드</h3>
+        <p>파트 A·B 전체 커리큘럼<br>학습 순서와 설계 원칙</p>
+        <strong>가이드 보기 <b>→</b></strong>
+      </a>
+    </div>
+  </section>
+
+  <section class="home-project">
+    <div><span>PROJECT HUB</span><h2>1차 프로젝트</h2><p>강의에서 배운 내용을 실제 프로젝트로 연결하세요.</p></div>
+    <a href="/guide">프로젝트 가이드 보기 <b>→</b></a>
+  </section>
+</div>
 {% endblock %}

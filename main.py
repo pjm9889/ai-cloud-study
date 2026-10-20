@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
@@ -91,11 +91,16 @@ async def guide_html():
 @app.get('/lectures')
 @app.get('/lectures/')
 async def lectures_home(request: Request):
-    return templates.TemplateResponse(request=request, name='lectures/index.html', context={'site': site, 'page_title': 'LLM & 에이전트 강의교안'})
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse('/#lecture-materials', status_code=307)
 @app.get('/lectures/part-a')
 @app.get('/lectures/part-a/')
 async def lectures_part_a(request: Request):
     return templates.TemplateResponse(request=request, name='lectures/part_a.html', context={'site': site, 'page_title': '파트 A 강의교안'})
+@app.get('/lectures/part-a/a0')
+@app.get('/lectures/part-a/a0/')
+async def lectures_part_a_a0(request: Request):
+    return templates.TemplateResponse(request=request, name='lectures/a0.html', context={'site': site, 'page_title': 'A0 강의교안'})
 @app.get('/lectures/part-b')
 @app.get('/lectures/part-b/')
 async def lectures_part_b(request: Request):
@@ -103,7 +108,7 @@ async def lectures_part_b(request: Request):
 @app.get('/lectures/guide')
 @app.get('/lectures/guide/')
 async def lectures_guide(request: Request):
-    return templates.TemplateResponse(request=request, name='lectures/guide.html', context={'site': site, 'page_title': '강의 구성 가이드'})
+    return RedirectResponse('/lectures/files/0-커리큘럼_웹페이지설계원칙검사에이전트.html', status_code=307)
 @app.get('/admin')
 async def admin_page(): return FileResponse(BASE / 'admin.html')
 @app.get('/mcp')

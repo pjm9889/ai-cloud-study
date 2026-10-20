@@ -4,17 +4,18 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{{ site.site_name }} | {{ page_title }}</title>
-  <link rel="stylesheet" href="/static/css/site.css" />
+  <link rel="stylesheet" href="/static/css/site.css?v=20261020-2" />
+  {% if page_title == '메인' %}<link rel="stylesheet" href="/static/css/home.css?v=20261020-1" />{% endif %}
 </head>
-<body>
+<body class="{% if page_title == '메인' %}home-page{% endif %}">
   <header class="site-header">
     <div class="container header-inner">
-      <a class="logo" href="/">{{ site.site_name }}</a>
+      <a class="logo" href="/"><span class="brand-mark">AI</span><span>{{ site.site_name }}</span></a>
       <nav class="main-nav" aria-label="주요 메뉴">
-        {% for team in site.teams %}<a href="{{ team.domain }}" target="_blank" rel="noreferrer">{{ team.name }}</a>{% endfor %}
+        <a href="/">홈</a>
+        <a href="/#lecture-materials">교안</a>
         <a href="/guide">프로젝트가이드</a>
       </nav>
-      <div class="account">관리자님 <span>My 프로젝트</span><span>관리센터</span></div>
     </div>
   </header>
   <main class="container">{% block content %}{% endblock %}</main>

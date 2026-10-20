@@ -1,0 +1,55 @@
+.home-design { padding:0 0 64px; color:#111827; font-family:Inter,"Pretendard","Noto Sans KR",Arial,sans-serif; }
+.home-hero { display:grid; grid-template-columns:1.1fr .9fr; gap:72px; align-items:center; padding:88px 0 92px; border-bottom:1px solid #e5e7eb; }
+.home-badge { display:inline-block; padding:7px 10px; border:1px solid #f6b7d4; border-radius:5px; background:#fff1f7; color:#e51d7d; font-size:11px; font-weight:800; letter-spacing:.06em; }
+.home-hero h1 { margin:24px 0 18px; font-size:54px; line-height:1.12; letter-spacing:-.09em; }
+.home-hero h1 em { color:#ff2e93; font-style:normal; }
+.home-hero-copy > p { margin:0; color:#667085; font-size:17px; line-height:1.75; }
+.home-actions { display:flex; align-items:center; gap:18px; margin-top:30px; }
+.home-primary { padding:14px 20px; border-radius:8px; background:#ff2e93; color:#fff; font-size:14px; font-weight:800; box-shadow:0 8px 18px rgba(255,46,147,.18); }
+.home-primary:hover { background:#e51d7d; }
+.home-primary b { margin-left:12px; font-size:18px; }
+.home-secondary { color:#4b5563; font-size:14px; font-weight:700; }
+.home-secondary:hover { color:#ff2e93; }
+.home-facts { display:flex; gap:22px; margin-top:40px; padding-top:18px; border-top:1px solid #e5e7eb; color:#697586; font-size:12px; }
+.home-facts span { display:flex; gap:7px; align-items:center; }
+.home-facts b { color:#7928ca; font-size:11px; }
+.code-preview { padding:22px; border:1px solid #d7dce3; border-radius:14px; background:#fff; box-shadow:0 18px 40px rgba(15,23,42,.08); }
+.code-window-head { display:flex; align-items:center; gap:7px; padding-bottom:17px; border-bottom:1px solid #e5e7eb; color:#98a2b3; font:700 11px/1 monospace; }
+.code-window-head i { width:9px; height:9px; border-radius:50%; background:#f97068; }
+.code-window-head i:nth-child(2) { background:#fdb022; }
+.code-window-head i:nth-child(3) { background:#32d583; }
+.code-window-head span { margin-left:auto; }
+.code-preview pre { margin:18px 0; padding:20px; overflow:auto; border-radius:9px; background:#111827; color:#c4f1ff; font:13px/1.85 Consolas,monospace; }
+.code-preview code b { color:#ff79c6; }
+.code-preview code em { color:#f8d477; font-style:normal; }
+.code-result { display:flex; gap:10px; align-items:center; padding:13px; border:1px solid #f6b7d4; border-radius:8px; background:#fff1f7; color:#667085; font-size:12px; }
+.code-result strong { color:#ff2e93; font-size:18px; }
+.home-section { padding:78px 0 0; }
+.home-section-heading { display:flex; justify-content:space-between; align-items:end; margin-bottom:26px; }
+.home-section-heading span, .home-project > div > span { color:#ff2e93; font-size:11px; font-weight:800; letter-spacing:.12em; }
+.home-section-heading h2, .home-project h2 { margin:7px 0 0; font-size:34px; letter-spacing:-.08em; }
+.home-section-heading p { margin:0; color:#8a94a6; font-size:13px; }
+.track-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+.track-card { min-height:292px; display:flex; flex-direction:column; padding:28px; border:1px solid #d9dee7; border-radius:12px; background:#fff; transition:.2s ease; }
+.track-card:hover { transform:translateY(-4px); border-color:#ff2e93; box-shadow:0 14px 26px rgba(15,23,42,.08); }
+.track-label { font-size:11px; font-weight:900; letter-spacing:.1em; color:#7928ca; }
+.track-b .track-label { color:#1479c9; }
+.track-guide .track-label { color:#108a66; }
+.track-card h3 { margin:34px 0 12px; font-size:26px; line-height:1.25; letter-spacing:-.08em; }
+.track-card p { margin:0; color:#758195; font-size:13px; line-height:1.7; }
+.track-card strong { display:flex; justify-content:space-between; align-items:center; margin-top:auto; padding-top:20px; border-top:1px solid #edf0f3; color:#ff2e93; font-size:13px; }
+.track-card strong b { font-size:18px; }
+.home-project { display:flex; justify-content:space-between; align-items:center; margin-top:72px; padding:28px 30px; border-radius:12px; background:#f8f5ff; }
+.home-project h2 { font-size:25px; }
+.home-project p { margin:8px 0 0; color:#697586; font-size:13px; }
+.home-project > a { padding:12px 16px; border-radius:7px; background:#7928ca; color:#fff; font-size:13px; font-weight:800; }
+.home-project > a b { margin-left:10px; font-size:17px; }
+@media (max-width:800px) {
+  .home-hero { grid-template-columns:1fr; gap:40px; padding:52px 0 60px; }
+  .home-hero h1 { font-size:40px; }
+  .home-section-heading { display:block; }
+  .home-section-heading p { margin-top:10px; }
+  .track-grid { grid-template-columns:1fr; }
+  .home-project { display:block; }
+  .home-project > a { display:inline-block; margin-top:20px; }
+}

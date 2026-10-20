@@ -1,12 +1,24 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="subpage lecture-hub">
-  <a class="back" href="/lectures">← 강의교안으로</a>
+<section class="subpage lecture-hub part-overview">
+  <a class="back" href="/">← 홈으로</a>
   <p class="eyebrow">LLM &amp; 에이전트 · Part A</p>
-  <h1>파트 A 강의교안</h1>
-  <p class="subpage-intro">파트 A의 세부 강의교안을 선택하세요.</p>
-  <div class="lecture-list">
-    <a href="/lectures/files/A0_Part01.html"><span>A0</span><strong>A0 강의교안</strong><small>Part 01</small></a>
+  <h1>Part A · RAG 편</h1>
+  <p class="subpage-intro">Part A는 A0부터 A7까지 여러 강의 파트로 구성됩니다. 현재는 A0의 첫 번째 교안을 제공합니다.</p>
+  <div class="part-table-wrap">
+    <table class="part-table">
+      <thead><tr><th>#</th><th>아티클</th><th>강의</th><th>실습</th><th>주요 기술</th><th>교안</th></tr></thead>
+      <tbody>
+        <tr><th>A0</th><td><strong>프로젝트 베이스: 설계 원칙 · 규칙 기반 탐지 · 키워드 검색</strong></td><td>3h</td><td>3h</td><td>Kiwi, BM25, TF-IDF, scikit-learn, Pydantic, YAML, Git, MySQL, SQLAlchemy, Playwright</td><td><a class="table-link" href="/lectures/part-a/a0">A0 보기</a></td></tr>
+        <tr><th>A1</th><td>생성형 AI · LLM 기초</td><td>8h</td><td>4h</td><td>OpenAI API, tiktoken, Hugging Face tokenizers</td><td><span class="coming">준비 중</span></td></tr>
+        <tr><th>A2</th><td>벡터 · 유사도 이해</td><td>5h</td><td>2h</td><td>NumPy, scikit-learn, UMAP, Plotly, OpenAI 임베딩, BGE-M3</td><td><span class="coming">준비 중</span></td></tr>
+        <tr><th>A3</th><td>벡터 DB · MongoDB · OpenSearch</td><td>7h</td><td>3h</td><td>ChromaDB, Pinecone, MongoDB, OpenSearch</td><td><span class="coming">준비 중</span></td></tr>
+        <tr><th>A4</th><td>RAG 파이프라인 + 에이전트 v1</td><td>8h</td><td>4h</td><td>LangChain, ChromaDB, MongoDB</td><td><span class="coming">준비 중</span></td></tr>
+        <tr><th>A5</th><td>RAG 고도화 · 평가 · 서비스</td><td>7h</td><td>4h</td><td>BM25Retriever, Kiwi, EnsembleRetriever, RAGAS, FastAPI, Jinja2</td><td><span class="coming">준비 중</span></td></tr>
+        <tr><th>A6</th><td>평가 자동화 · 추적성 · 지속 배포</td><td>6h</td><td>6h</td><td>GitHub Actions, Argo CD, Helm, Loki, OpenTelemetry, Tempo, Grafana</td><td><span class="coming">준비 중</span></td></tr>
+        <tr><th>A7</th><td>중간 캡스톤</td><td>—</td><td>2h</td><td>pandas</td><td><span class="coming">준비 중</span></td></tr>
+      </tbody>
+    </table>
   </div>
 </section>
 {% endblock %}
