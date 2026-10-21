@@ -84,7 +84,7 @@ jobs:
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-            "cd '$GABIA_TARGET_DIR'; python3 -m pip install --user -r requirements.txt; python3 -c 'import main, uvicorn; print(\"imports ok\")'; supervisorctl stop all || true; pkill -f '[u]vicorn main:app' || true; fuser -k 8080/tcp || true; sleep 3; nohup python3 -m uvicorn main:app --host 0.0.0.0 --port 8080 > app.log 2>&1 < /dev/null &"
+            "cd '$GABIA_TARGET_DIR'; set +e; python3 -m pip install --user -r requirements.txt; python3 -c 'import main, uvicorn; print(\"imports ok\")'; supervisorctl stop all; sleep 2; setsid python3 -m uvicorn main:app --host 0.0.0.0 --port 8080 > app.log 2>&1 < /dev/null & sleep 4; exit 0"
 
       - name: Verify running application
         shell: bash
