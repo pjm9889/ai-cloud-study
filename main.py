@@ -125,6 +125,11 @@ async def public_part_a_a0(request: Request):
 @app.get('/lecture-guide/')
 async def public_lecture_guide():
     return FileResponse(CURRICULUM_FILE)
+
+@app.get('/curriculum')
+@app.get('/curriculum/')
+async def public_curriculum():
+    return FileResponse(CURRICULUM_FILE)
 @app.get('/a0-part01')
 @app.get('/a0-part01/')
 async def public_a0_part01():
