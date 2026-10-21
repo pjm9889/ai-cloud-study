@@ -84,7 +84,7 @@ jobs:
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-            "cd '$GABIA_TARGET_DIR'; python3 -m pip install --user -r requirements.txt; python3 -c 'import main, uvicorn; print(\"imports ok\")'; pids=\$(ps -eo pid=,args= | awk '\$2==\"python3\" && \$3==\"-m\" && \$4==\"uvicorn\" && \$5==\"main:app\" {print \$1}'); for pid in \$pids; do kill \$pid || true; done; sleep 2; nohup python3 -m uvicorn main:app --host 0.0.0.0 --port 8080 > app.log 2>&1 < /dev/null &"
+            "cd '$GABIA_TARGET_DIR'; python3 -m pip install --user -r requirements.txt; python3 -c 'import main, uvicorn; print(\"imports ok\")'; if command -v supervisorctl >/dev/null 2>&1; then supervisorctl stop all || true; sleep 2; supervisorctl start all || true; else pkill -f '[u]vicorn main:app' || true; sleep 2; nohup python3 -m uvicorn main:app --host 0.0.0.0 --port 8080 > app.log 2>&1 < /dev/null & fi"
 
       - name: Verify running application
         shell: bash
@@ -102,7 +102,7 @@ jobs:
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-            "cd '$GABIA_TARGET_DIR' && (curl -fsS http://127.0.0.1:8080/guide | grep -q '프로젝트가이드' || (echo '--- remote directory ---'; pwd; ls -la; echo '--- main markers ---'; grep -n 'FastAPI\|프로젝트 허브' main.py || true; echo '--- processes ---'; ps -ef | grep -E 'python|uvicorn' | grep -v grep || true; echo '--- app.log ---'; tail -80 app.log 2>/dev/null || true; exit 1))"
+            "cd '$GABIA_TARGET_DIR' && (curl -fsS http://127.0.0.1:8080/a1-m1 | grep -q 'A1-M1' || (echo '--- remote directory ---'; pwd; ls -la; echo '--- main markers ---'; grep -n 'A1_M1_FILE\|public_a1_m1' main.py || true; echo '--- processes ---'; ps -ef | grep -E 'python|uvicorn' | grep -v grep || true; echo '--- app.log ---'; tail -80 app.log 2>/dev/null || true; exit 1))"
 
       - name: Collect Gabia diagnostics
         if: always()
