@@ -24,6 +24,8 @@ site = json.loads(SITE_PATH.read_text(encoding='utf-8')) if SITE_PATH.exists() e
 app.mount('/static', StaticFiles(directory=str(BASE / 'static')), name='static')
 app.mount('/lectures/files', StaticFiles(directory=str(BASE / 'lecture_materials')), name='lecture-files')
 templates = Jinja2Templates(directory=str(BASE / 'templates'))
+CURRICULUM_FILE = BASE / 'lecture_materials' / '00_쿼리큘럼.html'
+A1_M1_FILE = BASE / 'lecture_materials' / 'A1-M1_고전적 w3c 검사 체험.html'
 app.include_router(naver_blog_router)
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', '')
 
@@ -110,7 +112,7 @@ async def lectures_part_b(request: Request):
 @app.get('/lectures/guide')
 @app.get('/lectures/guide/')
 async def lectures_guide(request: Request):
-    return RedirectResponse('/lectures/files/0-커리큘럼_웹페이지설계원칙검사에이전트.html', status_code=307)
+    return RedirectResponse('/lectures/files/00_쿼리큘럼.html', status_code=307)
 @app.get('/part-a')
 @app.get('/part-a/')
 async def public_part_a(request: Request):
@@ -122,11 +124,16 @@ async def public_part_a_a0(request: Request):
 @app.get('/lecture-guide')
 @app.get('/lecture-guide/')
 async def public_lecture_guide():
-    return FileResponse(BASE / 'lecture_materials' / '0-커리큘럼_웹페이지설계원칙검사에이전트.html')
+    return FileResponse(CURRICULUM_FILE)
 @app.get('/a0-part01')
 @app.get('/a0-part01/')
 async def public_a0_part01():
-    return FileResponse(BASE / 'lecture_materials' / 'A0_Part01.html')
+    return FileResponse(A1_M1_FILE)
+
+@app.get('/a1-m1')
+@app.get('/a1-m1/')
+async def public_a1_m1():
+    return FileResponse(A1_M1_FILE)
 @app.get('/admin')
 async def admin_page(): return FileResponse(BASE / 'admin.html')
 @app.get('/mcp')
