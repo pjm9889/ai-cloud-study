@@ -101,6 +101,7 @@
     letter-spacing: 0.02em;
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
   }
+  .banner .banner-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .banner .home-link:hover { 
     background: var(--accent); 
     border-color: var(--accent);
@@ -245,7 +246,8 @@
     body { font-size: 15px; }
     .banner-in { flex-direction: column; align-items: flex-start; padding: 12px 16px; gap: 12px; }
     .banner-left { flex-direction: column; align-items: flex-start; gap: 4px; }
-    .banner .home-link { align-self: stretch; text-align: center; }
+    .banner .banner-actions { align-self: stretch; }
+    .banner .home-link { flex: 1; text-align: center; }
     h1 { font-size: 24px; }
     h2 { font-size: 21px; }
     h3 { font-size: 18px; }
@@ -366,7 +368,7 @@ code, pre, pre code {font-size:16px;}
 <div class="org">청년취업사관학교 AI_클라우드과정(2026년)</div>
 <div class="who">강사 부성순 · <a href="mailto:bakpak@empas.com">bakpak@empas.com</a></div>
 </div>
-<a class="home-link" href="/">🏠 홈으로</a>
+<div class="banner-actions"><a class="home-link" href="/">🏠 홈으로</a><a class="home-link" href="/lectures/files/index.html#section-a1">📚 강의자료 라이브러리 · Part A</a></div>
 </div>
 </div><div class="layout"><aside class="side"><div aria-label="커리큘럼 목차" aria-orientation="vertical" class="tabs" role="tablist"><div class="group">과정 안내</div><button aria-controls="overview" aria-selected="true" id="tab-overview" role="tab"><span class="no">안내</span>전체 과정 개요</button><button aria-controls="principles" aria-selected="false" id="tab-principles" role="tab" tabindex="-1"><span class="no">원칙</span>교안 작성 원칙</button><button aria-controls="roles" aria-selected="false" id="tab-roles" role="tab" tabindex="-1"><span class="no">직군</span>직군별 산출물</button><div class="group">Part A · RAG</div><button aria-controls="contract" aria-selected="false" id="tab-contract" role="tab" tabindex="-1"><span class="no">기준</span>제작 기준·인계 명세</button><button aria-controls="a-map" aria-selected="false" id="tab-a-map" role="tab" tabindex="-1"><span class="no">Article</span>A1~A4 개요</button><button aria-controls="a-modules" aria-selected="false" id="tab-a-modules" role="tab" tabindex="-1"><span class="no">Module</span>A1~A4 상세 목차</button><div class="group">Part B · AI 에이전트</div><button aria-controls="b-map" aria-selected="false" id="tab-b-map" role="tab" tabindex="-1"><span class="no">Article</span>B1~B7 개요</button><button aria-controls="b-modules" aria-selected="false" id="tab-b-modules" role="tab" tabindex="-1"><span class="no">Module</span>B1~B7 상세 목차</button><div class="group">Part C · Ollama · PDF · OCR</div><button aria-controls="c-map" aria-selected="false" id="tab-c-map" role="tab" tabindex="-1"><span class="no">Article</span>C1~C7 개요</button><button aria-controls="c-modules" aria-selected="false" id="tab-c-modules" role="tab" tabindex="-1"><span class="no">Module</span>C1~C7 상세 목차</button><div class="group">공통 시스템 설계</div><button aria-controls="stack" aria-selected="false" id="tab-stack" role="tab" tabindex="-1"><span class="no">기술</span>기술 스택</button><button aria-controls="release" aria-selected="false" id="tab-release" role="tab" tabindex="-1"><span class="no">배포</span>K3s 반복 배포</button><button aria-controls="quality" aria-selected="false" id="tab-quality" role="tab" tabindex="-1"><span class="no">평가</span>평가 체계</button><button aria-controls="ops" aria-selected="false" id="tab-ops" role="tab" tabindex="-1"><span class="no">운영</span>캐시·보안·안정성</button><div class="group">참고</div><button aria-controls="gloss" aria-selected="false" id="tab-gloss" role="tab" tabindex="-1"><span class="no">용어</span>약자와 원어</button></div></aside><main><section aria-labelledby="tab-overview" class="panel" id="overview" role="tabpanel">
 <div class="crumb">과정 안내</div><h2>교육과정 개요</h2><p><strong>필수 참조:</strong> 후속 교안 작성 전 오른쪽 「제작 기준·인계 명세」 탭을 먼저 확인하세요. A1은 완료·동결이며 A2~A4는 명시된 인계·보완 기준에 따라 동일 프로젝트를 확장합니다.</p>
