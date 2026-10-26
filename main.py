@@ -9,6 +9,7 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
+from urllib.parse import quote
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -24,8 +25,9 @@ site = json.loads(SITE_PATH.read_text(encoding='utf-8')) if SITE_PATH.exists() e
 app.mount('/static', StaticFiles(directory=str(BASE / 'static')), name='static')
 app.mount('/lectures/files', StaticFiles(directory=str(BASE / 'lecture_materials')), name='lecture-files')
 templates = Jinja2Templates(directory=str(BASE / 'templates'))
-CURRICULUM_FILE = BASE / 'lecture_materials' / '00_쿼리큘럼.html'
-A1_M1_FILE = BASE / 'lecture_materials' / 'A1-M1_고전적 w3c 검사 체험.html'
+LECTURE_ROOT = BASE / 'lecture_materials'
+CURRICULUM_FILE = LECTURE_ROOT / '최종쿼리큘럼.html'
+A1_M1_FILE = LECTURE_ROOT / 'A1' / 'A1-M1_고전적 w3c 검사 체험.html'
 app.include_router(naver_blog_router)
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', '')
 
@@ -79,6 +81,23 @@ def validate_admin_sql(sql: str):
     if re.match(r'(?is)^(drop|alter|attach|detach|vacuum|reindex)\b', statement):
         raise HTTPException(status_code=400, detail='안전을 위해 DROP/ALTER/ATTACH/DETACH/VACUUM/REINDEX는 실행할 수 없습니다.')
     return statement
+def lecture_label(path: Path) -> str:
+    return path.stem.replace('_', ' ').strip()
+def lecture_tree(directory: Path, relative: Path = Path('.')):
+    ignored = {'.git', '.agents', '.pytest_cache', '__pycache__', 'node_modules'}
+    nodes = []
+    for path in sorted(directory.iterdir(), key=lambda item: (item.is_file(), item.name.lower())):
+        if path.name in ignored or path.name.startswith('.'):
+            continue
+        child_relative = relative / path.name
+        if path.is_dir():
+            children = lecture_tree(path, child_relative)
+            if children:
+                nodes.append({'kind': 'directory', 'name': path.name, 'label': path.name, 'children': children})
+        elif path.suffix.lower() == '.html':
+            href = '/lectures/files/' + quote(child_relative.as_posix(), safe='/')
+            nodes.append({'kind': 'file', 'name': path.name, 'label': lecture_label(path), 'href': href})
+    return nodes
 @app.get('/')
 async def home(request: Request):
     return templates.TemplateResponse(request=request, name='home.html', context={'site': site, 'page_title': '메인'})
@@ -93,8 +112,9 @@ async def guide_html():
 @app.get('/lectures')
 @app.get('/lectures/')
 async def lectures_home(request: Request):
-    from fastapi.responses import RedirectResponse
-    return RedirectResponse('/#lecture-materials', status_code=307)
+    return templates.TemplateResponse(request=request, name='lectures/index.html', context={
+        'site': site, 'page_title': '강의교안', 'lecture_tree': lecture_tree(LECTURE_ROOT)
+    })
 @app.get('/lectures/part-a')
 @app.get('/lectures/part-a/')
 async def lectures_part_a(request: Request):
@@ -112,7 +132,7 @@ async def lectures_part_b(request: Request):
 @app.get('/lectures/guide')
 @app.get('/lectures/guide/')
 async def lectures_guide(request: Request):
-    return RedirectResponse('/lectures/files/00_쿼리큘럼.html', status_code=307)
+    return RedirectResponse('/lectures/files/최종쿼리큘럼.html', status_code=307)
 @app.get('/part-a')
 @app.get('/part-a/')
 async def public_part_a(request: Request):

@@ -1,14 +1,22 @@
 {% extends "base.html" %}
+{% macro render_nodes(nodes) %}
+  {% for node in nodes %}
+    {% if node.kind == 'directory' %}
+      <section class="lecture-folder" id="section-{{ node.name|lower|replace(' ', '-') }}">
+        <div class="lecture-folder-head"><span class="lecture-folder-index">{{ '%02d'|format(loop.index) }}</span><h2>{{ node.label }}</h2><span class="lecture-folder-meta">{{ node.children|length }}개 자료</span></div>
+        <div class="lecture-files">{{ render_nodes(node.children) }}</div>
+      </section>
+    {% else %}
+      <a class="lecture-file" href="{{ node.href }}"><span class="lecture-file-type">HTML</span><strong>{{ node.label }}</strong><span class="lecture-file-arrow">→</span></a>
+    {% endif %}
+  {% endfor %}
+{% endmacro %}
 {% block content %}
 <section class="subpage lecture-hub">
   <a class="back" href="/">← 메인으로</a>
   <p class="eyebrow">강의교안</p>
-  <h1>LLM &amp; 에이전트 강의교안</h1>
-  <p class="subpage-intro">파트 A와 파트 B 교안, 그리고 전체 쿼리큘럼을 확인하세요.</p>
-  <div class="lecture-cards">
-    <a class="lecture-card" href="/lectures/part-a"><span class="lecture-number">01</span><strong>파트 A</strong><small>파트 A 강의교안 보기</small></a>
-    <a class="lecture-card" href="/lectures/part-b"><span class="lecture-number">02</span><strong>파트 B</strong><small>파트 B 강의교안 보기</small></a>
-    <a class="lecture-card" href="/lectures/files/00_쿼리큘럼.html"><span class="lecture-number">03</span><strong>전체 쿼리큘럼</strong><small>Part A·B·C 학습 순서와 Module 구성</small></a>
-  </div>
+  <h1>강의자료 라이브러리</h1>
+  <p class="subpage-intro">폴더 구조를 기준으로 정리한 강의교안입니다. 커리큘럼에서 전체 흐름을 확인한 뒤 모듈별 자료로 이동하세요.</p>
+  <div class="lecture-library">{{ render_nodes(lecture_tree) }}</div>
 </section>
 {% endblock %}
