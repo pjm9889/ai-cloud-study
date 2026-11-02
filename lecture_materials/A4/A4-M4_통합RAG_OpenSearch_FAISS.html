@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>A4-M4 · 숫자와 문서 통합 RAG</title><link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet"/><style>
+:root{--bg:#fff;--surface:#f8fafc;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--accent:#ff2e93;--soft:rgba(255,46,147,.065);--codebg:#101d34}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:'Pretendard',system-ui,'Malgun Gothic',sans-serif;font-size:18px;line-height:1.81;word-break:keep-all}
+.banner{background:linear-gradient(125deg,#fcfcff,#f8fafc);border-bottom:1px solid var(--line)}.banner-in{max-width:1320px;margin:auto;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:18px}.brand{font-size:16px;font-weight:850;letter-spacing:.03em}.who{font-size:15px;color:var(--muted)}.layout{max-width:1320px;margin:auto;padding:32px 24px 84px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:38px;align-items:start}.sidebar{order:2;position:sticky;top:22px;max-height:calc(100vh - 44px);overflow:auto;border:1px solid var(--line);border-radius:15px;background:var(--surface);padding:17px}.group{font-size:15px;color:var(--muted);font-weight:800;margin:3px 10px 14px}.tabs{display:flex;flex-direction:column;gap:5px}.tabs button{appearance:none;border:1px solid transparent;border-radius:9px;background:transparent;color:#253348;cursor:pointer;text-align:left;font:600 16px/1.55 'Pretendard',sans-serif;padding:9px 12px 9px 14px}.tabs button span{color:var(--accent);font-weight:850;margin-right:7px}.tabs button:hover{background:#fff;border-color:var(--line)}.tabs button[aria-selected=true]{background:var(--soft);border-color:var(--accent);color:#bd1366}.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+main{min-width:0}.panel[hidden]{display:none}.panel{display:block}.crumb{color:var(--accent);font-size:15px;font-weight:800;margin:0 0 8px}.panel h1{font-size:31px;line-height:1.4;margin:0 0 12px}.lead{font-size:19px;font-weight:550;color:#344255;margin:6px 0 26px}.panel h3{font-size:21px;margin:33px 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px}.panel h3:before{content:'▸ ';color:var(--accent)}.panel p{margin:13px 0}.panel b,.panel strong{font-weight:790}.panel code:not(pre code){font:15px/1.6 Consolas,monospace;word-break:break-word;background:#f1f5f9;border:1px solid #e5e7eb;padding:1px 5px;border-radius:4px}
+.panel ul,.panel ol{padding-left:27px;margin:12px 0}.panel li{margin:7px 0}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:17px 0 24px}.panel table{border-collapse:collapse;width:100%;font-size:17px;line-height:1.65}.panel th,.panel td{border-bottom:1px solid var(--line);padding:12px 14px;vertical-align:top;text-align:left}.panel th{font-size:16px;font-weight:800;background:#f1f5f9;color:#40516a}.panel tbody tr:last-child td{border:0}.panel tbody tr:nth-child(even){background:#fbfcfe}
+.note,.task{border:1px solid var(--line);border-radius:13px;background:#fafcff;padding:17px 19px;margin:24px 0}.note{border-left:4px solid var(--accent);background:var(--soft)}.note b{color:#ad155e}.note p{margin:6px 0}.task{background:#fff}.task h4{margin:0 0 9px;font-size:19px}.task ol{margin:0;padding-left:23px}.task li{margin:8px 0}
+.codebox{border:1px solid #243953;border-radius:13px;overflow:hidden;margin:21px 0 26px}.codehead{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:8px 13px;background:#1d3452;color:#dceafc;font-size:14px;font-weight:700}.copy{border:1px solid #8598b4;color:#fff;background:#314f78;border-radius:6px;padding:3px 10px;cursor:pointer;font-size:13px}.codebox pre{background:var(--codebg);color:#cbe9fb;margin:0;padding:20px;overflow-x:auto;font:15px/1.7 Consolas,'JetBrains Mono',monospace;word-break:normal;white-space:pre}
+.outbox .codehead{background:#203a2c}.outbox{border-color:#2f5a43}.outbox pre{background:#0d1f17;color:#c9f5d9}
+.qa{padding:13px 17px;margin:13px 0;border:1px solid var(--line);background:#fbfcff;border-radius:10px}.qa summary{font-size:17px;cursor:pointer;font-weight:780}.qa[open] summary{color:#c01168}.qa p{font-size:17px}
+.footer{max-width:1320px;margin:auto;border-top:1px solid var(--line);padding:20px 24px 38px;text-align:center;color:var(--muted);font-size:15px}.footer small{display:block;max-width:950px;margin:5px auto}
+.tabs .part-heading{display:block;margin:15px 4px 6px;padding:12px 11px;background:#e5e7eb;color:#334155;border:1px solid #cbd5e1;border-radius:9px;font-size:15px;font-weight:850;line-height:1.5;white-space:normal}.tabs .part-heading:first-child{margin-top:0}
+.journey{border-left:4px solid #ff2e93;background:#fff5fa;padding:16px 19px;margin:20px 0;border-radius:8px}.journey h3{border:0!important;margin:0 0 8px!important;padding:0!important;font-size:18px!important}.journey h3:before{content:none!important}.journey ol{margin:6px 0 0;padding-left:22px}.journey li{margin:4px 0;overflow-wrap:anywhere}
+.say{border-left:4px solid #94a3b8;background:#f8fafc;padding:12px 16px;border-radius:0 10px 10px 0;margin:16px 0}.say>b:first-child{display:block;color:#475569;font-size:14px;margin-bottom:4px}
+.flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;margin:18px 0 24px}.flow .fstep{flex:1 1 96px;min-width:92px;border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:10px;background:#fff;padding:10px 12px}.flow .fstep b{display:block;font-size:16px;color:#0f172a}.flow .fstep span{display:block;font-size:14px;color:var(--muted);line-height:1.5;margin-top:3px}.flow .arrow{align-self:center;color:var(--accent);font-weight:900}
+main p,main li,main td{overflow-wrap:anywhere}
+/* 화면 모형 */
+.mock{border:1px solid #cbd5e1;border-radius:14px;background:#f8fafc;padding:14px 16px;margin:20px 0}.mock-title{font-weight:800;font-size:15px;color:#475569;margin-bottom:10px}
+.browser{border:1px solid #cbd5e1;border-radius:10px;overflow:hidden;background:#fff}.bbar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#eef2f7;border-bottom:1px solid #e2e8f0}.dots i{display:inline-block;width:10px;height:10px;border-radius:50%;background:#cbd5e1;margin-right:4px}.url{flex:1;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:2px 10px;font:14px Consolas,monospace;color:#334155}
+.browser pre{margin:0;padding:12px 14px;font:14px/1.6 Consolas,monospace;white-space:pre;overflow-x:auto;color:#0f172a;background:#fff}
+.dash{display:grid;grid-template-columns:210px 1fr;min-height:250px}.dash nav{background:#f8fafc;border-right:1px solid #e2e8f0;padding:10px;font-size:14px}.dash nav b{display:block;margin:10px 6px 4px;color:#64748b;font-size:12px}.dash nav div{padding:4px 8px;border-radius:6px;color:#334155}.dash nav .hl{background:#fde7f2;color:#bd1366;font-weight:800}.dash .home{padding:16px;font-size:15px;color:#334155}.dash .card{display:inline-block;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 6px 0 0;background:#fff}
+.console{display:grid;grid-template-columns:1fr 1fr}.console .ph{font-size:12px;font-weight:800;color:#64748b;padding:6px 14px;border-bottom:1px solid #e2e8f0;background:#f1f5f9;display:flex;justify-content:space-between}.console .left{border-right:1px solid #e2e8f0}.console .right pre{background:#f8fafc}.console .run{background:#e72281;color:#fff;border-radius:5px;padding:0 7px}
+.mark{background:#fde7f2;font-weight:800}
+.mock table{border-collapse:collapse;width:100%;font-size:15px;background:#fff}.mock td,.mock th{border:1px solid #e2e8f0;padding:6px 8px;text-align:center}.mock th{background:#f1f5f9}.mock .hl{background:#fde7f2;font-weight:800}.mock .dim{color:#94a3b8}
+@media(max-width:900px){.layout{grid-template-columns:1fr;gap:12px;padding:15px 16px 64px}.sidebar{order:0;position:sticky;top:0;z-index:10;border-radius:0;max-height:none;overflow:auto;padding:8px 0;background:#fff}.sidebar .group{display:none}.tabs{flex-direction:row;white-space:nowrap;overflow-x:auto}.tabs button{flex:none;font-size:15px}.tabs .part-heading{flex:none;margin:0 6px 0 0;white-space:nowrap;padding:9px 12px}.banner-in{flex-wrap:wrap}.panel h1{font-size:27px}}
+@media(max-width:760px){.dash,.console{grid-template-columns:1fr}.console .left{border-right:0;border-bottom:1px solid #e2e8f0}.dash nav{border-right:0;border-bottom:1px solid #e2e8f0}}
+@media(max-width:680px){body{font-size:17px}.panel table{font-size:16px}.panel th{font-size:15px}.panel h1{font-size:24px}.panel h3{font-size:20px}.codebox pre{font-size:14px;padding:15px}.flow .arrow{display:none}.flow .fstep{flex-basis:100%}}
+@media print{.sidebar,.copy{display:none}.layout{display:block}.panel[hidden]{display:block!important}.banner{background:#fff}}
+
+.shot{margin:20px 0 24px;border:1px solid var(--line);border-radius:13px;background:#fff;padding:12px}.shot img{display:block;max-width:100%;height:auto;margin:auto;border:1px solid var(--line);border-radius:8px}.shot figcaption{font-size:15px;font-weight:800;color:#40516a;margin-top:9px}.shot .cap-note{font-size:15px;color:var(--muted);margin-top:2px;line-height:1.6}
+.steps{list-style:none;counter-reset:st;padding-left:0!important;margin:16px 0}.steps li{counter-increment:st;position:relative;padding:4px 0 4px 46px;margin:10px 0}.steps li:before{content:counter(st);position:absolute;left:0;top:2px;width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;font-weight:850;font-size:15px;display:flex;align-items:center;justify-content:center}
+.file{display:inline-block;padding:9px 14px;margin:4px 6px 4px 0;background:var(--soft);border:1px solid var(--accent);border-radius:8px;text-decoration:none;color:#bd1366;font-weight:800;font-size:16px}
+.qa .codebox{margin:12px 0}
+
+.diagram{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:18px 0 22px;font:14.5px/1.7 Consolas,'JetBrains Mono',monospace;white-space:pre;overflow-x:auto;color:#1e293b}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}.cards.c3{grid-template-columns:repeat(3,minmax(0,1fr))}.card{border:1px solid var(--line);border-radius:12px;background:#fff;padding:14px 16px;font-size:16.5px;line-height:1.7}.card .h{font-weight:800;color:#bd1366;margin-bottom:6px;font-size:17px}
+.widget{border:2px solid var(--accent);border-radius:14px;margin:22px 0 26px;overflow:hidden;background:#fff}.wtitle{display:flex;align-items:center;gap:9px;padding:10px 16px;background:var(--soft);border-bottom:1px solid #fbcfe8;font-size:16px}.wtitle .dot{width:10px;height:10px;border-radius:50%;background:var(--accent)}.wtitle .tag{margin-left:auto;font-size:12px;font-weight:800;color:#bd1366;border:1px solid var(--accent);border-radius:999px;padding:1px 9px}.wbody{padding:16px 18px}
+.muted{color:var(--muted)}.scatter-wrap{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:16px;align-items:center}.legend{font-size:15px;display:flex;flex-direction:column;gap:8px}.sw{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.calc-panel,.readout{margin-top:12px;background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font:14.5px/1.8 Consolas,monospace;overflow-x:auto}.calc-panel .lab{font-weight:800;color:#334155}.hl{color:#bd1366;font-weight:800}
+.controls{display:flex;flex-wrap:wrap;gap:14px 22px;margin:12px 0}.ctrl{flex:1 1 200px;min-width:180px}.ctrl label{display:flex;justify-content:space-between;font-size:15px;font-weight:700;color:#334155}.ctrl .v{color:#bd1366;font-weight:850}.ctrl input[type=range]{width:100%;accent-color:#ff2e93}.ctrl select{width:100%;font:15px 'Pretendard',sans-serif;padding:6px 8px;border:1px solid var(--line);border-radius:8px;margin-top:4px}
+.samplebox{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:16px}
+.statrow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}.stat{border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}.stat .n{font-size:24px;font-weight:850;color:#bd1366}.stat .l{font-size:13px;color:var(--muted)}
+.chunk-list{display:flex;flex-direction:column;gap:8px}.chunk-item{border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:15.5px;background:#fff}.chunk-item mark{background:#fde7f2;color:#9d174d;border-radius:3px}.cid{display:inline-block;font-weight:850;color:#fff;background:var(--accent);border-radius:6px;padding:0 7px;margin-right:7px;font-size:13px}
+.presets{display:flex;flex-wrap:wrap;gap:8px}.preset{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 13px;font:600 14.5px 'Pretendard',sans-serif;cursor:pointer}.preset.active{background:var(--soft);border-color:var(--accent);color:#bd1366}
+.rrow{display:grid;grid-template-columns:34px minmax(0,1fr) 80px;gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin:7px 0;font-size:15.5px}.rrow.top{border-color:var(--accent);background:#fff7fb}.rrow.dim{opacity:.55}.rk{font-weight:850;color:#bd1366;text-align:center}.sc{font:700 15px Consolas,monospace;text-align:right}.bar-bg{height:7px;background:#f1f5f9;border-radius:99px;margin-top:6px}.bar{height:7px;background:var(--accent);border-radius:99px}
+.retrieved-note{margin-top:10px;background:var(--soft);border-radius:10px;padding:10px 13px;font-size:15.5px}
+.quiz{border:1px solid var(--line);border-radius:12px;padding:13px 16px;margin:12px 0;background:#fbfcff}.quiz .q{font-weight:800;font-size:17px}.opts{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}.opt{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 13px;font:600 15.5px 'Pretendard',sans-serif;cursor:pointer}.opt.correct{background:#dcfce7;border-color:#16a34a;color:#166534}.opt.wrong{background:#fee2e2;border-color:#dc2626;color:#991b1b}.exp{display:none;margin-top:9px;font-size:16px}.exp.show{display:block}
+@media(max-width:760px){.cards,.cards.c3{grid-template-columns:1fr}.scatter-wrap{grid-template-columns:1fr}.statrow{grid-template-columns:repeat(2,minmax(0,1fr))}.diagram{font-size:13px}}
+.where-bar{display:flex;flex-wrap:wrap;gap:8px 20px;background:#eef6ff;border:1px solid #bfdbfe;border-radius:10px;padding:9px 14px;margin:4px 0 14px;font-size:15.5px;color:#1e3a5f}</style></head><body>
+<header class="banner"><div class="banner-in"><div><div class="brand">Part A · A4-M4 · OpenSearch 집계 + FAISS 통합 RAG</div><div style="font-size:23px;font-weight:850">A4-M4 숫자와 문서 통합 RAG · OpenSearch 집계 → GPT → FAISS → Streamlit</div></div><div class="who">© 2026 부성순 · AI·클라우드 실무 과정<br/>부성순 강사(bakpak@empas.com)</div><a href="/lectures/files/index.html#section-a1" style="display:inline-block;padding:7px 11px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#bd1366;text-decoration:none;font-weight:800;white-space:nowrap">📚 강의자료 라이브러리 · Part A</a></div></header>
+<div class="layout"><aside class="sidebar"><div class="group">A4-M4 · 세부 목차</div><nav aria-label="교안 세부 목차" class="tabs" role="tablist">
+<div aria-level="2" class="part-heading" role="heading">Part 0. 시작</div>
+<button aria-controls="u00" aria-selected="true" id="tab-u00" role="tab" tabindex="0" type="button"><span>00</span>이 모듈에서 만드는 것</button>
+<button aria-controls="u01" aria-selected="false" id="tab-u01" role="tab" tabindex="-1" type="button"><span>01</span>실습 폴더와 실행 방법</button>
+<button aria-controls="u02" aria-selected="false" id="tab-u02" role="tab" tabindex="-1" type="button"><span>02</span>.env와 사전 점검</button>
+<div aria-level="2" class="part-heading" role="heading">Part 1. 공통 파일</div>
+<button aria-controls="u03" aria-selected="false" id="tab-u03" role="tab" tabindex="-1" type="button"><span>03</span>config.py · clients.py</button>
+<div aria-level="2" class="part-heading" role="heading">Part 2. 숫자 — OpenSearch</div>
+<button aria-controls="u04" aria-selected="false" id="tab-u04" role="tab" tabindex="-1" type="button"><span>04</span>CSV 확인 (01·02)</button>
+<button aria-controls="u05" aria-selected="false" id="tab-u05" role="tab" tabindex="-1" type="button"><span>05</span>지역 집계 (03)</button>
+<button aria-controls="u06" aria-selected="false" id="tab-u06" role="tab" tabindex="-1" type="button"><span>06</span>집계 + GPT (04)</button>
+<div aria-level="2" class="part-heading" role="heading">Part 3. 문서 — FAISS</div>
+<button aria-controls="u07" aria-selected="false" id="tab-u07" role="tab" tabindex="-1" type="button"><span>07</span>문서와 청크 (05)</button>
+<button aria-controls="u08" aria-selected="false" id="tab-u08" role="tab" tabindex="-1" type="button"><span>08</span>임베딩·FAISS 저장 (06)</button>
+<button aria-controls="u09" aria-selected="false" id="tab-u09" role="tab" tabindex="-1" type="button"><span>09</span>FAISS 검색 (07)</button>
+<div aria-level="2" class="part-heading" role="heading">Part 4. 통합</div>
+<button aria-controls="u10" aria-selected="false" id="tab-u10" role="tab" tabindex="-1" type="button"><span>10</span>숫자+문서 통합 RAG (08)</button>
+<button aria-controls="u11" aria-selected="false" id="tab-u11" role="tab" tabindex="-1" type="button"><span>11</span>Streamlit 화면 (app.py)</button>
+<div aria-level="2" class="part-heading" role="heading">Part 5. 실습 미션</div>
+<button aria-controls="u12" aria-selected="false" id="tab-u12" role="tab" tabindex="-1" type="button"><span>12</span>미션 1~7</button>
+<div aria-level="2" class="part-heading" role="heading">Part 6. 정리</div>
+<button aria-controls="u13" aria-selected="false" id="tab-u13" role="tab" tabindex="-1" type="button"><span>13</span>에러 사전·완료 점검</button>
+</nav></aside><main>
+<!-- 00 -->
+<section aria-labelledby="tab-u00" class="panel" id="u00" role="tabpanel"><div class="crumb">Part 0. 시작 · A4-M4</div><h1>00. 이 모듈에서 만드는 것 — 숫자와 문서를 함께 보는 AI 분석 화면</h1><p class="lead">A4-M1에서 OpenSearch에 넣은 <b>sales 주문 100건(숫자)</b>과, 지역별 시장 특성을 적은 <b>사내 문서(글)</b>를 함께 GPT에 넘겨 “광주는 문서상 복합기 수요가 크다는데, 실제로는 뭐가 팔렸나?” 같은 질문에 답하는 업무 화면을 만듭니다.</p>
+<div class="journey"><h3>이 탭의 흐름</h3><ol><li>완성 화면 미리보기</li><li>왜 숫자와 문서를 합치나</li><li>A4-M3의 “Hybrid”와 이번 “통합”의 차이</li><li>모듈 지도</li></ol></div>
+<h3>완성하면 이런 화면이 됩니다</h3>
+<div class="mock"><div class="mock-title">화면 모형 · streamlit run app.py → 브라우저 http://localhost:8501</div><div class="browser"><div class="bbar"><span class="dots"><i></i><i></i><i></i></span><span class="url">http://localhost:8501</span></div><div class="dash"><nav><b>조회 조건</b><div class="hl">지역: 광주 ▾</div><div>RAG 검색 문서 수: 3</div><div>[데이터 새로고침]</div></nav><div class="home"><b style="font-size:18px">Regional Sales Intelligence</b><br/><span class="muted">OpenSearch Sales + FAISS Knowledge + GPT-4.1-nano</span><div><span class="card">총 매출<br/><b>39,029,500원</b></span><span class="card">주문 건수<br/><b>24건</b></span><span class="card">판매 수량<br/><b>97개</b></span><span class="card">평균 만족도<br/><b>4.33</b></span></div><div style="margin-top:10px"><span class="card">Sales Overview</span><span class="card" style="border-color:#ff2e93">AI Analysis</span><span class="card">Evidence</span></div><div style="margin-top:10px;font-size:14px">질문: “광주 지역의 시장 특성과 실제 매출을 비교하고 영업 인사이트를 알려줘” → <b>Executive Brief</b> (GPT 답변) + 검색 근거 표</div></div></div></div></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>위 화면의 숫자 네 개(총 매출, 주문 건수, 판매 수량, 만족도)는 <b>OpenSearch가 sales 인덱스에서 계산한 값</b>입니다. A4-M1에서 Dashboard 차트로 보던 그 숫자를 이번에는 Python이 받아 옵니다. “광주는 중소기업·공공기관 중심의 복합기·프린터 수요”라는 설명은 <b>사내 문서에서 찾아온 글</b>입니다. GPT는 이 둘을 나란히 놓고 비교합니다.</p></div>
+<h3>왜 숫자와 문서를 합치나</h3>
+<div class="tablewrap"><table><thead><tr><th>구분</th><th>정형 데이터 (숫자)</th><th>비정형 데이터 (글)</th></tr></thead><tbody>
+<tr><td>이번 자료</td><td>sales 주문 100건 (CSV → OpenSearch)</td><td><code>지역_시장현황_RAG_테스트.md</code> (지역 6개 섹션)</td></tr>
+<tr><td>답할 수 있는 것</td><td>“광주 매출 얼마? 무엇이 많이 팔렸나?”</td><td>“광주는 어떤 고객이 많고 무엇이 수요가 크다고 보나?”</td></tr>
+<tr><td>찾는 방법</td><td>OpenSearch <b>집계</b> (sum, avg, terms)</td><td><b>벡터 검색</b> (임베딩 → FAISS)</td></tr>
+<tr><td>혼자서는 못 하는 것</td><td>“왜 그런지” 설명</td><td>“실제로 그런지” 확인</td></tr></tbody></table></div>
+<div class="note"><b>미리 보는 핵심 장면</b><p>광주 문서에는 “주요 수요: 복합기, 프린터, 모니터”라고 적혀 있습니다. 그런데 실제 sales를 집계하면 광주 매출 1위는 <b>노트북(10,200,000원)</b>, 복합기는 5위(3,060,000원)입니다. 문서만 보면 틀린 결론을, 숫자만 보면 이유 없는 결론을 냅니다. 둘을 합쳐야 “문서의 가정과 실제가 다르니 점검이 필요하다”는 인사이트가 나옵니다. 10탭에서 직접 확인합니다.</p></div>
+<h3>용어 주의 — A4-M3의 Hybrid와 다릅니다</h3>
+<div class="tablewrap"><table><thead><tr><th></th><th>A4-M3 17탭 Hybrid 검색</th><th>이번 모듈 통합 RAG (08_hybrid_rag.py)</th></tr></thead><tbody>
+<tr><td>섞는 것</td><td>같은 문서에 대한 키워드 점수 + 벡터 점수</td><td>서로 다른 두 자료: 매출 집계 + 문서 검색 결과</td></tr>
+<tr><td>섞는 곳</td><td>OpenSearch 안 (search pipeline)</td><td>GPT 프롬프트 안 (두 근거를 나란히 넣음)</td></tr>
+<tr><td>결과</td><td>순위가 매겨진 문서 목록</td><td>자연어 분석 답변</td></tr></tbody></table></div>
+<h3>모듈 지도</h3>
+<div class="flow"><div class="fstep"><b>준비</b><span>폴더, .env, 사전 점검</span></div><div class="arrow">→</div><div class="fstep"><b>공통 파일</b><span>config, clients</span></div><div class="arrow">→</div><div class="fstep"><b>숫자</b><span>01~04: 집계 + GPT</span></div><div class="arrow">→</div><div class="fstep"><b>문서</b><span>05~07: 청크, FAISS</span></div><div class="arrow">→</div><div class="fstep"><b>통합</b><span>08 + Streamlit</span></div><div class="arrow">→</div><div class="fstep"><b>미션</b><span>바꿔 보고 늘려 보기</span></div></div>
+</section>
+
+<!-- 01 -->
+<section aria-labelledby="tab-u01" class="panel" hidden="" id="u01" role="tabpanel"><div class="crumb">Part 0. 시작 · A4-M4</div><h1>01. 실습 폴더와 실행 방법 — 파일 지도부터</h1><p class="lead">이번 모듈은 노트북이 아니라 <b>터미널에서 번호 붙은 .py 파일을 차례로 실행</b>합니다. 실행 파일은 짧고, 실제 일은 공통 파일(서비스)이 합니다. 어떤 파일이 무엇을 부르는지 먼저 그림으로 잡습니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> 배포된 <code>Part1.opensearch_rag_FINAL_CHECKED</code> 폴더 · VS Code 터미널</span><span><b>✅ 먼저</b> A4-M1~M3 완료 (sales 100건이 OpenSearch에 있음)</span></div>
+<div class="journey"><h3>이 탭의 흐름</h3><ol><li>폴더 구조와 파일 용도</li><li>실행 파일 → 서비스 → 설정·연결의 3층 구조</li><li>A4-M3(노트북)와 실행 방식의 차이</li></ol></div>
+<pre class="diagram">Part1.opensearch_rag_FINAL_CHECKED/
+├─ .env                              ← API 키, OpenSearch 비밀번호 (02탭)
+├─ requirements.txt                  ← 설치 패키지 목록
+│
+├─ opensearch_dashboard_sample_100.csv   ← A4-M1의 매출 원본 100건
+├─ opensearch_devtools_bulk_100.txt      ← A4-M1 Dev Tools Bulk 자료
+├─ 지역_시장현황_RAG_테스트.md            ← FAISS로 검색할 사내 문서
+│
+├─ 00_preflight_check.py             ← 실행 전 점검
+├─ config.py   clients.py            ← 공통: 설정, 연결 (03탭)
+├─ sales_service.py                  ← 공통: OpenSearch sales 조회·집계
+├─ faiss_service.py                  ← 공통: 청킹·임베딩·FAISS
+├─ rag_service.py                    ← 공통: GPT 답변 생성
+│
+├─ 01_csv_check.py ~ 08_hybrid_rag.py   ← 실행 파일 (04~10탭)
+├─ app.py                            ← Streamlit 화면 (11탭)
+└─ rag_faiss/                        ← 06 실행 후 생김: index.faiss, chunks.json</pre>
+<h3>3층 구조 — 누가 누구를 부르나</h3>
+<div class="tablewrap"><table><thead><tr><th>층</th><th>파일</th><th>하는 일</th><th>비유</th></tr></thead><tbody>
+<tr><td>실행</td><td><code>01~08_*.py</code>, <code>app.py</code></td><td>“무엇을 할지” 순서만 적음 (10~30줄)</td><td>주문서</td></tr>
+<tr><td>서비스</td><td><code>sales_service</code>, <code>faiss_service</code>, <code>rag_service</code></td><td>실제 쿼리, 임베딩, 프롬프트</td><td>주방</td></tr>
+<tr><td>기반</td><td><code>config</code>, <code>clients</code></td><td>모델명·경로·접속정보, 연결 객체</td><td>가스·수도</td></tr></tbody></table></div>
+<pre class="diagram">08_hybrid_rag.py
+ ├─ clients.get_opensearch_client() ─┐
+ ├─ clients.get_openai_client()  ────┼─→ config.py (.env 읽기, 모델명, 경로)
+ ├─ faiss_service.search_faiss()  ───┤
+ ├─ sales_service.get_region_summary()┘
+ └─ rag_service.hybrid_answer()</pre>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>같은 함수(<code>get_region_summary</code>)를 03, 04, 08, app.py가 모두 씁니다. 그래서 함수는 서비스 파일에 한 번만 쓰고, 실행 파일은 불러다 쓰기만 합니다. 나중에 Streamlit 화면(app.py)을 만들 때도 새로 짤 게 거의 없는 이유입니다. 모델 이름을 바꾸려면 <code>config.py</code> 한 줄만 고치면 됩니다.</p></div>
+<h3>실행 방법 — A4-M3와 다른 점</h3>
+<div class="tablewrap"><table><thead><tr><th></th><th>A4-M3</th><th>이번 모듈</th></tr></thead><tbody>
+<tr><td>실행 단위</td><td>노트북 셀</td><td><code>python 03_opensearch_query.py</code>처럼 파일 하나씩</td></tr>
+<tr><td>앞 단계 결과</td><td>메모리에 남은 변수</td><td>OpenSearch(sales)와 파일(<code>rag_faiss/</code>)에 남은 결과</td></tr>
+<tr><td>장점</td><td>한 줄씩 보며 배우기 좋음</td><td>서비스로 옮기기 쉬움 (app.py가 그대로 재사용)</td></tr></tbody></table></div>
+<div class="task"><h4>화면에서 짚을 곳</h4><ol><li>VS Code에서 <b>폴더 자체를 열고</b>(파일 하나가 아니라), 터미널의 현재 위치가 이 폴더인지 확인합니다. 다른 위치에서 실행하면 <code>ModuleNotFoundError: No module named 'config'</code>가 납니다.</li><li>각 .py 파일 맨 위의 “파일 용도” 주석을 먼저 읽는 습관을 들입니다. 모든 파일에 한 줄씩 적혀 있습니다.</li></ol></div>
+</section>
+
+<!-- 02 -->
+<section aria-labelledby="tab-u02" class="panel" hidden="" id="u02" role="tabpanel"><div class="crumb">Part 0. 시작 · A4-M4</div><h1>02. .env와 사전 점검 — 실행 전에 한 번에 확인</h1><p class="lead">API 키와 비밀번호는 코드에 쓰지 않고 <code>.env</code> 파일에 둡니다. 그다음 <code>00_preflight_check.py</code>로 파일·키·패키지·OpenSearch·sales 100건을 한 번에 점검합니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> 실습 폴더 · VS Code 터미널</span><span><b>✅ 먼저</b> Docker의 opensearch, opensearch-dashboards 실행 중</span></div>
+<div class="journey"><h3>이 탭의 흐름</h3><ol><li>.env가 하는 일과 들어갈 값</li><li>패키지 설치</li><li>사전 점검 실행과 결과 읽기</li></ol></div>
+<h3>.env — 비밀 값을 코드 밖에 두는 파일</h3>
+<div class="codebox"><div class="codehead"><span>.env 의 모양 (값은 각자 것으로)</span><button class="copy" type="button">코드 복사</button></div><pre><code>OPENAI_API_KEY=sk-...본인 키...
+OPENSEARCH_PASSWORD=...OpenSearch admin 비밀번호...</code></pre></div>
+<div class="tablewrap"><table><thead><tr><th>키</th><th>쓰는 곳</th><th>없으면</th></tr></thead><tbody>
+<tr><td><code>OPENAI_API_KEY</code></td><td>04 GPT 설명, 06 임베딩, 07 검색, 08 통합, app.py</td><td><code>clients.py</code>가 “.env의 OPENAI_API_KEY를 확인하세요” 오류</td></tr>
+<tr><td><code>OPENSEARCH_PASSWORD</code></td><td>OpenSearch에 접속하는 모든 파일 (03, 04, 08, app.py, 사전 점검)</td><td><code>clients.py</code>가 “.env의 OPENSEARCH_PASSWORD를 확인하세요” 오류</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p><code>.env</code>는 “이 컴퓨터에서만 쓰는 비밀 메모”입니다. <code>config.py</code>의 <code>load_dotenv()</code>가 이 파일을 읽어 <code>os.getenv("OPENAI_API_KEY")</code>로 꺼내 씁니다. 코드에 키를 직접 쓰면 코드를 공유하는 순간 키도 함께 퍼지기 때문에 이렇게 분리합니다.</p><p>OpenSearch 비밀번호는 A4-M1에서 Dashboards에 <b>로그인할 때 쓴 admin 비밀번호</b>와 같습니다. Docker로 OpenSearch를 띄울 때 정한 값입니다.</p></div>
+<div class="note"><b>.env 관리 규칙</b><p>① 줄마다 <code>이름=값</code>, 등호 앞뒤 공백·따옴표 없이 씁니다. ② 이 모듈에 필요 없는 다른 키(예: 다른 서비스 API 키)가 함께 있어도 동작에는 상관없습니다. ③ <code>.env</code>는 다른 사람에게 보내거나 GitHub에 올리지 않습니다. 공유할 때는 값을 지운 <code>.env.example</code>을 만들어 줍니다. ④ 파일 이름이 정확히 <code>.env</code>인지 확인합니다. Windows 메모장으로 저장하면 <code>.env.txt</code>가 되는 경우가 많습니다.</p></div>
+<h3>패키지 설치</h3>
+<div class="codebox"><div class="codehead"><span>터미널</span><button class="copy" type="button">코드 복사</button></div><pre><code>pip install -r requirements.txt</code></pre></div>
+<p><code>requirements.txt</code>에는 openai, opensearch-py, python-dotenv, pandas, numpy, faiss-cpu, streamlit 일곱 개가 들어 있습니다.</p>
+<h3>사전 점검</h3>
+<div class="codebox"><div class="codehead"><span>터미널</span><button class="copy" type="button">코드 복사</button></div><pre><code>python 00_preflight_check.py</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>정상 결과 (모양)</span><button class="copy" type="button">코드 복사</button></div><pre><code>=== Part 1 사전 점검 ===
+[OK] config.py ...
+[OK] opensearch_dashboard_sample_100.csv ...
+[OK] 지역_시장현황_RAG_테스트.md ...
+[OK] OPENAI_API_KEY 값은 화면에 출력하지 않습니다.
+[OK] OPENSEARCH_PASSWORD 값은 화면에 출력하지 않습니다.
+[OK] 패키지 pandas
+...
+[OK] OpenSearch 연결 version=...
+[OK] sales 인덱스
+[OK] sales 문서 수 count=100
+[안내] rag_faiss/index.faiss와 chunks.json은 06_make_faiss.py 실행 후 생성됩니다.</code></pre></div>
+<div class="tablewrap"><table><thead><tr><th>“확인 필요”가 뜬 줄</th><th>할 일</th></tr></thead><tbody>
+<tr><td>파일 이름 줄</td><td>폴더 위치 확인 (01탭). 터미널이 다른 폴더에 있지 않은지</td></tr>
+<tr><td>OPENAI_API_KEY / OPENSEARCH_PASSWORD</td><td>.env 파일 이름과 줄 형식 확인</td></tr>
+<tr><td>패키지 …</td><td>옆에 나온 <code>pip install …</code> 실행</td></tr>
+<tr><td>OpenSearch 연결</td><td>Docker 실행 여부, 비밀번호 확인. 메시지에 401이 보이면 비밀번호가 틀린 것</td></tr>
+<tr><td>sales 인덱스 / 문서 수</td><td>A4-M1 02~04탭(PUT sales, _bulk)을 다시 실행</td></tr></tbody></table></div>
+<div class="note"><b>마지막 [안내] 줄은 정상입니다</b><p>FAISS 파일은 06을 실행해야 생깁니다. 지금 없는 것이 맞습니다.</p></div>
+</section>
+
+<!-- 03 -->
+<section aria-labelledby="tab-u03" class="panel" hidden="" id="u03" role="tabpanel"><div class="crumb">Part 1. 공통 파일 · A4-M4</div><h1>03. config.py와 clients.py — 모든 실행 파일이 기대는 두 파일</h1><p class="lead">설정은 <code>config.py</code> 한 곳에, 연결은 <code>clients.py</code> 한 곳에 모읍니다. 이 두 파일을 이해하면 나머지 파일의 첫 몇 줄이 전부 읽힙니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> VS Code에서 파일 열어 읽기 (실행은 안 함)</span><span><b>✅ 먼저</b> 02탭 사전 점검 통과</span></div>
+<h3>config.py</h3>
+<div class="codebox"><div class="codehead"><span>config.py</span><button class="copy" type="button">코드 복사</button></div><pre><code>import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(BASE_DIR / ".env")                 # 같은 폴더의 .env 읽기
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENSEARCH_PASSWORD = os.getenv("OPENSEARCH_PASSWORD")
+
+OPENSEARCH_HOST = "localhost"
+OPENSEARCH_PORT = 9200
+OPENSEARCH_USER = "admin"
+
+SALES_INDEX = "sales"
+
+GPT_MODEL = "gpt-4.1-nano"
+EMBEDDING_MODEL = "text-embedding-3-small"
+
+CSV_PATH = BASE_DIR / "opensearch_dashboard_sample_100.csv"
+MD_PATH = BASE_DIR / "지역_시장현황_RAG_테스트.md"
+
+FAISS_DIR = BASE_DIR / "rag_faiss"
+FAISS_INDEX_PATH = FAISS_DIR / "index.faiss"
+CHUNKS_PATH = FAISS_DIR / "chunks.json"</code></pre></div>
+<div class="tablewrap"><table><thead><tr><th>줄</th><th>뜻</th><th>왜 이렇게</th></tr></thead><tbody>
+<tr><td><code>BASE_DIR = Path(__file__)…parent</code></td><td>이 파일이 들어 있는 폴더</td><td>터미널 위치와 상관없이 CSV·MD를 찾기 위해</td></tr>
+<tr><td><code>load_dotenv</code>, <code>os.getenv</code></td><td>.env의 값을 변수로</td><td>키를 코드에 쓰지 않기 위해 (02탭)</td></tr>
+<tr><td><code>SALES_INDEX = "sales"</code></td><td>A4-M1에서 만든 인덱스 이름</td><td>모든 쿼리가 이 이름을 씀</td></tr>
+<tr><td><code>GPT_MODEL</code>, <code>EMBEDDING_MODEL</code></td><td>답변 모델, 임베딩 모델</td><td>여러 파일이 같은 모델을 쓰도록 한 곳에서 관리</td></tr>
+<tr><td><code>FAISS_DIR</code> …</td><td>06이 저장하고 07·08·app이 읽는 위치</td><td>저장과 읽기가 같은 경로를 쓰게</td></tr></tbody></table></div>
+<h3>clients.py — 로그인한 OpenSearch에 연결</h3>
+<div class="codebox"><div class="codehead"><span>clients.py</span><button class="copy" type="button">코드 복사</button></div><pre><code>from openai import OpenAI
+from opensearchpy import OpenSearch
+from config import (OPENAI_API_KEY, OPENSEARCH_PASSWORD,
+                    OPENSEARCH_HOST, OPENSEARCH_PORT, OPENSEARCH_USER)
+
+def get_openai_client():
+    if not OPENAI_API_KEY:
+        raise ValueError(".env의 OPENAI_API_KEY를 확인하세요.")
+    return OpenAI(api_key=OPENAI_API_KEY)
+
+def get_opensearch_client():
+    if not OPENSEARCH_PASSWORD:
+        raise ValueError(".env의 OPENSEARCH_PASSWORD를 확인하세요.")
+    return OpenSearch(
+        hosts=[{"host": OPENSEARCH_HOST, "port": OPENSEARCH_PORT}],
+        http_auth=(OPENSEARCH_USER, OPENSEARCH_PASSWORD),   # admin / 비밀번호로 로그인
+        use_ssl=True,                                        # https
+        verify_certs=False,                                  # 로컬 자체서명 인증서
+    )</code></pre></div>
+<div class="tablewrap"><table><thead><tr><th>옵션</th><th>뜻</th><th>A4-M1에서는</th></tr></thead><tbody>
+<tr><td><code>http_auth=("admin", 비밀번호)</code></td><td>Dashboards 로그인과 같은 계정으로 접속</td><td>Dashboards 로그인 화면에 입력하던 값</td></tr>
+<tr><td><code>use_ssl=True</code></td><td>https로 접속</td><td>브라우저 주소 <code>https://localhost:9200</code></td></tr>
+<tr><td><code>verify_certs=False</code></td><td>인증서 검증 생략</td><td>브라우저의 “안전하지 않음” 경고를 넘기던 것</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>두 함수 모두 “키가 없으면 바로 멈추고 이유를 말해 준다”는 공통점이 있습니다. 키 없이 진행하면 한참 뒤에 알아보기 어려운 오류가 나기 때문에, 입구에서 막는 것입니다. 실행 파일은 <code>os_client = get_opensearch_client()</code> 한 줄로 연결을 받습니다.</p></div>
+<div class="codebox"><div class="codehead"><span>터미널 · 연결만 빠르게 확인</span><button class="copy" type="button">코드 복사</button></div><pre><code>python -c "from clients import get_opensearch_client as g; print(g().count(index='sales'))"</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>실행 결과</span><button class="copy" type="button">코드 복사</button></div><pre><code>{'count': 100, '_shards': {...}}</code></pre></div>
+</section>
+
+<!-- 04 -->
+<section aria-labelledby="tab-u04" class="panel" hidden="" id="u04" role="tabpanel"><div class="crumb">Part 2. 숫자 — OpenSearch sales · A4-M4</div><h1>04. CSV 확인(01)과 업로드 참고(02) — 복습 구간</h1><p class="lead">A4-M1에서 Dev Tools로 넣은 그 100건입니다. 01은 원본 CSV가 Python에서 어떻게 보이는지 확인만 하고, 02는 같은 일을 Python으로 하는 참고 코드라 <b>실행하지 않습니다</b>.</p>
+<div class="where-bar"><span><b>📍 어디서</b> 터미널</span><span><b>✅ 먼저</b> 02탭 사전 점검 통과</span></div>
+<div class="codebox"><div class="codehead"><span>01_csv_check.py</span><button class="copy" type="button">코드 복사</button></div><pre><code>import pandas as pd
+from config import CSV_PATH
+
+df = pd.read_csv(CSV_PATH)
+print("CSV 행 수:", len(df))
+print("\n앞 5행:")
+print(df.head())
+print("\n첫 번째 행을 dict로 보기:")
+records = df.to_dict(orient="records")
+print(records[0])</code></pre></div>
+<div class="codebox"><div class="codehead"><span>터미널</span><button class="copy" type="button">코드 복사</button></div><pre><code>python 01_csv_check.py</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>실행 결과 (마지막 줄)</span><button class="copy" type="button">코드 복사</button></div><pre><code>CSV 행 수: 100
+...
+{'order_id': 'ORD001', 'order_date': '2026-06-13', 'region': '서울', 'sales_team': '1팀', 'salesperson': '최유진',
+ 'customer_type': '개인', 'category': '사무기기', 'product': '복합기', 'quantity': 4, 'unit_price': 850000,
+ 'discount_rate': 0, 'revenue': 3400000, 'satisfaction': 5, 'status': '완료'}</code></pre></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>마지막 줄의 dict 하나가 OpenSearch 문서 한 건의 <code>_source</code>와 같은 모양입니다. A4-M1 03탭 Bulk 파일 둘째 줄과 비교해 보면 똑같습니다. 데이터 기간은 2026년 1~7월, 지역은 광주·대구·서울·대전·부산 다섯 곳입니다.</p></div>
+<div class="note"><b>02_csv_to_opensearch.py는 실행하지 않습니다</b><p>sales는 A4-M1에서 이미 들어가 있습니다. 같은 <code>_id</code>(ORD001…)로 덮어쓰므로 실행해도 100건 그대로이긴 하지만, 필요 없는 단계입니다. A4-M1 15탭에서 CSV를 Python으로 넣어 본 것과 같은 코드라 읽기만 합니다. 실수로 sales를 지웠을 때 복구용으로 씁니다.</p></div>
+</section>
+
+<!-- 05 -->
+<section aria-labelledby="tab-u05" class="panel" hidden="" id="u05" role="tabpanel"><div class="crumb">Part 2. 숫자 — OpenSearch sales · A4-M4</div><h1>05. 지역 집계(03) — Dashboard 숫자를 함수 하나로</h1><p class="lead"><code>get_region_summary(os_client, region="서울")</code> 한 번으로 서울의 총매출, 평균, 수량, 만족도, 상태별 건수, 제품별 매출을 한꺼번에 받습니다. A4-M2 08탭(중첩과 정렬)에서 연습한 쿼리를 하나로 합친 것입니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> 터미널 · <code>sales_service.py</code>를 옆에 열어 두고</span><span><b>✅ 먼저</b> 03탭 연결 확인</span></div>
+<div class="journey"><h3>이 탭의 흐름</h3><ol><li>실행하고 결과 보기</li><li>query와 aggs 읽기</li><li>Dev Tools에서 같은 쿼리로 확인</li></ol></div>
+<div class="codebox"><div class="codehead"><span>03_opensearch_query.py</span><button class="copy" type="button">코드 복사</button></div><pre><code>import json
+from clients import get_opensearch_client
+from sales_service import get_region_summary
+
+os_client = get_opensearch_client()
+summary = get_region_summary(os_client, region="서울")
+print(json.dumps(summary, ensure_ascii=False, indent=2))</code></pre></div>
+<div class="codebox"><div class="codehead"><span>터미널</span><button class="copy" type="button">코드 복사</button></div><pre><code>python 03_opensearch_query.py</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>실행 결과 (sales 100건 기준 실제 값 · 일부 생략)</span><button class="copy" type="button">코드 복사</button></div><pre><code>{
+  "region": "서울",
+  "order_count": 21,
+  "total_revenue": 58566750.0,
+  "avg_revenue": 2788892.857142857,
+  "total_quantity": 107.0,
+  "avg_satisfaction": 4.523809523809524,
+  "status_count": [
+    {"key": "완료", "doc_count": 17},
+    {"key": "배송중", "doc_count": 2},
+    {"key": "취소", "doc_count": 2}
+  ],
+  "product_sales": [
+    {"key": "노트북", "doc_count": 3, "sales": {"value": 21360000.0}},
+    {"key": "복합기", "doc_count": 4, "sales": {"value": 17000000.0}},
+    {"key": "프로젝터", "doc_count": 2, "sales": {"value": 9506000.0}},
+    ...
+  ]
+}</code></pre></div>
+<h3>함수 안의 쿼리</h3>
+<div class="codebox"><div class="codehead"><span>sales_service.py · get_region_summary의 body</span><button class="copy" type="button">코드 복사</button></div><pre><code>{
+  "size": 0,                                        # 주문 문서는 안 받고 집계만
+  "query": {"term": {"region": region}},            # 어떤 문서를 대상으로
+  "aggs": {                                         # 그 문서들을 어떻게 계산할지
+    "total_revenue":    {"sum": {"field": "revenue"}},
+    "avg_revenue":      {"avg": {"field": "revenue"}},
+    "total_quantity":   {"sum": {"field": "quantity"}},
+    "avg_satisfaction": {"avg": {"field": "satisfaction"}},
+    "status_count":     {"terms": {"field": "status", "size": 10}},
+    "product_sales": {
+      "terms": {"field": "product", "size": 10, "order": {"sales": "desc"}},
+      "aggs": {"sales": {"sum": {"field": "revenue"}}}
+    }
+  }
+}</code></pre></div>
+<div class="tablewrap"><table><thead><tr><th>결과 키</th><th>A4-M1에서 본 곳</th></tr></thead><tbody>
+<tr><td>total_revenue</td><td>07탭 총매출 Metric (서울 필터)</td></tr>
+<tr><td>status_count</td><td>미션 3 상태별 주문 원 그래프</td></tr>
+<tr><td>product_sales</td><td>미션 9 서울만의 제품별 매출 (Dev Tools)</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>A4-M2에서 “query는 어떤 문서를, aggs는 어떻게 계산할지”를 정리했고, 10탭에서 바로 이 함수를 한 줄씩 해부했습니다. 이 함수는 그걸 여섯 개 한꺼번에 묻고, 결과를 GPT가 읽기 좋은 dict 하나로 정리해 돌려줍니다. 금액이 <code>58566750.0</code>처럼 소수점으로 나오는 건 OpenSearch의 sum이 실수로 계산하기 때문입니다. 원 단위 표시는 다음 탭에서 GPT가 합니다.</p></div>
+<div class="task"><h4>화면에서 짚을 곳</h4><ol><li>Dashboards에서 A4-M1의 Dashboard를 열고 region=서울 필터를 걸어 총매출이 58,566,750원인지 맞춰 봅니다. 시간 범위는 2026년 1~7월이 다 들어가게 넓힙니다.</li><li>총매출에는 <b>취소된 주문 2건도 포함</b>되어 있습니다. 이게 맞는 숫자인지는 미션 2에서 다룹니다.</li></ol></div>
+</section>
+
+<!-- 06 -->
+<section aria-labelledby="tab-u06" class="panel" hidden="" id="u06" role="tabpanel"><div class="crumb">Part 2. 숫자 — OpenSearch sales · A4-M4</div><h1>06. 집계 + GPT(04) — 계산은 OpenSearch, 설명은 GPT</h1><p class="lead">05탭의 dict를 GPT에 넘겨 사람이 읽는 보고 문장으로 바꿉니다. 핵심은 역할 분담입니다. GPT에게 주문 100건을 주고 “합계를 내 줘”라고 하지 않습니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> 터미널 · <code>rag_service.py</code>를 옆에 열어 두고</span><span><b>✅ 먼저</b> 05탭, .env의 OPENAI_API_KEY</span></div>
+<div class="codebox"><div class="codehead"><span>04_opensearch_gpt.py</span><button class="copy" type="button">코드 복사</button></div><pre><code>from clients import get_openai_client, get_opensearch_client
+from sales_service import get_region_summary
+from rag_service import explain_sales
+
+openai_client = get_openai_client()
+os_client = get_opensearch_client()
+
+question = "서울 지역 매출 현황을 알려줘"
+summary = get_region_summary(os_client, region="서울")
+answer = explain_sales(openai_client, summary, question)
+print(answer)</code></pre></div>
+<div class="codebox"><div class="codehead"><span>rag_service.py · explain_sales</span><button class="copy" type="button">코드 복사</button></div><pre><code>def explain_sales(openai_client, summary, question):
+    response = openai_client.responses.create(
+        model=GPT_MODEL,
+        max_output_tokens=500,
+        input=f"""
+다음은 OpenSearch가 직접 계산한 매출 집계입니다.
+
+{json.dumps(summary, ensure_ascii=False)}
+
+질문:
+{question}
+
+규칙:
+1. 위 집계값만 근거로 답하세요.
+2. 숫자를 추측하지 마세요.
+3. 금액은 천 단위 쉼표와 원으로 표시하세요.
+"""
+    )
+    return response.output_text</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>실행 결과 (예시 · 문장은 실행마다 조금씩 다름)</span><button class="copy" type="button">코드 복사</button></div><pre><code>서울 지역은 총 21건의 주문에서 58,566,750원의 매출을 기록했습니다.
+판매 수량은 107개, 평균 만족도는 4.52점입니다.
+제품별로는 노트북이 21,360,000원으로 가장 많고, 복합기(17,000,000원), 프로젝터(9,506,000원) 순입니다.
+주문 상태는 완료 17건, 배송중 2건, 취소 2건입니다.</code></pre></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>숫자는 전부 05탭 결과와 같아야 합니다. GPT가 한 일은 <b>계산이 아니라 문장 만들기와 단위 표시</b>뿐입니다. 언어 모델은 긴 숫자 목록을 더하다 틀리기 쉽고, 틀려도 그럴듯하게 말합니다. 그래서 계산은 정확한 OpenSearch에 맡기고, 프롬프트 규칙 1·2번으로 “받은 숫자 말고는 쓰지 마라”를 못 박습니다.</p></div>
+<div class="task"><h4>화면에서 짚을 곳</h4><ol><li>GPT 답변의 숫자를 05탭 JSON과 하나씩 대조합니다. 하나라도 다르면 규칙이 지켜지지 않은 것입니다.</li><li><code>responses.create</code>는 OpenAI의 Responses API입니다. 답변 문자열은 <code>response.output_text</code>로 꺼냅니다. A4-M3 18탭의 <code>chat.completions</code>와 같은 일을 하는 다른 호출 방식입니다.</li><li><code>max_output_tokens=500</code>은 답변 길이 상한입니다. 답이 중간에 잘리면 이 값을 올립니다.</li></ol></div>
+</section>
+
+<!-- 07 -->
+<section aria-labelledby="tab-u07" class="panel" hidden="" id="u07" role="tabpanel"><div class="crumb">Part 3. 문서 — FAISS · A4-M4</div><h1>07. 사내 문서 살펴보기와 청크(05) — 제목 단위로 자르기</h1><p class="lead">이제 글 쪽입니다. 먼저 검색 대상 문서를 직접 열어 보고, <code>05_chunk_check.py</code>로 이 문서가 몇 조각으로 나뉘는지 확인합니다. 임베딩(비용 발생) 전에 조각부터 눈으로 보는 단계입니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> VS Code에서 .md 파일 열기 → 터미널</span><span><b>✅ 먼저</b> 없음 (OpenSearch·OpenAI 호출 안 함)</span></div>
+<div class="codebox"><div class="codehead"><span>파일 열어 보기 · 지역_시장현황_RAG_테스트.md (앞부분)</span><button class="copy" type="button">코드 복사</button></div><pre><code># 지역 시장 현황 테스트 문서
+
+> 이 문서는 RAG 실습을 위한 **가상 사내 자료**입니다. 실제 통계가 아닙니다.
+
+## 서울 지역 현황
+- 기준연도: 2026
+- 인구: 940만 명
+- 기업 고객 비중: 높음
+- 주요 수요: 노트북, 복합기, 프로젝터
+- 특징: 대기업과 공공기관 수요가 많고 고가 IT기기 구매 비중이 높은 지역이다.
+- 영업 메모: 기업 대상 노트북과 복합기 패키지 제안이 효과적이다.
+
+## 부산 지역 현황
+...
+## 대구 지역 현황 / ## 대전 지역 현황 / ## 광주 지역 현황
+...
+## 지역 비교 요약
+- 인구 규모는 서울이 가장 크고 부산, 대구, 대전, 광주 순이다.
+...</code></pre></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>문서는 <code>##</code> 제목 6개(지역 5개 + 비교 요약)로 이루어져 있습니다. 각 섹션에 “주요 수요”, “특징”, “영업 메모”가 있는데, 이게 <b>숫자로는 알 수 없는 정보</b>입니다. sales에는 “광주는 중소기업과 공공기관 중심”이라는 말이 없습니다.</p></div>
+<div class="codebox"><div class="codehead"><span>faiss_service.py · chunk_markdown</span><button class="copy" type="button">코드 복사</button></div><pre><code>def chunk_markdown(text):
+    parts = re.split(r"\n(?=## )", text)          # '## '로 시작하는 줄 앞에서 자르기
+    chunks = [part.strip() for part in parts
+              if part.strip().startswith("## ")]   # 맨 앞 '# 제목'과 안내문 조각은 버림
+    return chunks</code></pre></div>
+<div class="codebox"><div class="codehead"><span>터미널</span><button class="copy" type="button">코드 복사</button></div><pre><code>python 05_chunk_check.py</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>실행 결과 (앞부분)</span><button class="copy" type="button">코드 복사</button></div><pre><code>청크 수: 6
+
+==================================================
+Chunk 0
+==================================================
+## 서울 지역 현황
+- 기준연도: 2026
+- 인구: 940만 명
+...</code></pre></div>
+<div class="tablewrap"><table><thead><tr><th></th><th>A4-M3 (글자 수로 자르기)</th><th>이번 (제목으로 자르기)</th></tr></thead><tbody>
+<tr><td>방법</td><td>200자씩, 40자 겹침</td><td><code>##</code> 제목마다 한 조각</td></tr>
+<tr><td>장점</td><td>어떤 문서에나 적용</td><td>한 조각 = 한 지역, 뜻이 안 끊김</td></tr>
+<tr><td>단점</td><td>문장 중간에서 끊길 수 있음</td><td>섹션이 길면 조각이 너무 커짐</td></tr>
+<tr><td>어울리는 문서</td><td>구조 없는 긴 글</td><td>제목 구조가 분명한 보고서·매뉴얼</td></tr></tbody></table></div>
+<div class="note"><b>정규식 <code>\n(?=## )</code> 읽는 법</b><p>“줄바꿈 다음에 <code>## </code>가 오는 자리”에서 자릅니다. <code>(?=…)</code>는 그 글자를 지우지 않고 위치만 확인하는 표현이라, 잘린 조각이 <code>## 서울 지역 현황</code>으로 제목을 품은 채 시작합니다.</p></div>
+</section>
+
+<!-- 08 -->
+<section aria-labelledby="tab-u08" class="panel" hidden="" id="u08" role="tabpanel"><div class="crumb">Part 3. 문서 — FAISS · A4-M4</div><h1>08. 임베딩과 FAISS 저장(06) — 조각 6개를 파일 두 개로</h1><p class="lead">조각 6개를 OpenAI 임베딩 모델로 1536차원 벡터로 바꾸고, FAISS 인덱스에 넣어 <code>rag_faiss/</code> 폴더에 저장합니다. 한 번 저장하면 이후에는 다시 만들지 않고 불러다 씁니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> 터미널</span><span><b>✅ 먼저</b> 07탭(청크 6개 확인), .env의 OPENAI_API_KEY</span></div>
+<pre class="diagram">Markdown 조각 6개
+→ text-embedding-3-small  (OpenAI API 호출 1번)
+→ 1536차원 벡터 6개
+→ L2 정규화 (길이를 1로)
+→ FAISS IndexFlatIP 에 add
+→ rag_faiss/index.faiss  +  rag_faiss/chunks.json  저장</pre>
+<div class="codebox"><div class="codehead"><span>faiss_service.py · make_embeddings, save_faiss</span><button class="copy" type="button">코드 복사</button></div><pre><code>def make_embeddings(openai_client, chunks):
+    response = openai_client.embeddings.create(model=EMBEDDING_MODEL, input=chunks)
+    vectors = np.array([item.embedding for item in response.data], dtype="float32")
+    faiss.normalize_L2(vectors)                       # 길이 1로 → 내적 = 코사인
+    return vectors
+
+def save_faiss(chunks, vectors):
+    FAISS_DIR.mkdir(exist_ok=True)
+    index = faiss.IndexFlatIP(vectors.shape[1])        # 1536차원, 전부 비교(정확 검색)
+    index.add(vectors)
+    faiss.write_index(index, str(FAISS_INDEX_PATH))   # 벡터 → index.faiss
+    CHUNKS_PATH.write_text(json.dumps(chunks, ensure_ascii=False, indent=2),
+                           encoding="utf-8")          # 원문 → chunks.json
+    return index</code></pre></div>
+<div class="codebox"><div class="codehead"><span>터미널</span><button class="copy" type="button">코드 복사</button></div><pre><code>python 06_make_faiss.py</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>실행 결과</span><button class="copy" type="button">코드 복사</button></div><pre><code>FAISS 저장 완료
+청크 수: 6
+벡터 수: 6
+벡터 차원: 1536</code></pre></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>A3-M2에서 직접 한 것과 같습니다. <code>normalize_L2</code> + <code>IndexFlatIP</code> = 코사인 유사도 검색. 다른 점은 임베딩을 로컬 모델이 아니라 OpenAI API로 만든다는 것뿐입니다(1536차원).</p><p>저장 파일이 두 개인 이유도 A3-M2와 같습니다. FAISS는 벡터와 번호만 압니다. 그래서 “3번 = 대전 지역 현황 원문”을 연결해 주는 <code>chunks.json</code>을 따로 둡니다. A4-M3에서 OpenSearch가 원문과 벡터를 한 문서에 함께 저장하던 것과 비교해 봅니다.</p></div>
+<div class="note"><b>왜 여기서는 OpenSearch 벡터가 아니라 FAISS인가</b><p>조각이 6개뿐이고 자주 바뀌지 않는 문서라 파일 두 개면 충분합니다. 서버 설정 없이 바로 쓸 수 있고, 전부 비교(IndexFlatIP)해도 순식간입니다. 문서가 수천 개로 늘거나, 메타데이터 필터나 여러 사람이 함께 갱신하는 일이 필요해지면 A4-M3처럼 OpenSearch <code>knn_vector</code>로 옮깁니다. 같은 RAG라도 <b>규모와 운영 요구에 따라 저장소를 고른다</b>는 것을 보여 주는 구성입니다.</p></div>
+<div class="task"><h4>화면에서 짚을 곳</h4><ol><li>실행 후 폴더에 <code>rag_faiss/</code>가 생겼는지, <code>chunks.json</code>을 열면 조각 6개 원문이 보이는지 확인합니다.</li><li>06은 문서를 바꿨을 때만 다시 실행합니다. 실행할 때마다 임베딩 API를 호출합니다(조각 6개라 비용은 매우 작음).</li><li>사전 점검(02탭)을 다시 돌리면 마지막 줄이 <code>[OK] FAISS 저장파일</code>로 바뀝니다.</li></ol></div>
+</section>
+
+<!-- 09 -->
+<section aria-labelledby="tab-u09" class="panel" hidden="" id="u09" role="tabpanel"><div class="crumb">Part 3. 문서 — FAISS · A4-M4</div><h1>09. 저장된 FAISS로 검색(07) — 질문만 새로 벡터로</h1><p class="lead">문서 벡터 6개는 다시 만들지 않고 <code>index.faiss</code>를 불러옵니다. 매 질문마다 새로 만드는 것은 질문 벡터 하나뿐입니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> 터미널</span><span><b>✅ 먼저</b> 08탭(06 실행, rag_faiss/ 생성)</span></div>
+<div class="codebox"><div class="codehead"><span>07_faiss_search.py</span><button class="copy" type="button">코드 복사</button></div><pre><code>from clients import get_openai_client
+from faiss_service import search_faiss
+
+openai_client = get_openai_client()
+question = "광주 지역의 시장 특성은?"
+results = search_faiss(openai_client, question, k=3)
+
+for result in results:
+    print(result["rank"], f'{result["score"]:.4f}', result["title"])</code></pre></div>
+<div class="codebox"><div class="codehead"><span>faiss_service.py · search_faiss (핵심만)</span><button class="copy" type="button">코드 복사</button></div><pre><code>index, chunks = load_faiss()                                   # 저장된 두 파일 불러오기
+q = openai_client.embeddings.create(model=EMBEDDING_MODEL, input=question)
+query_vector = np.array([q.data[0].embedding], dtype="float32")
+faiss.normalize_L2(query_vector)                               # 문서와 똑같이 정규화
+scores, indices = index.search(query_vector, min(k, index.ntotal))
+# indices[0] = [4, 5, 0] 처럼 조각 번호 → chunks[번호]로 원문을 찾아 붙임</code></pre></div>
+<div class="codebox"><div class="codehead"><span>터미널</span><button class="copy" type="button">코드 복사</button></div><pre><code>python 07_faiss_search.py</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>실행 결과 (예시 · 점수와 2·3위는 환경마다 다를 수 있음)</span><button class="copy" type="button">코드 복사</button></div><pre><code>1 0.6... ## 광주 지역 현황
+2 0.5... ## 지역 비교 요약
+3 0.4... ## ...</code></pre></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>1위가 광주 섹션이면 성공입니다. 2위로 “지역 비교 요약”이 오는 경우가 많은데, 그 섹션에도 광주 이야기가 한 줄 들어 있기 때문입니다. 점수는 코사인 유사도라 1에 가까울수록 비슷합니다. A4-M3 OpenSearch 점수처럼 (1+코사인)/2로 바꾸지 않은 원래 코사인이라 숫자 범위가 다릅니다.</p></div>
+<div class="task"><h4>화면에서 짚을 곳</h4><ol><li>문서와 질문을 <b>같은 모델</b>(<code>config.EMBEDDING_MODEL</code>)로 임베딩하고 <b>같은 방식</b>(normalize_L2)으로 정규화합니다. 하나라도 다르면 점수가 무의미해집니다(A4-M3 미션 7).</li><li><code>min(k, index.ntotal)</code>: k가 조각 수(6)보다 크면 6으로 줄입니다. FAISS는 모자라는 칸을 -1로 채우기 때문에 그 문제를 미리 막은 것입니다.</li><li>질문을 바꿔 봅니다: “공공기관 수요가 많은 지역은?”, “프린터를 많이 찾는 곳은?” (미션 4)</li></ol></div>
+</section>
+
+<!-- 10 -->
+<section aria-labelledby="tab-u10" class="panel" hidden="" id="u10" role="tabpanel"><div class="crumb">Part 4. 통합 · A4-M4</div><h1>10. 숫자 + 문서 통합 RAG(08) — 두 근거를 한 프롬프트에</h1><p class="lead">이 모듈의 핵심입니다. 질문 하나에 FAISS는 지역 문서를, OpenSearch는 실제 매출 집계를 가져오고, GPT가 둘을 비교해 답합니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> 터미널</span><span><b>✅ 먼저</b> 05탭(집계), 09탭(FAISS 검색)이 각각 동작</span></div>
+<pre class="diagram">사용자 질문 "광주 지역의 시장 특성과 실제 매출을 비교해줘"
+ ├─ FAISS search_faiss(k=3)          → 광주 지역 현황 등 문서 3조각   (비정형 근거)
+ └─ OpenSearch get_region_summary("광주") → 매출·수량·제품별 매출 dict (정형 근거)
+                      ↓
+              rag_service.hybrid_answer()
+                      ↓
+       GPT-4.1-nano → 시장 특성 + 실제 실적 + 인사이트</pre>
+<div class="codebox"><div class="codehead"><span>08_hybrid_rag.py</span><button class="copy" type="button">코드 복사</button></div><pre><code>from clients import get_openai_client, get_opensearch_client
+from faiss_service import search_faiss
+from sales_service import get_region_summary
+from rag_service import hybrid_answer
+
+openai_client = get_openai_client()
+os_client = get_opensearch_client()
+
+question = "광주 지역의 시장 특성과 실제 매출을 비교해줘"
+rag_docs = search_faiss(openai_client, question, k=3)          # 문서 근거
+sales_summary = get_region_summary(os_client, region="광주")     # 숫자 근거
+answer = hybrid_answer(openai_client, question, rag_docs, sales_summary)
+print(answer)</code></pre></div>
+<div class="codebox"><div class="codehead"><span>rag_service.py · hybrid_answer의 프롬프트</span><button class="copy" type="button">코드 복사</button></div><pre><code>[FAISS 내부 문서]
+{context}                         ← 검색된 조각 3개 원문
+
+[OpenSearch 실제 매출]
+{json.dumps(sales_summary)}       ← 05탭과 같은 dict
+
+[사용자 질문]
+{question}
+
+규칙:
+1. FAISS 문서는 지역·시장·고객 특성의 근거입니다.
+2. OpenSearch는 실제 주문·매출·판매수량의 근거입니다.
+3. 두 자료를 함께 비교하세요.
+4. 제공되지 않은 숫자는 만들지 마세요.
+5. 마지막에 업무 인사이트를 간단히 제시하세요.</code></pre></div>
+<h3>GPT가 받는 두 근거를 직접 나란히 놓아 보면</h3>
+<div class="mock"><div class="mock-title">광주 — 문서가 말하는 것 vs sales가 말하는 것 (sales 100건 기준 실제 값)</div><table><thead><tr><th>항목</th><th>FAISS 문서 (광주 지역 현황)</th><th>OpenSearch 집계 (광주)</th></tr></thead><tbody>
+<tr><td>주요 수요</td><td class="hl">복합기, 프린터, 모니터</td><td>매출 1위 <b>노트북 10,200,000원</b> · 2위 프로젝터 8,477,000원 · 3위 태블릿 7,630,000원</td></tr>
+<tr><td>복합기</td><td>“복합기와 프린터 유지관리 패키지를 함께 제안”</td><td class="hl">복합기 3,060,000원 (8개 제품 중 5위, 1건)</td></tr>
+<tr><td>전체 규모</td><td>인구 142만 명, 기업 고객 비중 중간</td><td>24건, 39,029,500원, 평균 만족도 4.33</td></tr>
+<tr><td>주문 상태</td><td>—</td><td>완료 16 · 배송중 5 · 취소 3</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>문서만 보면 “광주엔 복합기를 팔자”, 숫자만 보면 “광주는 노트북이 잘 팔린다”입니다. 둘을 같이 보면 <b>“문서상 주력 수요(복합기·프린터)와 실제 매출 상위(노트북·프로젝터)가 어긋난다 → 문서의 영업 가정을 점검하거나, 복합기 영업이 덜 된 것인지 확인해야 한다”</b>는 질문이 나옵니다. 이것이 정형+비정형 통합의 가치입니다. 실행해서 GPT가 이 어긋남을 짚는지 확인합니다.</p></div>
+<div class="codebox"><div class="codehead"><span>터미널</span><button class="copy" type="button">코드 복사</button></div><pre><code>python 08_hybrid_rag.py</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>실행 결과 (예시 · 문장은 실행마다 다름)</span><button class="copy" type="button">코드 복사</button></div><pre><code>[시장 특성] 광주는 중소기업과 공공기관 중심으로 복합기·프린터·모니터 교체 수요가 있는 지역입니다.
+[실제 매출] 24건, 39,029,500원. 노트북(10,200,000원), 프로젝터(8,477,000원), 태블릿(7,630,000원) 순이며
+복합기는 3,060,000원에 그쳤습니다.
+[비교] 문서에서 주력으로 본 복합기·프린터보다 노트북·프로젝터 매출이 더 큽니다.
+[인사이트] 복합기·프린터 유지관리 패키지 제안을 강화하거나, 문서의 수요 가정을 실제 실적에 맞게 갱신할 필요가 있습니다.</code></pre></div>
+<div class="task"><h4>화면에서 짚을 곳</h4><ol><li>답변의 숫자가 위 표의 OpenSearch 값과 같은지, 시장 특성이 문서 문장과 같은지 대조합니다. 규칙 4번(“없는 숫자는 만들지 마라”)이 지켜졌는지 보는 것입니다.</li><li>지금은 <code>region="광주"</code>가 코드에 고정돼 있습니다. 질문을 “대전…”으로 바꿔도 매출은 광주 것이 나옵니다. 미션 5에서 고칩니다.</li></ol></div>
+</section>
+
+<!-- 11 -->
+<section aria-labelledby="tab-u11" class="panel" hidden="" id="u11" role="tabpanel"><div class="crumb">Part 4. 통합 · A4-M4</div><h1>11. Streamlit 업무 화면(app.py) — 지금까지의 함수를 한 화면에</h1><p class="lead">새 기능은 거의 없습니다. 05탭의 집계, 09탭의 FAISS 검색, 10탭의 통합 답변을 버튼과 차트로 감싼 것입니다. 화면의 각 칸이 어떤 함수에서 오는지 짝지어 봅니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> 터미널 → 브라우저 <code>http://localhost:8501</code></span><span><b>✅ 먼저</b> 08탭(rag_faiss/ 있음), 10탭 동작</span></div>
+<div class="codebox"><div class="codehead"><span>터미널</span><button class="copy" type="button">코드 복사</button></div><pre><code>streamlit run app.py
+# 명령을 못 찾으면
+python -m streamlit run app.py</code></pre></div>
+<div class="tablewrap"><table><thead><tr><th>화면 위치</th><th>보이는 것</th><th>가져오는 함수</th><th>앞에서 본 곳</th></tr></thead><tbody>
+<tr><td>왼쪽 사이드바</td><td>지역 선택, RAG 검색 문서 수(Top-K)</td><td><code>get_regions()</code> — sales에 실제 있는 지역만</td><td>A4-M1 Bucket Terms(region)</td></tr>
+<tr><td>상단 숫자 4개</td><td>총 매출, 주문 건수, 판매 수량, 평균 만족도</td><td><code>get_region_summary()</code></td><td>05탭</td></tr>
+<tr><td>Sales Overview</td><td>월별 매출, 제품별 매출, 주문 상태, 담당자별 매출, 최근 주문 15건</td><td><code>get_region_summary()</code> + <code>get_region_documents()</code>(주문 원본 → pandas)</td><td>A4-M1 Dashboard, 14탭 DataFrame</td></tr>
+<tr><td>AI Analysis</td><td>질문 입력 → Executive Brief + 검색 근거 표</td><td><code>search_faiss()</code> + <code>hybrid_answer()</code></td><td>10탭</td></tr>
+<tr><td>Evidence</td><td>질문으로 문서만 검색, 순위·유사도·원문</td><td><code>search_faiss()</code></td><td>09탭</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>A4-M1에서 Dashboards로 만들던 차트를 이번엔 Python 화면이 그립니다. 차이는 <b>AI Analysis 탭</b> 하나입니다. Dashboards는 숫자만 보여 주지만, 이 화면은 숫자와 문서를 함께 GPT에 넘겨 해석까지 붙입니다. Evidence 탭은 “GPT가 어떤 문서를 보고 답했는지”를 확인하는 곳입니다. A4-M3 12탭의 “답이 이상하면 넘어간 근거부터 본다”를 화면으로 만든 것입니다.</p></div>
+<div class="task"><h4>화면에서 짚을 곳</h4><ol><li>지역을 광주로 바꾸고 상단 숫자가 39,029,500원 / 24건 / 97개 / 4.33인지 확인합니다.</li><li>AI Analysis에서 기본 질문으로 실행하고, 10탭 터미널 답변과 비교합니다.</li><li>Evidence에서 “광주 지역의 시장 특성”으로 검색해 1위가 광주 섹션인지 봅니다.</li><li><code>@st.cache_resource</code>, <code>@st.cache_data(ttl=30)</code>: 연결과 FAISS는 한 번만 만들고, 지역 목록·주문은 30초 동안 재사용합니다. 그래서 sales를 바꾼 직후엔 [데이터 새로고침]을 눌러야 반영됩니다.</li></ol></div>
+<details class="qa"><summary>Q. “초기화 오류”가 뜨고 화면이 멈춰요.</summary><p>app.py는 시작할 때 OpenAI·OpenSearch 연결과 FAISS 파일 불러오기를 먼저 합니다. 셋 중 하나라도 실패하면 이 메시지를 띄우고 멈춥니다. Docker 실행, .env, <code>rag_faiss/</code> 폴더 순으로 확인합니다. 02탭 사전 점검을 다시 돌리면 빠릅니다.</p></details>
+</section>
+
+<!-- 12 -->
+<section aria-labelledby="tab-u12" class="panel" hidden="" id="u12" role="tabpanel"><div class="crumb">Part 5. 실습 미션 · A4-M4</div><h1>12. 실습 미션 — 바꿔 보고, 고쳐 보고, 늘려 보기</h1><p class="lead">미션마다 어디서 하는지, 무엇을 먼저 해 두어야 하는지, 몇 단계로 하는지를 적었습니다. 원본 파일을 고치는 미션은 <b>파일을 복사해서</b> 새 이름으로 작업합니다(예: <code>08_hybrid_rag.py</code> → <code>m5_auto_region.py</code>).</p>
+<div class="where-bar"><span><b>📍 어디서</b> 실습 폴더 · VS Code</span><span><b>✅ 먼저</b> 01~08과 app.py가 모두 한 번씩 실행됨</span></div>
+<div class="tablewrap"><table><thead><tr><th>미션</th><th>할 일</th><th>완료 기준</th></tr></thead><tbody>
+<tr><td>1</td><td>03을 대전으로 실행하고 Dashboard 숫자와 맞추기</td><td>order_count 16, total_revenue 31,861,500</td></tr>
+<tr><td>2</td><td>취소 주문을 뺀 매출을 구하는 함수 만들기</td><td>서울 58,083,000 / 광주 34,921,500</td></tr>
+<tr><td>3</td><td><code>explain_sales</code> 프롬프트에 규칙 하나 추가</td><td>답변에 취소 비율이 언급됨</td></tr>
+<tr><td>4</td><td>07의 질문을 바꿔 FAISS 순위 비교</td><td>세 질문의 1위 지역 기록</td></tr>
+<tr><td>5</td><td>질문에서 지역을 찾아 자동으로 집계하기</td><td>“대전…” 질문에 대전 매출이 들어감</td></tr>
+<tr><td>6</td><td>문서에 새 지역(제주) 추가 → FAISS 다시 만들기 → 통합 RAG</td><td>벡터 수 7, GPT가 없는 매출을 지어내지 않음</td></tr>
+<tr><td>7</td><td>Streamlit 상단에 “취소 건수” 숫자 추가</td><td>광주 선택 시 3건</td></tr></tbody></table></div>
+
+<h3>미션 1 · 지역 바꿔 집계하기</h3>
+<div class="where-bar"><span><b>📍</b> 터미널 + Dashboards</span><span><b>✅</b> 05탭</span></div>
+<ol class="steps"><li><code>03_opensearch_query.py</code>의 <code>region="서울"</code>을 <code>"대전"</code>으로 바꿔 실행합니다.</li><li>Dashboards에서 A4-M1 Dashboard를 열고 region=대전 필터, 시간 범위 2026-01-01 ~ 2026-07-31.</li><li>총매출 Metric과 JSON의 <code>total_revenue</code>를 비교합니다.</li></ol>
+<details class="qa"><summary>정답</summary><p>order_count 16, total_revenue 31,861,500.0, total_quantity 78.0, avg_satisfaction 4.0625. 대전은 취소 주문이 0건입니다. Dashboard 숫자가 다르면 시간 범위나 남은 필터를 먼저 봅니다(A4-M1 09탭).</p></details>
+
+<h3>미션 2 · 취소 주문을 뺀 매출</h3>
+<div class="where-bar"><span><b>📍</b> 새 파일 <code>m2_net_revenue.py</code></span><span><b>✅</b> 05탭의 query·aggs 구조 이해</span></div>
+<ol class="steps"><li>05탭에서 본 것처럼 지금 총매출에는 취소 주문이 들어 있습니다.</li><li>아래 빈칸을 채워 “지역 + 취소 제외” 조건을 만듭니다. A4-M1 12탭의 <code>bool</code> / <code>filter</code>를 떠올립니다.</li><li>서울·광주로 실행해 원래 총매출과 비교합니다.</li></ol>
+<div class="codebox"><div class="codehead"><span>m2_net_revenue.py (빈칸 채우기)</span><button class="copy" type="button">코드 복사</button></div><pre><code>from clients import get_opensearch_client
+from config import SALES_INDEX
+
+def get_net_revenue(os_client, region):
+    result = os_client.search(index=SALES_INDEX, body={
+        "size": 0,
+        "query": {"bool": {
+            "filter":   [{"term": {"region": region}}],
+            "must_not": [____________________________],
+        }},
+        "aggs": {"net_revenue": {"sum": {"field": "revenue"}}},
+    })
+    return result["aggregations"]["net_revenue"]["value"]
+
+os_client = get_opensearch_client()
+for r in ["서울", "광주"]:
+    print(r, f"{get_net_revenue(os_client, r):,.0f}원")</code></pre></div>
+<details class="qa"><summary>정답</summary><p>빈칸: <code>{"term": {"status": "취소"}}</code>. 결과: 서울 58,083,000원(원래 58,566,750원), 광주 34,921,500원(원래 39,029,500원). 광주는 취소 3건으로 약 410만 원이 빠집니다. “매출”을 어떻게 정의할지는 업무 기준이고, GPT에게 넘기기 전에 사람이 정해 집계에 반영해야 합니다.</p></details>
+
+<h3>미션 3 · GPT 규칙 추가</h3>
+<div class="where-bar"><span><b>📍</b> <code>rag_service.py</code> 복사본 또는 직접 수정 후 04 실행</span><span><b>✅</b> 06탭</span></div>
+<ol class="steps"><li><code>explain_sales</code>의 규칙에 “4. status_count에서 취소 건수와 전체 대비 비율을 함께 언급하세요.”를 추가합니다.</li><li><code>python 04_opensearch_gpt.py</code>를 실행합니다.</li><li>답변에 취소 2건(약 9.5%)이 언급되는지 확인합니다.</li></ol>
+<details class="qa"><summary>정답 · 확인 포인트</summary><p>서울 취소 비율은 2 ÷ 21 ≈ 9.5%입니다. GPT가 나눗셈을 틀릴 수도 있으니 결과를 직접 계산해 대조합니다. 정확한 비율이 중요하면 미션 2처럼 Python에서 계산해 dict에 넣어 주는 편이 안전합니다(06탭의 역할 분담 원칙).</p></details>
+
+<h3>미션 4 · FAISS 순위 비교</h3>
+<div class="where-bar"><span><b>📍</b> <code>07_faiss_search.py</code></span><span><b>✅</b> 09탭</span></div>
+<ol class="steps"><li><code>question</code>을 아래 세 개로 차례로 바꿔 실행합니다.</li><li>각 질문의 1·2위 제목과 점수를 표에 적습니다.</li></ol>
+<div class="codebox"><div class="codehead"><span>바꿔 넣을 질문</span><button class="copy" type="button">코드 복사</button></div><pre><code>"공공기관 수요가 많은 지역은?"
+"프린터를 많이 찾는 곳은 어디야?"
+"인구가 가장 많은 지역은?"</code></pre></div>
+<details class="qa"><summary>확인 포인트</summary><p>첫 질문은 대전·서울·광주 섹션(모두 공공기관 언급)이 경쟁합니다. 셋째 질문은 “지역 비교 요약”이 1위로 오기 쉽습니다(“인구 규모는 서울이 가장 크고”가 그 섹션에 있음). 섹션 단위로 자르면 비교·요약 질문은 요약 섹션이 받아 줍니다. 순위는 환경마다 다를 수 있으니 결과를 기록하고 이유를 말해 보는 것이 목표입니다.</p></details>
+
+<h3>미션 5 · 질문에서 지역 자동 찾기</h3>
+<div class="where-bar"><span><b>📍</b> 새 파일 <code>m5_auto_region.py</code> (08 복사)</span><span><b>✅</b> 10탭</span></div>
+<ol class="steps"><li><code>08_hybrid_rag.py</code>를 복사해 새 파일을 만듭니다.</li><li>sales에 있는 지역 목록을 <code>get_regions()</code>로 받아 와, 질문 안에 들어 있는 지역을 찾습니다.</li><li>찾은 지역으로 <code>get_region_summary</code>를 부르고, 못 찾으면 안내 문구를 출력하고 끝냅니다.</li></ol>
+<div class="codebox"><div class="codehead"><span>m5_auto_region.py (빈칸 채우기)</span><button class="copy" type="button">코드 복사</button></div><pre><code>from clients import get_openai_client, get_opensearch_client
+from faiss_service import search_faiss
+from sales_service import get_regions, get_region_summary
+from rag_service import hybrid_answer
+
+openai_client = get_openai_client()
+os_client = get_opensearch_client()
+
+question = "대전 지역의 시장 특성과 실제 매출을 비교해줘"
+regions = get_regions(os_client)                     # ['광주', '대구', '서울', ...]
+found = [r for r in regions if ________ in question]
+
+if not found:
+    print("질문에서 지역을 찾지 못했습니다. 지역명을 넣어 질문해 주세요:", regions)
+else:
+    region = found[0]
+    rag_docs = search_faiss(openai_client, question, k=3)
+    summary = get_region_summary(os_client, region=region)
+    print("집계 지역:", region)
+    print(hybrid_answer(openai_client, question, rag_docs, summary))</code></pre></div>
+<details class="qa"><summary>정답</summary><p>빈칸: <code>r</code>. “대전” 질문에 집계 지역이 대전으로 나오고, 답변의 매출이 31,861,500원이어야 합니다. 지역이 두 개 들어간 비교 질문(“서울과 부산 비교”)은 <code>found</code>가 두 개가 되므로, 각 지역 summary를 dict로 묶어 넘기는 것까지 확장해 볼 수 있습니다.</p></details>
+
+<h3>미션 6 · 문서에 새 지역 추가</h3>
+<div class="where-bar"><span><b>📍</b> .md 파일 수정 → 터미널 05·06·08</span><span><b>✅</b> 07~10탭</span></div>
+<ol class="steps"><li><code>지역_시장현황_RAG_테스트.md</code>를 복사해 백업해 둡니다.</li><li>원본 맨 끝에 아래 섹션을 붙여넣습니다.</li><li><code>python 05_chunk_check.py</code> → 청크 수 7 확인.</li><li><code>python 06_make_faiss.py</code> → 벡터 수 7 확인.</li><li>08의 질문을 “제주 지역의 시장 특성과 실제 매출을 비교해줘”, <code>region="제주"</code>로 바꿔 실행합니다.</li></ol>
+<div class="codebox"><div class="codehead"><span>붙여넣을 섹션</span><button class="copy" type="button">코드 복사</button></div><pre><code>
+## 제주 지역 현황
+- 기준연도: 2026
+- 기업 고객 비중: 낮음
+- 주요 수요: 태블릿, 노트북
+- 특징: 관광·숙박업 고객 비중이 높고 휴대형 기기 수요가 많다.
+- 영업 메모: 숙박업 대상 태블릿 체크인 솔루션 제안을 검토한다.</code></pre></div>
+<details class="qa"><summary>정답 · 확인 포인트</summary><p>문서에는 제주가 있지만 sales에는 제주 주문이 없습니다. 그래서 summary가 <code>order_count: 0</code>, 합계 <code>0.0</code>, 평균 <code>None</code>으로 옵니다. GPT가 “제주 매출 데이터가 없다”고 말하면 규칙 4번이 지켜진 것이고, 그럴듯한 숫자를 지어내면 프롬프트를 보강해야 합니다. 실습이 끝나면 백업 파일로 되돌리고 06을 다시 실행해 벡터 6개로 복구합니다.</p></details>
+
+<h3>미션 7 · Streamlit에 취소 건수 추가</h3>
+<div class="where-bar"><span><b>📍</b> <code>app.py</code> 복사본 <code>m7_app.py</code></span><span><b>✅</b> 11탭</span></div>
+<ol class="steps"><li><code>app.py</code>를 <code>m7_app.py</code>로 복사합니다.</li><li><code>c1, c2, c3, c4 = st.columns(4)</code>를 5칸으로 늘립니다.</li><li><code>summary["status_count"]</code>에서 취소 건수를 찾아 다섯 번째 칸에 표시합니다.</li><li><code>streamlit run m7_app.py</code>로 실행하고 광주를 선택합니다.</li></ol>
+<div class="codebox"><div class="codehead"><span>m7_app.py 에 추가할 부분 (빈칸 채우기)</span><button class="copy" type="button">코드 복사</button></div><pre><code>c1, c2, c3, c4, c5 = st.columns(5)
+# ... c1~c4는 그대로 ...
+canceled = sum(item["doc_count"] for item in summary["status_count"]
+               if item["key"] == ______)
+c5.metric("취소 건수", f"{canceled}건")</code></pre></div>
+<details class="qa"><summary>정답</summary><p>빈칸: <code>"취소"</code>. 광주 3건, 서울 2건, 부산·대구 1건, 대전 0건입니다. 새 집계를 만들지 않고 이미 받아 온 <code>status_count</code>를 재사용한 점이 핵심입니다.</p></details>
+</section>
+
+<!-- 13 -->
+<section aria-labelledby="tab-u13" class="panel" hidden="" id="u13" role="tabpanel"><div class="crumb">Part 6. 정리 · A4-M4</div><h1>13. 에러 사전과 완료 점검</h1><p class="lead">자주 나는 오류를 메시지별로 정리하고, 체크리스트로 모듈을 닫습니다.</p>
+<div class="tablewrap"><table><thead><tr><th>메시지에 보이면</th><th>원인</th><th>할 일</th></tr></thead><tbody>
+<tr><td><code>ModuleNotFoundError: No module named 'config'</code></td><td>터미널이 실습 폴더 밖에 있음</td><td><code>cd</code>로 실습 폴더로 이동 (01탭)</td></tr>
+<tr><td><code>ModuleNotFoundError: No module named 'faiss'</code> 등</td><td>패키지 미설치</td><td><code>pip install -r requirements.txt</code></td></tr>
+<tr><td><code>.env의 OPENAI_API_KEY를 확인하세요</code></td><td>.env에 키가 없거나 파일 이름이 틀림</td><td>02탭 .env 규칙</td></tr>
+<tr><td><code>.env의 OPENSEARCH_PASSWORD를 확인하세요</code></td><td>.env에 비밀번호 줄이 없음</td><td>Dashboards 로그인 비밀번호를 <code>OPENSEARCH_PASSWORD=</code>로 추가</td></tr>
+<tr><td><code>AuthenticationException</code> / 401</td><td>OpenSearch 비밀번호가 틀림</td><td>Dashboards에 같은 비밀번호로 로그인되는지 확인</td></tr>
+<tr><td><code>ConnectionError</code></td><td>Docker의 OpenSearch가 꺼짐</td><td>Docker Desktop에서 컨테이너 Up 확인</td></tr>
+<tr><td><code>index_not_found_exception [sales]</code></td><td>sales 인덱스가 없음</td><td>A4-M1 02~04탭 또는 <code>02_csv_to_opensearch.py</code></td></tr>
+<tr><td><code>could not open rag_faiss/index.faiss</code></td><td>06을 실행하지 않음</td><td><code>python 06_make_faiss.py</code></td></tr>
+<tr><td>OpenAI <code>RateLimitError</code> / 401</td><td>키 오류, 사용 한도</td><td>키 확인, 잠시 후 재시도</td></tr>
+<tr><td>Streamlit “초기화 오류”</td><td>위 연결·파일 중 하나 실패</td><td>02탭 사전 점검 다시 실행</td></tr></tbody></table></div>
+<h3>오류 없이 틀리는 실수</h3>
+<div class="task"><h4>점검 습관</h4><ol><li>① <b>취소 주문이 들어간 매출</b>: 집계는 정확하지만 업무 정의와 다를 수 있음 (미션 2).</li><li>② <b>지역 고정</b>: 질문은 대전인데 08이 광주 매출을 넣음 (미션 5).</li><li>③ <b>문서만 바꾸고 06을 다시 안 돌림</b>: FAISS는 옛 문서로 검색함 (미션 6).</li><li>④ <b>Streamlit 캐시</b>: sales를 바꿨는데 화면 숫자가 그대로 → [데이터 새로고침] (11탭).</li></ol></div>
+<h3>완료 체크</h3>
+<div class="task"><h4>실행</h4><ol><li>□ <code>00_preflight_check.py</code>가 모두 OK (FAISS 안내 제외).</li><li>□ 03으로 서울 집계를 보고 Dashboard 숫자와 맞췄다.</li><li>□ 04에서 GPT 답변의 숫자가 집계와 같은지 대조했다.</li><li>□ 05에서 청크 6개, 06에서 벡터 6개·1536차원을 확인했다.</li><li>□ 07에서 광주 질문의 1위가 광주 섹션이었다.</li><li>□ 08에서 문서의 수요 가정과 실제 매출의 차이를 GPT가 짚었다.</li><li>□ app.py 화면의 세 탭을 모두 써 봤다.</li><li>□ 미션 1~7을 끝냈다.</li></ol></div>
+<div class="flow"><div class="fstep"><b>A4-M1</b><span>sales를 넣고 Dashboard로 본다</span></div><div class="arrow">→</div><div class="fstep"><b>A4-M2</b><span>원하는 숫자를 쿼리로 묻는다</span></div><div class="arrow">→</div><div class="fstep"><b>A4-M3</b><span>문서를 벡터로 찾고 LLM이 답한다</span></div><div class="arrow">→</div><div class="fstep"><b>A4-M4</b><span>숫자와 문서를 함께 넘겨 비교·해석한다</span></div></div>
+<h3>한 문장 복습</h3>
+<details class="qa"><summary>Q. 매출 합계를 GPT에게 직접 계산시키지 않는 이유는?</summary><p>언어 모델은 긴 숫자 계산을 틀리기 쉽고 틀려도 그럴듯하게 말합니다. 계산은 OpenSearch 집계, 설명은 GPT로 나눕니다.</p></details>
+<details class="qa"><summary>Q. 이번 모듈에서 FAISS를 쓴 이유와, OpenSearch 벡터로 옮길 때는?</summary><p>조각 6개뿐인 고정 문서라 파일 두 개로 충분합니다. 문서가 많아지거나 필터·공동 갱신이 필요하면 OpenSearch knn_vector로 옮깁니다(A4-M3).</p></details>
+<details class="qa"><summary>Q. FAISS 저장 파일이 두 개인 이유는?</summary><p>index.faiss는 벡터와 번호만 알고, chunks.json이 번호와 원문을 연결합니다.</p></details>
+<details class="qa"><summary>Q. 통합 RAG 프롬프트에서 두 근거의 역할은?</summary><p>FAISS 문서 = 지역·시장·고객 특성의 근거, OpenSearch 집계 = 실제 주문·매출·수량의 근거. 둘을 비교하고 없는 숫자는 만들지 않습니다.</p></details>
+</section>
+
+</main></div>
+<footer class="footer">© 2026 부성순. All rights reserved.<small>교안의 자체 해설 및 실습 예제에 대한 저작권 표시입니다. 외부 소프트웨어·라이브러리·모델의 권리는 각 권리자에게 있습니다. 실습 데이터(sales 주문 100건, 지역 시장현황 문서)는 교육용 가상 데이터입니다. 실행 결과의 집계 값은 배포 CSV 100건 기준이며, GPT 답변은 예시입니다.</small></footer>
+<script>(function(){
+const tabs=[...document.querySelectorAll('[role="tab"]')];
+function setTab(i,focus=false){tabs.forEach((t,j)=>{const on=i===j;t.setAttribute('aria-selected',on?'true':'false');t.tabIndex=on?0:-1;document.getElementById(t.getAttribute('aria-controls')).hidden=!on;});if(focus)tabs[i].focus({preventScroll:true});history.replaceState(null,'','#'+tabs[i].getAttribute('aria-controls'));window.scrollTo({top:0});}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>setTab(i));t.addEventListener('keydown',e=>{if(['ArrowDown','ArrowUp','ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();setTab((i+(e.key==='ArrowDown'||e.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length,true);}})});
+const index=tabs.findIndex(t=>'#'+t.getAttribute('aria-controls')===location.hash);if(index>=0)setTab(index);
+document.querySelectorAll('.copy').forEach(b=>{b.dataset.label=b.textContent;b.addEventListener('click',async()=>{const code=b.closest('.codebox').querySelector('pre').textContent;try{await navigator.clipboard.writeText(code);b.textContent='복사됨';}catch(e){b.textContent='복사 실패';}setTimeout(()=>b.textContent=b.dataset.label||'코드 복사',1500);});});
+})();</script></body></html>

@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>A4-M7 RAG 답변·운영 모니터링</title><link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet"/><style>
+:root{--bg:#fff;--surface:#f8fafc;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--accent:#ff2e93;--soft:rgba(255,46,147,.065);--codebg:#101d34}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:'Pretendard',system-ui,'Malgun Gothic',sans-serif;font-size:18px;line-height:1.81;word-break:keep-all}
+.banner{background:linear-gradient(125deg,#fcfcff,#f8fafc);border-bottom:1px solid var(--line)}.banner-in{max-width:1320px;margin:auto;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:18px}.brand{font-size:16px;font-weight:850;letter-spacing:.03em}.who{font-size:15px;color:var(--muted)}.layout{max-width:1320px;margin:auto;padding:32px 24px 84px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:38px;align-items:start}.sidebar{order:2;position:sticky;top:22px;max-height:calc(100vh - 44px);overflow:auto;border:1px solid var(--line);border-radius:15px;background:var(--surface);padding:17px}.group{font-size:15px;color:var(--muted);font-weight:800;margin:3px 10px 14px}.tabs{display:flex;flex-direction:column;gap:5px}.tabs button{appearance:none;border:1px solid transparent;border-radius:9px;background:transparent;color:#253348;cursor:pointer;text-align:left;font:600 16px/1.55 'Pretendard',sans-serif;padding:9px 12px 9px 14px}.tabs button span{color:var(--accent);font-weight:850;margin-right:7px}.tabs button:hover{background:#fff;border-color:var(--line)}.tabs button[aria-selected=true]{background:var(--soft);border-color:var(--accent);color:#bd1366}.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+main{min-width:0}.panel[hidden]{display:none}.panel{display:block}.crumb{color:var(--accent);font-size:15px;font-weight:800;margin:0 0 8px}.panel h1{font-size:31px;line-height:1.4;margin:0 0 12px}.lead{font-size:19px;font-weight:550;color:#344255;margin:6px 0 26px}.panel h3{font-size:21px;margin:33px 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px}.panel h3:before{content:'▸ ';color:var(--accent)}.panel p{margin:13px 0}.panel b,.panel strong{font-weight:790}.panel code:not(pre code){font:15px/1.6 Consolas,monospace;word-break:break-word;background:#f1f5f9;border:1px solid #e5e7eb;padding:1px 5px;border-radius:4px}
+.panel ul,.panel ol{padding-left:27px;margin:12px 0}.panel li{margin:7px 0}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:17px 0 24px}.panel table{border-collapse:collapse;width:100%;font-size:17px;line-height:1.65}.panel th,.panel td{border-bottom:1px solid var(--line);padding:12px 14px;vertical-align:top;text-align:left}.panel th{font-size:16px;font-weight:800;background:#f1f5f9;color:#40516a}.panel tbody tr:last-child td{border:0}.panel tbody tr:nth-child(even){background:#fbfcfe}
+.note,.task{border:1px solid var(--line);border-radius:13px;background:#fafcff;padding:17px 19px;margin:24px 0}.note{border-left:4px solid var(--accent);background:var(--soft)}.note b{color:#ad155e}.note p{margin:6px 0}.task{background:#fff}.task h4{margin:0 0 9px;font-size:19px}.task ol{margin:0;padding-left:23px}.task li{margin:8px 0}
+.codebox{border:1px solid #243953;border-radius:13px;overflow:hidden;margin:21px 0 26px}.codehead{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:8px 13px;background:#1d3452;color:#dceafc;font-size:14px;font-weight:700}.copy{border:1px solid #8598b4;color:#fff;background:#314f78;border-radius:6px;padding:3px 10px;cursor:pointer;font-size:13px}.codebox pre{background:var(--codebg);color:#cbe9fb;margin:0;padding:20px;overflow-x:auto;font:15px/1.7 Consolas,'JetBrains Mono',monospace;word-break:normal;white-space:pre}
+.outbox .codehead{background:#203a2c}.outbox{border-color:#2f5a43}.outbox pre{background:#0d1f17;color:#c9f5d9}
+.qa{padding:13px 17px;margin:13px 0;border:1px solid var(--line);background:#fbfcff;border-radius:10px}.qa summary{font-size:17px;cursor:pointer;font-weight:780}.qa[open] summary{color:#c01168}.qa p{font-size:17px}
+.footer{max-width:1320px;margin:auto;border-top:1px solid var(--line);padding:20px 24px 38px;text-align:center;color:var(--muted);font-size:15px}.footer small{display:block;max-width:950px;margin:5px auto}
+.tabs .part-heading{display:block;margin:15px 4px 6px;padding:12px 11px;background:#e5e7eb;color:#334155;border:1px solid #cbd5e1;border-radius:9px;font-size:15px;font-weight:850;line-height:1.5;white-space:normal}.tabs .part-heading:first-child{margin-top:0}
+.journey{border-left:4px solid #ff2e93;background:#fff5fa;padding:16px 19px;margin:20px 0;border-radius:8px}.journey h3{border:0!important;margin:0 0 8px!important;padding:0!important;font-size:18px!important}.journey h3:before{content:none!important}.journey ol{margin:6px 0 0;padding-left:22px}.journey li{margin:4px 0;overflow-wrap:anywhere}
+.say{border-left:4px solid #94a3b8;background:#f8fafc;padding:12px 16px;border-radius:0 10px 10px 0;margin:16px 0}.say>b:first-child{display:block;color:#475569;font-size:14px;margin-bottom:4px}
+.flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;margin:18px 0 24px}.flow .fstep{flex:1 1 96px;min-width:92px;border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:10px;background:#fff;padding:10px 12px}.flow .fstep b{display:block;font-size:16px;color:#0f172a}.flow .fstep span{display:block;font-size:14px;color:var(--muted);line-height:1.5;margin-top:3px}.flow .arrow{align-self:center;color:var(--accent);font-weight:900}
+main p,main li,main td{overflow-wrap:anywhere}
+/* 화면 모형 */
+.mock{border:1px solid #cbd5e1;border-radius:14px;background:#f8fafc;padding:14px 16px;margin:20px 0}.mock-title{font-weight:800;font-size:15px;color:#475569;margin-bottom:10px}
+.browser{border:1px solid #cbd5e1;border-radius:10px;overflow:hidden;background:#fff}.bbar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#eef2f7;border-bottom:1px solid #e2e8f0}.dots i{display:inline-block;width:10px;height:10px;border-radius:50%;background:#cbd5e1;margin-right:4px}.url{flex:1;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:2px 10px;font:14px Consolas,monospace;color:#334155}
+.browser pre{margin:0;padding:12px 14px;font:14px/1.6 Consolas,monospace;white-space:pre;overflow-x:auto;color:#0f172a;background:#fff}
+.dash{display:grid;grid-template-columns:210px 1fr;min-height:250px}.dash nav{background:#f8fafc;border-right:1px solid #e2e8f0;padding:10px;font-size:14px}.dash nav b{display:block;margin:10px 6px 4px;color:#64748b;font-size:12px}.dash nav div{padding:4px 8px;border-radius:6px;color:#334155}.dash nav .hl{background:#fde7f2;color:#bd1366;font-weight:800}.dash .home{padding:16px;font-size:15px;color:#334155}.dash .card{display:inline-block;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 6px 0 0;background:#fff}
+.console{display:grid;grid-template-columns:1fr 1fr}.console .ph{font-size:12px;font-weight:800;color:#64748b;padding:6px 14px;border-bottom:1px solid #e2e8f0;background:#f1f5f9;display:flex;justify-content:space-between}.console .left{border-right:1px solid #e2e8f0}.console .right pre{background:#f8fafc}.console .run{background:#e72281;color:#fff;border-radius:5px;padding:0 7px}
+.mark{background:#fde7f2;font-weight:800}
+.mock table{border-collapse:collapse;width:100%;font-size:15px;background:#fff}.mock td,.mock th{border:1px solid #e2e8f0;padding:6px 8px;text-align:center}.mock th{background:#f1f5f9}.mock .hl{background:#fde7f2;font-weight:800}.mock .dim{color:#94a3b8}
+@media(max-width:900px){.layout{grid-template-columns:1fr;gap:12px;padding:15px 16px 64px}.sidebar{order:0;position:sticky;top:0;z-index:10;border-radius:0;max-height:none;overflow:auto;padding:8px 0;background:#fff}.sidebar .group{display:none}.tabs{flex-direction:row;white-space:nowrap;overflow-x:auto}.tabs button{flex:none;font-size:15px}.tabs .part-heading{flex:none;margin:0 6px 0 0;white-space:nowrap;padding:9px 12px}.banner-in{flex-wrap:wrap}.panel h1{font-size:27px}}
+@media(max-width:760px){.dash,.console{grid-template-columns:1fr}.console .left{border-right:0;border-bottom:1px solid #e2e8f0}.dash nav{border-right:0;border-bottom:1px solid #e2e8f0}}
+@media(max-width:680px){body{font-size:17px}.panel table{font-size:16px}.panel th{font-size:15px}.panel h1{font-size:24px}.panel h3{font-size:20px}.codebox pre{font-size:14px;padding:15px}.flow .arrow{display:none}.flow .fstep{flex-basis:100%}}
+@media print{.sidebar,.copy{display:none}.layout{display:block}.panel[hidden]{display:block!important}.banner{background:#fff}}
+
+.shot{margin:20px 0 24px;border:1px solid var(--line);border-radius:13px;background:#fff;padding:12px}.shot img{display:block;max-width:100%;height:auto;margin:auto;border:1px solid var(--line);border-radius:8px}.shot figcaption{font-size:15px;font-weight:800;color:#40516a;margin-top:9px}.shot .cap-note{font-size:15px;color:var(--muted);margin-top:2px;line-height:1.6}
+.steps{list-style:none;counter-reset:st;padding-left:0!important;margin:16px 0}.steps li{counter-increment:st;position:relative;padding:4px 0 4px 46px;margin:10px 0}.steps li:before{content:counter(st);position:absolute;left:0;top:2px;width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;font-weight:850;font-size:15px;display:flex;align-items:center;justify-content:center}
+.file{display:inline-block;padding:9px 14px;margin:4px 6px 4px 0;background:var(--soft);border:1px solid var(--accent);border-radius:8px;text-decoration:none;color:#bd1366;font-weight:800;font-size:16px}
+.qa .codebox{margin:12px 0}
+
+.diagram{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:18px 0 22px;font:14.5px/1.7 Consolas,'JetBrains Mono',monospace;white-space:pre;overflow-x:auto;color:#1e293b}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}.cards.c3{grid-template-columns:repeat(3,minmax(0,1fr))}.card{border:1px solid var(--line);border-radius:12px;background:#fff;padding:14px 16px;font-size:16.5px;line-height:1.7}.card .h{font-weight:800;color:#bd1366;margin-bottom:6px;font-size:17px}
+.widget{border:2px solid var(--accent);border-radius:14px;margin:22px 0 26px;overflow:hidden;background:#fff}.wtitle{display:flex;align-items:center;gap:9px;padding:10px 16px;background:var(--soft);border-bottom:1px solid #fbcfe8;font-size:16px}.wtitle .dot{width:10px;height:10px;border-radius:50%;background:var(--accent)}.wtitle .tag{margin-left:auto;font-size:12px;font-weight:800;color:#bd1366;border:1px solid var(--accent);border-radius:999px;padding:1px 9px}.wbody{padding:16px 18px}
+.muted{color:var(--muted)}.scatter-wrap{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:16px;align-items:center}.legend{font-size:15px;display:flex;flex-direction:column;gap:8px}.sw{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.calc-panel,.readout{margin-top:12px;background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font:14.5px/1.8 Consolas,monospace;overflow-x:auto}.calc-panel .lab{font-weight:800;color:#334155}.hl{color:#bd1366;font-weight:800}
+.controls{display:flex;flex-wrap:wrap;gap:14px 22px;margin:12px 0}.ctrl{flex:1 1 200px;min-width:180px}.ctrl label{display:flex;justify-content:space-between;font-size:15px;font-weight:700;color:#334155}.ctrl .v{color:#bd1366;font-weight:850}.ctrl input[type=range]{width:100%;accent-color:#ff2e93}.ctrl select{width:100%;font:15px 'Pretendard',sans-serif;padding:6px 8px;border:1px solid var(--line);border-radius:8px;margin-top:4px}
+.samplebox{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:16px}
+.statrow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}.stat{border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}.stat .n{font-size:24px;font-weight:850;color:#bd1366}.stat .l{font-size:13px;color:var(--muted)}
+.chunk-list{display:flex;flex-direction:column;gap:8px}.chunk-item{border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:15.5px;background:#fff}.chunk-item mark{background:#fde7f2;color:#9d174d;border-radius:3px}.cid{display:inline-block;font-weight:850;color:#fff;background:var(--accent);border-radius:6px;padding:0 7px;margin-right:7px;font-size:13px}
+.presets{display:flex;flex-wrap:wrap;gap:8px}.preset{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 13px;font:600 14.5px 'Pretendard',sans-serif;cursor:pointer}.preset.active{background:var(--soft);border-color:var(--accent);color:#bd1366}
+.rrow{display:grid;grid-template-columns:34px minmax(0,1fr) 80px;gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin:7px 0;font-size:15.5px}.rrow.top{border-color:var(--accent);background:#fff7fb}.rrow.dim{opacity:.55}.rk{font-weight:850;color:#bd1366;text-align:center}.sc{font:700 15px Consolas,monospace;text-align:right}.bar-bg{height:7px;background:#f1f5f9;border-radius:99px;margin-top:6px}.bar{height:7px;background:var(--accent);border-radius:99px}
+.retrieved-note{margin-top:10px;background:var(--soft);border-radius:10px;padding:10px 13px;font-size:15.5px}
+.quiz{border:1px solid var(--line);border-radius:12px;padding:13px 16px;margin:12px 0;background:#fbfcff}.quiz .q{font-weight:800;font-size:17px}.opts{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}.opt{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 13px;font:600 15.5px 'Pretendard',sans-serif;cursor:pointer}.opt.correct{background:#dcfce7;border-color:#16a34a;color:#166534}.opt.wrong{background:#fee2e2;border-color:#dc2626;color:#991b1b}.exp{display:none;margin-top:9px;font-size:16px}.exp.show{display:block}
+@media(max-width:760px){.cards,.cards.c3{grid-template-columns:1fr}.scatter-wrap{grid-template-columns:1fr}.statrow{grid-template-columns:repeat(2,minmax(0,1fr))}.diagram{font-size:13px}}
+.where-bar{display:flex;flex-wrap:wrap;gap:8px 20px;background:#eef6ff;border:1px solid #bfdbfe;border-radius:10px;padding:9px 14px;margin:4px 0 14px;font-size:15.5px;color:#1e3a5f}.ask{border:1px dashed #a78bfa;background:#f5f3ff;border-radius:12px;padding:13px 17px;margin:24px 0}.ask>b:first-child{color:#6d28d9}.ask p{margin:6px 0;font-size:16.5px}</style></head><body>
+<header class="banner"><div class="banner-in"><div><div class="brand">Part A · A4-M7 · RAG Answer &amp; Operations Monitoring</div><div style="font-size:23px;font-weight:850">A4-M7 RAG 답변 품질과 운영 모니터링 · 근거성 → 인용 → 보류 → P95 → 비용 → Drift → Alert</div></div><div class="who">© 2026 부성순 · AI·클라우드 실무 과정<br/>부성순 강사(bakpak@empas.com)</div><a href="/lectures/files/index.html#section-a1" style="display:inline-block;padding:7px 11px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#bd1366;text-decoration:none;font-weight:800;white-space:nowrap">📚 강의자료 라이브러리 · Part A</a></div></header>
+<div class="layout"><aside class="sidebar"><div class="group">A4-M7 · 세부 목차</div><nav aria-label="교안 세부 목차" class="tabs" role="tablist">
+<div aria-level="2" class="part-heading" role="heading">Part 0. 시작</div>
+<button aria-controls="u00" aria-selected="true" id="tab-u00" role="tab" tabindex="0" type="button"><span>00</span>이 모듈의 질문</button>
+<button aria-controls="u01" aria-selected="false" id="tab-u01" role="tab" tabindex="-1" type="button"><span>01</span>실습 폴더·실행 순서</button>
+<div aria-level="2" class="part-heading" role="heading">Part 1. 답변 품질</div>
+<button aria-controls="u02" aria-selected="false" id="tab-u02" role="tab" tabindex="-1" type="button"><span>02</span>근거성·충실성·관련성·완전성</button>
+<button aria-controls="u03" aria-selected="false" id="tab-u03" role="tab" tabindex="-1" type="button"><span>03</span>손 답변 10개 채점</button>
+<button aria-controls="u04" aria-selected="false" id="tab-u04" role="tab" tabindex="-1" type="button"><span>04</span>Hallucination 진단</button>
+<button aria-controls="u05" aria-selected="false" id="tab-u05" role="tab" tabindex="-1" type="button"><span>05</span>Citation</button>
+<button aria-controls="u06" aria-selected="false" id="tab-u06" role="tab" tabindex="-1" type="button"><span>06</span>No-answer</button>
+<button aria-controls="u07" aria-selected="false" id="tab-u07" role="tab" tabindex="-1" type="button"><span>07</span>측정 방법·GPT 채점관</button>
+<div aria-level="2" class="part-heading" role="heading">Part 2. 실행</div>
+<button aria-controls="u08" aria-selected="false" id="tab-u08" role="tab" tabindex="-1" type="button"><span>08</span>답변 생성·운영 로그</button>
+<button aria-controls="u09" aria-selected="false" id="tab-u09" role="tab" tabindex="-1" type="button"><span>09</span>채점 결과 읽기</button>
+<div aria-level="2" class="part-heading" role="heading">Part 3. 운영</div>
+<button aria-controls="u10" aria-selected="false" id="tab-u10" role="tab" tabindex="-1" type="button"><span>10</span>Latency·P95</button>
+<button aria-controls="u11" aria-selected="false" id="tab-u11" role="tab" tabindex="-1" type="button"><span>11</span>Token·Cost</button>
+<button aria-controls="u12" aria-selected="false" id="tab-u12" role="tab" tabindex="-1" type="button"><span>12</span>Reliability</button>
+<button aria-controls="u13" aria-selected="false" id="tab-u13" role="tab" tabindex="-1" type="button"><span>13</span>Drift·기준선·회귀</button>
+<button aria-controls="u14" aria-selected="false" id="tab-u14" role="tab" tabindex="-1" type="button"><span>14</span>Alert·대시보드</button>
+<div aria-level="2" class="part-heading" role="heading">Part 4. 실습 미션</div>
+<button aria-controls="u15" aria-selected="false" id="tab-u15" role="tab" tabindex="-1" type="button"><span>15</span>미션 1~7</button>
+<div aria-level="2" class="part-heading" role="heading">Part 5. 정리</div>
+<button aria-controls="u16" aria-selected="false" id="tab-u16" role="tab" tabindex="-1" type="button"><span>16</span>에러 사전·정리</button>
+</nav></aside><main>
+<!-- 00 -->
+<section aria-labelledby="tab-u00" class="panel" id="u00" role="tabpanel"><div class="crumb">Part 0. 시작 · A4-M7</div><h1>00. 이 모듈의 질문 — “제대로 답하고, 계속 잘 돌아가는가?”</h1><p class="lead">A4-M6은 <b>검색</b>을 채점했습니다(정답 문서를 찾았나). A4-M7은 그다음 두 가지를 봅니다. <b>① 찾은 근거로 GPT가 제대로 답했나</b>(답변 품질), <b>② 실제 운영에서 빠르고, 싸고, 안 끊기고, 시간이 지나도 유지되나</b>(운영 품질).</p>
+<div class="journey"><h3>이 탭의 흐름</h3><ol><li>RAG를 다섯 층으로 나눠 보기</li><li>검색 × 답변 4가지 조합 — 가장 위험한 경우</li><li>이 모듈에서 직접 만드는 것</li></ol></div>
+<div class="flow"><div class="fstep"><b>① Data·Chunk</b><span>A4-M6</span></div><div class="arrow">→</div><div class="fstep"><b>② Retrieval</b><span>A4-M6 · Recall, MRR</span></div><div class="arrow">→</div><div class="fstep"><b>③ Answer</b><span>A4-M7 · 근거성, 인용, 보류</span></div><div class="arrow">→</div><div class="fstep"><b>④ Performance</b><span>A4-M7 · P95, 토큰, 비용, 오류</span></div><div class="arrow">→</div><div class="fstep"><b>⑤ Production</b><span>A4-M7 · 기준선, Drift, Alert</span></div></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>“답이 이상하다”는 신고 하나에도 원인은 다섯 층 어디에나 있을 수 있습니다. 문서가 빠졌을 수도(①), 검색이 엉뚱한 문서를 가져왔을 수도(②), GPT가 근거를 잘못 썼을 수도(③), 시간이 초과돼 잘린 답이 나갔을 수도(④), 지난달부터 질문 방식이 바뀌었을 수도(⑤) 있습니다. 층을 나눠 숫자로 보면 “어디를 고칠지”가 보입니다.</p></div>
+<h3>검색과 답변은 따로 채점합니다</h3>
+<div class="mock"><div class="mock-title">검색 × 답변 4가지 조합</div><table><thead><tr><th>검색</th><th>답변</th><th>뜻</th><th>고칠 곳</th></tr></thead><tbody>
+<tr><td>좋음</td><td>좋음</td><td>정상</td><td>—</td></tr>
+<tr><td>좋음</td><td>나쁨</td><td>근거는 넘겼는데 GPT가 잘못 씀</td><td>프롬프트, 근거 구성, 모델</td></tr>
+<tr class="hl"><td>나쁨</td><td>좋아 보임</td><td><b>가장 위험</b> — 잘못된 근거로 그럴듯하게 답함</td><td>검색부터 (A4-M6)</td></tr>
+<tr><td>나쁨</td><td>나쁨</td><td>검색 실패가 그대로 드러남</td><td>검색부터 (A4-M6)</td></tr></tbody></table></div>
+<div class="note"><b>“답변이 자연스럽다”는 품질 지표가 아닙니다</b><p>자연스럽지만 근거 없는 답이 가장 위험합니다. 그래서 이 모듈은 답변을 “읽어 보고 괜찮다”가 아니라 <b>근거와 대조해서 숫자로</b> 채점합니다.</p></div>
+<h3>이 모듈에서 만드는 것</h3>
+<div class="tablewrap"><table><thead><tr><th>단계</th><th>파일</th><th>하는 일</th></tr></thead><tbody>
+<tr><td>s09</td><td><code>s09_answer.py</code></td><td>질문 25개(Golden 20 + 답할 수 없는 질문 5) → 검색 → GPT 답변. 단계별 시간·토큰·비용·재시도를 한 줄씩 기록</td></tr>
+<tr><td>s10</td><td><code>s10_answer_eval.py</code></td><td>답변 채점: 근거성, 인용, 완전성, 보류 (+ 선택: GPT 채점관)</td></tr>
+<tr><td>s11</td><td><code>s11_ops_report.py</code></td><td>P50·P95·P99, 질문당 비용, 오류율, 기준선 비교, Alert</td></tr>
+<tr><td>대시보드</td><td><code>app_ops.py</code></td><td>운영 화면 8개</td></tr></tbody></table></div>
+<div class="ask"><b>🔍 스스로 찾아보기</b><p><b>GPT에게:</b> “RAG 시스템의 모니터링을 Data, Retrieval, Generation, Performance, Production 관점으로 나누어 설명해줘. 각 단계에서 장애가 발생했을 때 어떤 지표를 먼저 봐야 하는지도 사례로 설명해줘.”<br/><b>검색어:</b> <code>RAG monitoring metrics</code>, <code>RAG observability</code>, <code>production RAG monitoring</code><br/><b>확인:</b> “RAG 답변이 틀렸다”는 현상 하나만 보고 LLM 문제라고 바로 결론 내리면 안 되는 이유를 한 문장으로 써 봅니다.</p></div>
+</section>
+
+<!-- 01 -->
+<section aria-labelledby="tab-u01" class="panel" hidden="" id="u01" role="tabpanel"><div class="crumb">Part 0. 시작 · A4-M7</div><h1>01. 실습 폴더와 실행 순서</h1><p class="lead">A4-M6 폴더에 답변·운영 단계(s09~s11)와 운영 대시보드를 더한 폴더입니다. 문서 16개, Golden 20문항, 검색 코드는 A4-M6과 같습니다. A4-M6을 건너뛰었어도 이 폴더만으로 됩니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> <code>A4-M7_실습자료</code> 폴더 · VS Code 터미널</span><span><b>✅ 먼저</b> <code>pip install -r requirements.txt</code>, <code>.env</code>의 OPENAI_API_KEY</span></div>
+<pre class="diagram">A4-M7_실습자료/
+├─ docs/ data/ src/s01~s08     ← A4-M6과 같음 (s03 청킹만 다시 실행)
+├─ data/no_answer_questions.json  ← NEW 답할 수 없는 질문 5개
+├─ data/answer_samples.json       ← NEW 채점 연습용 손 답변 10개
+├─ src/config_ops.py              ← NEW 모델·K·가격·Alert 규칙
+├─ src/s09_answer.py              ← NEW 답변 생성 + 운영 로그
+├─ src/s10_answer_eval.py         ← NEW 답변 채점
+├─ src/s11_ops_report.py          ← NEW 운영 리포트·기준선·Alert
+├─ src/app_ops.py                 ← NEW 운영 대시보드
+└─ 미션_시작파일/                 ← 15탭 미션용</pre>
+<div class="codebox"><div class="codehead"><span>터미널 · 처음 한 번 전체 순서</span><button class="copy" type="button">코드 복사</button></div><pre><code>python src/s03_chunking.py                     # heading 청크 (검색 재료)
+python src/s10_answer_eval.py --samples        # 손 답변 10개 채점 — 키 없이 됨 (03탭)
+python src/s09_answer.py                       # 질문 25개 → 검색 → GPT 답변 (08탭)
+python src/s10_answer_eval.py                  # 답변 채점 (09탭)
+python src/s11_ops_report.py --save-baseline   # 운영 지표 + 기준선 저장 (10~14탭)
+streamlit run src/app_ops.py                   # 운영 대시보드</code></pre></div>
+<div class="tablewrap"><table><thead><tr><th>설정 (<code>src/config_ops.py</code>)</th><th>기본값</th><th>뜻</th></tr></thead><tbody>
+<tr><td><code>RETRIEVER</code>, <code>CHUNK_METHOD</code></td><td>Metadata+BM25, heading</td><td>A4-M6 대시보드가 추천한 조합</td></tr>
+<tr><td><code>ANSWER_K</code></td><td>5</td><td>GPT에 넘길 청크 수 (환경변수로 바꿔 실행 가능)</td></tr>
+<tr><td><code>LLM_MODEL</code></td><td>gpt-4.1-nano</td><td>답변 모델, <code>temperature=0</code></td></tr>
+<tr><td><code>PRICE</code></td><td>입력 $0.10 · 출력 $0.40 / 100만 토큰</td><td>비용 계산용. 강의 시점에 OpenAI 가격 페이지에서 확인 후 수정</td></tr>
+<tr><td><code>ALERT_ABS</code>, <code>ALERT_REL</code></td><td>14탭</td><td>Alert 규칙</td></tr></tbody></table></div>
+<div class="note"><b>키 없이 해 보기</b><p><code>.env</code>에 <code>LLM_BACKEND=fake</code>를 넣으면 GPT 대신 “1등 근거의 첫 줄을 그대로 답으로 쓰는” 흉내 함수가 돕니다. 시간·토큰도 흉내낸 값입니다. 코드 흐름과 화면 확인용이고, 품질 숫자로 쓰면 안 됩니다. 대시보드 맨 위에 경고가 뜹니다. 단, <b>검색 결과·근거 글자 수·손 답변 채점(03탭)은 키와 상관없이 실제 값</b>입니다.</p></div>
+</section>
+
+<!-- 02 -->
+<section aria-labelledby="tab-u02" class="panel" hidden="" id="u02" role="tabpanel"><div class="crumb">Part 1. 답변 품질 · A4-M7</div><h1>02. 답변 품질 4가지 — 근거성 · 충실성 · 관련성 · 완전성</h1><p class="lead">검색이 맞아도 GPT는 숫자를 바꾸거나, 의미를 과장하거나, 딴소리를 하거나, 절반만 답할 수 있습니다. 네 가지를 이 실습 문서 하나로 구분해 봅니다.</p>
+<div class="codebox"><div class="codehead"><span>근거 · docs/서울/2026_서울_공공기관_노트북전략.md 중 “제안 전략”</span><button class="copy" type="button">코드 복사</button></div><pre><code>## 제안 전략
+- 제품 코드 NB-SEOUL-26 기준 제안서 사용
+- 3년 유지보수 조건 명시
+- 대량 납품 일정과 설치 범위 명확화
+- 조달 절차에 맞춘 문서 제공</code></pre></div>
+<div class="tablewrap"><table><thead><tr><th>지표</th><th>묻는 것</th><th>실패하는 답변 예 (질문: 2026 서울 공공기관 노트북 전략은?)</th></tr></thead><tbody>
+<tr><td><b>Groundedness</b> 근거성</td><td>답의 내용이 근거 안에 실제로 있나?</td><td>“<b>5년</b> 유지보수 조건을 명시합니다.” — 근거에 없는 숫자</td></tr>
+<tr><td><b>Faithfulness</b> 충실성</td><td>근거의 의미·강도·조건을 바꾸지 않았나?</td><td>“3년 유지보수는 <b>법으로 정해진 필수</b> 조건입니다.” — ‘명시’를 ‘법적 필수’로 과장</td></tr>
+<tr><td><b>Answer Relevance</b> 관련성</td><td>물은 것에 답했나?</td><td>“서울 지역은 기업과 공공기관 고객이 모두 존재합니다.” — 사실이지만 전략이 아님</td></tr>
+<tr><td><b>Completeness</b> 완전성</td><td>핵심을 빠뜨리지 않았나?</td><td>(비교 질문에) 2026년만 설명하고 2025년은 빠뜨림</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>근거성은 “있는 걸 말했나”, 충실성은 “있는 걸 <b>그대로</b> 말했나”입니다. 3년이라는 숫자는 맞는데 ‘명시’가 ‘법적 필수’로 바뀌면 근거성은 통과, 충실성은 실패입니다. 영업 현장에서는 이런 과장이 계약 분쟁이 됩니다.</p></div>
+<div class="note"><b>용어 주의</b><p>Groundedness와 Faithfulness는 평가 도구마다 정의가 겹칩니다. Ragas는 Faithfulness를 “답의 주장이 검색 근거로 뒷받침되는가”로, Microsoft Foundry는 Groundedness를 “답이 근거와 일치하고 지어낸 것이 없는가”로 설명합니다. 이 교안에서는 위 표처럼 <b>있나(근거성) / 그대로인가(충실성)</b>로 나눠 배우되, 업계 전체의 별개 표준이라고 단정하지 않습니다.</p></div>
+<div class="ask"><b>🔍 스스로 찾아보기</b><p><b>GPT에게:</b> “Groundedness, Faithfulness, Answer Relevance, Completeness의 차이를 하나의 회사 매출 RAG 사례로 비교해줘. 같은 검색 문서를 사용하되 각 지표가 실패하는 답변 예를 각각 만들어줘.”<br/><b>검색어:</b> <code>RAG groundedness vs faithfulness</code>, <code>RAGAS faithfulness</code>, <code>RAG answer relevance</code><br/><b>확인:</b> 근거에는 “권장”인데 답변이 “필수”라고 하면 어느 지표의 실패인가?</p></div>
+</section>
+
+<!-- 03 -->
+<section aria-labelledby="tab-u03" class="panel" hidden="" id="u03" role="tabpanel"><div class="crumb">Part 1. 답변 품질 · A4-M7</div><h1>03. 손 답변 10개를 채점해 보기 (s10 --samples) — 규칙으로 잡히는 것과 안 잡히는 것</h1><p class="lead">GPT를 부르기 전에, 일부러 틀리게 만든 답변 10개로 채점기를 먼저 이해합니다. 키가 필요 없고 결과는 누구나 똑같이 나옵니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> 터미널 · <code>data/answer_samples.json</code>을 옆에 열어 두고</span><span><b>✅ 먼저</b> <code>python src/s03_chunking.py</code></span></div>
+<div class="codebox"><div class="codehead"><span>data/answer_samples.json 중 두 개</span><button class="copy" type="button">코드 복사</button></div><pre><code>{"sample_id": "S1", "query_id": "Q001", "label": "정상 답변",
+ "answer": "2026 서울 공공기관 노트북은 제품 코드 NB-SEOUL-26 기준 제안서를 사용하고 3년 유지보수 조건을 명시합니다. [SEOUL_2026_PUBLIC_NOTEBOOK] 조달 절차에 맞춘 문서를 제공합니다. [SEOUL_2026_PUBLIC_NOTEBOOK]"},
+{"sample_id": "S2", "query_id": "Q001", "label": "근거에 없는 사실(5년)",
+ "answer": "2026 서울 공공기관 노트북은 NB-SEOUL-26 기준으로 5년 유지보수 조건을 명시합니다. [SEOUL_2026_PUBLIC_NOTEBOOK] ..."}</code></pre></div>
+<div class="codebox"><div class="codehead"><span>터미널</span><button class="copy" type="button">코드 복사</button></div><pre><code>python src/s10_answer_eval.py --samples</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>실행 결과 (실제 값)</span><button class="copy" type="button">코드 복사</button></div><pre><code>샘플   의도                     판정               근거성 인용유효 인용정확 키워드  근거에없는것
+S1   정상 답변                  PASS             1     1.0     1.0     1.0
+S2   근거에 없는 사실(5년)          FAIL·근거없는사실      0     1.0     1.0     1.0    5년
+S3   의미 과장(명시→법적 필수)        PASS             1     1.0     1.0     1.0
+S4   출처 표시 없음               FAIL·출처없음        1     None    None    1.0
+S5   없는 문서를 인용              FAIL·없는출처        1     0.0     0.0     1.0
+S6   엉뚱한 문서를 인용(시장현황)       FAIL·엉뚱한출처       1     1.0     0.0     1.0
+S7   비교 질문에 한쪽만             WARN·불완전         1     1.0     1.0     0.5
+S8   답할 수 있는데 보류            FAIL·과도한보류       None  None    None    None
+S9   답할 수 없는데 지어냄           FAIL·근거없는답변      0     1.0     None    None   2027년 4년
+S10  답할 수 없어 보류             PASS             None  None    None    None</code></pre></div>
+<div class="tablewrap"><table><thead><tr><th>열</th><th>계산 방법 (<code>score_rule</code>)</th></tr></thead><tbody>
+<tr><td>근거성 <code>grounded_rule</code></td><td>답변에서 <b>제품코드</b>(NB-SEOUL-26)와 <b>숫자+단위</b>(3년, 5%)를 뽑아, 모두 근거 글에 있으면 1. “2025년” 안의 “5년”은 인정하지 않음</td></tr>
+<tr><td>인용 유효 <code>citation_valid</code></td><td>인용한 <code>[문서ID]</code> 중 실제로 GPT에 넘긴 근거에 있는 비율 (없는 문서 인용 = 지어낸 출처)</td></tr>
+<tr><td>인용 정확 <code>citation_acc</code></td><td>인용한 문서 중 Golden 정답 문서의 비율</td></tr>
+<tr><td>인용 커버리지 <code>citation_cov</code></td><td>문장 중 인용이 붙은 비율</td></tr>
+<tr><td>키워드 <code>keyword_cov</code></td><td>Golden의 기대 키워드가 답에 나온 비율 (완전성의 대용). 0.6 미만이면 WARN</td></tr>
+<tr><td>보류 <code>abstained</code></td><td>“확인할 수 없습니다”가 있나</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p><b>S3에 주목합니다.</b> “명시”를 “법으로 정해진 필수 조건, 빠지면 조달에 참여할 수 없다”로 과장했는데 <b>PASS</b>입니다. 숫자(3년)와 코드가 근거에 다 있고 출처도 맞기 때문입니다. 규칙 기반 채점은 빠르고 결과가 매번 같지만 <b>의미의 왜곡</b>은 못 잡습니다. 그 빈틈을 사람 평가나 GPT 채점관(07탭)이 메웁니다. 반대로 S2의 “5년”, S9의 “2027년·4년”처럼 숫자를 지어낸 것은 규칙이 정확히 잡아냅니다.</p></div>
+<div class="note"><b>S7은 왜 FAIL이 아니라 WARN인가</b><p>쓴 내용은 모두 맞습니다(근거성 1). 비교 질문인데 2025년 이야기가 없어 기대 키워드 2개 중 1개(NB-SEOUL-26)만 나왔습니다. 틀린 답은 아니지만 모자란 답이라 경고로 둡니다.</p></div>
+</section>
+
+<!-- 04 -->
+<section aria-labelledby="tab-u04" class="panel" hidden="" id="u04" role="tabpanel"><div class="crumb">Part 1. 답변 품질 · A4-M7</div><h1>04. Hallucination — 원인을 나눠 진단하기</h1><p class="lead">RAG를 붙였다고 지어내기가 사라지지 않습니다. 근거가 비어 있으면 GPT는 그 빈칸을 그럴듯하게 채웁니다. 원인이 넷이고, 고칠 곳이 각각 다릅니다.</p>
+<div class="tablewrap"><table><thead><tr><th>원인</th><th>이 실습의 예</th><th>고칠 곳</th></tr></thead><tbody>
+<tr><td>검색 실패</td><td>Q011 “MFP-GWANGJU-26은 …?” — 토크나이저 문제로 정답 문서가 근거에 없음 (A4-M6 09탭)</td><td>청킹, 토크나이저, 필터, K (A4-M6)</td></tr>
+<tr><td>근거 부족</td><td>정답 문서는 왔지만 필요한 섹션이 빠짐 (K가 작거나 청크가 잘림)</td><td>K, 청크 크기, 근거 구성</td></tr>
+<tr><td>생성 문제</td><td>근거에 “3년”인데 “5년”이라 답함 (S2)</td><td>프롬프트, 모델, 답변 제약</td></tr>
+<tr><td>답할 수 없는 질문</td><td>“2027년 정책은?” — 문서는 2025·2026뿐 (N01)</td><td>보류 정책 (06탭)</td></tr></tbody></table></div>
+<pre class="diagram">답변이 이상하다
+  ↓
+① 정답 문서가 GPT에 넘어갔나?        ← answer_log.jsonl 의 context_doc_ids vs relevant_doc_ids
+   ├─ 아니오 → A4-M6: 청킹·필터·BM25·K
+   └─ 예
+  ↓
+② 그 근거에 답에 필요한 정보가 있나?  ← answer_log.jsonl 의 context 를 직접 읽기
+   ├─ 아니오 → K·청크 크기·근거 구성
+   └─ 예
+  ↓
+③ GPT가 근거대로 답했나?             ← s10 판정 (근거없는사실, 엉뚱한출처 …)
+   ├─ 아니오 → 프롬프트·모델
+   └─ 예 → 정상</pre>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>이 순서가 A4-M3 12탭의 “답이 이상하면 LLM보다 넘어간 근거부터”를 절차로 만든 것입니다. s09는 질문마다 <b>넘긴 근거 전문(context)</b>을 로그에 남기므로 ①②를 눈으로 확인할 수 있습니다. s10은 답변 가능한 질문마다 <b>4분면</b>(①검색O·답변O ~ ④검색X·답변X)을 붙여 줍니다. ③번 칸 “검색X·답변O”가 0이 아니면 가장 먼저 봅니다.</p></div>
+<div class="ask"><b>🔍 스스로 찾아보기</b><p><b>GPT에게:</b> “RAG에서 hallucination이 발생하는 원인을 Retrieval 실패, Context 부족, Generation 오류, Answerability 실패로 구분해서 설명해줘. 각 원인마다 무엇을 수정해야 하는지 표로 정리해줘.”<br/><b>검색어:</b> <code>RAG hallucination causes</code>, <code>retrieval induced hallucination</code>, <code>context insufficiency RAG</code><br/><b>확인:</b> 정답 문서를 못 찾았는데 GPT가 정답처럼 보이는 문장을 만들었다면, 검색과 생성 중 어디부터 확인할까?</p></div>
+</section>
+
+<!-- 05 -->
+<section aria-labelledby="tab-u05" class="panel" hidden="" id="u05" role="tabpanel"><div class="crumb">Part 1. 답변 품질 · A4-M7</div><h1>05. Citation — 출처가 “붙어 있다”와 “맞다”는 다르다</h1><p class="lead">기업 RAG에서는 무엇을 답했는지만큼 어디를 근거로 했는지가 중요합니다. s09의 프롬프트는 문장마다 <code>[문서ID]</code>를 붙이게 하고, s10은 그 인용을 세 가지로 채점합니다.</p>
+<div class="mock"><div class="mock-title">답변 문장 → 근거 연결</div><table><tbody>
+<tr><td>답변</td><td>“제품 코드 NB-SEOUL-26 기준 제안서를 사용하고 3년 유지보수 조건을 명시합니다. <b>[SEOUL_2026_PUBLIC_NOTEBOOK]</b>”</td></tr>
+<tr><td>근거</td><td>docs/서울/2026_서울_공공기관_노트북전략.md → ## 제안 전략 → “3년 유지보수 조건 명시”</td></tr></tbody></table></div>
+<div class="tablewrap"><table><thead><tr><th>지표</th><th>확인 내용</th><th>03탭에서 실패한 샘플</th></tr></thead><tbody>
+<tr><td>인용 유효 (citation_valid)</td><td>인용한 문서가 GPT에 실제로 넘긴 근거에 있나 — 아니면 <b>지어낸 출처</b></td><td>S5 <code>[SEOUL_2026_POLICY]</code> (없는 문서)</td></tr>
+<tr><td>인용 정확 (Citation Accuracy)</td><td>인용한 문서가 그 주장의 진짜 근거인가</td><td>S6 내용은 노트북 전략인데 <code>[SEOUL_2026_MARKET]</code> 인용</td></tr>
+<tr><td>인용 커버리지 (Citation Coverage)</td><td>중요한 주장에 출처가 빠지지 않았나</td><td>S4 출처 없음</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>S6는 근거로 넘어간 문서를 인용했으니 “유효”는 1.0인데 “정확”은 0입니다. 출처 링크가 붙어 있다는 것만으로 믿을 수 있는 답이 아닙니다. 사용자가 그 링크를 눌러 원문을 확인했을 때 그 내용이 실제로 있어야 합니다. 그래서 로그에 <code>context_chunk_ids</code>(어느 문서의 몇 번째 조각인지)까지 남깁니다.</p></div>
+<div class="ask"><b>🔍 스스로 찾아보기</b><p><b>GPT에게:</b> “기업 RAG에서 Citation Accuracy와 Citation Coverage가 왜 다른지 설명해줘. 답변의 주장 5개 중 일부만 출처가 있는 예를 만들어 평가하는 방법도 보여줘.”<br/><b>검색어:</b> <code>RAG citation accuracy</code>, <code>source attribution LLM</code>, <code>RAG provenance tracking</code><br/><b>확인:</b> 출처 링크가 붙어 있다는 사실만으로 Citation Accuracy가 높다고 할 수 있을까?</p></div>
+</section>
+
+<!-- 06 -->
+<section aria-labelledby="tab-u06" class="panel" hidden="" id="u06" role="tabpanel"><div class="crumb">Part 1. 답변 품질 · A4-M7</div><h1>06. No-answer — “모른다”고 말하는 것도 품질</h1><p class="lead">좋은 RAG는 모든 질문에 억지로 답하지 않습니다. 이 실습에는 일부러 <b>답할 수 없는 질문 5개</b>를 넣었습니다.</p>
+<div class="tablewrap"><table><thead><tr><th>ID</th><th>질문 (data/no_answer_questions.json)</th><th>답할 수 없는 이유</th></tr></thead><tbody>
+<tr><td>N01</td><td>2027년 서울 공공기관 노트북 정책은?</td><td>문서는 2025·2026년만</td></tr>
+<tr><td>N02</td><td>인천 지역 시장현황을 알려줘</td><td>인천 문서 없음</td></tr>
+<tr><td>N03</td><td>NB-SEOUL-27 제품 코드를 쓰는 문서는?</td><td>없는 제품 코드</td></tr>
+<tr><td>N04</td><td>대전 기업 복합기 렌탈의 월 요금은 얼마인가?</td><td>“월 운영비 비교”만 있고 금액 없음</td></tr>
+<tr><td>N05</td><td>서울 공공기관 노트북 유지보수는 몇 년까지 연장할 수 있나?</td><td>“3년 명시”만 있고 연장 정보 없음</td></tr></tbody></table></div>
+<div class="codebox outbox"><div class="codehead"><span>N01일 때 GPT에 넘어가는 근거 (실제 검색 결과 · 1~2등만)</span><button class="copy" type="button">코드 복사</button></div><pre><code>[SEOUL_2025_PUBLIC_NOTEBOOK]   ← BM25 3.69 (1등)
+# 2025 서울 공공기관 노트북 전략
+## 대상
+서울 소재 공공기관
+## 핵심 키워드
+NB-SEOUL-25, 노트북, 공공기관, 조달, 유지보수
+
+[SEOUL_2026_PUBLIC_NOTEBOOK]   ← BM25 3.64 (2등)
+# 2026 서울 공공기관 노트북 전략
+...</code></pre></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>검색은 <b>항상 뭔가를 돌려줍니다</b>. “2027”은 어느 문서에도 없지만 “서울·공공기관·노트북”이 맞아 2025·2026 문서가 근거로 넘어갑니다. 여기서 GPT가 “2026년 기준을 이어서 2027년에도 3년 유지보수…”라고 하면 근거 없는 답입니다(03탭 S9). 프롬프트 규칙 2번 “근거로 답할 수 없으면 정확히 ‘제공된 문서에서 확인할 수 없습니다.’라고만 답한다”가 이것을 막는 장치입니다.</p></div>
+<div class="tablewrap"><table><thead><tr><th>지표</th><th>계산</th><th>나쁘면</th></tr></thead><tbody>
+<tr><td>보류 정확도 <code>abstention_accuracy</code></td><td>답할 수 없는 5개 중 보류한 비율</td><td>지어낸 답이 나감</td></tr>
+<tr><td>과도한 보류 <code>over_abstention</code></td><td>답할 수 있는 20개 중 보류한 비율</td><td>“모르겠습니다”만 하는 쓸모없는 시스템 (03탭 S8)</td></tr></tbody></table></div>
+<div class="note"><b>두 숫자를 같이 봅니다</b><p>“모르겠다”를 많이 할수록 보류 정확도는 오르지만 과도한 보류도 오릅니다. 미션 1에서 GPT를 부르기 <b>전에</b> 없는 연도·지역·제품코드를 거르는 장치를 만들면 N01·N02·N03은 확실히 보류되고, 답할 수 있는 20개는 하나도 걸리지 않습니다(실제 확인 값). N04·N05처럼 문서 범위 안이지만 내용이 없는 질문은 규칙으로 못 거르고 GPT의 판단에 맡겨야 합니다.</p></div>
+<div class="ask"><b>🔍 스스로 찾아보기</b><p><b>GPT에게:</b> “RAG가 답변을 거부해야 하는 조건을 설계해줘. 검색 score, 정답 근거 존재 여부, 질문의 시간 범위를 이용해서 Answer / No-answer를 판단하는 예를 보여줘.”<br/><b>검색어:</b> <code>RAG abstention</code>, <code>LLM answerability detection</code>, <code>selective answering LLM</code><br/><b>확인:</b> “모르겠습니다”라고 많이 답하면 무조건 안전한 RAG일까?</p></div>
+</section>
+
+<!-- 07 -->
+<section aria-labelledby="tab-u07" class="panel" hidden="" id="u07" role="tabpanel"><div class="crumb">Part 1. 답변 품질 · A4-M7</div><h1>07. 어떻게 측정하나 — 사람 · 규칙 · 정답 비교 · GPT 채점관</h1><p class="lead">지표 이름만으로는 모니터링이 안 됩니다. 누가, 무엇과 비교해서, 어떤 기준표(Rubric)로 채점하는지가 정해져야 합니다.</p>
+<div class="tablewrap"><table><thead><tr><th>방식</th><th>방법</th><th>좋은 점</th><th>주의점</th><th>이 실습</th></tr></thead><tbody>
+<tr><td>Human</td><td>사람이 질문·근거·답변을 기준표로 채점</td><td>업무 맥락 판단에 강함</td><td>시간·비용, 평가자마다 다름</td><td>미션 4 (10건 직접 채점)</td></tr>
+<tr><td>Rule-based</td><td>숫자·코드·출처·키워드 규칙</td><td>빠르고 매번 같음</td><td>의미 왜곡 못 잡음 (S3)</td><td><code>score_rule</code> — 항상 켜짐</td></tr>
+<tr><td>Reference-based</td><td>Golden 정답과 비교</td><td>정답이 명확한 업무에 유용</td><td>좋은 정답셋이 필요</td><td><code>keyword_cov</code>, <code>citation_acc</code></td></tr>
+<tr><td>LLM-as-a-Judge</td><td>채점용 GPT에 근거·답변·기준표를 주고 채점</td><td>대량 의미 평가 자동화</td><td>채점관 자체의 편향·변동을 검증해야 함</td><td><code>USE_JUDGE=1</code></td></tr></tbody></table></div>
+<div class="codebox"><div class="codehead"><span>src/s10_answer_eval.py · GPT 채점관의 기준표 (JUDGE_PROMPT)</span><button class="copy" type="button">코드 복사</button></div><pre><code>너는 RAG 답변 평가자다. [근거]와 [질문], [답변]을 보고 1~5점으로 채점한다.
+- groundedness: 답변의 모든 주장이 근거로 뒷받침되는가 (근거에 없는 사실이 있으면 낮게)
+- faithfulness: 근거의 의미·강도·조건을 바꾸지 않았는가 (권장→필수 같은 과장이 있으면 낮게)
+- relevance: 질문에 실제로 답했는가
+반드시 JSON 한 줄로만: {"groundedness": n, "faithfulness": n, "relevance": n, "reason": "한 문장"}</code></pre></div>
+<div class="codebox"><div class="codehead"><span>터미널 · 손 답변 10개를 GPT 채점관으로도 채점 (키 필요)</span><button class="copy" type="button">코드 복사</button></div><pre><code># Windows PowerShell:  $env:USE_JUDGE="1";  python src/s10_answer_eval.py --samples
+# macOS/Linux:         USE_JUDGE=1 python src/s10_answer_eval.py --samples
+# 결과: outputs/answer_eval_samples.csv 의 judge_groundedness, judge_faithfulness, judge_relevance, judge_reason 열</code></pre></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>확인할 곳은 <b>S3의 judge_faithfulness</b>입니다. 규칙이 PASS를 준 과장 답변을 채점관이 낮게 주는지 봅니다. 그리고 S1(정상)과 비교합니다. 채점관이 S1에도 낮은 점수를 준다면 채점관을 믿으면 안 된다는 뜻입니다. “채점관이 0.95를 줬다 = 품질 95%”가 아닙니다. 처음에는 <b>사람이 채점한 결과와 맞춰 보고</b> 기준표와 임계값을 고칩니다(미션 4).</p></div>
+<div class="ask"><b>🔍 스스로 찾아보기</b><p><b>GPT에게:</b> “RAG 답변 평가에서 Human Evaluation, Rule-based, LLM-as-a-Judge를 어떻게 조합하면 좋은지 설계하고 Groundedness와 Relevance Rubric 예시를 만들어줘.”<br/><b>검색어:</b> <code>RAG LLM as a judge evaluation</code>, <code>RAGAS evaluation metrics</code>, <code>RAG evaluation rubric</code><br/><b>확인:</b> 같은 답변을 채점관에게 세 번 채점시키면 점수가 매번 같을까? temperature=0이면?</p></div>
+</section>
+
+<!-- 08 -->
+<section aria-labelledby="tab-u08" class="panel" hidden="" id="u08" role="tabpanel"><div class="crumb">Part 2. 실행 · A4-M7</div><h1>08. 답변 생성과 운영 로그 (s09)</h1><p class="lead">질문 25개를 차례로 검색 → 근거 묶기 → GPT 호출합니다. 핵심은 답변 자체보다 <b>질문마다 남기는 기록 한 줄</b>입니다. 이후 모든 품질·운영 지표가 이 로그에서 나옵니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> 터미널 · <code>src/s09_answer.py</code></span><span><b>✅ 먼저</b> s03, <code>.env</code>의 OPENAI_API_KEY (또는 LLM_BACKEND=fake)</span></div>
+<div class="codebox"><div class="codehead"><span>src/s09_answer.py · 프롬프트 (PROMPT_VERSION = "v1")</span><button class="copy" type="button">코드 복사</button></div><pre><code>당신은 사내 영업 문서 도우미입니다.
+규칙:
+1. 아래 [근거]에 적힌 내용만 사용해 한국어로 짧게 답합니다.
+2. 근거로 답할 수 없으면 다른 말 없이 정확히 "제공된 문서에서 확인할 수 없습니다."라고만 답합니다.
+3. 문장마다 끝에 사용한 근거의 문서 ID를 [문서ID] 형식으로 붙입니다.
+4. 근거의 표현 강도(예: 명시, 권장)를 바꾸지 않습니다. 근거에 없는 숫자·기간·코드를 만들지 않습니다.</code></pre></div>
+<div class="tablewrap"><table><thead><tr><th>규칙</th><th>막으려는 실패</th><th>채점하는 곳</th></tr></thead><tbody>
+<tr><td>1</td><td>근거 밖 지식 사용 (Groundedness)</td><td><code>grounded_rule</code></td></tr>
+<tr><td>2</td><td>답할 수 없는데 지어냄 (No-answer)</td><td><code>abstention_accuracy</code> — 문구를 정확히 정해야 규칙으로 셀 수 있음</td></tr>
+<tr><td>3</td><td>출처 없음 (Citation)</td><td><code>citation_valid</code>, <code>citation_acc</code>, <code>citation_cov</code></td></tr>
+<tr><td>4</td><td>과장 (Faithfulness)</td><td>GPT 채점관, 사람</td></tr></tbody></table></div>
+<div class="codebox outbox"><div class="codehead"><span>Q001일 때 GPT에 넘어가는 근거 (실제 검색 결과 · Metadata+BM25 · K=5 · 459자)</span><button class="copy" type="button">코드 복사</button></div><pre><code>[SEOUL_2026_PUBLIC_NOTEBOOK]          ← 4.30
+# 2026 서울 공공기관 노트북 전략
+## 대상 / ## 핵심 키워드  NB-SEOUL-26, 노트북, 공공기관, 조달, 보안, 유지보수
+[SEOUL_2026_PUBLIC_NOTEBOOK]          ← 3.34   ## 주의 …
+[SEOUL_2026_PUBLIC_NOTEBOOK]          ← 3.27   ## 수요 특성 …
+[SEOUL_2026_PUBLIC_NOTEBOOK]          ← 2.59   ## 제안 전략  - 3년 유지보수 조건 명시 …
+[SEOUL_2026_MARKET]                   ← 1.95   ## 고객 구성 …</code></pre></div>
+<div class="codebox"><div class="codehead"><span>터미널</span><button class="copy" type="button">코드 복사</button></div><pre><code>python src/s09_answer.py</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>실행 결과 (모양 · 답변과 시간은 실행마다 다름)</span><button class="copy" type="button">코드 복사</button></div><pre><code>Q001 OK      9..ms  in  ... out  ..  2026 서울 공공기관 노트북은 NB-SEOUL-26 기준 제안서를 ...
+...
+N01  …       ...ms  in  ... out  ..  제공된 문서에서 확인할 수 없습니다.
+저장: 25건 → outputs/answer_log.jsonl, answers.csv  (backend=openai, K=5)</code></pre></div>
+<h3>로그 한 줄 (outputs/answer_log.jsonl)</h3>
+<div class="tablewrap"><table><thead><tr><th>묶음</th><th>필드</th><th>쓰는 곳</th></tr></thead><tbody>
+<tr><td>무엇으로</td><td><code>model</code>, <code>prompt_version</code>, <code>retriever</code>, <code>chunk_method</code>, <code>k</code></td><td>기준선 비교 — 무엇을 바꿨는지 기록</td></tr>
+<tr><td>질문</td><td><code>query_id</code>, <code>query_type</code>, <code>answerable</code>, <code>relevant_doc_ids</code></td><td>Drift, 보류 채점</td></tr>
+<tr><td>근거</td><td><code>context_doc_ids</code>, <code>context_chunk_ids</code>, <code>top_score</code>, <code>context</code>, <code>context_chars</code></td><td>진단 ①②, 인용 채점</td></tr>
+<tr><td>답변</td><td><code>answer</code></td><td>s10 채점</td></tr>
+<tr><td>시간</td><td><code>retrieval_ms</code>, <code>prompt_ms</code>, <code>llm_ms</code>, <code>e2e_ms</code></td><td>10탭 Latency</td></tr>
+<tr><td>토큰·비용</td><td><code>input_tokens</code>, <code>output_tokens</code>, <code>cost_usd</code></td><td>11탭 — OpenAI 응답의 <code>usage</code> 값</td></tr>
+<tr><td>안정성</td><td><code>retries</code>, <code>error</code></td><td>12탭 Reliability</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>운영 모니터링의 출발점은 대시보드가 아니라 <b>로그</b>입니다. 질문 하나가 들어왔을 때 “무엇으로(모델·프롬프트·K), 무엇을 넘겼고(근거), 무엇을 답했고, 얼마나 걸렸고, 얼마 들었고, 실패했는지”를 한 줄에 남기면, 나중에 어떤 질문이 오든 이 로그만으로 답할 수 있습니다. 실무 도구(OpenTelemetry, LangSmith 등)도 결국 이 한 줄을 모으는 일입니다.</p></div>
+</section>
+
+<!-- 09 -->
+<section aria-labelledby="tab-u09" class="panel" hidden="" id="u09" role="tabpanel"><div class="crumb">Part 2. 실행 · A4-M7</div><h1>09. 답변 채점 결과 읽기 (s10)</h1><p class="lead">03탭에서 손 답변으로 이해한 채점기를 GPT 답변 25개에 그대로 적용합니다. 결과는 모델 응답에 따라 달라지므로 아래 표를 각자 채웁니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> 터미널 → <code>outputs/answer_eval.csv</code>를 엑셀로</span><span><b>✅ 먼저</b> s09</span></div>
+<div class="codebox"><div class="codehead"><span>터미널</span><button class="copy" type="button">코드 복사</button></div><pre><code>python src/s10_answer_eval.py</code></pre></div>
+<div class="mock"><div class="mock-title">outputs/answer_quality_summary.csv — 내 결과 적기</div><table><thead><tr><th>지표</th><th>뜻</th><th>내 값</th></tr></thead><tbody>
+<tr><td>retrieval_hit</td><td>정답 문서가 근거에 들어간 비율 (20개 중)</td><td><b>0.95</b> (검색만으로 정해지는 실제 값 · Q011만 실패)</td></tr>
+<tr><td>grounded_rule</td><td>근거에 없는 숫자·코드가 없는 답 비율</td><td>___</td></tr>
+<tr><td>citation_valid / citation_acc</td><td>인용 유효 / 정확</td><td>___ / ___</td></tr>
+<tr><td>keyword_cov</td><td>완전성 대용</td><td>___</td></tr>
+<tr><td>abstention_accuracy</td><td>답할 수 없는 5개 중 보류</td><td>___</td></tr>
+<tr><td>over_abstention</td><td>답할 수 있는 20개 중 보류</td><td>___</td></tr>
+<tr><td>pass_rate</td><td>25개 중 PASS</td><td>___</td></tr></tbody></table></div>
+<div class="codebox outbox"><div class="codehead"><span>출력 끝부분 (모양)</span><button class="copy" type="button">코드 복사</button></div><pre><code>검색×답변 4분면: {'①검색O·답변O': .., '②검색O·답변X': .., '③검색X·답변O(위험)': .., '④검색X·답변X': ..}
+판정: {'PASS': .., 'WARN·불완전': .., 'FAIL·근거없는사실': .., ...}</code></pre></div>
+<h3>읽는 순서</h3>
+<ol class="steps"><li><b>③검색X·답변O</b>가 있으면 그 질문부터 엽니다. Q011이 여기 들어가면 “정답 문서 없이 그럴듯하게 답했다”는 뜻입니다.</li><li><b>FAIL·근거없는사실</b>의 <code>unsupported</code> 열을 봅니다. 어떤 숫자·코드를 지어냈는지 나옵니다.</li><li><b>N01~N05</b>의 판정을 봅니다. FAIL·근거없는답변이 있으면 06탭의 문제입니다(미션 1).</li><li><b>WARN·불완전</b>은 대부분 비교 질문(Q008, Q009, Q010 …)입니다. K=5 청크로 문서 4개를 다 담을 수 있는지 생각해 봅니다(미션 2).</li></ol>
+<div class="note"><b>fake로 돌렸다면</b><p>흉내 함수는 1등 근거의 첫 줄(예: “서울 소재 공공기관”)을 그대로 답하므로 대부분 WARN·불완전, N01~N05는 전부 FAIL·근거없는답변(보류 정확도 0.0)이 나옵니다. “보류 판단을 하지 않는 시스템”이 어떻게 보이는지 확인하는 데는 쓸 만합니다.</p></div>
+</section>
+
+<!-- 10 -->
+<section aria-labelledby="tab-u10" class="panel" hidden="" id="u10" role="tabpanel"><div class="crumb">Part 3. 운영 · A4-M7</div><h1>10. Latency — 평균 말고 P95</h1><p class="lead">“느리다”만으로는 고칠 수 없습니다. 단계별로 나누고, 평균이 아니라 느린 쪽 꼬리(P95·P99)를 봅니다.</p>
+<pre class="diagram">질문 → 검색(retrieval_ms) → 근거 묶기(prompt_ms) → GPT 생성(llm_ms) → 답변
+       └──────────────────── End-to-End (e2e_ms) ────────────────────┘</pre>
+<h3>손으로 계산해 보기 — 응답 시간 20건 (초)</h3>
+<div class="mock"><div class="mock-title">작은 순으로 정렬한 값</div><table><tbody><tr><td>1.1 · 1.2 · 1.2 · 1.3 · 1.3 · 1.3 · 1.4 · 1.4 · 1.4 · <b>1.5</b> · 1.5 · 1.5 · 1.6 · 1.6 · 1.7 · 1.8 · 1.9 · 2.1 · <b>7.8</b> · 8.4</td></tr></tbody></table></div>
+<div class="tablewrap"><table><thead><tr><th>지표</th><th>계산 (nearest-rank, <code>s11_ops_report.pct</code>)</th><th>값</th></tr></thead><tbody>
+<tr><td>평균</td><td>합 43.0 ÷ 20</td><td>2.15초</td></tr>
+<tr><td>P50 (중앙값)</td><td>20 × 0.50 = 10번째</td><td>1.5초</td></tr>
+<tr class="hl"><td>P95</td><td>20 × 0.95 = 19번째</td><td><b>7.8초</b></td></tr>
+<tr><td>P99</td><td>20 × 0.99 = 19.8 → 올림 20번째</td><td>8.4초</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>평균 2.15초면 괜찮아 보입니다. 그런데 20명 중 2명은 8초 가까이 기다렸습니다. 평균은 대부분이 빠르면 느린 소수를 가려 버립니다. 그래서 운영에서는 “<b>95%의 사용자는 이 시간 안에 받는다</b>”는 P95를 기준으로 약속(SLO)을 정합니다. 평균은 좋아졌는데 P95가 나빠졌다면 사용자 경험은 나빠진 것입니다.</p></div>
+<div class="codebox outbox"><div class="codehead"><span>s11 출력의 시간 줄 (모양)</span><button class="copy" type="button">코드 복사</button></div><pre><code>시간   검색 avg 0.3ms | LLM avg ....ms p95 ....ms | E2E avg .... p50 .... p95 .... p99 ....</code></pre></div>
+<div class="note"><b>이 실습에서 병목은 거의 항상 GPT</b><p>BM25 검색은 청크 60개라 1ms도 안 걸립니다(실제 값 약 0.3ms). 시간의 대부분은 <code>llm_ms</code>입니다. 대시보드 Latency 화면의 질문별 막대에서 확인합니다. 실무에서 문서가 수백만 개가 되면 검색·재정렬(reranking) 시간도 커지므로 단계를 나눠 기록하는 습관이 중요합니다. 스트리밍 답변이라면 첫 글자가 나올 때까지의 시간(TTFT)도 따로 봅니다.</p></div>
+<div class="ask"><b>🔍 스스로 찾아보기</b><p><b>GPT에게:</b> “RAG 응답시간을 Query processing, Retrieval, Reranking, Prompt construction, LLM generation으로 분해해줘. 평균 2초지만 P95가 8초인 경우 왜 문제인지 비전공자도 이해하게 설명해줘.”<br/><b>검색어:</b> <code>LLM latency p95 p99</code>, <code>time to first token</code>, <code>RAG latency breakdown</code><br/><b>확인:</b> 질문 25개로 구한 P99는 믿을 만한가? 몇 건쯤 모여야 의미가 있을까?</p></div>
+</section>
+
+<!-- 11 -->
+<section aria-labelledby="tab-u11" class="panel" hidden="" id="u11" role="tabpanel"><div class="crumb">Part 3. 운영 · A4-M7</div><h1>11. Token &amp; Cost — K를 늘리면 무엇이 같이 늘어나나</h1><p class="lead">RAG 비용은 임베딩, 검색 서버, 재정렬, GPT 입력·출력에서 나옵니다. 이 실습에서는 BM25라 임베딩 비용이 없고, 대부분이 <b>GPT 입력 토큰</b>입니다. 입력 토큰은 넘기는 근거의 양, 즉 K가 정합니다.</p>
+<div class="mock"><div class="mock-title">ANSWER_K별 평균 근거 글자 수 — 질문 25개 기준 (실제 값 · 검색만으로 정해짐)</div><table><thead><tr><th>ANSWER_K</th><th>평균 근거 글자 수</th><th>K=5 대비</th><th>검색 Hit (정답 문서가 근거에 있나)</th></tr></thead><tbody>
+<tr><td>3</td><td>253.6자</td><td>−40%</td><td>0.95</td></tr>
+<tr class="hl"><td>5 (기본)</td><td>421.1자</td><td>—</td><td>0.95</td></tr>
+<tr><td>10</td><td>772.3자</td><td>+83%</td><td>1.00 (Q011까지 들어옴)</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>K=10이면 Q011의 정답 문서까지 근거에 들어와 검색 Hit가 1.0이 됩니다. 대신 넘기는 글이 83% 늘어 입력 토큰과 비용, GPT 시간이 같이 늘고, 상관없는 근거가 섞여 GPT가 헷갈릴 수도 있습니다. A4-M6에서 “Recall이 가장 높은 K가 최적 K는 아니다”라고 한 것이 여기서 <b>돈과 시간</b>으로 보입니다. 미션 2에서 직접 비교합니다.</p></div>
+<h3>비용 계산 — 직접 해 보기</h3>
+<div class="codebox"><div class="codehead"><span>src/s09_answer.py · cost_usd</span><button class="copy" type="button">코드 복사</button></div><pre><code>비용($) = (입력 토큰 × 입력 단가 + 출력 토큰 × 출력 단가) ÷ 1,000,000
+
+예) 입력 700, 출력 60 토큰, gpt-4.1-nano ($0.10 / $0.40)
+  = (700 × 0.10 + 60 × 0.40) ÷ 1,000,000
+  = 0.000094 달러 / 질문
+  → 1,000건이면 0.094달러 ≈ 132원 (1달러 1,400원 가정)</code></pre></div>
+<div class="tablewrap"><table><thead><tr><th>볼 것</th><th>왜</th><th>s11 지표</th></tr></thead><tbody>
+<tr><td>Context 크기</td><td>근거를 너무 많이 넘기지 않나</td><td><code>avg_context_chars</code></td></tr>
+<tr><td>입력 토큰</td><td>근거 + 프롬프트 길이</td><td><code>avg_input_tokens</code></td></tr>
+<tr><td>출력 토큰</td><td>답이 필요 이상으로 길지 않나 (출력 단가가 4배)</td><td><code>avg_output_tokens</code></td></tr>
+<tr><td>질문당 비용</td><td>서비스 단위 경제성</td><td><code>cost_per_q_usd</code>, <code>cost_per_1000q_krw</code></td></tr>
+<tr><td>임베딩 호출 수</td><td>같은 문서를 반복 임베딩하지 않나</td><td>A4-M6 임베딩 캐시</td></tr></tbody></table></div>
+<div class="note"><b>토큰 수는 OpenAI 응답의 usage에서</b><p>글자 수로 토큰을 어림하지 않고, 응답에 들어 있는 <code>usage.prompt_tokens</code>, <code>usage.completion_tokens</code>를 그대로 기록합니다. 청구서와 같은 숫자입니다. 가격은 바뀌므로 <code>config_ops.PRICE</code>는 강의 시점에 다시 확인합니다.</p></div>
+<div class="ask"><b>🔍 스스로 찾아보기</b><p><b>GPT에게:</b> “RAG에서 K=3을 K=10으로 늘렸을 때 Recall, Context Size, Input Token, Latency, 비용이 어떻게 달라질 수 있는지 예시 숫자로 설명하고, 품질과 비용의 균형점을 찾는 방법을 알려줘.”<br/><b>검색어:</b> <code>RAG token cost optimization</code>, <code>top k context size RAG</code><br/><b>확인:</b> 하루 질문 2만 건이면 K=5와 K=10의 월 비용 차이는? 내 s11 결과로 계산해 봅니다.</p></div>
+</section>
+
+<!-- 12 -->
+<section aria-labelledby="tab-u12" class="panel" hidden="" id="u12" role="tabpanel"><div class="crumb">Part 3. 운영 · A4-M7</div><h1>12. Reliability — 재시도와 오류율</h1><p class="lead">정확해도 자주 끊기면 운영할 수 없습니다. s09는 GPT 호출이 실패하면 1초 → 2초 → 4초 쉬며 최대 3번 시도하고, 그 횟수를 기록합니다.</p>
+<div class="codebox"><div class="codehead"><span>src/s09_answer.py · call_llm (핵심)</span><button class="copy" type="button">코드 복사</button></div><pre><code>for attempt in range(MAX_RETRIES):          # 최대 3번
+    try:
+        ans, i, o = _openai(messages)
+        return ans, i, o, ms, retries, None   # 성공
+    except Exception as e:                    # Timeout · Rate limit · 서버 오류
+        last_err = f"{type(e).__name__}: {e}"
+        retries += 1
+        time.sleep(2 ** attempt)              # 1초, 2초, 4초 — exponential backoff
+return "", 0, 0, 0.0, retries, last_err       # 끝내 실패 → error 기록</code></pre></div>
+<div class="tablewrap"><table><thead><tr><th>지표</th><th>계산</th><th>읽는 법</th></tr></thead><tbody>
+<tr><td>Error Rate</td><td>끝내 실패한 요청 ÷ 전체</td><td>사용자가 실제로 받은 실패</td></tr>
+<tr><td>Retry Rate</td><td>재시도가 1번이라도 있었던 요청 ÷ 전체</td><td>숨은 불안정. 오르면 곧 오류율도 오를 신호</td></tr>
+<tr><td>Recovery Rate</td><td>재시도한 요청 중 결국 성공한 비율</td><td>재시도 정책이 효과가 있나</td></tr></tbody></table></div>
+<div class="tablewrap"><table><thead><tr><th>오류 유형</th><th>예</th><th>재시도?</th></tr></thead><tbody>
+<tr><td>일시적</td><td>Timeout, 429 Rate limit, 500·503</td><td>예 — 쉬었다가 다시</td></tr>
+<tr><td>구조적</td><td>401 키 오류, 400 잘못된 요청, 모델 이름 오타, 근거가 너무 길어 한도 초과</td><td>아니오 — 몇 번 해도 같음. 즉시 알리고 고침</td></tr>
+<tr><td>검색 쪽</td><td>OpenSearch timeout, 인덱스 없음 (A4-M5)</td><td>timeout만 재시도</td></tr>
+<tr><td>앱 쪽</td><td>JSON 파싱 실패, 빈 값</td><td>아니오 — 코드 수정</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>재시도율이 갑자기 올랐는데 오류율은 그대로라면 “괜찮다”가 아니라 “<b>재시도가 막아 주고 있다</b>”입니다. 사용자는 실패를 못 봤지만 그만큼 기다렸습니다(P95 상승). 그리고 지금은 재시도로 막아도 조금 더 나빠지면 오류로 넘어옵니다. 실습 코드는 단순하게 모든 오류를 재시도하지만, 실무에서는 401·400처럼 구조적 오류는 바로 멈추게 나눕니다.</p></div>
+<div class="ask"><b>🔍 스스로 찾아보기</b><p><b>GPT에게:</b> “운영 RAG에서 Embedding API, Vector DB, LLM API, Application 각각에서 발생할 수 있는 오류를 분류하고, Retry가 필요한 오류와 Retry하면 안 되는 오류를 구분해줘.”<br/><b>검색어:</b> <code>LLM API retry rate limit</code>, <code>exponential backoff</code>, <code>OpenAI error codes</code><br/><b>확인:</b> <code>call_llm</code>을 고쳐 401(AuthenticationError)은 재시도하지 않게 하려면 어디를 바꾸나?</p></div>
+</section>
+
+<!-- 13 -->
+<section aria-labelledby="tab-u13" class="panel" hidden="" id="u13" role="tabpanel"><div class="crumb">Part 3. 운영 · A4-M7</div><h1>13. Drift · 기준선 · 회귀 테스트 — 아무것도 안 바꿨는데 나빠질 때</h1><p class="lead">문서와 사용자 질문은 시간이 지나면 바뀝니다. 그래서 초기 점수를 <b>기준선</b>으로 저장해 두고, 무엇을 바꿀 때마다 같은 질문으로 다시 채점해 비교합니다.</p>
+<div class="tablewrap"><table><thead><tr><th>Drift</th><th>예</th><th>볼 지표</th></tr></thead><tbody>
+<tr><td>Document Drift</td><td>2027년 문서가 추가돼 2026년판과 경쟁</td><td>문서 수, Recall, MRR</td></tr>
+<tr><td>Query Drift</td><td>코드(NB-SEOUL-26)로 묻다가 자연어로 묻기 시작</td><td>질문 유형 분포, 유형별 Hit</td></tr>
+<tr><td>Retrieval Drift</td><td>Golden 정답 순위가 서서히 하락</td><td>Recall@K, MRR, nDCG</td></tr>
+<tr><td>Answer Drift</td><td>모델·프롬프트 변경 후 근거성 하락</td><td>grounded_rule, judge 점수</td></tr></tbody></table></div>
+<h3>Query Drift 실제로 보기 — 미션 6의 질문 4개</h3>
+<div class="mock"><div class="mock-title">연도·코드 없이 자연어로 물었을 때 1등 근거 (실제 검색 결과)</div><table><thead><tr><th>질문</th><th>정답</th><th>1등으로 온 문서</th></tr></thead><tbody>
+<tr class="hl"><td>서울 공공기관에 노트북 팔 때 뭐가 중요해?</td><td>SEOUL_2026_…</td><td>SEOUL_<b>2025</b>_PUBLIC_NOTEBOOK</td></tr>
+<tr class="hl"><td>부산 공공기관 노트북 제안할 때 챙길 것</td><td>BUSAN_2026_…</td><td>BUSAN_<b>2025</b>_PUBLIC_NOTEBOOK</td></tr>
+<tr><td>광주 기업한테 복합기 렌탈 제안 포인트</td><td>GWANGJU_2026_CORP_MFP</td><td>GWANGJU_2026_CORP_MFP</td></tr>
+<tr class="hl"><td>대전 공공기관 노트북 올해 전략</td><td>DAEJEON_2026_…</td><td>DAEJEON_<b>2025</b>_PUBLIC_NOTEBOOK</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>정답 문서는 K=5 안에 들어오니 검색 Hit는 그대로 좋습니다. 그런데 4개 중 3개에서 <b>작년 문서가 1등</b>입니다. 연도를 안 말하니 필터가 안 걸리고, 2025년판과 2026년판 문장이 거의 같기 때문입니다(A4-M6 01탭). GPT가 1등 근거 위주로 답하면 <b>작년 전략을 올해 전략처럼</b> 말하게 됩니다. 코드는 하나도 안 바뀌었는데 질문 방식이 바뀌어 품질이 떨어지는 것, 이것이 Query Drift입니다. 그래서 질문 유형 분포(<code>query_type_mix.csv</code>)도 운영 지표입니다.</p></div>
+<h3>기준선과 회귀 테스트</h3>
+<pre class="diagram">측정 → 기준선 저장(--save-baseline) → 변경(K·프롬프트·모델·문서) → 같은 질문 25개로 재실행
+     → 기준선과 비교 → 나빠졌나? → 원인 분석 → 개선 → 다시 측정</pre>
+<div class="codebox"><div class="codehead"><span>터미널 · K를 10으로 바꿔 회귀 테스트 (기준선은 K=5로 저장해 둔 상태)</span><button class="copy" type="button">코드 복사</button></div><pre><code># Windows PowerShell:  $env:ANSWER_K="10"   (끝나면  Remove-Item Env:ANSWER_K)
+# macOS/Linux:         export ANSWER_K=10   (끝나면  unset ANSWER_K)
+python src/s09_answer.py
+python src/s10_answer_eval.py
+python src/s11_ops_report.py          # --save-baseline 없이 → 기준선과 비교</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>출력 끝부분 (모양 — fake로 확인한 예. 실제 토큰·비용 숫자는 각자 다름)</span><button class="copy" type="button">코드 복사</button></div><pre><code>기준선 대비:
+  retrieval_hit      0.95 → 1.0
+  avg_input_tokens   688.0 → 1068.5
+  cost_per_q_usd     8.616e-05 → 0.0001242
+  ...
+Alert ..건:
+  [기준선대비] avg_input_tokens = 1068.5  (규칙 +30% 넘게 변화 (+55%))
+  [기준선대비] cost_per_q_usd = 0.0001242  (규칙 +30% 넘게 변화 (+44%))</code></pre></div>
+<div class="note"><b>Golden Dataset도 고정된 시험지가 아닙니다</b><p>실제 질문 방식이 바뀌면(자연어, “올해”, 새 지역) Golden에도 그런 질문을 추가합니다. A4-M6 미션 4와 이 모듈 미션 6이 그 연습입니다.</p></div>
+<div class="ask"><b>🔍 스스로 찾아보기</b><p><b>GPT에게:</b> “Document Drift, Query Drift, Retrieval Drift, Answer Drift를 매출 RAG 사례로 설명하고, 각 Drift를 감지하려면 어떤 데이터를 매일 또는 매주 저장해야 하는지 알려줘.”<br/><b>검색어:</b> <code>RAG regression testing</code>, <code>query drift LLM</code>, <code>RAG evaluation baseline</code><br/><b>확인:</b> 코드를 전혀 안 바꿨는데 Recall@3가 0.92에서 0.75로 떨어질 수 있는 이유는?</p></div>
+</section>
+
+<!-- 14 -->
+<section aria-labelledby="tab-u14" class="panel" hidden="" id="u14" role="tabpanel"><div class="crumb">Part 3. 운영 · A4-M7</div><h1>14. Alert와 운영 대시보드 (s11 · app_ops.py)</h1><p class="lead">사람이 매일 화면을 들여다볼 수는 없습니다. 기준을 벗어나면 먼저 알려 주는 Alert를 두 종류로 겁니다.</p>
+<div class="codebox"><div class="codehead"><span>src/config_ops.py · Alert 규칙</span><button class="copy" type="button">코드 복사</button></div><pre><code># 절대 기준 (서비스 요구사항) — 업계 표준값이 아니라 이 실습용 예시
+ALERT_ABS = {
+    "retrieval_hit":        (">=", 0.90),
+    "grounded_rule":        (">=", 0.90),
+    "citation_valid":       (">=", 0.95),
+    "abstention_accuracy":  (">=", 0.80),
+    "e2e_p95_ms":           ("<=", 5000),
+    "error_rate":           ("<=", 0.02),
+}
+# 기준선 대비 — 기준선보다 이만큼 나빠지면
+ALERT_REL = {
+    "avg_input_tokens": ("up", 0.30),   "cost_per_q_usd": ("up", 0.30),
+    "e2e_p95_ms":       ("up", 0.50),   "grounded_rule":  ("down", 0.05),
+    "retrieval_hit":    ("down", 0.05),
+}</code></pre></div>
+<div class="tablewrap"><table><thead><tr><th>종류</th><th>잡는 것</th><th>놓치는 것</th></tr></thead><tbody>
+<tr><td>절대 기준</td><td>“이 선 아래면 서비스 불가” — 명확한 약속</td><td>기준 안에서 서서히 나빠지는 것 (0.98 → 0.92도 통과)</td></tr>
+<tr><td>기준선 대비</td><td>갑작스러운 변화 — K를 바꿨더니 토큰 +55%</td><td>기준선 자체가 나빴던 경우, 매주 조금씩 나빠지는 것</td></tr>
+<tr><td>(추세 — 실무)</td><td>“MRR이 4주 연속 하락”</td><td>매주 결과를 쌓아야 함 (이 실습은 한 번 실행 기준)</td></tr></tbody></table></div>
+<div class="codebox"><div class="codehead"><span>터미널</span><button class="copy" type="button">코드 복사</button></div><pre><code>python src/s11_ops_report.py --save-baseline    # 처음 한 번
+streamlit run src/app_ops.py</code></pre></div>
+<div class="tablewrap"><table><thead><tr><th>화면</th><th>보는 것</th></tr></thead><tbody>
+<tr><td>Overview</td><td>핵심 숫자 6개(검색 Hit, 근거성, 보류 정확도, E2E P95, 질문당 비용, 오류율) + 기준선 대비 변화 + Alert</td></tr>
+<tr><td>Answer Quality</td><td>판정 분포, 검색×답변 4분면</td></tr>
+<tr><td>Latency</td><td>단계별 avg·P50·P95·P99, 질문별 단계 막대</td></tr>
+<tr><td>Token·Cost</td><td>평균 근거 글자·입력·출력 토큰, 1,000건당 원화</td></tr>
+<tr><td>Reliability</td><td>오류율·재시도율·복구율, 재시도한 질문 목록</td></tr>
+<tr><td>Drift·Mix</td><td>질문 유형 분포, 기준선 vs 현재 표</td></tr>
+<tr><td>Failures</td><td>PASS가 아닌 질문을 골라 질문·정답 문서·넘긴 근거·답변을 한 화면에 (04탭 진단 ①②③)</td></tr>
+<tr><td>Alerts</td><td>규칙과 걸린 지표</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>첫 화면에 지표 30개를 똑같은 크기로 늘어놓으면 아무것도 안 보입니다. 첫 화면은 <b>층마다 하나씩</b>(검색·답변·보류·속도·비용·안정성)과 Alert만, 나머지는 눌러서 들어가게(drill-down) 둡니다. 그리고 Failures 화면이 가장 자주 쓰입니다. 숫자가 나빠졌을 때 결국 사람이 “어떤 질문에 무엇을 넘겼고 무엇을 답했나”를 읽어야 원인이 보이기 때문입니다.</p></div>
+<div class="ask"><b>🔍 스스로 찾아보기</b><p><b>GPT에게:</b> “기업용 RAG Monitoring Dashboard를 설계해줘. Data Health, Retrieval, Answer Quality, Performance, Cost, Reliability, Drift, Alert를 화면 영역으로 나누고 각 영역에 KPI와 Drill-down 항목을 배치해줘.”<br/><b>검색어:</b> <code>RAG observability dashboard</code>, <code>SLO SLI LLM applications</code>, <code>OpenTelemetry GenAI</code><br/><b>확인:</b> Recall@3 &lt; 0.80 같은 고정 기준만 쓰면 어떤 문제를 놓칠까?</p></div>
+</section>
+
+<!-- 15 -->
+<section aria-labelledby="tab-u15" class="panel" hidden="" id="u15" role="tabpanel"><div class="crumb">Part 4. 실습 미션 · A4-M7</div><h1>15. 실습 미션 — 바꾸고, 다시 돌리고, 기준선과 비교하기</h1><p class="lead">모든 미션은 같은 순서입니다. <b>기준선 저장 → 하나만 바꾸기 → s09·s10·s11 → 기준선과 비교 → Alert 확인 → 되돌리기</b>. 미션 시작 전에 <code>python src/s11_ops_report.py --save-baseline</code>이 되어 있어야 합니다.</p>
+<div class="tablewrap"><table><thead><tr><th>미션</th><th>바꿀 것</th><th>다시 돌릴 단계</th><th>완료 기준</th></tr></thead><tbody>
+<tr><td>1</td><td>범위 밖 질문 가드 (s09)</td><td>s09 → s11</td><td>N01·N02·N03 보류, 과도한 보류 0</td></tr>
+<tr><td>2</td><td>ANSWER_K 3 · 5 · 10</td><td>s09 → s11 (세 번)</td><td>비교표와 고른 K의 근거</td></tr>
+<tr><td>3</td><td>프롬프트 v2 (보류 규칙 삭제) — 키 필요</td><td>s09 → s11</td><td>보류 정확도 변화와 Alert</td></tr>
+<tr><td>4</td><td>사람 채점 vs 규칙 vs GPT 채점관</td><td>s10 --samples</td><td>세 채점이 갈리는 샘플과 이유</td></tr>
+<tr><td>5</td><td>Alert 규칙 조정</td><td>s11만</td><td>규칙 2개 바꾸고 결과 설명</td></tr>
+<tr><td>6</td><td>질문 분포 변화 (Query Drift)</td><td>s09 → s11</td><td>1등이 2025년판인 질문 찾기, 대책 1개</td></tr>
+<tr><td>7</td><td>(도전) 운영 리포트 쓰기</td><td>—</td><td>GPT에게 ops_metrics.json을 주고 리포트 → 숫자 검증</td></tr></tbody></table></div>
+
+<h3>미션 1 · LLM을 부르기 전에 걸러내기</h3>
+<ol class="steps"><li><code>미션_시작파일/미션1_범위밖_가드.py</code>의 코드를 <code>src/s09_answer.py</code>의 <code>retrieve</code> 함수 바로 위에 붙이고 빈칸 두 곳을 채웁니다.</li><li><code>run()</code> 안에서 <code>call_llm</code>을 부르는 줄을 아래처럼 바꿉니다.</li><li>s09 → s10 → s11 실행, 기준선과 비교.</li></ol>
+<div class="codebox"><div class="codehead"><span>src/s09_answer.py · run() 안</span><button class="copy" type="button">코드 복사</button></div><pre><code>        reason = pre_check(q["question"])
+        if reason:                                   # 범위 밖 → GPT 호출 없이 보류
+            ans, i, o, llm_ms, retries, err = NO_ANSWER_TEXT, 0, 0, 0.0, 0, None
+            print("  가드:", q["query_id"], reason)
+        else:
+            ans, i, o, llm_ms, retries, err = call_llm(messages, rng)</code></pre></div>
+<details class="qa"><summary>정답과 결과 (실제 값)</summary><p>빈칸: <code>KNOWN_YEARS</code>, <code>KNOWN_CODES</code>.</p><div class="codebox outbox"><div class="codehead"><span>s09 출력 중</span><button class="copy" type="button">코드 복사</button></div><pre><code>  가드: N01 없는 연도 2027
+  가드: N02 없는 지역 인천
+  가드: N03 없는 제품코드 NB-SEOUL-27</code></pre></div><p>Golden 20문항은 하나도 걸리지 않습니다(과도한 보류 0). 걸린 3건은 GPT를 부르지 않으니 <b>비용 0, 시간 0, 지어낼 기회 0</b>입니다. fake로 돌리면 보류 정확도가 0.0 → 0.6이 됩니다. N04(월 요금)·N05(연장 기간)는 문서 범위 안의 질문이라 규칙으로 못 거르고, 프롬프트 규칙 2번과 GPT의 판단에 맡겨집니다. 실제 GPT로 돌려 N04·N05를 보류하는지 확인합니다.</p></details>
+
+<h3>미션 2 · K 고르기 — 품질 · 비용 · 시간</h3>
+<ol class="steps"><li><code>ANSWER_K</code>를 3, 5, 10으로 바꿔 가며 s09 → s10 → s11 (13탭 명령).</li><li><code>미션_시작파일/미션2_K_비교표.csv</code>를 채웁니다(근거 글자 수는 이미 채워 둠).</li><li>내 서비스라면 어느 K를 쓸지 한 문장으로.</li></ol>
+<details class="qa"><summary>확인 포인트</summary><p>검색만으로 정해지는 값: 근거 글자 수 253.6 / 421.1 / 772.3자, 검색 Hit 0.95 / 0.95 / 1.00. 나머지(토큰·비용·근거성·완전성·P95)는 각자 결과입니다. K=10에서 Q011이 맞는지, 비교 질문(Q009·Q016·Q020, 정답 문서 4개)의 WARN·불완전이 줄었는지, 대신 입력 토큰이 기준선 대비 Alert(+30%)를 넘는지 봅니다. 정답은 하나가 아니라 <b>숫자를 근거로 고르는 것</b>이 목표입니다.</p></details>
+
+<h3>미션 3 · 프롬프트 한 줄의 힘 (키 필요)</h3>
+<ol class="steps"><li>v1으로 기준선이 저장된 상태에서 <code>PROMPT_VERSION = "v2"</code>, 규칙 2번 줄을 지웁니다.</li><li>s09 → s10 → s11. 보류 정확도, 근거성, Alert를 봅니다.</li><li>끝나면 v1으로 되돌립니다.</li></ol>
+<details class="qa"><summary>확인 포인트</summary><p>규칙 2번이 없으면 보류 문구가 제각각(“정보가 없습니다”, “알 수 없습니다” …)이 되거나, 2026년 내용을 2027년에 그대로 적용해 답할 수 있습니다. 보류를 규칙으로 세려면 <b>문구를 정확히 고정</b>해야 한다는 것도 확인합니다. 로그의 <code>prompt_version</code> 덕분에 어느 버전의 결과인지 섞이지 않습니다.</p></details>
+
+<h3>미션 4 · 세 가지 채점 비교</h3>
+<ol class="steps"><li><code>data/answer_samples.json</code>의 10개를 직접 읽고 PASS/FAIL을 먼저 적습니다(사람 채점).</li><li>03탭의 규칙 채점 결과와 비교합니다.</li><li>키가 있으면 <code>USE_JUDGE=1</code>로 GPT 채점관 결과도 받습니다(07탭).</li></ol>
+<details class="qa"><summary>확인 포인트</summary><p>가장 크게 갈리는 것은 S3(의미 과장)입니다. 사람은 FAIL, 규칙은 PASS, 채점관은 faithfulness를 낮게 줄 것으로 기대합니다. 채점관이 S1(정상)에 낮은 점수를 주거나 S3를 놓치면 기준표(JUDGE_PROMPT)를 고칩니다. “자동 채점은 사람 표본으로 보정한다”의 실습입니다.</p></details>
+
+<h3>미션 5 · Alert 규칙 정하기</h3>
+<ol class="steps"><li><code>config_ops.py</code>에서 <code>e2e_p95_ms</code> 절대 기준을 3000으로 바꿉니다.</li><li><code>ALERT_REL</code>에 <code>"keyword_cov": ("down", 0.10)</code>을 추가합니다.</li><li><code>python src/s11_ops_report.py</code>만 다시 실행 (s09·s10 불필요 — 로그는 그대로).</li></ol>
+<details class="qa"><summary>확인 포인트</summary><p>Alert 규칙은 이미 쌓인 로그에 다시 적용할 수 있어서 s11만 돌리면 됩니다(A4-M6의 “K만 바꾸면 평가만 다시”와 같은 원리). 절대 기준이 너무 빡빡하면 매번 울려서 아무도 안 보게 되고(Alert 피로), 너무 느슨하면 아무것도 못 잡습니다. 기준은 <b>내 기준선 + 서비스 약속</b>으로 정합니다.</p></details>
+
+<h3>미션 6 · 질문 분포가 바뀌면</h3>
+<div class="codebox"><div class="codehead"><span>터미널 · 자연어 질문 4개를 더해 실행</span><button class="copy" type="button">코드 복사</button></div><pre><code># Windows PowerShell:  $env:EXTRA_QUESTIONS="미션_시작파일/미션6_질문분포_변화.json"
+# macOS/Linux:         export EXTRA_QUESTIONS=미션_시작파일/미션6_질문분포_변화.json
+python src/s09_answer.py
+python src/s10_answer_eval.py
+python src/s11_ops_report.py</code></pre></div>
+<details class="qa"><summary>확인 포인트</summary><p><code>query_type_mix.csv</code>에서 semantic 비율이 늘어난 것(질문 29개 중 9개, 0.31)을 확인합니다. 대시보드 Failures에서 D01·D02·D04를 열어 <b>1등 근거가 2025년판</b>인 것(13탭 표)과, GPT 답이 2025년 코드(NB-SEOUL-25 등)를 말하는지 봅니다. 대책 예: “연도가 없으면 최신 연도를 기본 필터로”, “올해 → 2026으로 바꿔 필터”, Golden에 자연어 질문 추가.</p></details>
+
+<h3>미션 7 · (도전) GPT로 운영 리포트 만들기</h3>
+<ol class="steps"><li><code>outputs/ops_metrics.json</code>, <code>alerts.csv</code>, <code>baseline.json</code> 내용을 GPT에 주고 “이번 주 RAG 운영 리포트(요약·문제·원인 후보·조치)”를 요청합니다.</li><li>리포트의 숫자를 원본 파일과 하나씩 대조합니다.</li></ol>
+<details class="qa"><summary>확인 포인트</summary><p>리포트를 쓰는 GPT도 근거(지표 파일)에 없는 숫자를 만들 수 있습니다. 이 모듈의 채점 관점(근거성·인용)을 리포트에도 그대로 적용해 봅니다. A4-M2 11탭의 “GPT 답은 실행해서 숫자로 확인”과 같은 습관입니다.</p></details>
+</section>
+
+<!-- 16 -->
+<section aria-labelledby="tab-u16" class="panel" hidden="" id="u16" role="tabpanel"><div class="crumb">Part 5. 정리 · A4-M7</div><h1>16. 에러 사전과 정리</h1>
+<div class="tablewrap"><table><thead><tr><th>메시지에 보이면</th><th>원인</th><th>할 일</th></tr></thead><tbody>
+<tr><td><code>FileNotFoundError: outputs/chunks_heading.json</code></td><td>s03을 안 돌림</td><td><code>python src/s03_chunking.py</code></td></tr>
+<tr><td><code>FileNotFoundError: answer_log.jsonl</code> / <code>answer_eval.csv</code></td><td>s09 / s10을 안 돌림</td><td>s09 → s10 → s11 순서</td></tr>
+<tr><td>s09에서 전부 <code>ERR</code>, <code>AuthenticationError</code></td><td>키 없음·오타 (재시도해도 안 됨)</td><td><code>.env</code> 확인, 또는 <code>LLM_BACKEND=fake</code></td></tr>
+<tr><td><code>RateLimitError</code>가 섞임</td><td>요청이 몰림</td><td>재시도가 처리. 계속되면 잠시 후 다시</td></tr>
+<tr><td><code>model_not_found</code></td><td>모델 이름 오타·권한</td><td><code>config_ops.LLM_MODEL</code></td></tr>
+<tr><td>s11 비교가 안 나옴</td><td>기준선 없음</td><td><code>--save-baseline</code> 한 번</td></tr>
+<tr><td>대시보드 상단 노란 경고</td><td>fake 결과</td><td>키를 넣고 s09부터</td></tr>
+<tr><td>환경변수 바꿨는데 그대로</td><td>PowerShell은 <code>$env:이름="값"</code>, 창마다 따로</td><td>같은 터미널에서 실행, 끝나면 지우기</td></tr></tbody></table></div>
+<h3>오류 없이 틀리는 실수</h3>
+<div class="task"><h4>점검 습관</h4><ol><li>① <b>기준선을 바꾼 뒤에 저장</b> → 비교 대상이 사라짐. 변경 전에 저장.</li><li>② <b>두 개를 동시에 바꿈</b>(K와 프롬프트) → 무엇 때문에 좋아졌는지 모름.</li><li>③ <b>fake 결과로 품질 판단</b> → 대시보드 경고 확인.</li><li>④ <b>평균만 봄</b> → P95, 실패 질문 목록, 4분면 ③번 칸을 같이.</li><li>⑤ <b>“자연스럽다 = 좋다”</b> → 근거와 대조한 숫자로만 판단.</li><li>⑥ <b>보류 정확도만 올림</b> → 과도한 보류(over_abstention)가 같이 오르는지.</li></ol></div>
+<h3>A4-M6과 A4-M7</h3>
+<div class="tablewrap"><table><thead><tr><th></th><th>A4-M6 Data &amp; Retrieval</th><th>A4-M7 Answer &amp; Operations</th></tr></thead><tbody>
+<tr><td>핵심 질문</td><td>좋은 데이터로 필요한 근거를 찾는가?</td><td>찾은 근거로 제대로 답하고, 운영에서도 안정적인가?</td></tr>
+<tr><td>지표</td><td>Precision·Recall·Hit·MRR·nDCG, 청크 통계</td><td>근거성·충실성·인용·보류, P95, 토큰·비용, 오류율, Drift, Alert</td></tr>
+<tr><td>정답지</td><td>Golden 20문항</td><td>Golden 20 + 답할 수 없는 질문 5 + 손 답변 10</td></tr>
+<tr><td>화면</td><td><code>app_dashboard.py</code></td><td><code>app_ops.py</code></td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>좋은 RAG는 “답이 그럴듯한 시스템”이 아니라 <b>검색과 답변을 각각 숫자로 잴 수 있고, 실패 원인을 추적할 수 있고, 시간이 지나도 나빠지지 않았는지 확인할 수 있는 시스템</b>입니다. 사용자가 “답이 이상하다”고 하면 Data → Retrieval → Answer → Operations 순서로, 각 층의 숫자와 로그를 따라 내려갑니다.</p></div>
+<h3>완료 체크</h3>
+<div class="task"><h4>할 수 있나요</h4><ol><li>□ 근거성과 충실성의 차이를 이 실습 문서로 예를 들어 말할 수 있다.</li><li>□ 손 답변 10개 채점에서 규칙이 놓친 것(S3)과 이유를 설명할 수 있다.</li><li>□ 답이 이상할 때 확인 순서 ①②③을 로그로 따라갈 수 있다.</li><li>□ 응답 시간 목록에서 P50·P95를 손으로 구할 수 있다.</li><li>□ 입력·출력 토큰으로 질문당 비용을 계산할 수 있다.</li><li>□ 재시도율과 오류율의 차이를 설명할 수 있다.</li><li>□ 기준선을 저장하고, 하나를 바꾼 뒤 회귀 테스트를 돌렸다.</li><li>□ 미션 1의 가드로 범위 밖 질문을 GPT 없이 보류시켰다.</li></ol></div>
+<div class="flow"><div class="fstep"><b>A4-M6</b><span>검색을 채점</span></div><div class="arrow">→</div><div class="fstep"><b>A4-M7</b><span>답변과 운영을 채점</span></div><div class="arrow">→</div><div class="fstep"><b>A4-M8</b><span>Agentic RAG — 스스로 검색을 고르는 RAG</span></div></div>
+<div class="note"><b>참고한 공식 자료</b><p>Ragas — Available Metrics, Faithfulness · Microsoft Foundry — RAG Evaluators · OpenTelemetry — GenAI Observability, Recording Errors · OpenAI — gpt-4.1-nano 모델 페이지(가격). 용어 정의는 도구마다 겹치므로 하나의 절대 정의로 단정하지 않았습니다.</p></div>
+</section>
+
+</main></div>
+<footer class="footer">© 2026 부성순. All rights reserved.<small>교안의 자체 해설 및 실습 예제에 대한 저작권 표시입니다. 외부 소프트웨어·라이브러리·모델의 권리는 각 권리자에게 있습니다. 실습 데이터(지역 문서 16개, 질문 25개, 손 답변 10개)는 교육용 가상 데이터입니다. 검색 결과·근거 글자 수·손 답변 채점은 실습 데이터로 계산한 실제 값이며, GPT 답변·시간·토큰·비용은 실행 환경에 따라 달라집니다.</small></footer>
+<script>(function(){
+const tabs=[...document.querySelectorAll('[role="tab"]')];
+function setTab(i,focus=false){tabs.forEach((t,j)=>{const on=i===j;t.setAttribute('aria-selected',on?'true':'false');t.tabIndex=on?0:-1;document.getElementById(t.getAttribute('aria-controls')).hidden=!on;});if(focus)tabs[i].focus({preventScroll:true});history.replaceState(null,'','#'+tabs[i].getAttribute('aria-controls'));window.scrollTo({top:0});}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>setTab(i));t.addEventListener('keydown',e=>{if(['ArrowDown','ArrowUp','ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();setTab((i+(e.key==='ArrowDown'||e.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length,true);}})});
+const index=tabs.findIndex(t=>'#'+t.getAttribute('aria-controls')===location.hash);if(index>=0)setTab(index);
+document.querySelectorAll('.copy').forEach(b=>{b.dataset.label=b.textContent;b.addEventListener('click',async()=>{const code=b.closest('.codebox').querySelector('pre').textContent;try{await navigator.clipboard.writeText(code);b.textContent='복사됨';}catch(e){b.textContent='복사 실패';}setTimeout(()=>b.textContent=b.dataset.label||'코드 복사',1500);});});
+})();</script></body></html>

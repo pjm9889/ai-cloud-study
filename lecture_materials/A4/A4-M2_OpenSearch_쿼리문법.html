@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>A4-M2 · OpenSearch 쿼리 문법</title><link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet"/><style>
+:root{--bg:#fff;--surface:#f8fafc;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--accent:#ff2e93;--soft:rgba(255,46,147,.065);--codebg:#101d34}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:'Pretendard',system-ui,'Malgun Gothic',sans-serif;font-size:18px;line-height:1.81;word-break:keep-all}
+.banner{background:linear-gradient(125deg,#fcfcff,#f8fafc);border-bottom:1px solid var(--line)}.banner-in{max-width:1320px;margin:auto;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:18px}.brand{font-size:16px;font-weight:850;letter-spacing:.03em}.who{font-size:15px;color:var(--muted)}.layout{max-width:1320px;margin:auto;padding:32px 24px 84px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:38px;align-items:start}.sidebar{order:2;position:sticky;top:22px;max-height:calc(100vh - 44px);overflow:auto;border:1px solid var(--line);border-radius:15px;background:var(--surface);padding:17px}.group{font-size:15px;color:var(--muted);font-weight:800;margin:3px 10px 14px}.tabs{display:flex;flex-direction:column;gap:5px}.tabs button{appearance:none;border:1px solid transparent;border-radius:9px;background:transparent;color:#253348;cursor:pointer;text-align:left;font:600 16px/1.55 'Pretendard',sans-serif;padding:9px 12px 9px 14px}.tabs button span{color:var(--accent);font-weight:850;margin-right:7px}.tabs button:hover{background:#fff;border-color:var(--line)}.tabs button[aria-selected=true]{background:var(--soft);border-color:var(--accent);color:#bd1366}.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+main{min-width:0}.panel[hidden]{display:none}.panel{display:block}.crumb{color:var(--accent);font-size:15px;font-weight:800;margin:0 0 8px}.panel h1{font-size:31px;line-height:1.4;margin:0 0 12px}.lead{font-size:19px;font-weight:550;color:#344255;margin:6px 0 26px}.panel h3{font-size:21px;margin:33px 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px}.panel h3:before{content:'▸ ';color:var(--accent)}.panel p{margin:13px 0}.panel b,.panel strong{font-weight:790}.panel code:not(pre code){font:15px/1.6 Consolas,monospace;word-break:break-word;background:#f1f5f9;border:1px solid #e5e7eb;padding:1px 5px;border-radius:4px}
+.panel ul,.panel ol{padding-left:27px;margin:12px 0}.panel li{margin:7px 0}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:17px 0 24px}.panel table{border-collapse:collapse;width:100%;font-size:17px;line-height:1.65}.panel th,.panel td{border-bottom:1px solid var(--line);padding:12px 14px;vertical-align:top;text-align:left}.panel th{font-size:16px;font-weight:800;background:#f1f5f9;color:#40516a}.panel tbody tr:last-child td{border:0}.panel tbody tr:nth-child(even){background:#fbfcfe}
+.note,.task{border:1px solid var(--line);border-radius:13px;background:#fafcff;padding:17px 19px;margin:24px 0}.note{border-left:4px solid var(--accent);background:var(--soft)}.note b{color:#ad155e}.note p{margin:6px 0}.task{background:#fff}.task h4{margin:0 0 9px;font-size:19px}.task ol{margin:0;padding-left:23px}.task li{margin:8px 0}
+.codebox{border:1px solid #243953;border-radius:13px;overflow:hidden;margin:21px 0 26px}.codehead{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:8px 13px;background:#1d3452;color:#dceafc;font-size:14px;font-weight:700}.copy{border:1px solid #8598b4;color:#fff;background:#314f78;border-radius:6px;padding:3px 10px;cursor:pointer;font-size:13px}.codebox pre{background:var(--codebg);color:#cbe9fb;margin:0;padding:20px;overflow-x:auto;font:15px/1.7 Consolas,'JetBrains Mono',monospace;word-break:normal;white-space:pre}
+.outbox .codehead{background:#203a2c}.outbox{border-color:#2f5a43}.outbox pre{background:#0d1f17;color:#c9f5d9}
+.qa{padding:13px 17px;margin:13px 0;border:1px solid var(--line);background:#fbfcff;border-radius:10px}.qa summary{font-size:17px;cursor:pointer;font-weight:780}.qa[open] summary{color:#c01168}.qa p{font-size:17px}
+.footer{max-width:1320px;margin:auto;border-top:1px solid var(--line);padding:20px 24px 38px;text-align:center;color:var(--muted);font-size:15px}.footer small{display:block;max-width:950px;margin:5px auto}
+.tabs .part-heading{display:block;margin:15px 4px 6px;padding:12px 11px;background:#e5e7eb;color:#334155;border:1px solid #cbd5e1;border-radius:9px;font-size:15px;font-weight:850;line-height:1.5;white-space:normal}.tabs .part-heading:first-child{margin-top:0}
+.journey{border-left:4px solid #ff2e93;background:#fff5fa;padding:16px 19px;margin:20px 0;border-radius:8px}.journey h3{border:0!important;margin:0 0 8px!important;padding:0!important;font-size:18px!important}.journey h3:before{content:none!important}.journey ol{margin:6px 0 0;padding-left:22px}.journey li{margin:4px 0;overflow-wrap:anywhere}
+.say{border-left:4px solid #94a3b8;background:#f8fafc;padding:12px 16px;border-radius:0 10px 10px 0;margin:16px 0}.say>b:first-child{display:block;color:#475569;font-size:14px;margin-bottom:4px}
+.flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;margin:18px 0 24px}.flow .fstep{flex:1 1 96px;min-width:92px;border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:10px;background:#fff;padding:10px 12px}.flow .fstep b{display:block;font-size:16px;color:#0f172a}.flow .fstep span{display:block;font-size:14px;color:var(--muted);line-height:1.5;margin-top:3px}.flow .arrow{align-self:center;color:var(--accent);font-weight:900}
+main p,main li,main td{overflow-wrap:anywhere}
+/* 화면 모형 */
+.mock{border:1px solid #cbd5e1;border-radius:14px;background:#f8fafc;padding:14px 16px;margin:20px 0}.mock-title{font-weight:800;font-size:15px;color:#475569;margin-bottom:10px}
+.browser{border:1px solid #cbd5e1;border-radius:10px;overflow:hidden;background:#fff}.bbar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#eef2f7;border-bottom:1px solid #e2e8f0}.dots i{display:inline-block;width:10px;height:10px;border-radius:50%;background:#cbd5e1;margin-right:4px}.url{flex:1;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:2px 10px;font:14px Consolas,monospace;color:#334155}
+.browser pre{margin:0;padding:12px 14px;font:14px/1.6 Consolas,monospace;white-space:pre;overflow-x:auto;color:#0f172a;background:#fff}
+.dash{display:grid;grid-template-columns:210px 1fr;min-height:250px}.dash nav{background:#f8fafc;border-right:1px solid #e2e8f0;padding:10px;font-size:14px}.dash nav b{display:block;margin:10px 6px 4px;color:#64748b;font-size:12px}.dash nav div{padding:4px 8px;border-radius:6px;color:#334155}.dash nav .hl{background:#fde7f2;color:#bd1366;font-weight:800}.dash .home{padding:16px;font-size:15px;color:#334155}.dash .card{display:inline-block;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 6px 0 0;background:#fff}
+.console{display:grid;grid-template-columns:1fr 1fr}.console .ph{font-size:12px;font-weight:800;color:#64748b;padding:6px 14px;border-bottom:1px solid #e2e8f0;background:#f1f5f9;display:flex;justify-content:space-between}.console .left{border-right:1px solid #e2e8f0}.console .right pre{background:#f8fafc}.console .run{background:#e72281;color:#fff;border-radius:5px;padding:0 7px}
+.mark{background:#fde7f2;font-weight:800}
+.mock table{border-collapse:collapse;width:100%;font-size:15px;background:#fff}.mock td,.mock th{border:1px solid #e2e8f0;padding:6px 8px;text-align:center}.mock th{background:#f1f5f9}.mock .hl{background:#fde7f2;font-weight:800}.mock .dim{color:#94a3b8}
+@media(max-width:900px){.layout{grid-template-columns:1fr;gap:12px;padding:15px 16px 64px}.sidebar{order:0;position:sticky;top:0;z-index:10;border-radius:0;max-height:none;overflow:auto;padding:8px 0;background:#fff}.sidebar .group{display:none}.tabs{flex-direction:row;white-space:nowrap;overflow-x:auto}.tabs button{flex:none;font-size:15px}.tabs .part-heading{flex:none;margin:0 6px 0 0;white-space:nowrap;padding:9px 12px}.banner-in{flex-wrap:wrap}.panel h1{font-size:27px}}
+@media(max-width:760px){.dash,.console{grid-template-columns:1fr}.console .left{border-right:0;border-bottom:1px solid #e2e8f0}.dash nav{border-right:0;border-bottom:1px solid #e2e8f0}}
+@media(max-width:680px){body{font-size:17px}.panel table{font-size:16px}.panel th{font-size:15px}.panel h1{font-size:24px}.panel h3{font-size:20px}.codebox pre{font-size:14px;padding:15px}.flow .arrow{display:none}.flow .fstep{flex-basis:100%}}
+@media print{.sidebar,.copy{display:none}.layout{display:block}.panel[hidden]{display:block!important}.banner{background:#fff}}
+
+.shot{margin:20px 0 24px;border:1px solid var(--line);border-radius:13px;background:#fff;padding:12px}.shot img{display:block;max-width:100%;height:auto;margin:auto;border:1px solid var(--line);border-radius:8px}.shot figcaption{font-size:15px;font-weight:800;color:#40516a;margin-top:9px}.shot .cap-note{font-size:15px;color:var(--muted);margin-top:2px;line-height:1.6}
+.steps{list-style:none;counter-reset:st;padding-left:0!important;margin:16px 0}.steps li{counter-increment:st;position:relative;padding:4px 0 4px 46px;margin:10px 0}.steps li:before{content:counter(st);position:absolute;left:0;top:2px;width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;font-weight:850;font-size:15px;display:flex;align-items:center;justify-content:center}
+.file{display:inline-block;padding:9px 14px;margin:4px 6px 4px 0;background:var(--soft);border:1px solid var(--accent);border-radius:8px;text-decoration:none;color:#bd1366;font-weight:800;font-size:16px}
+.qa .codebox{margin:12px 0}
+
+.diagram{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:18px 0 22px;font:14.5px/1.7 Consolas,'JetBrains Mono',monospace;white-space:pre;overflow-x:auto;color:#1e293b}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}.cards.c3{grid-template-columns:repeat(3,minmax(0,1fr))}.card{border:1px solid var(--line);border-radius:12px;background:#fff;padding:14px 16px;font-size:16.5px;line-height:1.7}.card .h{font-weight:800;color:#bd1366;margin-bottom:6px;font-size:17px}
+.widget{border:2px solid var(--accent);border-radius:14px;margin:22px 0 26px;overflow:hidden;background:#fff}.wtitle{display:flex;align-items:center;gap:9px;padding:10px 16px;background:var(--soft);border-bottom:1px solid #fbcfe8;font-size:16px}.wtitle .dot{width:10px;height:10px;border-radius:50%;background:var(--accent)}.wtitle .tag{margin-left:auto;font-size:12px;font-weight:800;color:#bd1366;border:1px solid var(--accent);border-radius:999px;padding:1px 9px}.wbody{padding:16px 18px}
+.muted{color:var(--muted)}.scatter-wrap{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:16px;align-items:center}.legend{font-size:15px;display:flex;flex-direction:column;gap:8px}.sw{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.calc-panel,.readout{margin-top:12px;background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font:14.5px/1.8 Consolas,monospace;overflow-x:auto}.calc-panel .lab{font-weight:800;color:#334155}.hl{color:#bd1366;font-weight:800}
+.controls{display:flex;flex-wrap:wrap;gap:14px 22px;margin:12px 0}.ctrl{flex:1 1 200px;min-width:180px}.ctrl label{display:flex;justify-content:space-between;font-size:15px;font-weight:700;color:#334155}.ctrl .v{color:#bd1366;font-weight:850}.ctrl input[type=range]{width:100%;accent-color:#ff2e93}.ctrl select{width:100%;font:15px 'Pretendard',sans-serif;padding:6px 8px;border:1px solid var(--line);border-radius:8px;margin-top:4px}
+.samplebox{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:16px}
+.statrow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}.stat{border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}.stat .n{font-size:24px;font-weight:850;color:#bd1366}.stat .l{font-size:13px;color:var(--muted)}
+.chunk-list{display:flex;flex-direction:column;gap:8px}.chunk-item{border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:15.5px;background:#fff}.chunk-item mark{background:#fde7f2;color:#9d174d;border-radius:3px}.cid{display:inline-block;font-weight:850;color:#fff;background:var(--accent);border-radius:6px;padding:0 7px;margin-right:7px;font-size:13px}
+.presets{display:flex;flex-wrap:wrap;gap:8px}.preset{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 13px;font:600 14.5px 'Pretendard',sans-serif;cursor:pointer}.preset.active{background:var(--soft);border-color:var(--accent);color:#bd1366}
+.rrow{display:grid;grid-template-columns:34px minmax(0,1fr) 80px;gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin:7px 0;font-size:15.5px}.rrow.top{border-color:var(--accent);background:#fff7fb}.rrow.dim{opacity:.55}.rk{font-weight:850;color:#bd1366;text-align:center}.sc{font:700 15px Consolas,monospace;text-align:right}.bar-bg{height:7px;background:#f1f5f9;border-radius:99px;margin-top:6px}.bar{height:7px;background:var(--accent);border-radius:99px}
+.retrieved-note{margin-top:10px;background:var(--soft);border-radius:10px;padding:10px 13px;font-size:15.5px}
+.quiz{border:1px solid var(--line);border-radius:12px;padding:13px 16px;margin:12px 0;background:#fbfcff}.quiz .q{font-weight:800;font-size:17px}.opts{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}.opt{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 13px;font:600 15.5px 'Pretendard',sans-serif;cursor:pointer}.opt.correct{background:#dcfce7;border-color:#16a34a;color:#166534}.opt.wrong{background:#fee2e2;border-color:#dc2626;color:#991b1b}.exp{display:none;margin-top:9px;font-size:16px}.exp.show{display:block}
+@media(max-width:760px){.cards,.cards.c3{grid-template-columns:1fr}.scatter-wrap{grid-template-columns:1fr}.statrow{grid-template-columns:repeat(2,minmax(0,1fr))}.diagram{font-size:13px}}
+.where-bar{display:flex;flex-wrap:wrap;gap:8px 20px;background:#eef6ff;border:1px solid #bfdbfe;border-radius:10px;padding:9px 14px;margin:4px 0 14px;font-size:15.5px;color:#1e3a5f}.ask{border:1px dashed #a78bfa;background:#f5f3ff;border-radius:12px;padding:13px 17px;margin:24px 0}.ask>b:first-child{color:#6d28d9}.ask p{margin:6px 0;font-size:16.5px}</style></head><body>
+<header class="banner"><div class="banner-in"><div><div class="brand">Part A · A4-M2 · OpenSearch Query DSL</div><div style="font-size:23px;font-weight:850">A4-M2 OpenSearch 쿼리 문법 · 고르기 → 계산하기 → SQL 대응 → 스스로 공부하기</div></div><div class="who">© 2026 부성순 · AI·클라우드 실무 과정<br/>부성순 강사(bakpak@empas.com)</div><a href="/lectures/files/index.html#section-a1" style="display:inline-block;padding:7px 11px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#bd1366;text-decoration:none;font-weight:800;white-space:nowrap">📚 강의자료 라이브러리 · Part A</a></div></header>
+<div class="layout"><aside class="sidebar"><div class="group">A4-M2 · 세부 목차</div><nav aria-label="교안 세부 목차" class="tabs" role="tablist">
+<div aria-level="2" class="part-heading" role="heading">Part 0. 시작</div>
+<button aria-controls="u00" aria-selected="true" id="tab-u00" role="tab" tabindex="0" type="button"><span>00</span>이 모듈의 목표</button>
+<button aria-controls="u01" aria-selected="false" id="tab-u01" role="tab" tabindex="-1" type="button"><span>01</span>요청 골격과 응답 읽기</button>
+<div aria-level="2" class="part-heading" role="heading">Part 1. 고르기 — query</div>
+<button aria-controls="u02" aria-selected="false" id="tab-u02" role="tab" tabindex="-1" type="button"><span>02</span>text vs keyword (match·term)</button>
+<button aria-controls="u03" aria-selected="false" id="tab-u03" role="tab" tabindex="-1" type="button"><span>03</span>term·terms·range·exists</button>
+<button aria-controls="u04" aria-selected="false" id="tab-u04" role="tab" tabindex="-1" type="button"><span>04</span>bool 네 칸</button>
+<button aria-controls="u05" aria-selected="false" id="tab-u05" role="tab" tabindex="-1" type="button"><span>05</span>size·from·sort·_source</button>
+<div aria-level="2" class="part-heading" role="heading">Part 2. 계산하기 — aggs</div>
+<button aria-controls="u06" aria-selected="false" id="tab-u06" role="tab" tabindex="-1" type="button"><span>06</span>metric 집계</button>
+<button aria-controls="u07" aria-selected="false" id="tab-u07" role="tab" tabindex="-1" type="button"><span>07</span>bucket 집계</button>
+<button aria-controls="u08" aria-selected="false" id="tab-u08" role="tab" tabindex="-1" type="button"><span>08</span>중첩과 정렬</button>
+<div aria-level="2" class="part-heading" role="heading">Part 3. SQL 대응표</div>
+<button aria-controls="u09" aria-selected="false" id="tab-u09" role="tab" tabindex="-1" type="button"><span>09</span>SQL ↔ Query DSL</button>
+<div aria-level="2" class="part-heading" role="heading">Part 4. Python으로</div>
+<button aria-controls="u10" aria-selected="false" id="tab-u10" role="tab" tabindex="-1" type="button"><span>10</span>Python 변환·함수 해부</button>
+<div aria-level="2" class="part-heading" role="heading">Part 5. 스스로 공부하기</div>
+<button aria-controls="u11" aria-selected="false" id="tab-u11" role="tab" tabindex="-1" type="button"><span>11</span>GPT·검색 활용법</button>
+<button aria-controls="u12" aria-selected="false" id="tab-u12" role="tab" tabindex="-1" type="button"><span>12</span>연습 문제 20</button>
+<button aria-controls="u13" aria-selected="false" id="tab-u13" role="tab" tabindex="-1" type="button"><span>13</span>실습 미션 6</button>
+<div aria-level="2" class="part-heading" role="heading">Part 6. 복습</div>
+<button aria-controls="u14" aria-selected="false" id="tab-u14" role="tab" tabindex="-1" type="button"><span>14</span>퀴즈·문법 한 장·완료 체크</button>
+</nav></aside><main>
+<!-- 00 -->
+<section aria-labelledby="tab-u00" class="panel" id="u00" role="tabpanel"><div class="crumb">Part 0. 시작 · A4-M2</div><h1>00. 이 모듈의 목표 — “원하는 숫자를 직접 묻는” 문법</h1><p class="lead">A4-M1에서는 화면(Dashboard)으로 숫자를 봤고, 미션 정답 속에서 쿼리를 한두 개씩 만났습니다. 이번에는 그 쿼리들을 <b>문법으로 정리</b>합니다. 끝나면 “2분기 서울 공공기관 주문 중 취소를 뺀 매출” 같은 질문을 스스로 쿼리로 바꿀 수 있습니다.</p>
+<div class="journey"><h3>이 탭의 흐름</h3><ol><li>모든 검색 요청은 세 질문의 답</li><li>모듈 지도</li><li>실습 환경과 정답 확인 방법</li><li>스스로 공부하는 장치</li></ol></div>
+<h3>모든 검색 요청은 세 질문의 답입니다</h3>
+<div class="tablewrap"><table><thead><tr><th>질문</th><th>요청 안의 자리</th><th>SQL로 말하면</th><th>다루는 탭</th></tr></thead><tbody>
+<tr><td>① <b>어떤 문서를</b> 고를까?</td><td><code>query</code></td><td><code>WHERE</code></td><td>02~04</td></tr>
+<tr><td>② 고른 문서로 <b>무엇을 계산</b>할까?</td><td><code>aggs</code></td><td><code>SUM()</code>, <code>GROUP BY</code></td><td>06~08</td></tr>
+<tr><td>③ <b>무엇을, 몇 개, 어떤 순서로</b> 돌려받을까?</td><td><code>size</code>, <code>sort</code>, <code>_source</code></td><td><code>SELECT 열</code>, <code>ORDER BY</code>, <code>LIMIT</code></td><td>05</td></tr></tbody></table></div>
+<div class="codebox"><div class="codehead"><span>판서용 — 세 질문이 한 요청에 들어간 모양</span><button class="copy" type="button">코드 복사</button></div><pre><code>GET sales/_search
+{
+  "query": { ... 어떤 문서를 ... },        ← ①
+  "aggs":  { ... 무엇을 계산 ... },        ← ②
+  "size": 5, "sort": [...], "_source": [...]   ← ③
+}</code></pre></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>A4-M1 Dashboard 실습을 떠올려 봅니다. 검색창에 <code>region:서울</code>을 넣은 것이 ①, Metric에서 <code>Sum(revenue)</code>를 고른 것이 ②, Discover에서 문서 목록을 본 것이 ③입니다. 화면에서 클릭으로 하던 세 가지를 글로 쓰는 법을 배우는 것이 이 모듈입니다.</p></div>
+<h3>모듈 지도</h3>
+<div class="flow"><div class="fstep"><b>골격</b><span>요청·응답 읽기</span></div><div class="arrow">→</div><div class="fstep"><b>고르기</b><span>match·term·range·bool</span></div><div class="arrow">→</div><div class="fstep"><b>계산하기</b><span>metric·bucket·중첩</span></div><div class="arrow">→</div><div class="fstep"><b>SQL 대응</b><span>아는 문법으로 번역</span></div><div class="arrow">→</div><div class="fstep"><b>Python</b><span>코드로 옮기기</span></div><div class="arrow">→</div><div class="fstep"><b>스스로</b><span>GPT 활용·문제 20·미션</span></div></div>
+<div class="note"><b>실습 환경</b><p>A4-M1과 같습니다. Dashboards에 admin으로 로그인 → Dev Tools. <code>sales</code> 인덱스에 100건이 들어 있어야 합니다(<code>GET sales/_count</code> → 100). 02탭에서 연습용 후기 인덱스 <code>reviews</code>를 하나 더 만듭니다.</p></div>
+<div class="note"><b>정답이 숫자로 정해져 있습니다</b><p>이 모듈의 결과값은 모두 A4-M1에서 넣은 <b>sales 100건으로 미리 계산한 실제 값</b>입니다(예: 서울 21건, 전체 매출 213,292,750원). 내 쿼리 결과가 교안 숫자와 다르면 쿼리가 틀린 것입니다. 단, Dashboard와 비교할 때는 시간 범위를 2026-01-01 ~ 2026-07-31로 넓혀야 합니다.</p></div>
+<h3>스스로 공부하는 장치</h3>
+<div class="tablewrap"><table><thead><tr><th>장치</th><th>어디에</th><th>쓰는 법</th></tr></thead><tbody>
+<tr><td>🔍 스스로 찾아보기</td><td>각 탭 끝</td><td>GPT에게 물어볼 질문 예시 + 공식 문서 검색어. 답을 받으면 Dev Tools에서 직접 실행해 확인</td></tr>
+<tr><td>GPT·검색 활용법</td><td>11탭</td><td>좋은 질문 틀, GPT 답을 검증하는 체크리스트, 자주 틀리는 부분</td></tr>
+<tr><td>연습 문제 20</td><td>12탭</td><td>정답 숫자만 먼저 보고 쿼리를 짠 뒤, 정답 쿼리와 비교</td></tr>
+<tr><td>미션 6개</td><td>13탭</td><td>여러 문법을 섞어 작은 리포트를 만드는 응용</td></tr>
+<tr><td>퀴즈·문법 한 장</td><td>14탭</td><td>복습용. 수업 후 다시 열어 보기</td></tr></tbody></table></div>
+</section>
+
+<!-- 01 -->
+<section aria-labelledby="tab-u01" class="panel" hidden="" id="u01" role="tabpanel"><div class="crumb">Part 0. 시작 · A4-M2</div><h1>01. 요청의 골격과 응답 읽기</h1><p class="lead">문법을 배우기 전에 “어디에 무엇을 쓰고, 어디서 무엇을 읽는지” 자리부터 익힙니다. 이 표 두 개가 이후 모든 탭의 바탕입니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> Dashboards → Dev Tools</span><span><b>✅ 먼저</b> <code>GET sales/_count</code> = 100</span></div>
+<h3>_search 요청에 쓸 수 있는 자리</h3>
+<div class="tablewrap"><table><thead><tr><th>키</th><th>하는 일</th><th>생략하면</th><th>예</th></tr></thead><tbody>
+<tr><td><code>query</code></td><td>어떤 문서를 고를지</td><td>전체 문서 (<code>match_all</code>)</td><td><code>{"term": {"region": "서울"}}</code></td></tr>
+<tr><td><code>aggs</code></td><td>고른 문서로 계산</td><td>계산 없음</td><td><code>{"합계": {"sum": {"field": "revenue"}}}</code></td></tr>
+<tr><td><code>size</code></td><td>돌려받을 문서 수</td><td>10</td><td><code>0</code> = 문서는 빼고 계산만</td></tr>
+<tr><td><code>from</code></td><td>몇 번째부터 (페이지)</td><td>0</td><td><code>10</code> = 11번째부터</td></tr>
+<tr><td><code>sort</code></td><td>정렬 기준</td><td>점수 높은 순</td><td><code>[{"revenue": "desc"}]</code></td></tr>
+<tr><td><code>_source</code></td><td>문서에서 받을 필드</td><td>전체 필드</td><td><code>["order_id", "revenue"]</code></td></tr>
+<tr><td><code>track_total_hits</code></td><td>전체 건수를 정확히 셀지</td><td>10,000까지만 정확</td><td><code>true</code></td></tr></tbody></table></div>
+<div class="codebox"><div class="codehead"><span>Dev Tools · 첫 요청</span><button class="copy" type="button">코드 복사</button></div><pre><code>GET sales/_search
+{
+  "size": 2,
+  "query": { "term": { "region": "서울" } },
+  "_source": ["order_id", "product", "revenue"],
+  "aggs": { "서울_총매출": { "sum": { "field": "revenue" } } }
+}</code></pre></div>
+<h3>응답의 자리</h3>
+<div class="codebox outbox"><div class="codehead"><span>응답 (실제 값)</span><button class="copy" type="button">코드 복사</button></div><pre><code>{
+  "took": 3,                                   ← 걸린 시간(ms), 매번 다름
+  "timed_out": false,
+  "hits": {
+    "total": { "value": 21, "relation": "eq" },  ← ① 조건에 맞는 전체 건수
+    "max_score": ...,
+    "hits": [                                  ← ③ size만큼의 문서
+      { "_index": "sales", "_id": "ORD...", "_score": ...,
+        "_source": { "order_id": "ORD...", "product": "...", "revenue": ... } },
+      { ... }
+    ]
+  },
+  "aggregations": {                            ← ② 계산 결과
+    "서울_총매출": { "value": 58566750.0 }
+  }
+}</code></pre></div>
+<div class="tablewrap"><table><thead><tr><th>읽고 싶은 것</th><th>경로</th><th>이 응답에서</th></tr></thead><tbody>
+<tr><td>조건에 맞는 전체 건수</td><td><code>hits.total.value</code></td><td>21</td></tr>
+<tr><td>받은 문서 개수</td><td><code>hits.hits</code>의 길이</td><td>2 (size)</td></tr>
+<tr><td>문서 내용</td><td><code>hits.hits[i]._source</code></td><td>order_id, product, revenue</td></tr>
+<tr><td>계산 값 하나</td><td><code>aggregations.이름.value</code></td><td>58,566,750</td></tr>
+<tr><td>그룹 목록</td><td><code>aggregations.이름.buckets</code></td><td>(07탭)</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>가장 많이 헷갈리는 것이 <b>“21”과 “2”의 차이</b>입니다. 서울 주문은 21건이지만, size를 2로 했으니 문서는 2건만 왔습니다. 그리고 합계 58,566,750원은 <b>받은 2건이 아니라 조건에 맞는 21건 전체</b>로 계산한 값입니다. aggs는 size와 상관없이 query가 고른 문서 전부를 봅니다.</p></div>
+<div class="note"><b>aggs 이름은 내가 짓습니다</b><p><code>"서울_총매출"</code>은 OpenSearch 문법이 아니라 내가 붙인 이름표입니다. 응답에서 같은 이름으로 돌아옵니다. 한글도 되지만, Python에서 꺼내 쓸 거라면 <code>total_revenue</code>처럼 영어로 짓는 편이 편합니다.</p></div>
+<div class="ask"><b>🔍 스스로 찾아보기</b><p><b>GPT에게:</b> “OpenSearch _search 응답에서 hits.total.relation 값이 eq와 gte일 때 차이를 예시와 함께 설명해 줘.”<br/><b>문서 검색어:</b> <code>OpenSearch search API response body</code>, <code>track_total_hits</code><br/><b>확인:</b> 위 요청에서 size를 0, 50으로 바꿔 hits.hits 길이와 total.value를 비교합니다.</p></div>
+</section>
+
+<!-- 02 -->
+<section aria-labelledby="tab-u02" class="panel" hidden="" id="u02" role="tabpanel"><div class="crumb">Part 1. 고르기 — query · A4-M2</div><h1>02. text와 keyword — match와 term은 왜 결과가 다른가</h1><p class="lead">sales는 모든 글자 필드가 <code>keyword</code>라 “정확히 같은 값”만 찾습니다. 문장을 검색하는 <code>text</code> 필드가 어떻게 다른지 보려고, 고객 후기 10건짜리 연습 인덱스 <code>reviews</code>를 만듭니다. A4-M3의 키워드 검색(BM25)과 Hybrid 검색이 이 차이 위에 서 있습니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> Dev Tools</span><span><b>✅ 먼저</b> 01탭</span></div>
+<div class="journey"><h3>이 탭의 흐름</h3><ol><li>reviews 인덱스 만들기 (text 하나 + keyword 여럿)</li><li><code>_analyze</code>로 문장이 어떻게 쪼개지는지 보기</li><li>match / term / match_phrase 결과 비교</li></ol></div>
+<div class="codebox"><div class="codehead"><span>Dev Tools · 인덱스와 후기 10건</span><button class="copy" type="button">코드 복사</button></div><pre><code>PUT reviews
+{
+  "settings": { "number_of_shards": 1, "number_of_replicas": 0 },
+  "mappings": { "properties": {
+    "review_id": { "type": "keyword" },
+    "order_id":  { "type": "keyword" },
+    "product":   { "type": "keyword" },
+    "region":    { "type": "keyword" },
+    "rating":    { "type": "integer" },
+    "comment":   { "type": "text" }
+  } }
+}
+
+POST _bulk?refresh=true
+{"index":{"_index":"reviews","_id":"R01"}}
+{"review_id":"R01","order_id":"ORD001","product":"복합기","region":"서울","rating":5,"comment":"배송 빠르고 설치 기사님이 친절했어요"}
+{"index":{"_index":"reviews","_id":"R02"}}
+{"review_id":"R02","order_id":"ORD002","product":"노트북","region":"광주","rating":4,"comment":"노트북 성능은 좋은데 배송이 조금 늦었어요"}
+{"index":{"_index":"reviews","_id":"R03"}}
+{"review_id":"R03","order_id":"ORD006","product":"모니터","region":"광주","rating":5,"comment":"화면이 선명하고 배송 포장도 꼼꼼합니다"}
+{"index":{"_index":"reviews","_id":"R04"}}
+{"review_id":"R04","order_id":"ORD009","product":"노트북","region":"부산","rating":3,"comment":"배터리가 생각보다 빨리 닳아요"}
+{"index":{"_index":"reviews","_id":"R05"}}
+{"review_id":"R05","order_id":"ORD013","product":"복합기","region":"서울","rating":4,"comment":"복합기 소음이 조금 있지만 인쇄 속도는 빠름"}
+{"index":{"_index":"reviews","_id":"R06"}}
+{"review_id":"R06","order_id":"ORD022","product":"모니터","region":"대구","rating":2,"comment":"배송 중 파손되어 교환했습니다"}
+{"index":{"_index":"reviews","_id":"R07"}}
+{"review_id":"R07","order_id":"ORD030","product":"모니터","region":"대구","rating":1,"comment":"주문 취소 후 환불이 늦어요"}
+{"index":{"_index":"reviews","_id":"R08"}}
+{"review_id":"R08","order_id":"ORD040","product":"노트북","region":"부산","rating":5,"comment":"가성비 최고 노트북 배송 빠름"}
+{"index":{"_index":"reviews","_id":"R09"}}
+{"review_id":"R09","order_id":"ORD047","product":"프로젝터","region":"서울","rating":4,"comment":"회의실 프로젝터로 밝기 충분합니다"}
+{"index":{"_index":"reviews","_id":"R10"}}
+{"review_id":"R10","order_id":"ORD079","product":"노트북","region":"서울","rating":5,"comment":"배송 빠름 품질 만족"}</code></pre></div>
+<div class="note"><b>후기는 실제 주문과 연결돼 있습니다</b><p><code>order_id</code>가 sales의 실제 주문 번호입니다. 예를 들어 R07(“주문 취소 후 환불이 늦어요”)의 ORD030은 sales에서 정말 <b>취소</b> 상태인 대구 모니터 주문입니다. 13탭 미션 4에서 두 인덱스를 이어서 조회합니다.</p></div>
+<h3>문장은 어떻게 쪼개지나 — _analyze</h3>
+<div class="codebox"><div class="codehead"><span>Dev Tools</span><button class="copy" type="button">코드 복사</button></div><pre><code>POST reviews/_analyze
+{ "field": "comment", "text": "노트북 성능은 좋은데 배송이 조금 늦었어요" }</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>응답 (토큰만)</span><button class="copy" type="button">코드 복사</button></div><pre><code>"노트북", "성능은", "좋은데", "배송이", "조금", "늦었어요"</code></pre></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p><code>text</code> 필드는 저장할 때 문장을 <b>토큰(단어 조각)</b>으로 쪼개 색인합니다. 기본 분석기는 띄어쓰기와 문장부호 기준으로 자르기 때문에, 한국어 조사가 붙은 “배송<b>이</b>”는 “배송”과 <b>다른 토큰</b>입니다. <code>keyword</code> 필드는 쪼개지 않고 값 전체를 하나로 저장합니다. 그래서 sales의 <code>region</code>은 “서울” 전체가 일치해야만 찾습니다.</p></div>
+<h3>세 가지 검색 비교</h3>
+<div class="codebox"><div class="codehead"><span>Dev Tools · 하나씩 실행하고 hits.total.value 보기</span><button class="copy" type="button">코드 복사</button></div><pre><code>GET reviews/_search
+{ "query": { "match": { "comment": "배송" } } }
+
+GET reviews/_search
+{ "query": { "match": { "comment": "배송 빠름" } } }
+
+GET reviews/_search
+{ "query": { "match_phrase": { "comment": "배송 빠름" } } }
+
+GET reviews/_search
+{ "query": { "term": { "comment": "배송 빠름" } } }
+
+GET reviews/_search
+{ "query": { "term": { "product": "노트북" } } }
+
+GET reviews/_search
+{ "query": { "term": { "product": "노트" } } }</code></pre></div>
+<div class="mock"><div class="mock-title">결과 정리 — 어느 후기가 걸리나</div><table><thead><tr><th>쿼리</th><th>건수</th><th>걸린 후기</th><th>이유</th></tr></thead><tbody>
+<tr><td>match comment “배송”</td><td class="hl">5</td><td>R01 R03 R06 R08 R10</td><td>토큰 “배송”이 있는 후기. R02의 “배송이”는 다른 토큰이라 빠짐</td></tr>
+<tr><td>match comment “배송 빠름”</td><td class="hl">6</td><td>위 5건 + R05</td><td>질문도 쪼개서 “배송” <b>또는</b> “빠름”. 둘 다 있는 R08·R10이 점수가 높아 위로</td></tr>
+<tr><td>match_phrase “배송 빠름”</td><td class="hl">2</td><td>R08 R10</td><td>두 토큰이 <b>순서대로 붙어</b> 있어야 함</td></tr>
+<tr><td>term comment “배송 빠름”</td><td class="hl">0</td><td>—</td><td>term은 질문을 쪼개지 않음. “배송 빠름”이라는 토큰 하나는 색인에 없음</td></tr>
+<tr><td>term product “노트북”</td><td class="hl">4</td><td>R02 R04 R08 R10</td><td>keyword 값 전체가 일치</td></tr>
+<tr><td>term product “노트”</td><td class="hl">0</td><td>—</td><td>keyword는 부분 일치 없음</td></tr></tbody></table></div>
+<div class="tablewrap"><table><thead><tr><th></th><th><code>match</code></th><th><code>term</code></th></tr></thead><tbody>
+<tr><td>질문을</td><td>필드와 같은 방식으로 쪼갬</td><td>그대로 하나의 값으로</td></tr>
+<tr><td>어울리는 필드</td><td><code>text</code> (문장)</td><td><code>keyword</code>, 숫자, 날짜 (정확한 값)</td></tr>
+<tr><td>점수</td><td>얼마나 잘 맞는지 BM25 점수</td><td>맞으면 같은 점수 (보통 filter에 넣어 점수 생략)</td></tr>
+<tr><td>sales에서</td><td>keyword 필드에 쓰면 term과 같게 동작</td><td>region, product, status 고르기의 기본</td></tr></tbody></table></div>
+<div class="note"><b>한 줄 규칙</b><p><b>문장은 match, 정확한 값은 term.</b> text 필드에 term을 쓰거나, 조사 붙은 단어로 match를 하면 <b>오류 없이 0건</b>이 나옵니다. 실무 한국어 검색은 조사를 떼 주는 <b>nori</b> 분석기를 씁니다.</p></div>
+<div class="ask"><b>🔍 스스로 찾아보기</b><p><b>GPT에게:</b> “OpenSearch에서 text 필드와 keyword 필드를 둘 다 갖는 multi-field(fields) 매핑 예시를 보여 주고, match와 term을 각각 어디에 써야 하는지 설명해 줘.”<br/><b>문서 검색어:</b> <code>OpenSearch match vs term query</code>, <code>OpenSearch nori analyzer</code><br/><b>확인:</b> <code>POST reviews/_analyze</code>로 R05 문장을 쪼개 보고, “속도”로 match 하면 몇 건인지 먼저 예상한 뒤 실행합니다.</p></div>
+</section>
+
+<!-- 03 -->
+<section aria-labelledby="tab-u03" class="panel" hidden="" id="u03" role="tabpanel"><div class="crumb">Part 1. 고르기 — query · A4-M2</div><h1>03. term · terms · range · exists — sales를 조건으로 고르기</h1><p class="lead">sales 질문의 대부분은 이 네 개로 고릅니다. “서울”, “서울 또는 광주”, “500만 원 이상”, “2분기”처럼 말로 하는 조건을 하나씩 바꿔 봅니다. 건수는 <code>_count</code>로 빠르게 확인합니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> Dev Tools</span><span><b>✅ 먼저</b> 01탭</span></div>
+<div class="codebox"><div class="codehead"><span>Dev Tools · 차례로 실행</span><button class="copy" type="button">코드 복사</button></div><pre><code># term — 값 하나와 정확히 같음
+GET sales/_count
+{ "query": { "term": { "region": "서울" } } }
+
+# terms — 여러 값 중 하나 (SQL의 IN)
+GET sales/_count
+{ "query": { "terms": { "region": ["서울", "광주"] } } }
+
+# range — 숫자 범위
+GET sales/_count
+{ "query": { "range": { "revenue": { "gte": 5000000 } } } }
+
+# range — 날짜 범위 (2분기)
+GET sales/_count
+{ "query": { "range": { "order_date": { "gte": "2026-04-01", "lte": "2026-06-30" } } } }
+
+# exists — 필드에 값이 있는 문서
+GET sales/_count
+{ "query": { "exists": { "field": "discount_rate" } } }</code></pre></div>
+<div class="mock"><div class="mock-title">정답 (sales 100건 기준)</div><table><thead><tr><th>쿼리</th><th>count</th></tr></thead><tbody>
+<tr><td>term region 서울</td><td class="hl">21</td></tr><tr><td>terms region 서울, 광주</td><td class="hl">45</td></tr><tr><td>range revenue ≥ 5,000,000</td><td class="hl">14</td></tr><tr><td>range order_date 2026-04-01 ~ 06-30</td><td class="hl">46</td></tr><tr><td>exists discount_rate</td><td class="hl">100</td></tr></tbody></table></div>
+<div class="tablewrap"><table><thead><tr><th>range 연산자</th><th>뜻</th><th>SQL</th></tr></thead><tbody>
+<tr><td><code>gte</code></td><td>이상 (greater than or equal)</td><td><code>&gt;=</code></td></tr>
+<tr><td><code>gt</code></td><td>초과</td><td><code>&gt;</code></td></tr>
+<tr><td><code>lte</code></td><td>이하</td><td><code>&lt;=</code></td></tr>
+<tr><td><code>lt</code></td><td>미만</td><td><code>&lt;</code></td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p><code>exists</code>가 100인 이유: 할인이 없는 주문도 <code>discount_rate: 0</code>이라는 <b>값이 있기</b> 때문입니다. “할인 받은 주문”을 찾으려면 exists가 아니라 <code>range discount_rate gt 0</code>을 써야 합니다(연습 문제 7, 정답 45건). 값이 0인 것과 값이 없는 것은 다릅니다.</p></div>
+<div class="note"><b>날짜는 문자열로 써도 됩니다</b><p><code>order_date</code>가 <code>date</code> 타입이라 <code>"2026-04-01"</code>을 날짜로 알아듣습니다. <code>"now-30d"</code>처럼 상대 날짜도 쓸 수 있지만, 실습 데이터는 2026년 1~7월이라 결과가 날마다 달라지니 절대 날짜로 연습합니다.</p></div>
+<div class="ask"><b>🔍 스스로 찾아보기</b><p><b>GPT에게:</b> “OpenSearch range 쿼리에서 날짜 필드에 format과 time_zone 옵션을 쓰는 예를 보여 줘. 한국 시간 기준 하루 범위를 어떻게 잡아?”<br/><b>문서 검색어:</b> <code>OpenSearch range query date math</code>, <code>OpenSearch terms query</code><br/><b>확인:</b> 3월 한 달(2026-03-01 ~ 2026-03-31) 주문 수를 직접 구해 봅니다. 정답 18건.</p></div>
+</section>
+
+<!-- 04 -->
+<section aria-labelledby="tab-u04" class="panel" hidden="" id="u04" role="tabpanel"><div class="crumb">Part 1. 고르기 — query · A4-M2</div><h1>04. bool — 조건 여러 개를 묶는 네 칸</h1><p class="lead">실무 질문은 조건이 두 개 이상입니다. <code>bool</code>은 조건을 네 칸에 나눠 담습니다. 칸마다 “반드시인지, 점수에 넣을지”가 다릅니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> Dev Tools</span><span><b>✅ 먼저</b> 02·03탭</span></div>
+<div class="tablewrap"><table><thead><tr><th>칸</th><th>조건</th><th>점수</th><th>SQL로 말하면</th><th>쓰는 곳</th></tr></thead><tbody>
+<tr><td><code>filter</code></td><td>반드시 만족</td><td>안 매김 (빠르고 캐시됨)</td><td><code>WHERE … AND …</code></td><td>sales처럼 정확한 조건 거의 전부</td></tr>
+<tr><td><code>must</code></td><td>반드시 만족</td><td>매김</td><td><code>WHERE …</code> + 관련도 순</td><td>문장 검색(match)</td></tr>
+<tr><td><code>should</code></td><td>만족하면 가점</td><td>매김</td><td><code>OR</code>에 가까움</td><td>“이것도 있으면 좋음”</td></tr>
+<tr><td><code>must_not</code></td><td>만족하면 제외</td><td>안 매김</td><td><code>AND NOT</code></td><td>취소 제외, 특정 지역 제외</td></tr></tbody></table></div>
+<div class="codebox"><div class="codehead"><span>Dev Tools · 예제 1 — 서울의 노트북 주문</span><button class="copy" type="button">코드 복사</button></div><pre><code>GET sales/_search
+{
+  "_source": ["order_id", "revenue"],
+  "query": { "bool": { "filter": [
+    { "term": { "region": "서울" } },
+    { "term": { "product": "노트북" } }
+  ] } }
+}</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>정답</span><button class="copy" type="button">코드 복사</button></div><pre><code>hits.total.value = 3   →  ORD060 4,800,000 · ORD079 8,160,000 · ORD087 8,400,000</code></pre></div>
+<div class="codebox"><div class="codehead"><span>Dev Tools · 예제 2 — 공공기관이면서 서울 또는 광주</span><button class="copy" type="button">코드 복사</button></div><pre><code>GET sales/_count
+{
+  "query": { "bool": { "filter": [
+    { "term":  { "customer_type": "공공기관" } },
+    { "terms": { "region": ["서울", "광주"] } }
+  ] } }
+}</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>정답</span><button class="copy" type="button">코드 복사</button></div><pre><code>{ "count": 16 }</code></pre></div>
+<div class="codebox"><div class="codehead"><span>Dev Tools · 예제 3 — IT기기 중 취소 제외 (must_not)</span><button class="copy" type="button">코드 복사</button></div><pre><code>GET sales/_search
+{
+  "size": 0,
+  "query": { "bool": {
+    "filter":   [ { "term": { "category": "IT기기" } } ],
+    "must_not": [ { "term": { "status": "취소" } } ]
+  } },
+  "aggs": { "매출": { "sum": { "field": "revenue" } } }
+}</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>정답</span><button class="copy" type="button">코드 복사</button></div><pre><code>"aggregations": { "매출": { "value": 98675000.0 } }</code></pre></div>
+<div class="codebox"><div class="codehead"><span>Dev Tools · 예제 4 — must와 filter의 점수 차이 (reviews)</span><button class="copy" type="button">코드 복사</button></div><pre><code>GET reviews/_search
+{
+  "_source": ["review_id", "rating", "comment"],
+  "query": { "bool": {
+    "must":   [ { "match": { "comment": "배송" } } ],
+    "filter": [ { "range": { "rating": { "gte": 4 } } } ]
+  } }
+}</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>정답</span><button class="copy" type="button">코드 복사</button></div><pre><code>4건 — R01, R03, R08, R10   (R06은 “배송”이 있지만 평점 2라 filter에서 제외)
+_score는 match가 매긴 점수. rating 조건은 점수에 영향 없음</code></pre></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>sales 같은 정형 데이터는 “관련도”라는 개념이 없습니다. 서울이면 서울, 아니면 아닙니다. 그래서 <b>정형 조건은 거의 다 filter</b>에 넣습니다. 점수 계산을 건너뛰니 빠르고 결과가 캐시됩니다. 문장 검색처럼 “얼마나 잘 맞는지”가 순위에 의미 있을 때만 must를 씁니다. A4-M3에서 벡터 검색에 조건을 걸 때도 이 filter를 그대로 씁니다.</p></div>
+<div class="note"><b>bool 안에 bool</b><p>“(서울 AND 노트북) OR (부산 AND 프린터)”처럼 복잡해지면 <code>should</code> 안에 bool을 두 개 넣고 <code>"minimum_should_match": 1</code>을 줍니다. 13탭 미션 3에서 써 봅니다.</p></div>
+<div class="ask"><b>🔍 스스로 찾아보기</b><p><b>GPT에게:</b> “OpenSearch bool 쿼리에서 should만 있을 때와 must/filter와 함께 있을 때 minimum_should_match 기본값이 어떻게 달라지는지 예시로 설명해 줘.”<br/><b>문서 검색어:</b> <code>OpenSearch bool query</code>, <code>query and filter context</code><br/><b>확인:</b> 예제 1을 filter 대신 must로 바꿔 실행하고 <code>_score</code>가 어떻게 달라지는지 봅니다.</p></div>
+</section>
+
+<!-- 05 -->
+<section aria-labelledby="tab-u05" class="panel" hidden="" id="u05" role="tabpanel"><div class="crumb">Part 1. 고르기 — query · A4-M2</div><h1>05. size · from · sort · _source — 무엇을 몇 개 어떤 순서로</h1><p class="lead">고른 문서를 어떻게 돌려받을지 정합니다. “매출 상위 3건”, “서울에서 가장 오래된 주문”, “두 번째 페이지” 같은 질문이 여기에 해당합니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> Dev Tools</span><span><b>✅ 먼저</b> 03·04탭</span></div>
+<div class="codebox"><div class="codehead"><span>Dev Tools · 매출 상위 3건</span><button class="copy" type="button">코드 복사</button></div><pre><code>GET sales/_search
+{
+  "size": 3,
+  "_source": ["order_id", "region", "product", "revenue"],
+  "sort": [
+    { "revenue":  "desc" },
+    { "order_id": "asc" }
+  ]
+}</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>정답</span><button class="copy" type="button">코드 복사</button></div><pre><code>ORD040  부산  노트북  8,400,000
+ORD087  서울  노트북  8,400,000
+ORD079  서울  노트북  8,160,000</code></pre></div>
+<p>두 번째 정렬 기준 <code>{"order_id": "asc"}</code>는 매출이 같을 때 순서를 고정하는 장치입니다.</p><div class="say"><b>이렇게 풀어서 설명합니다</b><p>ORD040과 ORD087은 매출이 똑같이 8,400,000원입니다. 두 번째 정렬 기준이 없으면 둘의 순서는 실행할 때마다 바뀔 수 있습니다. <b>정렬 기준은 끝까지 겹치지 않게</b> 하나 더 두는 습관을 들입니다. sort를 지정하면 <code>_score</code>는 계산되지 않고 <code>null</code>로 나옵니다.</p></div>
+<div class="codebox"><div class="codehead"><span>Dev Tools · 서울에서 가장 오래된 주문 3건</span><button class="copy" type="button">코드 복사</button></div><pre><code>GET sales/_search
+{
+  "size": 3,
+  "_source": ["order_id", "order_date"],
+  "query": { "bool": { "filter": [ { "term": { "region": "서울" } } ] } },
+  "sort": [ { "order_date": "asc" } ]
+}</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>정답</span><button class="copy" type="button">코드 복사</button></div><pre><code>ORD048  2026-01-07
+ORD042  2026-01-10
+ORD047  2026-02-13</code></pre></div>
+<h3>페이지 나누기 — from + size</h3>
+<div class="codebox"><div class="codehead"><span>Dev Tools · 매출 순 4~6위 (두 번째 페이지)</span><button class="copy" type="button">코드 복사</button></div><pre><code>GET sales/_search
+{ "from": 3, "size": 3, "_source": ["order_id", "revenue"],
+  "sort": [ { "revenue": "desc" }, { "order_id": "asc" } ] }</code></pre></div>
+<div class="note"><b>from + size는 10,000까지</b><p>깊은 페이지(예: 9,990번째부터)는 느려지고 기본 한도(10,000)를 넘으면 오류가 납니다. 대량으로 끝까지 읽을 때는 Python의 <code>helpers.scan</code>이나 <code>search_after</code>를 씁니다(A4-M1 14탭 Q&amp;A).</p></div>
+<div class="ask"><b>🔍 스스로 찾아보기</b><p><b>GPT에게:</b> “OpenSearch에서 from/size 페이지네이션과 search_after의 차이, 그리고 각각 언제 쓰는지 표로 정리해 줘.”<br/><b>문서 검색어:</b> <code>OpenSearch paginate results search_after</code>, <code>OpenSearch sort</code><br/><b>확인:</b> 매출이 가장 작은 주문을 찾아봅니다. 정답 ORD057(42,750원).</p></div>
+</section>
+
+<!-- 06 -->
+<section aria-labelledby="tab-u06" class="panel" hidden="" id="u06" role="tabpanel"><div class="crumb">Part 2. 계산하기 — aggs · A4-M2</div><h1>06. metric 집계 — 숫자 하나 계산하기</h1><p class="lead">합계·평균·최소·최대·개수처럼 결과가 숫자 하나인 계산입니다. A4-M1 07탭 Metric 차트가 이것입니다. 문서는 필요 없으니 <code>"size": 0</code>으로 계산만 받습니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> Dev Tools</span><span><b>✅ 먼저</b> 01탭 응답 읽기</span></div>
+<div class="codebox"><div class="codehead"><span>Dev Tools · 전체 매출 통계</span><button class="copy" type="button">코드 복사</button></div><pre><code>GET sales/_search
+{
+  "size": 0,
+  "aggs": {
+    "합계":     { "sum":         { "field": "revenue" } },
+    "평균":     { "avg":         { "field": "revenue" } },
+    "최소":     { "min":         { "field": "revenue" } },
+    "최대":     { "max":         { "field": "revenue" } },
+    "건수":     { "value_count": { "field": "order_id" } },
+    "담당자수": { "cardinality": { "field": "salesperson" } },
+    "한번에":   { "stats":       { "field": "revenue" } }
+  }
+}</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>정답 (aggregations 부분)</span><button class="copy" type="button">코드 복사</button></div><pre><code>"합계":     { "value": 213292750.0 }
+"평균":     { "value": 2132927.5 }
+"최소":     { "value": 42750.0 }
+"최대":     { "value": 8400000.0 }
+"건수":     { "value": 100 }
+"담당자수": { "value": 8 }
+"한번에":   { "count": 100, "min": 42750.0, "max": 8400000.0, "avg": 2132927.5, "sum": 213292750.0 }</code></pre></div>
+<div class="tablewrap"><table><thead><tr><th>집계</th><th>계산</th><th>SQL</th><th>주의</th></tr></thead><tbody>
+<tr><td><code>sum</code> / <code>avg</code></td><td>합계 / 평균</td><td><code>SUM</code> / <code>AVG</code></td><td>정수 필드도 결과는 소수(<code>.0</code>)</td></tr>
+<tr><td><code>min</code> / <code>max</code></td><td>최소 / 최대</td><td><code>MIN</code> / <code>MAX</code></td><td>어느 문서인지는 안 알려 줌 → 05탭 sort로</td></tr>
+<tr><td><code>value_count</code></td><td>값이 있는 문서 수</td><td><code>COUNT(열)</code></td><td>그냥 건수는 <code>hits.total.value</code>로도 충분</td></tr>
+<tr><td><code>cardinality</code></td><td>서로 다른 값의 개수</td><td><code>COUNT(DISTINCT 열)</code></td><td>근사값. 수천 개 이하는 사실상 정확</td></tr>
+<tr><td><code>stats</code></td><td>위 다섯 개를 한 번에</td><td>—</td><td>표준편차까지는 <code>extended_stats</code></td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>최대 매출이 8,400,000원이라는 건 알지만, 어느 주문인지는 metric 집계가 알려 주지 않습니다. “최대값”과 “최대값을 가진 문서”는 다른 질문입니다. 문서가 필요하면 05탭처럼 sort + size를 씁니다(정답: ORD040과 ORD087 두 건).</p></div>
+<div class="note"><b>query와 함께 쓰면 고른 문서만 계산합니다</b><p>위 요청에 <code>"query": {"term": {"region": "부산"}}</code>을 더하면 부산 16건의 통계가 됩니다. 부산 평균 만족도는 <code>avg satisfaction</code> = 4.25입니다.</p></div>
+<div class="ask"><b>🔍 스스로 찾아보기</b><p><b>GPT에게:</b> “OpenSearch cardinality 집계가 왜 근사값인지, precision_threshold 옵션이 무엇인지 쉽게 설명해 줘.”<br/><b>문서 검색어:</b> <code>OpenSearch metric aggregations</code>, <code>percentiles aggregation</code><br/><b>확인:</b> 판매 수량(<code>quantity</code>) 합계와 평균 만족도를 구해 봅니다. 정답 459개, 4.31.</p></div>
+</section>
+
+<!-- 07 -->
+<section aria-labelledby="tab-u07" class="panel" hidden="" id="u07" role="tabpanel"><div class="crumb">Part 2. 계산하기 — aggs · A4-M2</div><h1>07. bucket 집계 — 그룹으로 나누기</h1><p class="lead">“지역별”, “월별”, “금액 구간별”처럼 문서를 그룹(버킷)으로 나눕니다. A4-M1 08탭 Bar 차트의 X축(Buckets)이 이것입니다. 결과는 <code>buckets</code> 목록으로 옵니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> Dev Tools</span><span><b>✅ 먼저</b> 06탭</span></div>
+<h3>terms — 값별로</h3>
+<div class="codebox"><div class="codehead"><span>Dev Tools · 상태별 건수</span><button class="copy" type="button">코드 복사</button></div><pre><code>GET sales/_search
+{ "size": 0, "aggs": { "상태별": { "terms": { "field": "status" } } } }</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>정답</span><button class="copy" type="button">코드 복사</button></div><pre><code>"buckets": [
+  { "key": "완료",   "doc_count": 75 },
+  { "key": "배송중", "doc_count": 18 },
+  { "key": "취소",   "doc_count": 7 }
+]</code></pre></div>
+<div class="note"><b>terms의 기본 size는 10</b><p>버킷은 기본으로 <b>건수 많은 순 10개</b>만 옵니다. 제품(8개), 담당자(8명)는 괜찮지만 값 종류가 10개를 넘으면 <code>"size": 50</code>처럼 늘려야 합니다. 안 늘리면 <b>오류 없이 일부가 빠집니다</b>. 응답의 <code>sum_other_doc_count</code>가 0이 아니면 잘린 것입니다.</p></div>
+<h3>date_histogram — 기간별로</h3>
+<div class="codebox"><div class="codehead"><span>Dev Tools · 월별 건수</span><button class="copy" type="button">코드 복사</button></div><pre><code>GET sales/_search
+{
+  "size": 0,
+  "aggs": { "월별": { "date_histogram": {
+    "field": "order_date", "calendar_interval": "month", "format": "yyyy-MM"
+  } } }
+}</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>정답</span><button class="copy" type="button">코드 복사</button></div><pre><code>2026-01: 14   2026-02: 14   2026-03: 18   2026-04: 17
+2026-05: 13   2026-06: 16   2026-07: 8          (key_as_string: doc_count)</code></pre></div>
+<div class="tablewrap"><table><thead><tr><th>calendar_interval</th><th>뜻</th></tr></thead><tbody><tr><td><code>day</code>, <code>week</code>, <code>month</code>, <code>quarter</code>, <code>year</code></td><td>달력 기준 단위. 월마다 일수가 달라도 정확히 “한 달”</td></tr><tr><td>(<code>fixed_interval</code>: <code>30d</code>, <code>12h</code>)</td><td>고정 길이. 월 단위 리포트에는 calendar_interval을 씀</td></tr></tbody></table></div>
+<h3>range — 직접 정한 구간별로</h3>
+<div class="codebox"><div class="codehead"><span>Dev Tools · 매출 금액 구간별 건수</span><button class="copy" type="button">코드 복사</button></div><pre><code>GET sales/_search
+{
+  "size": 0,
+  "aggs": { "금액대": { "range": {
+    "field": "revenue",
+    "ranges": [
+      { "key": "100만 미만",   "to": 1000000 },
+      { "key": "100~500만",    "from": 1000000, "to": 5000000 },
+      { "key": "500만 이상",   "from": 5000000 }
+    ]
+  } } }
+}</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>정답</span><button class="copy" type="button">코드 복사</button></div><pre><code>100만 미만: 42   100~500만: 44   500만 이상: 14       (from은 포함, to는 미포함)</code></pre></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>세 가지 버킷 모두 응답 모양이 같습니다. <code>buckets</code> 목록, 각 버킷의 <code>key</code>(그룹 이름)와 <code>doc_count</code>(건수). 지금은 건수만 세고 있는데, 실무에서 원하는 건 보통 “그룹별 <b>매출</b>”입니다. 버킷 안에 06탭의 sum을 넣으면 됩니다. 그게 다음 탭입니다.</p></div>
+<div class="ask"><b>🔍 스스로 찾아보기</b><p><b>GPT에게:</b> “OpenSearch terms 집계에서 size와 shard_size의 차이, 그리고 결과 건수가 부정확해질 수 있는 경우를 설명해 줘.”<br/><b>문서 검색어:</b> <code>OpenSearch bucket aggregations</code>, <code>date_histogram calendar_interval</code><br/><b>확인:</b> 고객 유형(<code>customer_type</code>)별 건수를 구해 봅니다. 정답 공공기관 37, 개인 33, 기업 30.</p></div>
+</section>
+
+<!-- 08 -->
+<section aria-labelledby="tab-u08" class="panel" hidden="" id="u08" role="tabpanel"><div class="crumb">Part 2. 계산하기 — aggs · A4-M2</div><h1>08. 중첩과 정렬 — “그룹별로 계산하고 큰 순서로”</h1><p class="lead">버킷 안에 다시 aggs를 넣으면 “지역별 매출”, “월별 평균 만족도”가 됩니다. 버킷 안에 버킷을 넣으면 “지역별 → 제품별”이 됩니다. A4-M4의 <code>get_region_summary()</code>가 바로 이 구조입니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> Dev Tools</span><span><b>✅ 먼저</b> 06·07탭</span></div>
+<div class="codebox"><div class="codehead"><span>Dev Tools · 지역별 매출, 큰 순서로</span><button class="copy" type="button">코드 복사</button></div><pre><code>GET sales/_search
+{
+  "size": 0,
+  "aggs": {
+    "지역별": {
+      "terms": { "field": "region", "order": { "매출": "desc" } },
+      "aggs":  { "매출": { "sum": { "field": "revenue" } } }
+    }
+  }
+}</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>정답</span><button class="copy" type="button">코드 복사</button></div><pre><code>서울 58,566,750 (21건)
+부산 44,906,750 (16건)
+광주 39,029,500 (24건)
+대구 38,928,250 (23건)
+대전 31,861,500 (16건)</code></pre></div>
+<div class="mock"><div class="mock-title">중첩 구조 읽는 법 — 들여쓰기가 곧 “~별로 ~를”</div><table><thead><tr><th>층</th><th>요청</th><th>응답에서 꺼내는 곳</th></tr></thead><tbody>
+<tr><td>바깥 (버킷)</td><td><code>"지역별": {"terms": …}</code></td><td><code>aggregations.지역별.buckets[i].key</code> → “서울”</td></tr>
+<tr><td>안쪽 (계산)</td><td><code>"aggs": {"매출": {"sum": …}}</code></td><td><code>buckets[i].매출.value</code> → 58566750.0</td></tr>
+<tr><td>정렬</td><td><code>"order": {"매출": "desc"}</code></td><td>buckets 순서 자체</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>order를 빼면 버킷은 <b>건수 많은 순</b>(광주 24건이 1등)으로 옵니다. “매출 큰 순”을 원하면 안쪽 계산의 이름으로 정렬해야 합니다. A4-M1에서 Bar 차트의 Order By를 “Metric: Sum of revenue”로 바꾸던 것과 같습니다.</p></div>
+<h3>버킷 안에 버킷 — 지역별 1위 제품</h3>
+<div class="codebox"><div class="codehead"><span>Dev Tools</span><button class="copy" type="button">코드 복사</button></div><pre><code>GET sales/_search
+{
+  "size": 0,
+  "aggs": {
+    "지역별": {
+      "terms": { "field": "region" },
+      "aggs": {
+        "1위제품": {
+          "terms": { "field": "product", "size": 1, "order": { "매출": "desc" } },
+          "aggs":  { "매출": { "sum": { "field": "revenue" } } }
+        }
+      }
+    }
+  }
+}</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>정답</span><button class="copy" type="button">코드 복사</button></div><pre><code>서울 → 노트북   21,360,000
+부산 → 노트북   24,840,000
+대구 → 복합기   11,560,000
+대전 → 프로젝터 10,290,000
+광주 → 노트북   10,200,000</code></pre></div>
+<div class="note"><b>A4-M4 미리 보기</b><p>A4-M4에서 광주 사내 문서는 “복합기·프린터 수요가 크다”고 말하는데, 이 쿼리로 보면 광주 1위는 노트북입니다. 그 어긋남을 GPT가 짚게 하는 것이 A4-M4의 핵심 장면입니다.</p></div>
+<h3>query + aggs — 고른 다음 그룹별로</h3>
+<div class="codebox"><div class="codehead"><span>Dev Tools · 취소 제외, 월별 매출</span><button class="copy" type="button">코드 복사</button></div><pre><code>GET sales/_search
+{
+  "size": 0,
+  "query": { "bool": { "must_not": [ { "term": { "status": "취소" } } ] } },
+  "aggs": { "월별": {
+    "date_histogram": { "field": "order_date", "calendar_interval": "month", "format": "yyyy-MM" },
+    "aggs": { "매출": { "sum": { "field": "revenue" } } }
+  } }
+}</code></pre></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>순서는 항상 <b>query가 먼저 고르고, aggs가 그 결과로 계산</b>입니다. 취소 7건이 빠진 93건으로 월별 매출을 냅니다. 전체 매출에서 취소 매출 8,335,750원이 빠지므로 월별 합계를 모두 더하면 204,957,000원이 됩니다.</p></div>
+<div class="ask"><b>🔍 스스로 찾아보기</b><p><b>GPT에게:</b> “OpenSearch에서 terms 집계 안에 top_hits를 넣어 그룹별 대표 문서를 함께 가져오는 예를 보여 줘. sales 인덱스(region, product, revenue)를 가정해 줘.”<br/><b>문서 검색어:</b> <code>OpenSearch sub-aggregations</code>, <code>bucket_sort</code>, <code>top_hits aggregation</code><br/><b>확인:</b> 담당자별 매출 1·2위를 구해 봅니다. 정답 박지훈 36,420,750 / 최유진 35,067,000.</p></div>
+</section>
+
+<!-- 09 -->
+<section aria-labelledby="tab-u09" class="panel" hidden="" id="u09" role="tabpanel"><div class="crumb">Part 3. SQL 대응표 · A4-M2</div><h1>09. SQL ↔ Query DSL 대응표 — 아는 문법으로 번역하기</h1><p class="lead">SQL을 안다면 이 표 한 장이 가장 빠른 지름길입니다. 그리고 OpenSearch는 SQL을 직접 받아 주기도 하고, SQL을 DSL로 <b>번역해서 보여 주기도</b> 합니다. 모르는 DSL은 SQL로 먼저 쓰고 번역본을 보면 됩니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> Dev Tools, Dashboards → Query Workbench</span><span><b>✅ 먼저</b> 03~08탭</span></div>
+<div class="tablewrap"><table><thead><tr><th>SQL</th><th>Query DSL</th><th>탭</th></tr></thead><tbody>
+<tr><td><code>FROM sales</code></td><td><code>GET sales/_search</code></td><td>01</td></tr>
+<tr><td><code>SELECT order_id, revenue</code></td><td><code>"_source": ["order_id", "revenue"]</code></td><td>05</td></tr>
+<tr><td><code>WHERE region = '서울'</code></td><td><code>{"term": {"region": "서울"}}</code></td><td>03</td></tr>
+<tr><td><code>WHERE region IN ('서울','광주')</code></td><td><code>{"terms": {"region": ["서울","광주"]}}</code></td><td>03</td></tr>
+<tr><td><code>WHERE revenue &gt;= 5000000</code></td><td><code>{"range": {"revenue": {"gte": 5000000}}}</code></td><td>03</td></tr>
+<tr><td><code>WHERE order_date BETWEEN '2026-04-01' AND '2026-06-30'</code></td><td><code>{"range": {"order_date": {"gte": "2026-04-01", "lte": "2026-06-30"}}}</code></td><td>03</td></tr>
+<tr><td><code>WHERE A AND B</code></td><td><code>{"bool": {"filter": [A, B]}}</code></td><td>04</td></tr>
+<tr><td><code>WHERE A AND NOT B</code></td><td><code>{"bool": {"filter": [A], "must_not": [B]}}</code></td><td>04</td></tr>
+<tr><td><code>WHERE A OR B</code></td><td><code>{"bool": {"should": [A, B], "minimum_should_match": 1}}</code></td><td>04</td></tr>
+<tr><td><code>WHERE comment LIKE '%배송%'</code></td><td>(비슷하게) <code>{"match": {"comment": "배송"}}</code> — 토큰 단위라 완전히 같지 않음</td><td>02</td></tr>
+<tr><td><code>WHERE discount_rate IS NOT NULL</code></td><td><code>{"exists": {"field": "discount_rate"}}</code></td><td>03</td></tr>
+<tr><td><code>ORDER BY revenue DESC</code></td><td><code>"sort": [{"revenue": "desc"}]</code></td><td>05</td></tr>
+<tr><td><code>LIMIT 3 OFFSET 3</code></td><td><code>"size": 3, "from": 3</code></td><td>05</td></tr>
+<tr><td><code>COUNT(*)</code></td><td><code>hits.total.value</code> 또는 <code>GET sales/_count</code></td><td>01·03</td></tr>
+<tr><td><code>SUM / AVG / MIN / MAX(revenue)</code></td><td><code>{"sum" | "avg" | "min" | "max": {"field": "revenue"}}</code></td><td>06</td></tr>
+<tr><td><code>COUNT(DISTINCT salesperson)</code></td><td><code>{"cardinality": {"field": "salesperson"}}</code></td><td>06</td></tr>
+<tr><td><code>GROUP BY region</code></td><td><code>{"terms": {"field": "region"}}</code></td><td>07</td></tr>
+<tr><td><code>GROUP BY 월</code></td><td><code>{"date_histogram": {"field": "order_date", "calendar_interval": "month"}}</code></td><td>07</td></tr>
+<tr><td><code>CASE WHEN 구간</code> + <code>GROUP BY</code></td><td><code>{"range": {"field": "revenue", "ranges": [...]}}</code></td><td>07</td></tr>
+<tr><td><code>SELECT region, SUM(revenue) … GROUP BY region</code></td><td>terms 안에 <code>"aggs": {"매출": {"sum": …}}</code></td><td>08</td></tr>
+<tr><td><code>ORDER BY SUM(revenue) DESC</code></td><td>terms에 <code>"order": {"매출": "desc"}</code></td><td>08</td></tr>
+<tr><td><code>HAVING SUM(revenue) &gt; 40000000</code></td><td>안쪽에 <code>bucket_selector</code> (또는 결과를 Python에서 거르기)</td><td>13</td></tr>
+<tr><td><code>JOIN</code></td><td><b>없음</b> — 두 번 조회해서 잇기 (또는 문서에 미리 합쳐 저장)</td><td>13</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>표에서 가장 중요한 줄은 마지막 줄입니다. OpenSearch는 <b>JOIN이 없습니다</b>. 검색엔진은 “한 문서 안에 필요한 것이 다 들어 있다”를 전제로 빠르게 찾는 도구이기 때문입니다. 그래서 sales 문서에 지역·제품·담당자를 모두 함께 넣어 둔 것이고, 후기(reviews)와 주문(sales)을 잇는 일은 두 번 조회해서 합니다(13탭 미션 4).</p></div>
+<h3>SQL을 직접 실행하기</h3>
+<div class="codebox"><div class="codehead"><span>Dev Tools</span><button class="copy" type="button">코드 복사</button></div><pre><code>POST _plugins/_sql
+{ "query": "SELECT region, SUM(revenue) AS rev FROM sales GROUP BY region ORDER BY rev DESC" }</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>응답 (모양)</span><button class="copy" type="button">코드 복사</button></div><pre><code>{
+  "schema":   [ { "name": "region", "type": "keyword" }, { "name": "rev", "type": "long" } ],
+  "datarows": [ ["서울", 58566750], ["부산", 44906750], ["광주", 39029500],
+                ["대구", 38928250], ["대전", 31861500] ],
+  "total": 5, "size": 5, "status": 200
+}</code></pre></div>
+<h3>SQL을 DSL로 번역해 보기 — _explain</h3>
+<div class="codebox"><div class="codehead"><span>Dev Tools</span><button class="copy" type="button">코드 복사</button></div><pre><code>POST _plugins/_sql/_explain
+{ "query": "SELECT COUNT(*) FROM sales WHERE region = '서울' AND status <> '취소'" }</code></pre></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>응답 안에 OpenSearch가 실제로 실행할 DSL(<code>"bool"</code>, <code>"term"</code>, <code>"must_not"</code> …)이 들어 있습니다. 모양이 내가 04탭에서 쓴 것과 조금 다를 수 있지만(예: <code>filter</code> 안에 bool이 한 번 더 들어감) 의미는 같습니다. 정답은 19건(서울 21건 − 취소 2건)입니다.</p></div>
+<div class="note"><b>Query Workbench — 화면에서 SQL</b><p>Dashboards 메뉴의 <b>OpenSearch Plugins → Query Workbench</b>에서 SQL을 쓰고 Run을 누르면 표로 결과가 나옵니다. <b>Explain</b> 버튼으로 DSL 번역도 볼 수 있습니다. SQL 기능은 플러그인이라 지원 문법이 버전마다 조금 다르고, 복잡한 쿼리는 DSL로 쓰는 편이 확실합니다. 이 모듈에서 SQL은 <b>DSL을 이해하는 보조 도구</b>로 씁니다.</p></div>
+<div class="ask"><b>🔍 스스로 찾아보기</b><p><b>GPT에게:</b> “아래 SQL을 OpenSearch Query DSL로 바꿔 줘. 인덱스 sales, region·status는 keyword, revenue는 long. SELECT product, AVG(satisfaction) FROM sales WHERE region='대구' GROUP BY product”<br/><b>문서 검색어:</b> <code>OpenSearch SQL plugin</code>, <code>OpenSearch SQL explain</code>, <code>Query Workbench</code><br/><b>확인:</b> GPT가 준 DSL과 <code>_plugins/_sql/_explain</code> 결과를 나란히 놓고, 둘 다 Dev Tools에서 실행해 같은 숫자가 나오는지 봅니다.</p></div>
+</section>
+
+<!-- 10 -->
+<section aria-labelledby="tab-u10" class="panel" hidden="" id="u10" role="tabpanel"><div class="crumb">Part 4. Python으로 · A4-M2</div><h1>10. Python으로 옮기기 — 그리고 get_region_summary 해부</h1><p class="lead">Dev Tools에서 완성한 요청은 거의 그대로 Python <code>body=</code>에 들어갑니다. 마지막으로 A4-M4에서 쓰는 <code>get_region_summary()</code>를 한 줄씩 읽으며 이 모듈의 문법을 모두 확인합니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> 노트북 또는 .py (A4-M1 13탭 연결 코드 사용)</span><span><b>✅ 먼저</b> A4-M1 13탭 로그인 방식 연결</span></div>
+<div class="tablewrap"><table><thead><tr><th>Dev Tools</th><th>Python</th></tr></thead><tbody>
+<tr><td><code>GET sales/_search</code> + JSON</td><td><code>client.search(index="sales", body={...})</code></td></tr>
+<tr><td><code>GET sales/_count</code> + JSON</td><td><code>client.count(index="sales", body={...})["count"]</code></td></tr>
+<tr><td><code>true / false / null</code></td><td><code>True / False / None</code></td></tr>
+<tr><td><code># 주석</code> (Dev Tools)</td><td><code># 주석</code> (그대로)</td></tr>
+<tr><td><code>POST _plugins/_sql</code></td><td><code>client.transport.perform_request("POST", "/_plugins/_sql", body={"query": "..."})</code></td></tr></tbody></table></div>
+<div class="codebox"><div class="codehead"><span>Python · 08탭 “지역별 매출”을 그대로</span><button class="copy" type="button">코드 복사</button></div><pre><code>body = {
+    "size": 0,
+    "aggs": {"by_region": {
+        "terms": {"field": "region", "order": {"rev": "desc"}},
+        "aggs": {"rev": {"sum": {"field": "revenue"}}},
+    }},
+}
+res = client.search(index="sales", body=body)
+for b in res["aggregations"]["by_region"]["buckets"]:
+    print(f'{b["key"]}  {b["doc_count"]:>2}건  {b["rev"]["value"]:>14,.0f}원')</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>실행 결과</span><button class="copy" type="button">코드 복사</button></div><pre><code>서울  21건      58,566,750원
+부산  16건      44,906,750원
+광주  24건      39,029,500원
+대구  23건      38,928,250원
+대전  16건      31,861,500원</code></pre></div>
+<h3>get_region_summary 해부 (A4-M4 sales_service.py)</h3>
+<div class="codebox"><div class="codehead"><span>A4-M4 · get_region_summary의 body — 줄마다 이 모듈의 탭 번호</span><button class="copy" type="button">코드 복사</button></div><pre><code>{
+  "size": 0,                                            ← 05·06탭: 문서 없이 계산만
+  "query": {"term": {"region": region}},                ← 03탭: 지역 하나 고르기
+  "aggs": {
+    "total_revenue":    {"sum": {"field": "revenue"}},       ← 06탭 metric
+    "avg_revenue":      {"avg": {"field": "revenue"}},       ← 06탭
+    "total_quantity":   {"sum": {"field": "quantity"}},      ← 06탭
+    "avg_satisfaction": {"avg": {"field": "satisfaction"}},  ← 06탭
+    "status_count":     {"terms": {"field": "status", "size": 10}},   ← 07탭 bucket
+    "product_sales": {
+      "terms": {"field": "product", "size": 10, "order": {"sales": "desc"}},  ← 08탭 정렬
+      "aggs": {"sales": {"sum": {"field": "revenue"}}}                      ← 08탭 중첩
+    }
+  }
+}</code></pre></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>A4-M4의 핵심 함수가 이 모듈의 03·05·06·07·08탭으로 전부 설명됩니다. 처음 보면 길어 보이지만 “서울을 고르고(query), 숫자 넷을 계산하고(metric), 상태별로 세고(bucket), 제품별 매출을 큰 순으로(중첩+정렬)” 네 문장입니다. 이 해석이 술술 나오면 A4-M4로 넘어갈 준비가 된 것입니다.</p></div>
+<div class="ask"><b>🔍 스스로 찾아보기</b><p><b>GPT에게:</b> “opensearch-py로 search 결과의 aggregations buckets를 pandas DataFrame으로 바꾸는 함수를 만들어 줘. 버킷 안에 sum 집계가 하나 있는 경우.”<br/><b>문서 검색어:</b> <code>opensearch-py search</code>, <code>opensearch-py transport perform_request</code><br/><b>확인:</b> 위 body에서 <code>"query"</code>를 광주로 바꿔 실행하고 total_revenue가 39,029,500인지 봅니다.</p></div>
+</section>
+
+<!-- 11 -->
+<section aria-labelledby="tab-u11" class="panel" hidden="" id="u11" role="tabpanel"><div class="crumb">Part 5. 스스로 공부하기 · A4-M2</div><h1>11. GPT와 검색으로 공부하는 법 — 묻고, 실행하고, 확인하기</h1><p class="lead">쿼리 문법은 외우는 것보다 <b>찾아서 바로 실행해 보는</b> 쪽이 빨리 늡니다. GPT는 좋은 선생님이지만 OpenSearch에 대해서는 자주 틀립니다. 질문하는 틀과 검증하는 습관을 함께 익힙니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> ChatGPT·Claude 등 + Dev Tools</span><span><b>✅ 먼저</b> 01~10탭</span></div>
+<h3>좋은 질문의 틀</h3>
+<div class="codebox"><div class="codehead"><span>질문 틀 — 복사해서 [ ] 부분만 바꾸기</span><button class="copy" type="button">코드 복사</button></div><pre><code>[OpenSearch 2.x] Query DSL로 답해 줘. Elasticsearch 문법과 다르면 OpenSearch 기준으로.
+인덱스: sales
+필드: order_id(keyword), order_date(date), region(keyword), product(keyword),
+      customer_type(keyword), status(keyword), revenue(long), quantity(integer),
+      satisfaction(integer), discount_rate(integer)
+원하는 결과: [예: 2분기 공공기관 주문의 지역별 매출, 큰 순서]
+조건: Dev Tools에 바로 붙여넣을 수 있는 형태로, 각 줄에 짧은 설명 주석.</code></pre></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>세 가지가 핵심입니다. ① <b>OpenSearch라고 명시</b> — 안 하면 Elasticsearch 문법으로 답하는 경우가 많습니다. ② <b>필드 이름과 타입을 알려 주기</b> — 안 알려 주면 <code>region.keyword</code>처럼 우리 인덱스에 없는 필드를 지어냅니다. ③ <b>원하는 결과를 구체적으로</b> — “매출 분석해 줘”보다 “지역별 매출 큰 순서”가 정확한 쿼리를 받습니다.</p></div>
+<h3>이런 것을 물어보세요</h3>
+<div class="tablewrap"><table><thead><tr><th>목적</th><th>질문 예</th></tr></thead><tbody>
+<tr><td>설명 듣기</td><td>“이 쿼리를 한 줄씩 한국어로 설명해 줘: (쿼리 붙여넣기)”</td></tr>
+<tr><td>SQL에서 번역</td><td>“이 SQL을 OpenSearch DSL로: SELECT … (필드 정보 포함)”</td></tr>
+<tr><td>오류 해석</td><td>“Dev Tools에서 이 오류가 났어. 원인과 고친 쿼리를 알려 줘: (error.type, reason 붙여넣기)”</td></tr>
+<tr><td>바꿔 보기</td><td>“이 쿼리를 취소 주문 제외로 바꿔 줘 / 월별로 나눠 줘”</td></tr>
+<tr><td>비교 학습</td><td>“terms와 composite 집계의 차이를 sales 예시로 보여 줘”</td></tr>
+<tr><td>문제 만들기</td><td>“sales 필드로 bool + terms + sum을 섞은 연습 문제 5개를 만들어 줘. 정답 쿼리는 따로”</td></tr></tbody></table></div>
+<h3>GPT 답을 검증하는 체크리스트</h3>
+<div class="task"><h4>받은 쿼리는 반드시 이 순서로</h4><ol><li><b>Dev Tools에서 실행</b>한다. 실행하지 않은 쿼리는 아직 정답이 아닙니다.</li><li><b>필드 이름</b>이 우리 매핑에 있는지 본다 (<code>GET sales/_mapping</code>). <code>.keyword</code>가 붙어 있으면 의심.</li><li><b>건수 감각</b>으로 확인한다. 서울은 21건, 전체는 100건. 결과가 0이거나 100이면 조건이 안 걸린 것.</li><li><b>숫자를 하나 손으로</b> 맞춰 본다. 이 교안의 정답 숫자나 Dashboard와 비교.</li><li>오류가 나면 <b>오류 메시지를 그대로</b> 다시 GPT에게 준다.</li></ol></div>
+<h3>GPT가 자주 틀리는 OpenSearch 부분</h3>
+<div class="tablewrap"><table><thead><tr><th>GPT가 준 것</th><th>문제</th><th>우리 환경에서는</th></tr></thead><tbody>
+<tr><td><code>"region.keyword"</code></td><td>동적 매핑을 가정한 이름. 우리 sales엔 없음 → 조용히 0건</td><td><code>"region"</code> (이미 keyword)</td></tr>
+<tr><td><code>_xpack/sql</code>, <code>_sql</code></td><td>Elasticsearch의 SQL 경로</td><td><code>_plugins/_sql</code></td></tr>
+<tr><td><code>_opendistro/_sql</code></td><td>OpenSearch 이전 이름(구버전)</td><td><code>_plugins/_sql</code></td></tr>
+<tr><td>최상위 <code>"knn": {...}</code> (Elasticsearch 8 방식)</td><td>OpenSearch 벡터 검색과 문법이 다름</td><td><code>"query": {"knn": {...}}</code> (A4-M3)</td></tr>
+<tr><td><code>"interval": "month"</code></td><td>오래된 date_histogram 옵션</td><td><code>"calendar_interval": "month"</code></td></tr>
+<tr><td>필드에 없는 값으로 term (예: <code>"서울시"</code>)</td><td>keyword는 완전 일치라 0건</td><td>실제 값 확인: terms 집계로 값 목록부터 보기</td></tr></tbody></table></div>
+<h3>공식 문서와 검색</h3>
+<div class="tablewrap"><table><thead><tr><th>찾을 때</th><th>검색어 / 위치</th></tr></thead><tbody>
+<tr><td>쿼리 문법 전체</td><td><code>OpenSearch query DSL</code> → docs.opensearch.org</td></tr>
+<tr><td>집계</td><td><code>OpenSearch aggregations metric bucket</code></td></tr>
+<tr><td>SQL</td><td><code>OpenSearch SQL and PPL</code>, <code>Query Workbench</code></td></tr>
+<tr><td>Python</td><td><code>opensearch-py user guide</code></td></tr>
+<tr><td>인터넷 예제를 볼 때</td><td>제목·주소에 <b>elastic.co</b>가 있으면 Elasticsearch 문서. 대부분 비슷하지만 SQL·벡터·보안은 다름</td></tr></tbody></table></div>
+<div class="note"><b>버전 확인</b><p>문서를 볼 때는 오른쪽 위 버전을 내 OpenSearch 버전과 맞춥니다. 내 버전은 Dev Tools <code>GET /</code>의 <code>version.number</code>입니다(A4-M1 01탭).</p></div>
+</section>
+
+<!-- 12 -->
+<section aria-labelledby="tab-u12" class="panel" hidden="" id="u12" role="tabpanel"><div class="crumb">Part 5. 스스로 공부하기 · A4-M2</div><h1>12. 연습 문제 20 — 정답 숫자를 먼저 보고 쿼리 짜기</h1><p class="lead">각 문제의 정답 숫자는 표에 공개돼 있습니다. 쿼리를 짜서 같은 숫자가 나오면 맞은 것입니다. 막히면 힌트(탭 번호)로 돌아가고, 마지막에 정답 쿼리를 펼쳐 비교합니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> Dev Tools (원하면 Python으로도)</span><span><b>✅ 먼저</b> 01~09탭</span></div>
+<div class="tablewrap"><table><thead><tr><th>#</th><th>문제</th><th>정답</th><th>힌트</th></tr></thead><tbody>
+<tr><td>1</td><td>sales 전체 주문 수</td><td>100</td><td>03</td></tr>
+<tr><td>2</td><td>서울 주문 수</td><td>21</td><td>03</td></tr>
+<tr><td>3</td><td>서울의 노트북 주문 수</td><td>3</td><td>04</td></tr>
+<tr><td>4</td><td>매출 500만 원 이상 주문 수</td><td>14</td><td>03</td></tr>
+<tr><td>5</td><td>2분기(4/1~6/30) 주문 수와 매출</td><td>46건 / 89,782,500</td><td>03·06</td></tr>
+<tr><td>6</td><td>공공기관이면서 서울 또는 광주인 주문 수</td><td>16</td><td>04</td></tr>
+<tr><td>7</td><td>할인을 받은(할인율 0 초과) 주문 수</td><td>45</td><td>03</td></tr>
+<tr><td>8</td><td>IT기기 중 취소를 뺀 매출</td><td>98,675,000</td><td>04</td></tr>
+<tr><td>9</td><td>매출 상위 3건의 order_id (동률은 order_id 오름차순)</td><td>ORD040, ORD087, ORD079</td><td>05</td></tr>
+<tr><td>10</td><td>서울에서 가장 오래된 주문 3건</td><td>ORD048, ORD042, ORD047</td><td>05</td></tr>
+<tr><td>11</td><td>전체 매출의 합계·평균·최소·최대 (한 번에)</td><td>213,292,750 / 2,132,927.5 / 42,750 / 8,400,000</td><td>06</td></tr>
+<tr><td>12</td><td>서로 다른 담당자 수</td><td>8</td><td>06</td></tr>
+<tr><td>13</td><td>제품별 매출 1위 제품과 금액</td><td>노트북 62,040,000</td><td>08</td></tr>
+<tr><td>14</td><td>담당자별 매출 1·2위</td><td>박지훈 36,420,750 / 최유진 35,067,000</td><td>08</td></tr>
+<tr><td>15</td><td>월별 매출이 가장 큰 달</td><td>2026-03, 50,737,000 (18건)</td><td>07·08</td></tr>
+<tr><td>16</td><td>카테고리별 평균 만족도</td><td>IT기기 4.36 / 사무기기 4.29 / 주변기기 4.28</td><td>08</td></tr>
+<tr><td>17</td><td>고객 유형별 건수와 매출</td><td>개인 33·76,589,750 / 공공기관 37·62,991,250 / 기업 30·73,711,750</td><td>08</td></tr>
+<tr><td>18</td><td>매출 구간별 건수 (100만 미만 / 100~500만 / 500만 이상)</td><td>42 / 44 / 14</td><td>07</td></tr>
+<tr><td>19</td><td>영업 2팀의 매출과 건수</td><td>45,017,750 / 14건</td><td>04·06</td></tr>
+<tr><td>20</td><td>대구 매출의 최소·최대·평균</td><td>42,750 / 5,100,000 / 1,692,532.6</td><td>06</td></tr></tbody></table></div>
+<details class="qa"><summary>정답 쿼리 1~7</summary><div class="codebox"><div class="codehead"><span>Dev Tools</span><button class="copy" type="button">코드 복사</button></div><pre><code># 1
+GET sales/_count
+# 2
+GET sales/_count
+{ "query": { "term": { "region": "서울" } } }
+# 3
+GET sales/_count
+{ "query": { "bool": { "filter": [ { "term": { "region": "서울" } }, { "term": { "product": "노트북" } } ] } } }
+# 4
+GET sales/_count
+{ "query": { "range": { "revenue": { "gte": 5000000 } } } }
+# 5
+GET sales/_search
+{ "size": 0, "query": { "range": { "order_date": { "gte": "2026-04-01", "lte": "2026-06-30" } } },
+  "aggs": { "매출": { "sum": { "field": "revenue" } } } }
+# 6
+GET sales/_count
+{ "query": { "bool": { "filter": [ { "term": { "customer_type": "공공기관" } }, { "terms": { "region": ["서울", "광주"] } } ] } } }
+# 7
+GET sales/_count
+{ "query": { "range": { "discount_rate": { "gt": 0 } } } }</code></pre></div></details>
+<details class="qa"><summary>정답 쿼리 8~12</summary><div class="codebox"><div class="codehead"><span>Dev Tools</span><button class="copy" type="button">코드 복사</button></div><pre><code># 8
+GET sales/_search
+{ "size": 0, "query": { "bool": { "filter": [ { "term": { "category": "IT기기" } } ], "must_not": [ { "term": { "status": "취소" } } ] } },
+  "aggs": { "매출": { "sum": { "field": "revenue" } } } }
+# 9
+GET sales/_search
+{ "size": 3, "_source": ["order_id", "revenue"], "sort": [ { "revenue": "desc" }, { "order_id": "asc" } ] }
+# 10
+GET sales/_search
+{ "size": 3, "_source": ["order_id", "order_date"], "query": { "term": { "region": "서울" } }, "sort": [ { "order_date": "asc" } ] }
+# 11
+GET sales/_search
+{ "size": 0, "aggs": { "s": { "stats": { "field": "revenue" } } } }
+# 12
+GET sales/_search
+{ "size": 0, "aggs": { "담당자수": { "cardinality": { "field": "salesperson" } } } }</code></pre></div></details>
+<details class="qa"><summary>정답 쿼리 13~17</summary><div class="codebox"><div class="codehead"><span>Dev Tools</span><button class="copy" type="button">코드 복사</button></div><pre><code># 13
+GET sales/_search
+{ "size": 0, "aggs": { "제품": { "terms": { "field": "product", "size": 1, "order": { "매출": "desc" } },
+  "aggs": { "매출": { "sum": { "field": "revenue" } } } } } }
+# 14
+GET sales/_search
+{ "size": 0, "aggs": { "담당자": { "terms": { "field": "salesperson", "size": 2, "order": { "매출": "desc" } },
+  "aggs": { "매출": { "sum": { "field": "revenue" } } } } } }
+# 15
+GET sales/_search
+{ "size": 0, "aggs": { "월별": { "date_histogram": { "field": "order_date", "calendar_interval": "month", "format": "yyyy-MM" },
+  "aggs": { "매출": { "sum": { "field": "revenue" } } } } } }
+#   → 응답에서 매출이 가장 큰 버킷 찾기 (date_histogram은 날짜순으로만 옴)
+# 16
+GET sales/_search
+{ "size": 0, "aggs": { "카테고리": { "terms": { "field": "category" },
+  "aggs": { "만족도": { "avg": { "field": "satisfaction" } } } } } }
+# 17
+GET sales/_search
+{ "size": 0, "aggs": { "유형": { "terms": { "field": "customer_type" },
+  "aggs": { "매출": { "sum": { "field": "revenue" } } } } } }</code></pre></div></details>
+<details class="qa"><summary>정답 쿼리 18~20</summary><div class="codebox"><div class="codehead"><span>Dev Tools</span><button class="copy" type="button">코드 복사</button></div><pre><code># 18
+GET sales/_search
+{ "size": 0, "aggs": { "금액대": { "range": { "field": "revenue",
+  "ranges": [ { "to": 1000000 }, { "from": 1000000, "to": 5000000 }, { "from": 5000000 } ] } } } }
+# 19
+GET sales/_search
+{ "size": 0, "query": { "term": { "sales_team": "2팀" } }, "aggs": { "매출": { "sum": { "field": "revenue" } } } }
+# 20
+GET sales/_search
+{ "size": 0, "query": { "term": { "region": "대구" } }, "aggs": { "s": { "stats": { "field": "revenue" } } } }</code></pre></div></details>
+<div class="note"><b>15번에서 한 번 더 생각하기</b><p>date_histogram 버킷은 날짜순으로만 오고 <code>order</code>로 매출순 정렬이 되지 않습니다. 가장 큰 달은 응답을 눈으로 보거나 Python에서 <code>max()</code>로 고릅니다. “DSL로 다 할 수 있는 것”과 “받아서 코드로 처리하는 것”을 나누는 감각을 기르는 문제입니다.</p></div>
+<div class="ask"><b>🔍 스스로 찾아보기</b><p><b>GPT에게:</b> 11탭 질문 틀에 “연습 문제를 10개 더 만들어 줘. 정답 쿼리는 따로”를 붙여 문제를 받습니다. 받은 정답 쿼리는 <b>실행해서 숫자가 맞는지까지</b> 확인해야 진짜 정답입니다.</p></div>
+</section>
+
+<!-- 13 -->
+<section aria-labelledby="tab-u13" class="panel" hidden="" id="u13" role="tabpanel"><div class="crumb">Part 5. 스스로 공부하기 · A4-M2</div><h1>13. 실습 미션 — 여러 문법을 섞어 작은 리포트 만들기</h1><p class="lead">연습 문제가 문법 하나씩이었다면, 미션은 실무 질문 하나를 받아 여러 문법을 조합합니다. 미션마다 “요청 한 번으로” 끝내는 것이 목표이고, 정답 숫자로 확인합니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> Dev Tools (미션 5·6은 Python)</span><span><b>✅ 먼저</b> 12탭 연습 문제</span></div>
+<div class="tablewrap"><table><thead><tr><th>미션</th><th>질문</th><th>쓰는 문법</th></tr></thead><tbody>
+<tr><td>1</td><td>월별 리포트: 월마다 매출과 상태별 건수를 한 번에</td><td>date_histogram + sum + terms</td></tr>
+<tr><td>2</td><td>할인율별 평균 매출 — 할인을 많이 할수록 주문 금액이 큰가?</td><td>terms + avg</td></tr>
+<tr><td>3</td><td>(서울 AND 노트북) OR (부산 AND 프린터) 주문 수와 매출</td><td>bool 안의 bool, should</td></tr>
+<tr><td>4</td><td>평점 2점 이하 후기의 실제 주문 상태 확인 (JOIN 없이)</td><td>reviews 조회 → sales terms</td></tr>
+<tr><td>5</td><td>SQL로 먼저 쓰고 _explain으로 DSL 받아 Python에서 실행</td><td>_plugins/_sql, Python</td></tr>
+<tr><td>6</td><td>GPT가 만든 틀린 쿼리 고치기</td><td>11탭 체크리스트</td></tr></tbody></table></div>
+
+<h3>미션 1 · 월별 리포트</h3>
+<ol class="steps"><li>08탭 “취소 제외, 월별 매출”에서 query를 지웁니다.</li><li>월별 버킷 안에 <code>매출</code>(sum) 옆에 <code>상태</code>(terms status)를 하나 더 넣습니다.</li><li>3월 버킷이 매출 50,737,000, 완료 15·취소 2·배송중 1인지 확인합니다.</li></ol>
+<details class="qa"><summary>정답</summary><div class="codebox"><div class="codehead"><span>Dev Tools</span><button class="copy" type="button">코드 복사</button></div><pre><code>GET sales/_search
+{
+  "size": 0,
+  "aggs": { "월별": {
+    "date_histogram": { "field": "order_date", "calendar_interval": "month", "format": "yyyy-MM" },
+    "aggs": {
+      "매출": { "sum":   { "field": "revenue" } },
+      "상태": { "terms": { "field": "status" } }
+    }
+  } }
+}</code></pre></div><p>버킷 하나 안에 계산을 여러 개 나란히 둘 수 있습니다. 월별 취소 건수는 1월 2, 3월 2, 4월 1, 6월 2입니다.</p></details>
+
+<h3>미션 2 · 할인율별 평균 매출</h3>
+<ol class="steps"><li><code>discount_rate</code>로 terms 버킷을 만들고 안에 평균 매출을 넣습니다.</li><li>key 순서(0, 5, 10, 15)로 보고 싶으면 <code>"order": {"_key": "asc"}</code>.</li><li>결과를 보고 “할인율이 높을수록 주문 금액이 크다”가 맞는지 한 문장으로 답합니다.</li></ol>
+<details class="qa"><summary>정답</summary><div class="codebox"><div class="codehead"><span>Dev Tools</span><button class="copy" type="button">코드 복사</button></div><pre><code>GET sales/_search
+{ "size": 0, "aggs": { "할인율": {
+  "terms": { "field": "discount_rate", "order": { "_key": "asc" } },
+  "aggs": { "평균매출": { "avg": { "field": "revenue" } } } } } }</code></pre></div><p>0%: 55건 평균 2,057,090.9 / 5%: 17건 2,102,573.5 / 10%: 14건 2,481,107.1 / 15%: 14건 2,119,535.7. 10%까지는 오르지만 15%에서 다시 내려갑니다. “할인율이 높을수록 크다”는 맞지 않습니다. 데이터 100건으로는 단정하기 어렵다는 점도 함께 말할 수 있으면 좋습니다.</p></details>
+
+<h3>미션 3 · 조건 묶음 OR</h3>
+<ol class="steps"><li><code>should</code> 안에 bool을 두 개 넣습니다. 각각 filter에 term 두 개.</li><li><code>"minimum_should_match": 1</code>을 넣습니다.</li><li>건수와 매출 합계를 받습니다.</li></ol>
+<details class="qa"><summary>정답</summary><div class="codebox"><div class="codehead"><span>Dev Tools</span><button class="copy" type="button">코드 복사</button></div><pre><code>GET sales/_search
+{
+  "size": 0,
+  "query": { "bool": {
+    "should": [
+      { "bool": { "filter": [ { "term": { "region": "서울" } }, { "term": { "product": "노트북" } } ] } },
+      { "bool": { "filter": [ { "term": { "region": "부산" } }, { "term": { "product": "프린터" } } ] } }
+    ],
+    "minimum_should_match": 1
+  } },
+  "aggs": { "매출": { "sum": { "field": "revenue" } } }
+}</code></pre></div><p>서울 노트북 3건(21,360,000)에 부산 프린터 주문을 더한 값이 나옵니다. 부산 프린터만 따로 조회해 두 결과의 합과 같은지 확인합니다. <code>minimum_should_match</code>를 빼고 실행해 보면 should만 있을 때는 기본으로 하나 이상 만족해야 해서 결과가 같습니다. filter와 함께 쓰면 달라집니다(04탭 찾아보기 질문).</p></details>
+
+<h3>미션 4 · JOIN 없이 두 인덱스 잇기</h3>
+<ol class="steps"><li>reviews에서 <code>rating</code> 2 이하인 후기의 <code>order_id</code>를 받습니다.</li><li>그 order_id들로 sales를 <code>terms</code> 조회합니다.</li><li>후기 내용과 실제 주문 상태가 맞는지 비교합니다.</li></ol>
+<details class="qa"><summary>정답</summary><div class="codebox"><div class="codehead"><span>Dev Tools</span><button class="copy" type="button">코드 복사</button></div><pre><code>GET reviews/_search
+{ "_source": ["order_id", "rating", "comment"], "query": { "range": { "rating": { "lte": 2 } } } }
+# → ORD022 (2점, "배송 중 파손되어 교환했습니다"), ORD030 (1점, "주문 취소 후 환불이 늦어요")
+
+GET sales/_search
+{ "_source": ["order_id", "region", "product", "revenue", "status"],
+  "query": { "terms": { "order_id": ["ORD022", "ORD030"] } } }
+# → ORD022 대구 모니터 1,904,000 배송중 / ORD030 대구 모니터 2,304,000 취소</code></pre></div><p>ORD030은 후기대로 실제로 취소된 주문입니다. 두 건 모두 대구 모니터라는 공통점도 보입니다. 실무에서는 Python으로 첫 결과의 order_id 목록을 받아 두 번째 쿼리에 넣습니다. 이것이 JOIN이 없는 검색엔진에서 데이터를 잇는 기본 방법입니다.</p></details>
+
+<h3>미션 5 · SQL → DSL → Python</h3>
+<ol class="steps"><li>Query Workbench나 Dev Tools에서 <code>SELECT product, AVG(satisfaction) FROM sales WHERE region='대구' GROUP BY product</code>를 실행합니다.</li><li>같은 SQL을 <code>_plugins/_sql/_explain</code>에 넣어 DSL을 받습니다.</li><li>그 DSL(또는 직접 쓴 DSL)을 Python <code>client.search</code>로 실행해 제품별 평균 만족도를 출력합니다.</li></ol>
+<details class="qa"><summary>정답 (Python)</summary><div class="codebox"><div class="codehead"><span>Python</span><button class="copy" type="button">코드 복사</button></div><pre><code>body = {"size": 0,
+        "query": {"term": {"region": "대구"}},
+        "aggs": {"p": {"terms": {"field": "product"},
+                       "aggs": {"sat": {"avg": {"field": "satisfaction"}}}}}}
+res = client.search(index="sales", body=body)
+for b in res["aggregations"]["p"]["buckets"]:
+    print(b["key"], b["doc_count"], round(b["sat"]["value"], 2))
+
+# SQL을 Python에서 바로
+sql = client.transport.perform_request("POST", "/_plugins/_sql",
+        body={"query": "SELECT product, AVG(satisfaction) FROM sales WHERE region='대구' GROUP BY product"})
+print(sql["datarows"])</code></pre></div><p>두 방식의 숫자가 같아야 합니다. _explain이 준 DSL은 내가 쓴 것보다 길 수 있지만 결과는 같습니다.</p></details>
+
+<h3>미션 6 · GPT가 만든 틀린 쿼리 고치기</h3>
+<p>아래는 “서울의 제품별 매출을 큰 순서로”를 GPT에게 물어 받은 답이라고 가정합니다. 실행하면 오류가 나거나 결과가 비어 있습니다. 11탭 체크리스트로 <b>세 군데</b>를 찾아 고칩니다.</p>
+<div class="codebox"><div class="codehead"><span>틀린 쿼리</span><button class="copy" type="button">코드 복사</button></div><pre><code>GET sales/_search
+{
+  "size": 0,
+  "query": { "match": { "region.keyword": "서울" } },
+  "aggs": {
+    "products": {
+      "terms": { "field": "product", "order": { "total": "desc" } },
+      "aggs": { "revenue_sum": { "sum": { "field": "revenue" } } }
+    }
+  }
+}</code></pre></div>
+<details class="qa"><summary>정답</summary><p>① <code>region.keyword</code> → <code>region</code>: 우리 매핑에는 <code>.keyword</code> 하위 필드가 없습니다. 이대로면 오류 없이 0건이고 집계가 비어 있습니다. ② <code>match</code> → <code>term</code>: keyword 필드라 결과는 같지만, 정확한 값 조건은 term(가능하면 bool filter)이 의도에 맞습니다. ③ <code>"order": {"total": "desc"}</code> → <code>{"revenue_sum": "desc"}</code>: 정렬 이름은 안쪽 집계 이름과 같아야 합니다. 없는 이름이면 오류가 납니다. 고친 뒤 결과는 노트북 21,360,000 → 복합기 17,000,000 → 프로젝터 9,506,000 순입니다.</p></details>
+</section>
+
+<!-- 14 -->
+<section aria-labelledby="tab-u14" class="panel" hidden="" id="u14" role="tabpanel"><div class="crumb">Part 6. 복습 · A4-M2</div><h1>14. 복습 — 퀴즈, 문법 한 장, 완료 체크</h1><p class="lead">수업이 끝난 뒤 다시 열어 보는 탭입니다. 퀴즈로 헷갈리는 곳을 확인하고, 문법 한 장을 옆에 두고 A4-M3·M4로 넘어갑니다.</p>
+<h3>퀴즈</h3>
+<div id="quizArea"></div>
+<h3>문법 한 장</h3>
+<div class="codebox"><div class="codehead"><span>A4-M2 문법 한 장 — 출력해서 옆에 두기</span><button class="copy" type="button">코드 복사</button></div><pre><code>GET 인덱스/_search
+{
+  "query": {                                   # 어떤 문서를
+    "bool": {
+      "filter":   [ {"term":  {"필드": "값"}},          # 정확히 같음 (keyword·숫자)
+                    {"terms": {"필드": ["값1","값2"]}},  # 여러 값 중 하나
+                    {"range": {"필드": {"gte": 1, "lt": 9}}} ],
+      "must":     [ {"match": {"문장필드": "검색어"}} ],  # 문장 검색, 점수
+      "should":   [ ... ], "minimum_should_match": 1,     # OR
+      "must_not": [ {"term": {"status": "취소"}} ]       # 제외
+    }
+  },
+  "aggs": {                                    # 무엇을 계산
+    "이름": {
+      "terms" | "date_histogram" | "range": {...},       # 그룹으로 (buckets)
+      "aggs": { "이름2": {"sum" | "avg" | "min" | "max" | "cardinality" | "stats": {"field": "..."}} }
+    }
+  },
+  "size": 0,  "from": 0,                       # 몇 개 (0 = 계산만)
+  "sort": [{"필드": "desc"}, {"보조필드": "asc"}],
+  "_source": ["필드1", "필드2"]
+}
+응답: hits.total.value / hits.hits[i]._source / aggregations.이름.value / aggregations.이름.buckets[i].key·doc_count</code></pre></div>
+<h3>완료 체크</h3>
+<div class="task"><h4>할 수 있나요</h4><ol><li>□ 요청의 세 자리(query, aggs, size·sort·_source)를 말할 수 있다.</li><li>□ match와 term의 차이를 reviews 결과(5건 vs 0건)로 설명할 수 있다.</li><li>□ 조건 두 개 이상을 bool filter로, 제외 조건을 must_not으로 쓸 수 있다.</li><li>□ 정렬 동률을 두 번째 기준으로 고정할 수 있다.</li><li>□ metric과 bucket의 차이를 말하고, 버킷 안에 계산을 넣어 정렬할 수 있다.</li><li>□ SQL 한 줄을 DSL로 바꾸고, _explain으로 확인할 수 있다.</li><li>□ get_region_summary의 body를 탭 번호와 함께 설명할 수 있다.</li><li>□ GPT가 준 쿼리를 실행·필드·건수·숫자로 검증할 수 있다.</li><li>□ 연습 문제 20개와 미션 6개를 끝냈다.</li></ol></div>
+<div class="flow"><div class="fstep"><b>A4-M1</b><span>sales를 넣고 화면으로 본다</span></div><div class="arrow">→</div><div class="fstep"><b>A4-M2</b><span>원하는 숫자를 쿼리로 직접 묻는다</span></div><div class="arrow">→</div><div class="fstep"><b>A4-M3</b><span>문서를 벡터로 찾는다 (+ knn)</span></div><div class="arrow">→</div><div class="fstep"><b>A4-M4</b><span>숫자와 문서를 함께 GPT에</span></div></div>
+</section>
+
+</main></div>
+<footer class="footer">© 2026 부성순. All rights reserved.<small>교안의 자체 해설 및 실습 예제에 대한 저작권 표시입니다. 외부 소프트웨어·라이브러리의 권리는 각 권리자에게 있습니다. 실습 데이터(sales 주문 100건, 후기 10건)는 교육용 가상 데이터이며, 교안의 정답 숫자는 배포된 sales 100건으로 계산한 값입니다.</small></footer>
+<script>(function(){
+const tabs=[...document.querySelectorAll('[role="tab"]')];
+function setTab(i,focus=false){tabs.forEach((t,j)=>{const on=i===j;t.setAttribute('aria-selected',on?'true':'false');t.tabIndex=on?0:-1;document.getElementById(t.getAttribute('aria-controls')).hidden=!on;});if(focus)tabs[i].focus({preventScroll:true});history.replaceState(null,'','#'+tabs[i].getAttribute('aria-controls'));window.scrollTo({top:0});}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>setTab(i));t.addEventListener('keydown',e=>{if(['ArrowDown','ArrowUp','ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();setTab((i+(e.key==='ArrowDown'||e.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length,true);}})});
+const index=tabs.findIndex(t=>'#'+t.getAttribute('aria-controls')===location.hash);if(index>=0)setTab(index);
+document.querySelectorAll('.copy').forEach(b=>{b.dataset.label=b.textContent;b.addEventListener('click',async()=>{const code=b.closest('.codebox').querySelector('pre').textContent;try{await navigator.clipboard.writeText(code);b.textContent='복사됨';}catch(e){b.textContent='복사 실패';}setTimeout(()=>b.textContent=b.dataset.label||'코드 복사',1500);});});
+})();</script>
+<script>(function(){
+const QZ=[
+{q:'sales의 region(keyword)에서 “서울”을 정확히 고를 때 기본으로 쓰는 쿼리는?',o:['match','term'],a:1,e:'keyword는 값 전체가 일치해야 하므로 term. 보통 bool filter 안에 넣습니다(03·04탭).'},
+{q:'reviews에서 match comment “배송”이 R02(“배송이 조금 늦었어요”)를 못 찾은 이유는?',o:['R02 평점이 낮아서','“배송이”가 “배송”과 다른 토큰이라서'],a:1,e:'기본 분석기는 조사를 떼지 않습니다. 한국어 실무는 nori 분석기를 씁니다(02탭).'},
+{q:'size를 2로 했을 때 aggs의 합계는 무엇으로 계산될까?',o:['돌려받은 2건','query가 고른 문서 전체'],a:1,e:'aggs는 size와 상관없이 query가 고른 전부로 계산합니다(01탭: 서울 21건 합계 58,566,750).'},
+{q:'정형 조건(지역, 상태, 날짜)을 bool의 어느 칸에 넣는 것이 기본일까?',o:['must','filter'],a:1,e:'filter는 점수를 계산하지 않아 빠르고 캐시됩니다. must는 문장 검색처럼 관련도가 의미 있을 때(04탭).'},
+{q:'“할인 받은 주문”을 찾으려면?',o:['exists discount_rate','range discount_rate gt 0'],a:1,e:'할인 없는 주문도 0이라는 값이 있어 exists는 100건 전부입니다. 정답 45건(03탭).'},
+{q:'terms 집계 버킷이 기본으로 몇 개까지 올까?',o:['전부','10개'],a:1,e:'기본 size는 10. 값 종류가 더 많으면 size를 늘려야 하고, 안 늘리면 오류 없이 잘립니다(07탭).'},
+{q:'지역별 버킷을 “매출 큰 순”으로 정렬하려면?',o:['"order": {"_count": "desc"}','"order": {"안쪽 sum 이름": "desc"}'],a:1,e:'order에는 버킷 안 계산의 이름을 씁니다. 빼면 건수 많은 순(광주가 1등)입니다(08탭).'},
+{q:'SQL의 JOIN에 해당하는 OpenSearch 기능은?',o:['join 쿼리','없음 — 두 번 조회해서 잇는다'],a:1,e:'검색엔진은 한 문서에 필요한 정보를 담는 것을 전제로 합니다. reviews → sales를 두 번 조회로 이었습니다(13탭 미션 4).'},
+{q:'GPT가 준 쿼리에 "region.keyword"가 있다. 우리 sales에서 실행하면?',o:['오류가 난다','오류 없이 0건이 나온다'],a:1,e:'없는 필드로 검색하면 조용히 0건입니다. 매핑을 확인해 "region"으로 고칩니다(11탭).'},
+{q:'OpenSearch에서 SQL을 DSL로 번역해 보여 주는 경로는?',o:['POST _sql/translate','POST _plugins/_sql/_explain'],a:1,e:'_xpack/sql, _sql/translate는 Elasticsearch 경로입니다. OpenSearch는 _plugins/_sql(09탭).'}];
+const qa=document.getElementById('quizArea');if(!qa)return;
+QZ.forEach((it,i)=>{const b=document.createElement('div');b.className='quiz';b.innerHTML=`<div class="q">Q${i+1}. ${it.q}</div><div class="opts">${it.o.map((o,j)=>`<button class="opt" type="button" data-q="${i}" data-o="${j}">${o}</button>`).join('')}</div><div class="exp" id="exp${i}">✅ ${it.e}</div>`;qa.appendChild(b);});
+qa.querySelectorAll('.opt').forEach(btn=>btn.addEventListener('click',()=>{const i=+btn.dataset.q,j=+btn.dataset.o,it=QZ[i],box=btn.closest('.quiz');box.querySelectorAll('.opt').forEach(b=>b.disabled=true);if(j===it.a)btn.classList.add('correct');else{btn.classList.add('wrong');box.querySelectorAll('.opt')[it.a].classList.add('correct');}document.getElementById('exp'+i).classList.add('show');}));
+})();</script>
+</body></html>

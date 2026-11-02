@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>A4-M3 · RAG와 OpenSearch 벡터 검색</title><link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet"/><style>
+:root{--bg:#fff;--surface:#f8fafc;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--accent:#ff2e93;--soft:rgba(255,46,147,.065);--codebg:#101d34}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:'Pretendard',system-ui,'Malgun Gothic',sans-serif;font-size:18px;line-height:1.81;word-break:keep-all}
+.banner{background:linear-gradient(125deg,#fcfcff,#f8fafc);border-bottom:1px solid var(--line)}.banner-in{max-width:1320px;margin:auto;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:18px}.brand{font-size:16px;font-weight:850;letter-spacing:.03em}.who{font-size:15px;color:var(--muted)}.layout{max-width:1320px;margin:auto;padding:32px 24px 84px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:38px;align-items:start}.sidebar{order:2;position:sticky;top:22px;max-height:calc(100vh - 44px);overflow:auto;border:1px solid var(--line);border-radius:15px;background:var(--surface);padding:17px}.group{font-size:15px;color:var(--muted);font-weight:800;margin:3px 10px 14px}.tabs{display:flex;flex-direction:column;gap:5px}.tabs button{appearance:none;border:1px solid transparent;border-radius:9px;background:transparent;color:#253348;cursor:pointer;text-align:left;font:600 16px/1.55 'Pretendard',sans-serif;padding:9px 12px 9px 14px}.tabs button span{color:var(--accent);font-weight:850;margin-right:7px}.tabs button:hover{background:#fff;border-color:var(--line)}.tabs button[aria-selected=true]{background:var(--soft);border-color:var(--accent);color:#bd1366}.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+main{min-width:0}.panel[hidden]{display:none}.panel{display:block}.crumb{color:var(--accent);font-size:15px;font-weight:800;margin:0 0 8px}.panel h1{font-size:31px;line-height:1.4;margin:0 0 12px}.lead{font-size:19px;font-weight:550;color:#344255;margin:6px 0 26px}.panel h3{font-size:21px;margin:33px 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px}.panel h3:before{content:'▸ ';color:var(--accent)}.panel p{margin:13px 0}.panel b,.panel strong{font-weight:790}.panel code:not(pre code){font:15px/1.6 Consolas,monospace;word-break:break-word;background:#f1f5f9;border:1px solid #e5e7eb;padding:1px 5px;border-radius:4px}
+.panel ul,.panel ol{padding-left:27px;margin:12px 0}.panel li{margin:7px 0}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:17px 0 24px}.panel table{border-collapse:collapse;width:100%;font-size:17px;line-height:1.65}.panel th,.panel td{border-bottom:1px solid var(--line);padding:12px 14px;vertical-align:top;text-align:left}.panel th{font-size:16px;font-weight:800;background:#f1f5f9;color:#40516a}.panel tbody tr:last-child td{border:0}.panel tbody tr:nth-child(even){background:#fbfcfe}
+.note,.task{border:1px solid var(--line);border-radius:13px;background:#fafcff;padding:17px 19px;margin:24px 0}.note{border-left:4px solid var(--accent);background:var(--soft)}.note b{color:#ad155e}.note p{margin:6px 0}.task{background:#fff}.task h4{margin:0 0 9px;font-size:19px}.task ol{margin:0;padding-left:23px}.task li{margin:8px 0}
+.codebox{border:1px solid #243953;border-radius:13px;overflow:hidden;margin:21px 0 26px}.codehead{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:8px 13px;background:#1d3452;color:#dceafc;font-size:14px;font-weight:700}.copy{border:1px solid #8598b4;color:#fff;background:#314f78;border-radius:6px;padding:3px 10px;cursor:pointer;font-size:13px}.codebox pre{background:var(--codebg);color:#cbe9fb;margin:0;padding:20px;overflow-x:auto;font:15px/1.7 Consolas,'JetBrains Mono',monospace;word-break:normal;white-space:pre}
+.outbox .codehead{background:#203a2c}.outbox{border-color:#2f5a43}.outbox pre{background:#0d1f17;color:#c9f5d9}
+.qa{padding:13px 17px;margin:13px 0;border:1px solid var(--line);background:#fbfcff;border-radius:10px}.qa summary{font-size:17px;cursor:pointer;font-weight:780}.qa[open] summary{color:#c01168}.qa p{font-size:17px}
+.footer{max-width:1320px;margin:auto;border-top:1px solid var(--line);padding:20px 24px 38px;text-align:center;color:var(--muted);font-size:15px}.footer small{display:block;max-width:950px;margin:5px auto}
+.tabs .part-heading{display:block;margin:15px 4px 6px;padding:12px 11px;background:#e5e7eb;color:#334155;border:1px solid #cbd5e1;border-radius:9px;font-size:15px;font-weight:850;line-height:1.5;white-space:normal}.tabs .part-heading:first-child{margin-top:0}
+.journey{border-left:4px solid #ff2e93;background:#fff5fa;padding:16px 19px;margin:20px 0;border-radius:8px}.journey h3{border:0!important;margin:0 0 8px!important;padding:0!important;font-size:18px!important}.journey h3:before{content:none!important}.journey ol{margin:6px 0 0;padding-left:22px}.journey li{margin:4px 0;overflow-wrap:anywhere}
+.say{border-left:4px solid #94a3b8;background:#f8fafc;padding:12px 16px;border-radius:0 10px 10px 0;margin:16px 0}.say>b:first-child{display:block;color:#475569;font-size:14px;margin-bottom:4px}
+.flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;margin:18px 0 24px}.flow .fstep{flex:1 1 96px;min-width:92px;border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:10px;background:#fff;padding:10px 12px}.flow .fstep b{display:block;font-size:16px;color:#0f172a}.flow .fstep span{display:block;font-size:14px;color:var(--muted);line-height:1.5;margin-top:3px}.flow .arrow{align-self:center;color:var(--accent);font-weight:900}
+main p,main li,main td{overflow-wrap:anywhere}
+/* 화면 모형 */
+.mock{border:1px solid #cbd5e1;border-radius:14px;background:#f8fafc;padding:14px 16px;margin:20px 0}.mock-title{font-weight:800;font-size:15px;color:#475569;margin-bottom:10px}
+.browser{border:1px solid #cbd5e1;border-radius:10px;overflow:hidden;background:#fff}.bbar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#eef2f7;border-bottom:1px solid #e2e8f0}.dots i{display:inline-block;width:10px;height:10px;border-radius:50%;background:#cbd5e1;margin-right:4px}.url{flex:1;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:2px 10px;font:14px Consolas,monospace;color:#334155}
+.browser pre{margin:0;padding:12px 14px;font:14px/1.6 Consolas,monospace;white-space:pre;overflow-x:auto;color:#0f172a;background:#fff}
+.dash{display:grid;grid-template-columns:210px 1fr;min-height:250px}.dash nav{background:#f8fafc;border-right:1px solid #e2e8f0;padding:10px;font-size:14px}.dash nav b{display:block;margin:10px 6px 4px;color:#64748b;font-size:12px}.dash nav div{padding:4px 8px;border-radius:6px;color:#334155}.dash nav .hl{background:#fde7f2;color:#bd1366;font-weight:800}.dash .home{padding:16px;font-size:15px;color:#334155}.dash .card{display:inline-block;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 6px 0 0;background:#fff}
+.console{display:grid;grid-template-columns:1fr 1fr}.console .ph{font-size:12px;font-weight:800;color:#64748b;padding:6px 14px;border-bottom:1px solid #e2e8f0;background:#f1f5f9;display:flex;justify-content:space-between}.console .left{border-right:1px solid #e2e8f0}.console .right pre{background:#f8fafc}.console .run{background:#e72281;color:#fff;border-radius:5px;padding:0 7px}
+.mark{background:#fde7f2;font-weight:800}
+.mock table{border-collapse:collapse;width:100%;font-size:15px;background:#fff}.mock td,.mock th{border:1px solid #e2e8f0;padding:6px 8px;text-align:center}.mock th{background:#f1f5f9}.mock .hl{background:#fde7f2;font-weight:800}.mock .dim{color:#94a3b8}
+@media(max-width:900px){.layout{grid-template-columns:1fr;gap:12px;padding:15px 16px 64px}.sidebar{order:0;position:sticky;top:0;z-index:10;border-radius:0;max-height:none;overflow:auto;padding:8px 0;background:#fff}.sidebar .group{display:none}.tabs{flex-direction:row;white-space:nowrap;overflow-x:auto}.tabs button{flex:none;font-size:15px}.tabs .part-heading{flex:none;margin:0 6px 0 0;white-space:nowrap;padding:9px 12px}.banner-in{flex-wrap:wrap}.panel h1{font-size:27px}}
+@media(max-width:760px){.dash,.console{grid-template-columns:1fr}.console .left{border-right:0;border-bottom:1px solid #e2e8f0}.dash nav{border-right:0;border-bottom:1px solid #e2e8f0}}
+@media(max-width:680px){body{font-size:17px}.panel table{font-size:16px}.panel th{font-size:15px}.panel h1{font-size:24px}.panel h3{font-size:20px}.codebox pre{font-size:14px;padding:15px}.flow .arrow{display:none}.flow .fstep{flex-basis:100%}}
+@media print{.sidebar,.copy{display:none}.layout{display:block}.panel[hidden]{display:block!important}.banner{background:#fff}}
+
+.shot{margin:20px 0 24px;border:1px solid var(--line);border-radius:13px;background:#fff;padding:12px}.shot img{display:block;max-width:100%;height:auto;margin:auto;border:1px solid var(--line);border-radius:8px}.shot figcaption{font-size:15px;font-weight:800;color:#40516a;margin-top:9px}.shot .cap-note{font-size:15px;color:var(--muted);margin-top:2px;line-height:1.6}
+.steps{list-style:none;counter-reset:st;padding-left:0!important;margin:16px 0}.steps li{counter-increment:st;position:relative;padding:4px 0 4px 46px;margin:10px 0}.steps li:before{content:counter(st);position:absolute;left:0;top:2px;width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;font-weight:850;font-size:15px;display:flex;align-items:center;justify-content:center}
+.file{display:inline-block;padding:9px 14px;margin:4px 6px 4px 0;background:var(--soft);border:1px solid var(--accent);border-radius:8px;text-decoration:none;color:#bd1366;font-weight:800;font-size:16px}
+.qa .codebox{margin:12px 0}
+
+.diagram{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:18px 0 22px;font:14.5px/1.7 Consolas,'JetBrains Mono',monospace;white-space:pre;overflow-x:auto;color:#1e293b}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}.cards.c3{grid-template-columns:repeat(3,minmax(0,1fr))}.card{border:1px solid var(--line);border-radius:12px;background:#fff;padding:14px 16px;font-size:16.5px;line-height:1.7}.card .h{font-weight:800;color:#bd1366;margin-bottom:6px;font-size:17px}
+.widget{border:2px solid var(--accent);border-radius:14px;margin:22px 0 26px;overflow:hidden;background:#fff}.wtitle{display:flex;align-items:center;gap:9px;padding:10px 16px;background:var(--soft);border-bottom:1px solid #fbcfe8;font-size:16px}.wtitle .dot{width:10px;height:10px;border-radius:50%;background:var(--accent)}.wtitle .tag{margin-left:auto;font-size:12px;font-weight:800;color:#bd1366;border:1px solid var(--accent);border-radius:999px;padding:1px 9px}.wbody{padding:16px 18px}
+.muted{color:var(--muted)}.scatter-wrap{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:16px;align-items:center}.legend{font-size:15px;display:flex;flex-direction:column;gap:8px}.sw{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.calc-panel,.readout{margin-top:12px;background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font:14.5px/1.8 Consolas,monospace;overflow-x:auto}.calc-panel .lab{font-weight:800;color:#334155}.hl{color:#bd1366;font-weight:800}
+.controls{display:flex;flex-wrap:wrap;gap:14px 22px;margin:12px 0}.ctrl{flex:1 1 200px;min-width:180px}.ctrl label{display:flex;justify-content:space-between;font-size:15px;font-weight:700;color:#334155}.ctrl .v{color:#bd1366;font-weight:850}.ctrl input[type=range]{width:100%;accent-color:#ff2e93}.ctrl select{width:100%;font:15px 'Pretendard',sans-serif;padding:6px 8px;border:1px solid var(--line);border-radius:8px;margin-top:4px}
+.samplebox{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:16px}
+.statrow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}.stat{border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}.stat .n{font-size:24px;font-weight:850;color:#bd1366}.stat .l{font-size:13px;color:var(--muted)}
+.chunk-list{display:flex;flex-direction:column;gap:8px}.chunk-item{border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:15.5px;background:#fff}.chunk-item mark{background:#fde7f2;color:#9d174d;border-radius:3px}.cid{display:inline-block;font-weight:850;color:#fff;background:var(--accent);border-radius:6px;padding:0 7px;margin-right:7px;font-size:13px}
+.presets{display:flex;flex-wrap:wrap;gap:8px}.preset{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 13px;font:600 14.5px 'Pretendard',sans-serif;cursor:pointer}.preset.active{background:var(--soft);border-color:var(--accent);color:#bd1366}
+.rrow{display:grid;grid-template-columns:34px minmax(0,1fr) 80px;gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin:7px 0;font-size:15.5px}.rrow.top{border-color:var(--accent);background:#fff7fb}.rrow.dim{opacity:.55}.rk{font-weight:850;color:#bd1366;text-align:center}.sc{font:700 15px Consolas,monospace;text-align:right}.bar-bg{height:7px;background:#f1f5f9;border-radius:99px;margin-top:6px}.bar{height:7px;background:var(--accent);border-radius:99px}
+.retrieved-note{margin-top:10px;background:var(--soft);border-radius:10px;padding:10px 13px;font-size:15.5px}
+.quiz{border:1px solid var(--line);border-radius:12px;padding:13px 16px;margin:12px 0;background:#fbfcff}.quiz .q{font-weight:800;font-size:17px}.opts{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}.opt{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 13px;font:600 15.5px 'Pretendard',sans-serif;cursor:pointer}.opt.correct{background:#dcfce7;border-color:#16a34a;color:#166534}.opt.wrong{background:#fee2e2;border-color:#dc2626;color:#991b1b}.exp{display:none;margin-top:9px;font-size:16px}.exp.show{display:block}
+@media(max-width:760px){.cards,.cards.c3{grid-template-columns:1fr}.scatter-wrap{grid-template-columns:1fr}.statrow{grid-template-columns:repeat(2,minmax(0,1fr))}.diagram{font-size:13px}}
+.where-bar{display:flex;flex-wrap:wrap;gap:8px 20px;background:#eef6ff;border:1px solid #bfdbfe;border-radius:10px;padding:9px 14px;margin:4px 0 14px;font-size:15.5px;color:#1e3a5f}.cellmap td:nth-child(-n+2),.cellmap th:nth-child(-n+2){white-space:nowrap;overflow-wrap:normal}</style></head><body>
+<header class="banner"><div class="banner-in"><div><div class="brand">Part A · A4-M3 · RAG · OpenSearch Vector Search</div><div style="font-size:23px;font-weight:850">A4-M3 RAG와 OpenSearch 벡터 검색 · 개념 → 직관 → 실습</div></div><div class="who">© 2026 부성순 · AI·클라우드 실무 과정<br/>부성순 강사(bakpak@empas.com)</div><a href="/lectures/files/index.html#section-a1" style="display:inline-block;padding:7px 11px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#bd1366;text-decoration:none;font-weight:800;white-space:nowrap">📚 강의자료 라이브러리 · Part A</a></div></header>
+<div class="layout"><aside class="sidebar"><div class="group">A4-M3 · 세부 목차</div><nav aria-label="교안 세부 목차" class="tabs" role="tablist">
+<div aria-level="2" class="part-heading" role="heading">Part 0. 큰 그림</div>
+<button aria-controls="u00" aria-selected="true" id="tab-u00" role="tab" tabindex="0" type="button"><span>00</span>한 문단 요약·문제</button>
+<button aria-controls="u01" aria-selected="false" id="tab-u01" role="tab" tabindex="-1" type="button"><span>01</span>오픈북과 의미 검색</button>
+<button aria-controls="u02" aria-selected="false" id="tab-u02" role="tab" tabindex="-1" type="button"><span>02</span>전체 여정 미리보기</button>
+<div aria-level="2" class="part-heading" role="heading">Part 1. 벡터</div>
+<button aria-controls="u03" aria-selected="false" id="tab-u03" role="tab" tabindex="-1" type="button"><span>03</span>숫자로 표현·거리</button>
+<button aria-controls="u04" aria-selected="false" id="tab-u04" role="tab" tabindex="-1" type="button"><span>04</span>임베딩과 차원</button>
+<button aria-controls="u05" aria-selected="false" id="tab-u05" role="tab" tabindex="-1" type="button"><span>05</span>원문+벡터+메타데이터</button>
+<div aria-level="2" class="part-heading" role="heading">Part 2. 전체 그림</div>
+<button aria-controls="u06" aria-selected="false" id="tab-u06" role="tab" tabindex="-1" type="button"><span>06</span>파이프라인과 RAG</button>
+<div aria-level="2" class="part-heading" role="heading">Part 3. 문서 준비</div>
+<button aria-controls="u07" aria-selected="false" id="tab-u07" role="tab" tabindex="-1" type="button"><span>07</span>Chunk Size·Overlap</button>
+<button aria-controls="u08" aria-selected="false" id="tab-u08" role="tab" tabindex="-1" type="button"><span>08</span>누가 나누나·4개념</button>
+<div aria-level="2" class="part-heading" role="heading">Part 4. 질문 검색</div>
+<button aria-controls="u09" aria-selected="false" id="tab-u09" role="tab" tabindex="-1" type="button"><span>09</span>유사도·k-NN 플레이그라운드</button>
+<button aria-controls="u10" aria-selected="false" id="tab-u10" role="tab" tabindex="-1" type="button"><span>10</span>ANN·HNSW</button>
+<button aria-controls="u11" aria-selected="false" id="tab-u11" role="tab" tabindex="-1" type="button"><span>11</span>Hybrid와 Filter</button>
+<div aria-level="2" class="part-heading" role="heading">Part 5. RAG 연결</div>
+<button aria-controls="u12" aria-selected="false" id="tab-u12" role="tab" tabindex="-1" type="button"><span>12</span>근거가 답변이 되기까지</button>
+<div aria-level="2" class="part-heading" role="heading">Part 6. 도구와 운영</div>
+<button aria-controls="u13" aria-selected="false" id="tab-u13" role="tab" tabindex="-1" type="button"><span>13</span>도구 비교·로컬 vs AWS</button>
+<div aria-level="2" class="part-heading" role="heading">Part 7. OpenSearch 실습</div>
+<button aria-controls="u13x" aria-selected="false" id="tab-u13x" role="tab" tabindex="-1" type="button"><span>▶</span>실습 안내 (먼저 읽기)</button>
+<button aria-controls="u14" aria-selected="false" id="tab-u14" role="tab" tabindex="-1" type="button"><span>14</span>Dev Tools 벡터 인덱스</button>
+<button aria-controls="u15" aria-selected="false" id="tab-u15" role="tab" tabindex="-1" type="button"><span>15</span>Python 문서 준비·적재</button>
+<button aria-controls="u16" aria-selected="false" id="tab-u16" role="tab" tabindex="-1" type="button"><span>16</span>Python 의미 검색·필터</button>
+<button aria-controls="u17" aria-selected="false" id="tab-u17" role="tab" tabindex="-1" type="button"><span>17</span>Python Hybrid 검색</button>
+<button aria-controls="u18" aria-selected="false" id="tab-u18" role="tab" tabindex="-1" type="button"><span>18</span>RAG 완성 (LLM)</button>
+<div aria-level="2" class="part-heading" role="heading">Part 8. 실습 미션</div>
+<button aria-controls="u19" aria-selected="false" id="tab-u19" role="tab" tabindex="-1" type="button"><span>19</span>실습 미션 1~8</button>
+<div aria-level="2" class="part-heading" role="heading">Part 9. 정리</div>
+<button aria-controls="u20" aria-selected="false" id="tab-u20" role="tab" tabindex="-1" type="button"><span>20</span>퀴즈·용어·완료 체크</button>
+</nav></aside><main>
+<!-- 00 -->
+<section aria-labelledby="tab-u00" class="panel" id="u00" role="tabpanel"><div class="crumb">Part 0. 큰 그림 · A4-M3</div><h1>00. 한 문단 요약 — 우리가 풀려는 문제</h1><p class="lead">기계적인 단계로 들어가기 전에, 이 기술이 “무엇을 위해” 존재하는지부터 이야기합니다. 모듈을 마치면 아래 문단을 스스로 설명할 수 있어야 합니다.</p>
+<div class="journey"><h3>이 탭의 흐름</h3><ol><li>모듈 전체를 한 문단으로</li><li>LLM의 세 가지 한계</li><li>공통 원인과 RAG의 출발점</li></ol></div>
+<div class="note"><b>이 모듈의 한 문단</b><p>“긴 문서를 <b>작은 조각(Chunk)</b>으로 나누고, 각 조각의 <b>의미를 숫자(벡터)</b>로 바꿔 <b>OpenSearch</b>에 저장해 둔다. 사용자가 질문하면 질문도 같은 방식으로 숫자로 바꿔, 저장된 조각 중 <b>의미가 가까운 것 몇 개(k-NN)</b>를 찾아, 그 근거를 <b>LLM</b>에게 넘겨 답을 만들게 한다. 이 전체 구조가 <b>RAG</b>다.”</p></div>
+<p>지금 이 문장이 낯설어도 괜찮습니다. 아래에서 하나씩, 왜 그렇게 하는지를 순서대로 풀어 갑니다.</p>
+<h3>LLM을 실무에 그대로 쓰기 어려운 세 가지 이유</h3>
+<div class="cards c3"><div class="card"><div class="h">① 내 자료를 모른다</div>회사 내부 규정, 팀 매뉴얼, 개인이 가진 PDF는 모델이 학습한 적이 없습니다. 물어봐도 알 수 없습니다.</div><div class="card"><div class="h">② 최신 정보를 모른다</div>모델은 특정 시점까지의 데이터로 학습됩니다. 그 이후에 바뀐 규정·수치·사건은 반영되어 있지 않습니다.</div><div class="card"><div class="h">③ 근거 없이 답할 수 있다</div>모르는 것도 그럴듯하게 지어내는 경향(환각)이 있습니다. 출처가 없으면 신뢰하기 어렵습니다.</div></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>세 문제의 공통 원인은 하나입니다. <b>모델의 머릿속(학습된 지식)에만 의존</b>하기 때문입니다. 그렇다면 답을 만들기 <b>직전에, 필요한 자료를 찾아서 같이 건네주면</b> 어떨까요? 이것이 RAG의 출발점입니다.</p></div>
+<h3>모듈 지도</h3>
+<div class="flow"><div class="fstep"><b>개념</b><span>문제, 오픈북, 의미 검색</span></div><div class="arrow">→</div><div class="fstep"><b>벡터</b><span>좌표, 임베딩, 차원</span></div><div class="arrow">→</div><div class="fstep"><b>저장</b><span>Chunk, 메타데이터</span></div><div class="arrow">→</div><div class="fstep"><b>검색</b><span>k-NN, HNSW, Hybrid, Filter</span></div><div class="arrow">→</div><div class="fstep"><b>Python 실습</b><span>OpenSearch로 RAG 완성</span></div><div class="arrow">→</div><div class="fstep"><b>미션</b><span>혼자 바꿔 보기</span></div></div>
+<div class="note"><b>실습 환경 전제</b><p>A4-M1(Dashboard·Python 연결)과 A4-M2(쿼리 문법)를 마친 상태를 기준으로 합니다. 이 모듈의 <code>bool</code>, <code>filter</code>, <code>match</code>는 A4-M2에서 배운 그대로이고, 새로 더해지는 것은 벡터 검색 <code>knn</code>입니다. 환경은 A4-M1과 같습니다. Docker의 <b>opensearch</b>(9200)와 <b>opensearch-dashboards</b>(5601)가 실행 중이어야 합니다. 서버는 <b>로그인 방식</b>(https, admin 계정)입니다. Python 실습(14~18탭)에는 <code>opensearch-py</code>, <code>sentence-transformers</code>, <code>python-dotenv</code>가 필요하고, OpenSearch 비밀번호는 <code>.env</code> 파일에서 읽습니다. 마지막 답변 생성 단계에서만 LLM API 키를 씁니다(없어도 검색까지는 모두 됩니다).</p></div>
+</section>
+
+<!-- 01 -->
+<section aria-labelledby="tab-u01" class="panel" hidden="" id="u01" role="tabpanel"><div class="crumb">Part 0. 큰 그림 · A4-M3</div><h1>01. 오픈북 시험과 의미 검색 — 왜 “숫자”가 필요한가</h1><p class="lead">RAG는 오픈북 시험입니다. 그런데 “관련 페이지를 펼친다”를 기계에게 시키려면, 단어가 달라도 뜻이 같으면 찾아 주는 검색이 필요합니다. 그 검색을 위해 의미를 숫자로 바꿉니다.</p>
+<div class="journey"><h3>이 탭의 흐름</h3><ol><li>폐쇄형 시험 vs 오픈북 시험</li><li>키워드 검색이 놓치는 경우</li><li>의미를 좌표로 바꾸는 이유</li></ol></div>
+<div class="cards"><div class="card"><div class="h">폐쇄형 시험 (LLM 단독)</div>학생이 외운 지식만으로 답을 씁니다. 안 배운 내용, 최근 내용은 틀리거나 지어냅니다.</div><div class="card"><div class="h">오픈북 시험 (RAG)</div>질문을 받으면 <b>참고서에서 관련 페이지를 펼쳐</b> 그 내용을 보고 답을 씁니다. 외우지 않아도 정확한 근거로 답합니다.</div></div>
+<pre class="diagram">폐쇄형 (LLM 단독)   질문 ─────────────────→ LLM ──→ 아는 범위에서 답
+
+오픈북 (RAG)        질문 ─→ [관련 자료 검색] ─→ 근거 + 질문 ─→ LLM ──→ 근거 기반 답</pre>
+<div class="note"><b>중요한 구분</b><p>모델을 다시 <b>학습(재훈련)</b>시키는 것은 “머릿속에 새로 외우게 하는 것”이고, RAG는 “시험장에 자료를 반입하게 하는 것”입니다. 문서가 자주 바뀌는 실무에서는 매번 외우게 하는 것보다, 그때그때 찾아보게 하는 편이 빠르고 저렴합니다.</p></div>
+<h3>“관련 자료 검색”이 왜 어려운가</h3>
+<div class="cards"><div class="card"><div class="h">키워드 검색이 놓치는 경우</div>문서: “프레스 작업 시 <b>방호장치</b>를 설치한다.”<br/>질문: “기계에 <b>손이 끼이지 않게</b> 하려면?”<br/><br/>→ 겹치는 단어가 없어 못 찾을 수 있습니다.</div><div class="card"><div class="h">사람은 어떻게 아는가</div>사람은 “방호장치 설치”와 “손 끼임 방지”가 <b>의미상 같은 이야기</b>임을 압니다.<br/><br/>→ 기계도 이 “의미의 유사성”을 계산할 수 있어야 합니다.</div></div>
+<h3>그래서 의미를 숫자로 바꿉니다</h3>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>기계는 “비슷하다”를 직접 느끼지 못합니다. 대신 <b>숫자 사이의 거리</b>는 정확히 계산할 수 있습니다. 그래서 문장의 의미를 여러 개의 숫자, 즉 <b>좌표(벡터)</b>로 바꾸고, 의미가 비슷한 문장은 좌표도 가깝게 놓이도록 만듭니다.</p></div>
+<pre class="diagram">문장 ──(임베딩 모델)──→ 벡터(숫자 좌표) ──→ 좌표 사이 거리로 "의미의 가까움"을 계산
+
+"방호장치를 설치한다"   → [0.91, 0.82, 0.10]  ┐  두 좌표가 가까움
+"손이 끼지 않게 한다"   → [0.89, 0.80, 0.12]  ┘  → 의미가 비슷하다고 판단</pre>
+<div class="note"><b>모든 개념의 뿌리</b><p><b>문장 → 임베딩 → 벡터 → 거리 계산</b>. 이 한 줄이 이후 모든 탭의 바탕입니다. 03탭에서 실제 좌표와 계산으로 확인합니다.</p></div>
+</section>
+
+<!-- 02 -->
+<section aria-labelledby="tab-u02" class="panel" hidden="" id="u02" role="tabpanel"><div class="crumb">Part 0. 큰 그림 · A4-M3</div><h1>02. 전체 여정 미리보기 — 여덟 단계와 다섯 가지 직관</h1><p class="lead">앞으로 다룰 내용을 두 줄로 미리 봅니다. 지금은 용어를 외울 필요 없이 “이런 흐름이구나” 정도면 충분합니다.</p>
+<h3>저장 단계</h3>
+<div class="flow"><div class="fstep"><b>① 원본 문서</b><span>PDF, 매뉴얼</span></div><div class="arrow">→</div><div class="fstep"><b>② Chunking</b><span>조각으로 나누기</span></div><div class="arrow">→</div><div class="fstep"><b>③ Embedding</b><span>조각 → 벡터</span></div><div class="arrow">→</div><div class="fstep"><b>④ OpenSearch 저장</b><span>원문 + 벡터 + 메타데이터</span></div></div>
+<h3>질문 단계</h3>
+<div class="flow"><div class="fstep"><b>⑤ 사용자 질문</b><span>자연어</span></div><div class="arrow">→</div><div class="fstep"><b>⑥ 질문 Embedding</b><span>같은 모델로</span></div><div class="arrow">→</div><div class="fstep"><b>⑦ k-NN 검색</b><span>가까운 조각 k개</span></div><div class="arrow">→</div><div class="fstep"><b>⑧ LLM 답변</b><span>근거 기반</span></div></div>
+<h3>기억할 핵심 직관 5가지</h3>
+<div class="tablewrap"><table><thead><tr><th>#</th><th>직관</th><th>다루는 탭</th><th>Python 실습</th></tr></thead><tbody>
+<tr><td>1</td><td>긴 문서는 <b>조각(Chunk)</b>으로 나눠 검색한다.</td><td>07·08</td><td>15</td></tr>
+<tr><td>2</td><td>조각의 <b>의미를 벡터</b>로 바꿔 저장한다.</td><td>03·04·05</td><td>14·15</td></tr>
+<tr><td>3</td><td>검색 = <b>질문 벡터와 가까운 조각 찾기(k-NN)</b>.</td><td>09·10</td><td>16</td></tr>
+<tr><td>4</td><td>정확 용어는 <b>키워드+의미(Hybrid)</b>로 함께 찾는다.</td><td>11</td><td>17</td></tr>
+<tr><td>5</td><td>OpenSearch는 <b>검색까지</b>, 답변은 <b>LLM</b>이 만든다.</td><td>12</td><td>18</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>이 다섯을 이해하면 나머지는 세부일 뿐입니다. 앞부분(03~13탭)은 위젯으로 “값을 바꾸면 결과가 어떻게 달라지는지”를 눈으로 보고, 뒷부분(14~18탭)은 같은 일을 OpenSearch와 Python으로 실제로 합니다.</p></div>
+</section>
+
+<!-- 03 -->
+<section aria-labelledby="tab-u03" class="panel" hidden="" id="u03" role="tabpanel"><div class="crumb">Part 1. 벡터 · A4-M3</div><h1>03. 대상을 숫자로 표현하기 — 거리로 비슷함 재기</h1><p class="lead">사람 세 명을 커피 선호도와 운동 선호도, 두 숫자로 표현해 봅니다. 특징을 수치화하면 두 대상이 얼마나 비슷한지를 <b>거리 계산</b>으로 판단할 수 있습니다.</p>
+<div class="journey"><h3>이 탭의 흐름</h3><ol><li>사람 세 명을 좌표로</li><li>산점도에서 거리 계산 (점을 클릭)</li><li>문장도 같은 방식이라는 연결</li></ol></div>
+<div class="tablewrap"><table><thead><tr><th>대상</th><th>커피 선호</th><th>운동 선호</th><th>좌표(벡터)</th></tr></thead><tbody>
+<tr><td>A</td><td>9</td><td>8</td><td><code>[9, 8]</code></td></tr><tr><td>B</td><td>8</td><td>8</td><td><code>[8, 8]</code></td></tr><tr><td>C</td><td>2</td><td>1</td><td><code>[2, 1]</code></td></tr></tbody></table></div>
+<div class="widget"><div class="wtitle"><span class="dot"></span><b>2차원 벡터 산점도 · 거리 계산기</b><span class="tag">INTERACTIVE</span></div><div class="wbody">
+<p style="margin-top:0">점을 클릭(또는 마우스를 올리면)하면 다른 점과의 <b>거리 계산 과정</b>이 아래에 단계별로 표시됩니다.</p>
+<div class="scatter-wrap"><svg aria-label="2차원 벡터 산점도" id="scatter" role="img" viewBox="0 0 380 320" width="100%"></svg><div class="legend"><div><span class="sw" style="background:#ff2e93"></span> 대상 점 (A·B·C)</div><div><span class="sw" style="background:#2563eb"></span> 선택한 점과 거리</div><div class="muted">거리 = √((x₁−x₂)² + (y₁−y₂)²)</div></div></div>
+<div class="calc-panel" id="calcPanel"></div></div></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>거리가 <b>작을수록</b> 두 대상은 비슷합니다. A와 B는 성향이 거의 같아 가깝고(1.00), C는 취향이 반대라 멀리(9.90) 떨어져 있습니다. 문장도 똑같은 방식으로 좌표를 만들어 거리를 잽니다. 축이 2개가 아니라 수백 개일 뿐입니다.</p></div>
+<details class="qa"><summary>Q. A3-M2(FAISS)에서 한 L2 거리와 같은 건가요?</summary><p>같습니다. FAISS <code>IndexFlatL2</code>는 이 거리의 제곱(√를 빼고)을 돌려줬습니다. 순서는 똑같습니다. 제곱근은 순서를 바꾸지 않기 때문입니다.</p></details>
+</section>
+
+<!-- 04 -->
+<section aria-labelledby="tab-u04" class="panel" hidden="" id="u04" role="tabpanel"><div class="crumb">Part 1. 벡터 · A4-M3</div><h1>04. 임베딩과 차원 — 문장을 숫자로, 몇 개의 숫자로</h1><p class="lead">사람이 항목마다 점수를 매기는 대신, <b>임베딩(Embedding) 모델</b>이 문장의 의미를 반영한 여러 숫자를 자동으로 만듭니다. 그 숫자의 개수가 차원(Dimension)이고, OpenSearch 설정과 반드시 맞아야 합니다.</p>
+<div class="journey"><h3>이 탭의 흐름</h3><ol><li>임베딩 = 문장 → 숫자 배열</li><li>차원 = 숫자의 개수, 의미의 축</li><li>대표 모델의 차원</li><li>트레이드오프와 가장 흔한 실수</li></ol></div>
+<pre class="diagram">"프레스 방호장치를 설치해야 합니다."
+                 ↓
+           Embedding 모델   (문장의 의미를 학습한 모델)
+                 ↓
+      [0.91, 0.82, 0.10, ...]   ← Vector(벡터)</pre>
+<div class="note"><b>예시 값입니다</b><p>위 좌표값은 이해를 돕기 위한 예시입니다. 실제 임베딩은 사람이 해석하기 어려운 수백~수천 개의 숫자이며, “의미가 가까운 문장은 좌표도 가깝다”는 성질만 보장됩니다.</p></div>
+<h3>차원(Dimension)</h3>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>벡터 하나에 들어 있는 <b>숫자의 개수</b>가 차원입니다. <code>[9, 8]</code>은 2차원, <code>[0.91, 0.82, 0.10]</code>은 3차원입니다. 각 숫자는 “의미를 이루는 하나의 축”이라고 이해하면 됩니다.</p><p>03탭의 사람 예시는 축이 2개라 취향을 대략적으로만 구분했습니다. 축을 수백~수천 개로 늘리면 “격식/캐주얼”, “긍정/부정”, “기계안전/화재안전”처럼 수많은 미세한 의미 성분을 동시에 담습니다. 이 축들은 사람이 지정하지 않고, 임베딩 모델이 대량의 텍스트를 학습하며 <b>스스로 잡아냅니다</b>.</p></div>
+<div class="tablewrap"><table><thead><tr><th>모델 (대략값 · 버전에 따라 다름)</th><th>차원</th><th>비고</th></tr></thead><tbody>
+<tr><td>OpenAI text-embedding-3-large</td><td>3072</td><td>표현력이 크지만 저장·계산 비용도 큼 (축소 옵션 제공)</td></tr>
+<tr><td>OpenAI text-embedding-3-small / ada-002</td><td>1536</td><td>범용적으로 많이 쓰이는 크기</td></tr>
+<tr><td>Amazon Titan Text Embeddings v2</td><td>1024 / 512 / 256</td><td>차원을 선택해 비용·정확도 조절</td></tr>
+<tr><td>Cohere Embed v3</td><td>1024</td><td>다국어 지원</td></tr>
+<tr><td>intfloat/multilingual-e5-small (로컬)</td><td>384</td><td>한국어 가능, 가벼움 — <b>이 모듈 Python 실습 기본값</b></td></tr>
+<tr><td>all-MiniLM-L6-v2 (로컬)</td><td>384</td><td>가볍고 빠름, 영어 중심</td></tr></tbody></table></div>
+<div class="cards"><div class="card"><div class="h">차원이 크면</div>더 미세한 의미 차이를 표현(표현력↑). 대신 벡터 하나당 저장 용량과 검색 계산량이 늘어 <b>메모리·속도·비용 부담↑</b>.</div><div class="card"><div class="h">차원이 작으면</div>가볍고 빠르며 저장이 적음. 대신 미묘한 의미 차이를 <b>놓칠 수</b> 있어 검색 품질이 떨어질 수 있음.</div></div>
+<div class="note"><b>실무에서 가장 자주 실수하는 제약</b><p>검색이 성립하려면 <b>임베딩 모델의 출력 차원</b>과 <b>OpenSearch 벡터 필드의 <code>dimension</code></b>이 <b>정확히 일치</b>해야 합니다. 차원이 다른 벡터끼리는 거리 계산 자체가 불가능합니다. 그래서 저장할 때와 질문할 때 <b>반드시 같은 모델</b>을 쓰고, 모델을 바꾸면 저장된 벡터를 <b>전부 다시 만들어야</b> 합니다. 미션 7에서 이 오류를 일부러 내 봅니다.</p></div>
+<details class="qa"><summary>Q. 그럼 무조건 큰 차원이 좋은가요?</summary><p>아닙니다. 차원이 지나치게 커지면 “모든 벡터 사이 거리가 서로 비슷해져” 구별이 어려워지는 <b>차원의 저주</b>가 나타납니다. 보통 모델이 권장하는 차원을 그대로 쓰고, 데이터가 많아 느려지는 문제는 차원을 줄이는 대신 10탭의 ANN·HNSW 인덱스로 해결합니다.</p></details>
+</section>
+
+<!-- 05 -->
+<section aria-labelledby="tab-u05" class="panel" hidden="" id="u05" role="tabpanel"><div class="crumb">Part 1. 벡터 · A4-M3</div><h1>05. 저장·검색 시스템의 필요 — 원문 + 벡터 + 메타데이터</h1><p class="lead">문장을 벡터로 만들었다면, 그 벡터를 저장하고 질문과 가까운 벡터를 빠르게 찾아 줄 시스템이 필요합니다. 실제로는 벡터만이 아니라 <b>원문 + 벡터 + 메타데이터</b>를 한 문서로 함께 저장합니다.</p>
+<pre class="diagram">Chunk 원문  "프레스 작업 시 방호장치를 설치해야 합니다."
+     ↓ Embedding
+Vector      [0.91, 0.82, 0.10]
+     +
+Metadata    source=press_safety.pdf · page=12 · type=안전지침 · year=2026
+     ↓
+Vector DB / Vector Search Engine (예: OpenSearch)</pre>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>A3-M2에서 FAISS를 쓸 때는 벡터만 FAISS에 넣고, 원문은 docs.json, 카테고리는 따로 표로 들고 있었습니다. OpenSearch에서는 이 셋이 <b>한 문서의 필드</b>입니다. A4-M1의 sales 문서에 <code>region</code>, <code>revenue</code>가 같이 있던 것과 같고, 거기에 <code>embedding</code> 필드 하나가 더 붙을 뿐입니다.</p></div>
+<div class="note"><b>메타데이터를 함께 두는 이유</b><p>“2026년 안전지침 중에서만 검색”처럼 <b>조건을 건 의미 검색</b>이 가능해집니다. 11탭(Filter)과 16탭(Python)에서 다시 다룹니다.</p></div>
+<div class="tablewrap"><table><thead><tr><th>필드</th><th>자료형 (A4-M1 10탭 복습)</th><th>쓰임</th></tr></thead><tbody>
+<tr><td>text</td><td><code>text</code></td><td>원문, 키워드(BM25) 검색, LLM에 넘길 근거</td></tr>
+<tr><td>embedding</td><td><code>knn_vector</code></td><td>의미 검색</td></tr>
+<tr><td>source / type / factory</td><td><code>keyword</code></td><td>필터, 출처 표시</td></tr>
+<tr><td>page / year</td><td><code>integer</code></td><td>범위 필터, 출처 표시</td></tr></tbody></table></div>
+</section>
+
+<!-- 06 -->
+<section aria-labelledby="tab-u06" class="panel" hidden="" id="u06" role="tabpanel"><div class="crumb">Part 2. 전체 그림 · A4-M3</div><h1>06. 전체 파이프라인과 RAG — 재학습과의 차이</h1><p class="lead">파이프라인 구조를 한 장으로 보고, RAG가 모델 재학습과 어떻게 다른지 정리합니다. OpenSearch는 이 그림에서 <b>검색엔진</b> 자리에 있습니다.</p>
+<pre class="diagram">[저장 단계]  문서 → Text 추출 → Chunking → Embedding → Vector → OpenSearch 저장
+
+──────────────────────── 질문이 들어옴 ────────────────────────
+
+[검색 단계]  질문 → Embedding → 질문 벡터 → 유사도/거리 → k-NN (대규모면 ANN/HNSW)
+             → Keyword + Vector + Filter (Hybrid) → Top-k Chunk → LLM → 답변</pre>
+<div class="note"><b>핵심</b><p>OpenSearch는 답변을 생성하는 엔진이 아니라, 질문과 의미가 가까운 문서 조각을 찾아 주는 <b>검색엔진</b>입니다. 자연어 답변 생성은 LLM의 몫입니다.</p></div>
+<h3>RAG vs 재학습</h3>
+<div class="tablewrap"><table><thead><tr><th>방식</th><th>무엇을 하는가</th><th>문서가 바뀌면</th><th>비용/속도</th></tr></thead><tbody>
+<tr><td>Fine-tuning / 재학습</td><td>모델 자체의 동작·지식을 조정 (머릿속에 외우기)</td><td>다시 학습 필요</td><td>비교적 무겁고 느림</td></tr>
+<tr><td><b>RAG</b></td><td>질의 시점에 필요한 문서를 검색해 근거로 제공 (자료 반입)</td><td>문서만 갱신하면 즉시 반영</td><td>가볍고 유연</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p><b>RAG = Retrieval-Augmented Generation.</b> 검색(Retrieval)으로 근거를 찾고, 컨텍스트로 보강(Augmented)한 뒤, LLM이 답변을 생성(Generation)합니다. “문서만 갱신하면 즉시 반영”은 A4-M1 미션 P6에서 이미 봤습니다. Python으로 주문 1건을 넣자 Dashboard가 바로 바뀌었죠. 문서 조각도 똑같이 넣으면 바로 검색됩니다.</p></div>
+</section>
+
+<!-- 07 -->
+<section aria-labelledby="tab-u07" class="panel" hidden="" id="u07" role="tabpanel"><div class="crumb">Part 3. 문서 준비 · A4-M3</div><h1>07. Chunk로 나누기 — Size와 Overlap 직접 바꿔 보기</h1><p class="lead">긴 문서를 통째로 하나의 검색 단위로 쓰면, 질문과 무관한 내용까지 딸려 와 정확도가 떨어집니다. 그래서 검색에 적합한 크기의 조각(Chunk)으로 나눕니다. 아래 계산기에서 값을 바꾸면 실제 문서가 그 값으로 잘립니다.</p>
+<div class="journey"><h3>이 탭의 흐름</h3><ol><li>조각으로 나눈 결과의 모습</li><li>Size와 Overlap의 의미</li><li>계산기로 조각 수 공식 확인</li></ol></div>
+<div class="tablewrap"><table><thead><tr><th>Chunk</th><th>내용</th></tr></thead><tbody>
+<tr><td>C1</td><td>프레스 작업 시 방호장치를 설치해야 합니다.</td></tr><tr><td>C2</td><td>작업 전 비상정지장치의 정상 작동 여부를 확인해야 합니다.</td></tr><tr><td>C3</td><td>작업자는 지정된 안전보호구(안전모·안전화 등)를 착용해야 합니다.</td></tr><tr><td>C4</td><td>지게차 운행 구역과 보행자 통로를 구분해야 합니다.</td></tr><tr><td>C5</td><td>화재 발생 시 비상구로 신속히 대피해야 합니다.</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>조각을 너무 작게 자르면 문맥이 끊기고, 너무 크게 자르면 한 조각에 여러 주제가 섞입니다. <b>Overlap</b>은 앞 조각의 끝을 다음 조각 앞에 겹쳐 문맥 단절을 줄입니다.</p></div>
+<div class="widget"><div class="wtitle"><span class="dot"></span><b>Chunk 분할 계산기 (실제 텍스트)</b><span class="tag">계산 + 내용 출력</span></div><div class="wbody">
+<div class="samplebox" id="sampleBox"></div>
+<div class="controls"><div class="ctrl"><label>Chunk Size <span class="v" id="vSize">40 자</span></label><input id="cSize" max="90" min="15" step="5" type="range" value="40"/></div><div class="ctrl"><label>Overlap <span class="v" id="vOv">10 자</span></label><input id="cOv" max="40" min="0" step="5" type="range" value="10"/></div></div>
+<div class="statrow"><div class="stat"><div class="n" id="stTotal">—</div><div class="l">전체 길이 (글자)</div></div><div class="stat"><div class="n" id="stChunks">—</div><div class="l">생성되는 Chunk 수</div></div><div class="stat"><div class="n" id="stStride">—</div><div class="l">이동 간격 (size−overlap)</div></div><div class="stat"><div class="n" id="stCover">—</div><div class="l">Overlap 비율</div></div></div>
+<div class="readout" id="chunkFormula"></div>
+<p style="margin:12px 0 6px"><b>각 Chunk의 실제 내용</b> <span class="muted">(분홍 표시 = 앞 조각과 겹치는 부분)</span></p>
+<div class="chunk-list" id="chunkList"></div></div></div>
+<div class="note"><b>실무에서는</b><p>보통 <b>토큰(token)</b> 단위로 자르지만, 여기서는 눈으로 확인하기 쉽도록 <b>글자 수</b>로 나눴습니다. 적정값은 문서 구조와 검색 목적에 따라 달라지며, Overlap이 Chunk Size에 가까워질수록 조각 수가 급증해 저장·검색 비용이 늘어납니다.</p></div>
+<div class="task"><h4>화면에서 짚을 곳</h4><ol><li>Size 40, Overlap 10에서 조각 수를 읽고, 공식 <code>⌈(전체 − overlap) ÷ (size − overlap)⌉</code>에 직접 대입해 같은지 봅니다.</li><li>Overlap을 35까지 올려 조각 수가 얼마나 늘어나는지 봅니다.</li><li>이 계산기와 똑같이 동작하는 Python 함수를 15탭에서 만들고, 미션 1에서 숫자를 맞춰 봅니다.</li></ol></div>
+</section>
+
+<!-- 08 -->
+<section aria-labelledby="tab-u08" class="panel" hidden="" id="u08" role="tabpanel"><div class="crumb">Part 3. 문서 준비 · A4-M3</div><h1>08. 누가 나누고 누가 숫자로 바꾸나 — 헷갈리는 4개념</h1><p class="lead">Chunking과 Embedding은 OpenSearch의 기능이 아니라 일반적으로 <b>문서 전처리 파이프라인</b>에서 처리합니다. OpenSearch는 다 만들어진 결과를 받아 저장하고 찾습니다.</p>
+<div class="tablewrap"><table><thead><tr><th>임베딩 방식</th><th>예</th><th>OpenAI Key</th></tr></thead><tbody>
+<tr><td>OpenAI Embedding API</td><td>OpenAI 임베딩 모델</td><td><b>필요</b></td></tr>
+<tr><td>AWS Bedrock Embedding</td><td>Bedrock 임베딩 모델</td><td>불필요 (AWS 자격 증명)</td></tr>
+<tr><td>로컬 임베딩</td><td>Sentence Transformers 등</td><td>불필요 — <b>이 모듈 기본값</b></td></tr></tbody></table></div>
+<div class="note"><b>OpenSearch 사용에 Python과 OpenAI Key가 필수는 아닙니다.</b><p>Python이 자주 쓰이지만 Java·JavaScript·ETL 도구로도 됩니다. Python + OpenAI는 하나의 구현 조합일 뿐입니다.</p></div>
+<h3>헷갈리는 4개념</h3>
+<div class="tablewrap"><table><thead><tr><th>개념</th><th>의미</th><th>예</th></tr></thead><tbody>
+<tr><td>Chunk 수</td><td>문서에서 만들어진 검색 단위 수</td><td>100개</td></tr>
+<tr><td>Vector 수</td><td>보통 Chunk마다 1개</td><td>100개</td></tr>
+<tr><td>Dimension</td><td>벡터 하나 안의 숫자 개수</td><td>384 / 1,536</td></tr>
+<tr><td>Top-k</td><td>검색 결과로 가져올 Chunk 개수</td><td>3개</td></tr></tbody></table></div>
+<h3>저장 형태</h3>
+<pre class="diagram">C1
+ ├─ text   : "프레스 방호장치를 설치해야 합니다."
+ ├─ vector : [0.91, 0.82, 0.10]
+ ├─ source : press_safety.pdf
+ └─ page   : 12
+C2
+ ├─ text   : "비상정지장치를 확인해야 합니다."
+ └─ vector : [0.84, 0.78, 0.15]  ...</pre>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>위 그림이 OpenSearch에서는 문서 한 건의 <code>_source</code>입니다. <code>_id</code>는 <code>C1</code>, 필드는 <code>text</code>, <code>embedding</code>, <code>source</code>, <code>page</code>. 14탭에서 이 모양 그대로 Dev Tools로 넣어 봅니다.</p></div>
+</section>
+
+<!-- 09 -->
+<section aria-labelledby="tab-u09" class="panel" hidden="" id="u09" role="tabpanel"><div class="crumb">Part 4. 질문 검색 · A4-M3</div><h1>09. 유사도 · k-NN 플레이그라운드 — '가깝다'를 재는 세 가지</h1><p class="lead">5개 Chunk에 설명용 3차원 벡터가 붙어 있습니다. 질문을 고르거나 슬라이더로 질문 벡터를 바꾸면, 선택한 지표로 모든 점수가 실시간 계산되고 상위 k개가 강조됩니다. 이 5개는 14탭 Dev Tools 실습에 그대로 넣는 데이터입니다.</p>
+<div class="journey"><h3>이 탭의 흐름</h3><ol><li>질문을 바꿔 보며 순위 변화 보기</li><li>지표(코사인·L2·내적) 바꿔 보기</li><li>Top-k 바꿔 보기</li><li>세 지표 정리</li></ol></div>
+<div class="widget"><div class="wtitle"><span class="dot"></span><b>Vector Search Playground</b><span class="tag">실시간 계산</span></div><div class="wbody">
+<div class="presets" id="qPresets"><button class="preset active" data-q="0.94,0.85,0.12" type="button">질문: “프레스 손 끼임 예방”</button><button class="preset" data-q="0.20,0.33,0.82" type="button">질문: “화재 시 대피 방법”</button><button class="preset" data-q="0.14,0.24,0.90" type="button">질문: “지게차 통행 안전”</button></div>
+<div class="controls"><div class="ctrl"><label>질문 x₁ <span class="v" id="vq0">0.94</span></label><input id="q0" max="1" min="0" step="0.01" type="range" value="0.94"/></div><div class="ctrl"><label>질문 x₂ <span class="v" id="vq1">0.85</span></label><input id="q1" max="1" min="0" step="0.01" type="range" value="0.85"/></div><div class="ctrl"><label>질문 x₃ <span class="v" id="vq2">0.12</span></label><input id="q2" max="1" min="0" step="0.01" type="range" value="0.12"/></div>
+<div class="ctrl"><label for="metric">유사도 지표</label><select id="metric"><option value="cosine">Cosine 유사도 (클수록 유사)</option><option value="l2">L2 / Euclidean 거리 (작을수록 유사)</option><option value="inner">Inner Product 내적 (클수록 유사)</option></select></div>
+<div class="ctrl"><label>Top-k <span class="v" id="vk">3</span></label><input id="kval" max="5" min="1" step="1" type="range" value="3"/></div></div>
+<div id="ranks"></div><div class="retrieved-note" id="retrieved"></div></div></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p><b>Similarity/Distance는 “비교 기준”</b>이고, <b>k-NN은 그 기준으로 가장 가까운 k개를 찾는 검색</b>입니다. 기본 질문에서는 세 지표 모두 C1 → C2 → C3 순위가 같지만, 질문을 바꾸면 순위가 달라집니다.</p></div>
+<div class="tablewrap"><table><thead><tr><th>지표</th><th>무엇을 비교하나</th><th>유사하다는 의미</th><th>OpenSearch <code>space_type</code></th></tr></thead><tbody>
+<tr><td><b>Cosine 유사도</b></td><td>두 벡터의 방향</td><td>값이 클수록 가까움 (1에 근접)</td><td><code>cosinesimil</code></td></tr>
+<tr><td><b>L2 / Euclidean</b></td><td>두 점 사이 직선거리</td><td>값이 작을수록 가까움 (0에 근접)</td><td><code>l2</code></td></tr>
+<tr><td><b>Inner Product</b></td><td>방향과 크기의 결합</td><td>값이 클수록 유사</td><td><code>innerproduct</code></td></tr></tbody></table></div>
+<div class="note"><b>OpenSearch는 항상 “클수록 가까움”으로 돌려줍니다</b><p>위젯에서는 L2가 오름차순이지만, OpenSearch는 어떤 지표든 <code>_score</code>로 바꿔 <b>점수가 클수록 위</b>에 놓습니다. 키워드 점수(BM25)와 같은 방향이어야 정렬과 Hybrid 결합이 되기 때문입니다. 14탭에서 이 위젯의 코사인 순위와 OpenSearch 점수를 나란히 맞춰 봅니다.</p></div>
+</section>
+
+<!-- 10 -->
+<section aria-labelledby="tab-u10" class="panel" hidden="" id="u10" role="tabpanel"><div class="crumb">Part 4. 질문 검색 · A4-M3</div><h1>10. 대규모 검색 — Exact, ANN, HNSW</h1><p class="lead">Chunk가 몇 백 개면 질문 벡터를 전부와 비교해도 순식간입니다. 하지만 실무에서는 수십만~수억 개가 됩니다. 이때 “정확하지만 느린” 방식과 “약간 부정확하지만 빠른” 방식 사이에서 선택이 생깁니다.</p>
+<div class="journey"><h3>이 탭의 흐름</h3><ol><li>Exact 검색의 계산량</li><li>ANN과 Recall</li><li>HNSW의 작동 방식</li><li>파라미터 세 개와 OpenSearch 설정</li></ol></div>
+<h3>① Exact 검색은 왜 부담스러운가</h3>
+<pre class="diagram">N = 1,000,000 개 · D = 1,536 차원
+
+한 번의 검색 = 100만 개 × 1,536 = 약 15억 번의 곱셈·덧셈
+        ↓
+사용자마다, 질문마다 매번 이만큼 반복
+        ↓
+데이터가 10배 늘면 검색 비용도 10배 → 확장이 어려움</pre>
+<h3>② ANN — 정확도를 조금 내주고 속도를 크게 얻는다</h3>
+<div class="cards"><div class="card"><div class="h">Exact k-NN</div>전수 비교 · <b>정확도 100%</b> · 대규모에서 느림. 소규모거나 “절대 놓치면 안 되는” 검색에 적합.</div><div class="card"><div class="h">Approximate k-NN (ANN)</div>후보만 탐색 · <b>매우 빠름</b> · 근사 결과. 대규모 서비스 검색의 사실상 표준.</div></div>
+<div class="note"><b>Recall(재현율)</b><p>“진짜 정답 top-k 중 몇 개를 실제로 찾아냈는가”입니다. 진짜 최근접 10개 중 9개를 찾으면 recall = 0.9. ANN의 목표는 recall을 1.0에 가깝게 유지하면서 속도를 얻는 것입니다.</p></div>
+<h3>③ HNSW의 작동 방식</h3>
+<pre class="diagram">상위 Layer(고속도로)   ●─────────────────●        ← 노드 적음, 넓게 점프
+                       \               /
+중간 Layer             ●────●─────●───●
+                        \   |     |
+하위 Layer(골목길)   ●─●─●─●─●─●─●─●─●─●        ← 노드 많음, 촘촘
+
+탐색 순서
+1. 최상위 층의 한 지점(entry point)에서 시작
+2. 현재 층에서 이웃 중 "질문에 더 가까운 쪽"으로 이동(greedy)
+   → 더 가까워지는 이웃이 없으면 한 층 아래로 내려감
+3. 아래층일수록 촘촘하므로 점점 정밀하게 탐색
+4. 최하위 층에서 모은 후보 중 가장 가까운 k개를 반환</pre>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>먼 거리는 위층에서 몇 번의 점프로 빠르게 좁히고, 가까워질수록 아래층에서 촘촘히 확인합니다. 덕분에 100만 개 중에서도 수십 번의 비교만으로 근접 후보에 도달합니다. A3-M2에서 FAISS <code>IndexHNSWFlat</code>으로 이미 돌려 본 바로 그 구조이고, OpenSearch도 안에서 같은 HNSW를 씁니다.</p></div>
+<h3>④ 핵심 파라미터</h3>
+<div class="tablewrap"><table><thead><tr><th>파라미터</th><th>의미</th><th>키우면</th><th>정하는 때</th></tr></thead><tbody>
+<tr><td><code>m</code></td><td>노드 하나가 갖는 이웃 연결 수 (그래프 촘촘함)</td><td>정확도↑ · 메모리↑</td><td>인덱스 만들 때</td></tr>
+<tr><td><code>ef_construction</code></td><td>인덱스를 <b>만들 때</b> 탐색하는 후보 폭</td><td>인덱스 품질↑ · 색인 시간↑</td><td>인덱스 만들 때</td></tr>
+<tr><td><code>ef_search</code></td><td>인덱스로 <b>검색할 때</b> 탐색하는 후보 폭</td><td>recall↑ · 검색 속도↓</td><td>검색할 때</td></tr></tbody></table></div>
+<div class="note"><b>실무 규칙</b><p>검색 결과가 부실하면 먼저 <code>ef_search</code>를 올려 봅니다. 색인을 다시 만들지 않고 정확도를 높일 수 있습니다. 그래도 부족하면 <code>m</code>·<code>ef_construction</code>을 키워 인덱스를 다시 만듭니다.</p></div>
+<h3>⑤ OpenSearch에서는 — 매핑의 벡터 필드</h3>
+<div class="codebox"><div class="codehead"><span>판서용 — knn_vector 필드의 모양</span><button class="copy" type="button">코드 복사</button></div><pre><code>"embedding": {
+  "type": "knn_vector",
+  "dimension": 384,                 ← 임베딩 모델과 일치 (04탭)
+  "method": {
+    "name": "hnsw",
+    "engine": "lucene",             ← lucene / faiss
+    "space_type": "cosinesimil",    ← cosinesimil / l2 / innerproduct (09탭)
+    "parameters": { "m": 16, "ef_construction": 128 }
+  }
+}</code></pre></div>
+<details class="qa"><summary>Q. HNSW 말고 다른 방식도 있나요?</summary><p><b>IVF</b>(군집으로 나눠 탐색), <b>PQ</b>(벡터를 압축해 메모리 절감) 같은 다른 ANN 기법이 있습니다. A3-M2에서 FAISS로 다뤘습니다. 대규모·저메모리 요구가 있을 때 검토하고, 개념 이해와 이 모듈 실습은 HNSW 하나로 충분합니다. 예전 기본 엔진이던 <code>nmslib</code>는 최신 버전에서 지원 중단 예정이라 새로 쓰지 않습니다.</p></details>
+</section>
+
+<!-- 11 -->
+<section aria-labelledby="tab-u11" class="panel" hidden="" id="u11" role="tabpanel"><div class="crumb">Part 4. 질문 검색 · A4-M3</div><h1>11. Hybrid Search와 Metadata Filter</h1><p class="lead">의미 검색이 강력해도 법령번호·모델명·사번·품번처럼 <b>글자 자체가 중요한 검색</b>에서는 키워드 검색이 더 정확합니다. 그래서 둘을 섞습니다(Hybrid). 그리고 조건으로 범위를 먼저 좁힙니다(Filter).</p>
+<div class="journey"><h3>이 탭의 흐름</h3><ol><li>가중치 α로 키워드·벡터 섞기 (위젯)</li><li>OpenSearch에서 섞는 방법 미리보기</li><li>Metadata Filter</li></ol></div>
+<div class="widget"><div class="wtitle"><span class="dot"></span><b>Hybrid Search 가중치 블렌더</b><span class="tag">실시간 계산</span></div><div class="wbody">
+<p style="margin-top:0">결합 점수 = <code>α × 벡터점수 + (1−α) × 키워드점수</code>. α=<b>0</b>이면 키워드만, α=<b>1</b>이면 의미만 사용합니다.</p>
+<div class="controls"><div class="ctrl" style="min-width:260px"><label>α (벡터 가중치) <span class="v" id="vAlpha">0.50</span></label><input id="alpha" max="1" min="0" step="0.05" type="range" value="0.5"/></div></div>
+<div id="hybridRanks"></div><div class="readout" id="hybridNote"></div></div></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>α를 0으로 내리면 “제38조”라는 글자가 정확히 들어간 D1이 1등, 1로 올리면 표현은 달라도 뜻이 가까운 D2가 1등입니다. 중간에서는 양쪽 점수가 고른 D3가 강세입니다. 실무 질문에는 둘이 섞여 있으니 둘 다 씁니다.</p><p>OpenSearch에서는 키워드 검색(BM25)과 벡터 검색(k-NN)을 한 요청에 넣고, <b>search pipeline</b>이 두 점수를 0~1로 맞춘 뒤 가중 평균을 냅니다. 위젯의 α가 pipeline의 <code>weights</code>입니다. 17탭에서 실제로 만듭니다.</p></div>
+<h3>Metadata Filter</h3>
+<pre class="diagram">질문 "프레스 사고 예방 방법"
+        ↓
+Filter   year=2026 · factory=화성 · type=안전지침
+        ↓
+조건에 맞는 문서 집합 → Vector k-NN → Top-3 Chunk</pre>
+<div class="note"><b>벡터 유사도만큼 메타데이터 설계가 중요합니다</b><p>문서명·날짜·부서·페이지·문서종류·보안등급을 함께 저장하는 이유입니다. OpenSearch에서는 필터를 <b>knn 쿼리 안의 <code>filter</code></b>에 넣어야 “조건 안에서 k개”가 채워집니다. 밖에서 거르면 0건이 될 수 있습니다(16탭).</p></div>
+</section>
+
+<!-- 12 -->
+<section aria-labelledby="tab-u12" class="panel" hidden="" id="u12" role="tabpanel"><div class="crumb">Part 5. RAG 연결 · A4-M3</div><h1>12. 검색된 근거가 답변이 되기까지 — 품질을 좌우하는 다섯 가지</h1><p class="lead">검색한 Chunk를 LLM에 넘겨 최종 답변을 만드는 흐름입니다. 18탭에서 이 다섯 단계를 Python 코드 다섯 덩어리로 그대로 옮깁니다.</p>
+<div class="tablewrap"><table><thead><tr><th>단계</th><th>뜻</th><th>담당</th></tr></thead><tbody>
+<tr><td><b>Retrieval</b></td><td>검색</td><td>OpenSearch가 관련 Chunk를 찾음</td></tr>
+<tr><td><b>Augmented</b></td><td>보강</td><td>찾은 근거를 질문과 함께 LLM에 제공</td></tr>
+<tr><td><b>Generation</b></td><td>생성</td><td>LLM이 근거를 참고해 답변 생성</td></tr></tbody></table></div>
+<pre class="diagram">STEP 1  질문: "프레스 작업 중 손 끼임을 어떻게 예방하나요?"
+        ↓
+STEP 2  질문 → Embedding → [0.94, 0.85, 0.12]
+        ↓
+STEP 3  OpenSearch 검색 (Top-3)  C1 방호장치 · C2 비상정지장치 · C3 안전보호구
+        ↓
+STEP 4  [근거 3건] + [질문] → LLM 전달        ← Retrieval + Augmented
+        ↓
+STEP 5  LLM이 근거 기반 답변 생성            ← Generation</pre>
+<div class="note"><b>답변 예시</b><p>“금형 위험구역에 손이 접근하지 않도록 방호장치를 사용하고, 작업 전 비상정지장치의 정상 작동을 확인하며, 지정된 안전보호구를 착용해야 합니다.” — 모두 검색된 근거에 기반합니다.</p></div>
+<h3>RAG 속 OpenSearch의 위치</h3>
+<pre class="diagram">사용자 ─질문→ Embedding ─질문벡터→ ┌────────────────────────┐
+                                  │       OpenSearch       │
+                                  │  Keyword / Vector·k-NN │
+                                  │  Hybrid / Filter       │
+                                  └──────────┬─────────────┘
+                                             │ 관련 Chunk
+                                             ▼
+                                            LLM ──→ 최종 답변</pre>
+<div class="tablewrap"><table><thead><tr><th>품질 요소</th><th>잘못되면</th><th>손볼 곳</th></tr></thead><tbody>
+<tr><td>Chunk 크기/분할</td><td>문맥이 잘리거나 여러 주제가 섞임</td><td>07탭, 미션 1</td></tr>
+<tr><td>Embedding</td><td>질문과 관련 문서를 잘 연결하지 못함</td><td>04탭, 미션 7</td></tr>
+<tr><td>Vector Search / k-NN</td><td>관련 없는 Chunk가 검색됨</td><td>10탭, 미션 5</td></tr>
+<tr><td>Hybrid 균형</td><td>정확 용어와 의미 검색의 균형이 무너짐</td><td>11탭, 미션 4</td></tr>
+<tr><td>Top-k</td><td>적으면 근거 부족, 많으면 불필요한 컨텍스트 증가</td><td>18탭, 미션 6</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p><b>OpenSearch ≠ RAG 전체.</b> OpenSearch는 근거를 찾는 Retrieval을 담당하고, 최종 자연어 답변은 LLM이 생성합니다. 답이 이상할 때 LLM 탓을 하기 전에, 먼저 <b>LLM에 무엇이 넘어갔는지(검색 결과)</b>를 출력해 보는 습관이 가장 중요합니다.</p></div>
+</section>
+
+<!-- 13 -->
+<section aria-labelledby="tab-u13" class="panel" hidden="" id="u13" role="tabpanel"><div class="crumb">Part 6. 도구 비교와 운영 · A4-M3</div><h1>13. 도구 지형도와 운영 — FAISS vs OpenSearch, 로컬 vs AWS</h1><p class="lead">다른 벡터 도구와의 차이, 그리고 로컬에서 AWS로 확장하는 관점을 정리합니다. 마지막은 이 모듈 전체를 한 장으로 요약한 아키텍처입니다.</p>
+<div class="tablewrap"><table><thead><tr><th>분류</th><th>대표</th><th>성격</th></tr></thead><tbody>
+<tr><td>검색 라이브러리</td><td>FAISS</td><td>서버가 아닌 고속 유사도 검색 라이브러리</td></tr>
+<tr><td>전용 Vector DB</td><td>Qdrant · Weaviate · Milvus</td><td>벡터 검색·필터 특화, 대규모 확장</td></tr>
+<tr><td>기존 DB 확장</td><td>PostgreSQL + pgvector</td><td>관계형 데이터와 벡터를 한 DB에서</td></tr>
+<tr><td><b>검색엔진 + Vector</b></td><td><b>OpenSearch</b></td><td>Keyword + Vector + Filter + Hybrid 통합</td></tr>
+<tr><td>관리형 서비스</td><td>Pinecone</td><td>서버 운영 부담이 적은 클라우드형</td></tr></tbody></table></div>
+<div class="tablewrap"><table><thead><tr><th>항목</th><th>FAISS (A3-M2)</th><th>OpenSearch (이번 모듈)</th></tr></thead><tbody>
+<tr><td>성격</td><td>벡터 검색 라이브러리</td><td>서버형 검색엔진 + Vector</td></tr>
+<tr><td>Keyword Search</td><td>별도 구현 필요</td><td><b>기본 기능</b></td></tr>
+<tr><td>Metadata Filter</td><td>앱에서 별도 관리 (IDSelector)</td><td><b>쿼리에서 함께 사용</b></td></tr>
+<tr><td>Hybrid Search</td><td>직접 조합</td><td><b>지원</b> (search pipeline)</td></tr>
+<tr><td>REST API</td><td>기본 아님</td><td><b>지원</b></td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>학습 순서는 <b>FAISS로 원리 → OpenSearch로 실제 검색 서버 구조</b>가 자연스럽습니다. 여러분은 A3-M2에서 FAISS를, A4-M1에서 OpenSearch 화면과 Python 연결을 이미 했고 A4-M2에서 쿼리 문법을 정리했으니, 이제 둘을 합치기만 하면 됩니다.</p></div>
+<h3>로컬 vs AWS</h3>
+<div class="tablewrap"><table><thead><tr><th>항목</th><th>Local (Docker)</th><th>Amazon OpenSearch Service</th></tr></thead><tbody>
+<tr><td>설치·서버관리</td><td>직접</td><td>AWS 관리형</td></tr>
+<tr><td>확장</td><td>직접 자원 조정</td><td>클라우드에서 용이</td></tr>
+<tr><td>보안</td><td>직접 구성</td><td>IAM·VPC·암호화 연계</td></tr>
+<tr><td>S3/Bedrock 연계</td><td>별도 연결</td><td>AWS 환경에서 용이</td></tr>
+<tr><td>비용</td><td>SW 무료, 로컬 자원</td><td>AWS 서비스 비용</td></tr></tbody></table></div>
+<div class="cards"><div class="card"><div class="h">AWS를 택하는 이유</div>운영 부담 감소 · 확장성 · S3/Bedrock/IAM/VPC 연계 · 기업 보안 요구 대응</div><div class="card"><div class="h">그러나</div>소규모 실험·개인용에서는 항상 최적은 아닙니다. 비용과 운영 요구를 함께 고려해야 합니다.</div></div>
+<pre class="diagram">A. 로컬+OpenAI  문서→Python→Chunk→OpenAI Embedding→Local OpenSearch→OpenAI GPT
+B. 완전 로컬    문서→전처리→Local Embedding→Local OpenSearch→Local/기타 LLM   ← 이 모듈 14~17탭
+C. AWS 중심     S3→전처리→Bedrock Embedding→Amazon OpenSearch→Bedrock LLM→RAG</pre>
+<h3>아키텍처 한 장 요약</h3>
+<pre class="diagram">[문서 준비]  PDF/DOCX → Text 추출 → Chunking(Size·Overlap) → Embedding → Vector(dim=N) → OpenSearch 저장
+
+[질문 검색]  질문 → Embedding → 질문벡터 → Similarity(Cosine·L2·Inner) → k-NN
+             → (대규모면) ANN/HNSW → Keyword+Vector+Filter → Hybrid → Top-k Chunk
+
+[답변]       Top-k Chunk → LLM 컨텍스트 → 최종 RAG 답변
+
+[운영 확장]  Local OpenSearch → Amazon OpenSearch Service → S3+Bedrock+IAM/VPC</pre>
+</section>
+
+<!-- P7 intro -->
+<section aria-labelledby="tab-u13x" class="panel" hidden="" id="u13x" role="tabpanel"><div class="crumb">Part 7. OpenSearch 실습 · A4-M3</div><h1>실습 안내 — 지금부터 무엇을, 어디서, 어떤 순서로</h1><p class="lead">00~13탭은 그림과 위젯으로 개념을 봤습니다. 지금부터는 <b>사내 안전 문서 6개로 진짜 질문에 답하는 프로그램</b>을 만듭니다. 시작하기 전에 실습 자료, 완성품의 모습, 작업 장소 두 곳, 노트북 셀 순서를 먼저 봅니다.</p>
+<div class="journey"><h3>이 탭의 흐름</h3><ol><li>실습 자료 받기 — 파일을 열어 보며 설명</li><li>완성하면 무엇이 되는가 — 실제 입력과 출력</li><li>개념이 실습에서 어떤 “물건”으로 나타나는가</li><li>작업 장소 두 곳: Dev Tools, 노트북</li><li>노트북 셀 지도</li><li>시작 전 점검과 막힐 때</li></ol></div>
+<h3>⓪ 실습 자료 받기 — 무엇이 들어 있나</h3>
+<p><a class="file" href="A4-M3_실습자료.zip">📦 A4-M3_실습자료.zip</a></p>
+<p>압축을 풀면 아래처럼 생겼습니다. <b>이 폴더에서 노트북을 엽니다.</b></p>
+<pre class="diagram">A4-M3_실습자료/
+├─ A4-M3_실습.ipynb          ← 15~18탭 셀 1~11이 들어 있는 노트북
+├─ .env.example              ← 복사해서 .env로 이름을 바꾸고 비밀번호 입력
+├─ rag_toy_bulk.txt          ← 14탭 Dev Tools에 붙여넣는 장난감 벡터 5개
+├─ rag_eval_questions.csv    ← 미션 4·6에서 쓰는 평가 질문 20개
+└─ docs/                     ← RAG가 검색할 사내 안전 문서 6개
+   ├─ 01_press_safety.txt
+   ├─ 02_forklift_guide.txt
+   ├─ 03_fire_manual.txt
+   ├─ 04_ppe_rules.txt
+   ├─ 05_law_summary.txt
+   └─ 06_notice_2026.txt</pre>
+<h3>docs/ — 검색 대상 문서 6개</h3>
+<p>가상의 제조회사 “화성공장·평택공장”의 안전 문서입니다. RAG 프로그램은 <b>이 6개 파일 안의 내용만</b> 근거로 답합니다.</p>
+<div class="tablewrap"><table><thead><tr><th>파일</th><th>제목</th><th>종류(type)</th><th>공장(factory)</th><th>연도(year)</th><th>쪽(page)</th></tr></thead><tbody><tr><td><code>01_press_safety.txt</code></td><td>프레스 작업 안전지침</td><td>안전지침</td><td>화성</td><td>2026</td><td>11, 12, 13</td></tr><tr><td><code>02_forklift_guide.txt</code></td><td>지게차 운행 안전 가이드</td><td>안전지침</td><td>평택</td><td>2025</td><td>3, 4</td></tr><tr><td><code>03_fire_manual.txt</code></td><td>화재 비상대응 매뉴얼</td><td>비상대응</td><td>화성</td><td>2026</td><td>1, 2</td></tr><tr><td><code>04_ppe_rules.txt</code></td><td>개인보호구 착용 기준</td><td>안전지침</td><td>공통</td><td>2026</td><td>1, 2</td></tr><tr><td><code>05_law_summary.txt</code></td><td>산업안전보건법 주요 조항 요약 (교육용)</td><td>법령</td><td>공통</td><td>2026</td><td>38, 39</td></tr><tr><td><code>06_notice_2026.txt</code></td><td>2026년 하반기 안전점검 일정 공지</td><td>공지</td><td>화성</td><td>2026</td><td>1</td></tr></tbody></table></div>
+<div class="codebox"><div class="codehead"><span>파일 열어 보기 · docs/01_press_safety.txt 전체</span><button class="copy" type="button">코드 복사</button></div><pre><code>title: 프레스 작업 안전지침
+source: press_safety.pdf
+type: 안전지침
+year: 2026
+factory: 화성
+
+=== page 11 ===
+1. 적용 범위
+이 지침은 화성공장 프레스 라인(P1~P4)에서 금형 교체, 소재 투입, 제품 취출 작업을 하는 모든 작업자에게 적용된다. 협력업체 작업자도 동일하게 적용한다. 신규 작업자는 현장 배치 전 4시간의 프레스 안전교육을 이수해야 하며, 교육 이수 기록은 생산관리팀이 보관한다.
+
+=== page 12 ===
+2. 방호장치
+프레스 작업 시 작업자의 손이 금형 사이에 들어가지 않도록 방호장치를 설치해야 한다. 광전자식 방호장치는 손이 감지 영역에 들어오면 슬라이드가 즉시 멈추도록 설정한다. 양수조작식 장치는 두 손으로 버튼을 동시에 눌러야만 작동하므로, 한쪽 버튼을 테이프로 고정하는 등 임의로 무력화해서는 안 된다. 방호장치를 해제한 상태로 작업한 사실이 확인되면 즉시 작업을 중지시킨다.
+
+=== page 13 ===
+3. 작업 전 점검
+작업 전에는 비상정지장치가 정상 작동하는지 확인해야 한다. 비상정지 버튼을 눌러 슬라이드가 멈추는지, 재가동 시 리셋 절차를 거쳐야 하는지 확인하고 점검표에 서명한다. 금형 교체 후에는 안전블록을 설치한 상태에서만 금형 사이에 손을 넣을 수 있다. 이상이 발견되면 설비보전팀(내선 2301)에 신고하고 해당 설비에 사용금지 표지를 붙인다.</code></pre></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>파일은 두 부분입니다. <b>맨 위 다섯 줄</b>(title, source, type, year, factory)은 문서 정보, 즉 05탭에서 말한 <b>메타데이터</b>입니다. 16탭에서 “화성 공장 문서만”, “법령만” 같은 필터를 걸 때 이 값을 씁니다. <b><code>=== page 12 ===</code></b> 아래는 그 쪽의 본문입니다. 실제 PDF에서 텍스트를 뽑으면 “몇 쪽에 무슨 글”이 나오는데, 그 결과를 흉내 낸 형식입니다.</p><p>본문을 읽어 보면 질문거리가 보입니다. “버튼 하나를 테이프로 붙여도 되나요?”의 답은 12쪽에, “금형 바꾼 뒤 손 넣어도 되나요?”의 답은 13쪽에 있습니다. RAG가 할 일은 질문을 받으면 <b>이 15개 조각 중 답이 든 조각을 찾아 LLM에게 건네는 것</b>입니다.</p></div>
+<div class="note"><b>05_law_summary.txt에 대해</b><p>“제38조” 같은 조항 번호 검색(17탭 Hybrid)을 실습하려고 넣은 <b>교육용 요약 예시</b>입니다. 실제 법령 문구와 다를 수 있으며, 파일 안에도 그렇게 적혀 있습니다.</p></div>
+<h3>rag_eval_questions.csv — 채점용 질문 20개</h3>
+<div class="codebox"><div class="codehead"><span>파일 열어 보기 · 앞부분</span><button class="copy" type="button">코드 복사</button></div><pre><code>question,expected_source,related
+기계에 손이 끼지 않게 하려면?,press_safety.pdf,Y
+프레스 버튼 하나를 테이프로 붙여도 되나요?,press_safety.pdf,Y
+금형 바꾼 뒤 손 넣어도 되나요?,press_safety.pdf,Y
+신입은 프레스 교육 몇 시간 받아요?,press_safety.pdf,Y
+포크리프트 속도 제한이 있나요?,forklift_guide.pdf,Y
+...
+주식 지금 사도 될까요?,,N</code></pre></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>질문마다 “정답이 들어 있는 문서(expected_source)”와 “문서와 관련 있는 질문인지(related)”가 적혀 있습니다. 질문은 일부러 문서와 <b>다른 단어</b>로 썼습니다(“포크리프트” ↔ 지게차, “엘리베이터 타도 되나요” ↔ 사용하지 말고). 마지막 4개는 문서와 상관없는 질문입니다. 미션 4에서 Hybrid 가중치를, 미션 6에서 “모르면 거절하는 기준 점수”를 이 질문들로 정합니다.</p></div>
+<h3>rag_toy_bulk.txt — 14탭 Dev Tools용</h3>
+<div class="codebox"><div class="codehead"><span>파일 열어 보기 · 앞부분</span><button class="copy" type="button">코드 복사</button></div><pre><code>POST _bulk?refresh=true
+{&quot;index&quot;:{&quot;_index&quot;:&quot;rag_toy&quot;,&quot;_id&quot;:&quot;C1&quot;}}
+{&quot;text&quot;:&quot;프레스 방호장치를 설치해야 합니다.&quot;,&quot;type&quot;:&quot;기계안전&quot;,&quot;year&quot;:2026,&quot;embedding&quot;:[0.91,0.82,0.10]}
+{&quot;index&quot;:{&quot;_index&quot;:&quot;rag_toy&quot;,&quot;_id&quot;:&quot;C2&quot;}}
+{&quot;text&quot;:&quot;비상정지장치를 확인해야 합니다.&quot;,&quot;type&quot;:&quot;기계안전&quot;,&quot;year&quot;:2025,&quot;embedding&quot;:[0.84,0.78,0.15]}
+...</code></pre></div>
+<p>09탭 플레이그라운드의 C1~C5를 Bulk 형식으로 옮긴 것입니다. A4-M1의 <code>opensearch_devtools_bulk_100.txt</code>와 같은 방법으로, 파일 전체를 Dev Tools에 붙여넣고 실행합니다. 마지막 칸의 숫자 3개가 벡터입니다.</p>
+<h3>① 완성하면 이렇게 됩니다</h3>
+<p>18탭까지 끝나면 노트북에서 아래 한 줄을 실행할 수 있습니다. 질문을 넣으면 OpenSearch가 문서 조각을 찾아 오고, LLM이 그 조각만 보고 답합니다.</p>
+<div class="codebox"><div class="codehead"><span>노트북 · 완성 후 실행하는 한 줄</span><button class="copy" type="button">코드 복사</button></div><pre><code>answer, sources = rag_answer("불나면 엘리베이터 타도 되나요?")
+print(answer)
+print(sources)</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>실행 결과 (예시 · 문장은 LLM마다 다름)</span><button class="copy" type="button">코드 복사</button></div><pre><code>아니요. 화재 발생 시에는 엘리베이터를 사용하지 말고 계단을 이용해 비상구로 대피해야 하며,
+대피 후 지정된 집결지에서 인원을 확인합니다. [1][2]
+[('fire_manual.pdf', 1), ('fire_manual.pdf', 2), ('ppe_rules.pdf', 1)]</code></pre></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>질문에는 “화재”, “계단”이라는 단어가 없습니다. 그런데도 화재 매뉴얼을 찾아 왔습니다(의미 검색). 답은 LLM이 지어낸 게 아니라 fire_manual.pdf 1쪽에 적힌 문장을 근거로 만든 것이고, 그 출처가 함께 나옵니다. 00탭에서 말한 세 가지 문제 — 내 자료를 모른다, 최신이 아니다, 근거가 없다 — 를 이 한 줄이 해결합니다.</p><p>반대로 “오늘 점심 메뉴 추천해 줘”를 넣으면 문서에 근거가 없으니 <b>“관련 근거를 찾지 못했습니다”</b>라고 답합니다. 모르는 걸 지어내지 않게 막은 것입니다.</p></div>
+<h3>② 개념이 실습에서는 이런 “물건”입니다</h3>
+<div class="tablewrap"><table><thead><tr><th>앞에서 배운 개념</th><th>실습에서 눈에 보이는 실제 모습</th><th>어디서 보나</th></tr></thead><tbody>
+<tr><td>원본 문서</td><td><code>docs/</code> 폴더의 파일 6개 → 셀 1이 읽으면 <b>쪽 12개</b> (<code>PAGES</code>)</td><td>15탭 셀 1</td></tr>
+<tr><td>Chunk</td><td>각 쪽을 200자씩(40자 겹침) 자른 문자열 <b>15개</b>. 예: <code>"2. 방호장치 프레스 작업 시 작업자의 손이…"</code></td><td>15탭 셀 2 출력</td></tr>
+<tr><td>임베딩 / 벡터</td><td>Chunk 하나당 숫자 384개짜리 리스트. 예: <code>[0.031, -0.012, 0.054, …]</code></td><td>15탭 셀 3 출력</td></tr>
+<tr><td>OpenSearch 저장</td><td><code>rag_chunks</code> 인덱스의 문서들. A4-M1의 sales 주문처럼 Discover에서 한 건씩 열어 볼 수 있음</td><td>15탭 셀 4, Dashboards Discover</td></tr>
+<tr><td>k-NN 검색</td><td><code>search("질문")</code>이 돌려주는 3줄: 점수, 출처, 조각 내용</td><td>16탭</td></tr>
+<tr><td>Hybrid</td><td><code>hybrid_search("제38조")</code> — 법령 조각이 위로 올라오는 것</td><td>17탭</td></tr>
+<tr><td>RAG</td><td>위 ①의 <code>rag_answer()</code> 한 줄</td><td>18탭</td></tr></tbody></table></div>
+<h3>③ 작업 장소는 두 곳입니다</h3>
+<div class="tablewrap"><table><thead><tr><th>탭</th><th>어디서</th><th>무엇을</th><th>A4-M1에서 비슷했던 것</th></tr></thead><tbody>
+<tr><td><b>14</b></td><td><b>Dashboards → Dev Tools</b> (5601)</td><td>09탭 위젯의 3차원 벡터 5개를 손으로 넣고 검색해 보기</td><td>02~04탭 <code>PUT sales</code> → <code>_bulk</code> → <code>_count</code></td></tr>
+<tr><td><b>15~18</b></td><td><b>Jupyter 노트북 하나</b> (VS Code 또는 Jupyter)</td><td>docs/ 문서 6개로 RAG 프로그램 만들기</td><td>13~16탭 Python 연결, 집계</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>14탭은 <b>손으로</b>, 15~18탭은 <b>코드로</b> 같은 일을 합니다. 14탭에서 벡터 3개짜리로 “인덱스 만들기 → 넣기 → 찾기”를 눈으로 익히고, 15탭부터는 벡터가 384개로 늘어 손으로 칠 수 없으니 Python이 대신 만들어 넣습니다. 쿼리 모양은 14탭과 똑같습니다.</p></div>
+<h3>④ 노트북 셀 지도</h3>
+<p><b>새 노트북 하나</b>를 열고, 아래 순서대로 셀을 하나씩 추가해 위에서부터 실행합니다. 교안 코드 상자 제목에 “노트북 셀 1”, “셀 2”…가 적혀 있으니 <b>상자 하나 = 셀 하나</b>로 붙여넣으면 됩니다.</p>
+<div class="tablewrap"><table class="cellmap"><thead><tr><th>셀</th><th>탭</th><th>하는 일</th><th>실행 후 확인할 것</th><th>이후 셀이 쓰는 것</th></tr></thead><tbody>
+<tr><td>1</td><td>15</td><td>OpenSearch 연결, docs/ 파일 읽기</td><td><code>True</code>, 문서 6개 / 쪽 12개</td><td><code>client</code>, <code>PAGES</code></td></tr>
+<tr><td>2</td><td>15</td><td>쪽을 Chunk로 자르기</td><td>Chunk 수 15</td><td><code>chunks</code>, <code>chunk_text()</code></td></tr>
+<tr><td>3</td><td>15</td><td>임베딩 모델로 Chunk → 벡터</td><td>차원 384, 벡터 앞 5개 숫자</td><td><code>model</code>, <code>embed_query()</code>, <code>vectors</code></td></tr>
+<tr><td>4</td><td>15</td><td><code>rag_chunks</code> 인덱스 만들고 넣기</td><td>count = Chunk 수</td><td><code>INDEX</code></td></tr>
+<tr><td>5</td><td>16</td><td>검색 함수, 질문 3개 검색</td><td>맞는 문서가 1등</td><td><code>search()</code>, <code>show()</code></td></tr>
+<tr><td>6</td><td>16</td><td>필터 걸어 검색</td><td>필터에 따라 결과가 바뀜</td><td>—</td></tr>
+<tr><td>7</td><td>16</td><td>ef_search 바꿔 검색</td><td>결과 같음 (데이터가 작아서)</td><td>—</td></tr>
+<tr><td>8</td><td>17</td><td>pipeline + Hybrid 검색</td><td>“제38조” 비교</td><td><code>hybrid_search()</code>, <code>make_pipeline()</code></td></tr>
+<tr><td>9</td><td>18</td><td>근거 묶기, 프롬프트 만들기</td><td>LLM에 갈 글이 출력됨</td><td><code>build_prompt()</code></td></tr>
+<tr><td>10</td><td>18</td><td>LLM 연결 (API 키 있을 때만)</td><td>답변 출력</td><td><code>generate()</code></td></tr>
+<tr><td>11</td><td>18</td><td><code>rag_answer()</code> 완성</td><td>관련 질문은 근거, 무관 질문은 거절</td><td><code>rag_answer()</code></td></tr>
+<tr><td>12~</td><td>19</td><td>미션 — 같은 노트북 아래에 이어서</td><td>미션별 완료 기준</td><td>—</td></tr></tbody></table></div>
+<h3>⑤ 시작 전 점검</h3>
+<div class="task"><h4>다섯 가지가 모두 되면 시작</h4><ol><li>Docker에서 <b>opensearch</b>, <b>opensearch-dashboards</b>가 실행 중이다.</li><li>브라우저 <code>http://localhost:5601</code> → admin으로 로그인 → Dev Tools가 열린다.</li><li>터미널에서 <code>pip install opensearch-py sentence-transformers python-dotenv</code>를 했다. (18탭 LLM까지 하려면 <code>openai</code>도)</li><li>실습 폴더(노트북 옆)에 <code>.env</code> 파일을 만들고 비밀번호를 적었다. 실습자료의 <code>.env.example</code>을 복사해 이름을 <code>.env</code>로 바꾸고 값을 채우면 됩니다.</li><li>새 노트북 첫 셀에서 아래가 <code>True</code>를 출력한다.</li></ol></div>
+<div class="codebox"><div class="codehead"><span>노트북 · 점검용 (셀 1 전에 한 번)</span><button class="copy" type="button">코드 복사</button></div><pre><code>import os
+from dotenv import load_dotenv
+from opensearchpy import OpenSearch
+load_dotenv()
+OpenSearch(hosts=[{"host": "localhost", "port": 9200}],
+           http_auth=("admin", os.getenv("OPENSEARCH_PASSWORD")),
+           use_ssl=True, verify_certs=False, ssl_show_warn=False).ping()</code></pre></div>
+<div class="codebox"><div class="codehead"><span>.env (노트북과 같은 폴더)</span><button class="copy" type="button">코드 복사</button></div><pre><code>OPENSEARCH_PASSWORD=Dashboards에_로그인할_때_쓰는_admin_비밀번호
+OPENAI_API_KEY=sk-...        ← 18탭 LLM을 쓸 때만</code></pre></div>
+<div class="note"><b>로그인 방식이라 연결 코드에 세 가지가 더 붙습니다</b><p><code>http_auth=("admin", 비밀번호)</code> — Dashboards 로그인 계정, <code>use_ssl=True</code> — https, <code>verify_certs=False</code> — 로컬 Docker의 자체서명 인증서 허용. 비로그인(보안 끈) 서버라면 <code>use_ssl=False</code> 하나로 충분하지만 우리 서버에서는 끊기거나 401이 납니다. 두 방식의 자세한 비교는 <b>A4-M1 13탭</b>에 있습니다. Dev Tools 쿼리(14탭)는 두 방식에서 똑같습니다.</p></div>
+<h3>막힐 때</h3>
+<div class="tablewrap"><table><thead><tr><th>이런 메시지가 나오면</th><th>원인</th><th>할 일</th></tr></thead><tbody>
+<tr><td><code>NameError: name 'client' is not defined</code> (또는 <code>search</code>, <code>INDEX</code> 등)</td><td>앞 셀을 실행하지 않았거나 노트북을 재시작함</td><td>셀 지도에서 그 이름을 만드는 셀부터 다시 순서대로 실행</td></tr>
+<tr><td><code>ConnectionError</code>, <code>ping()</code>이 False</td><td>OpenSearch가 꺼져 있음, 또는 비밀번호 오류</td><td>Docker 확인 (A4-M1 00탭). 켜져 있으면 <code>OpenSearch(...).info()</code>로 실제 오류 확인</td></tr><tr><td><code>AuthenticationException</code> (401)</td><td>비밀번호가 틀렸거나 <code>.env</code>를 못 읽음</td><td><code>.env</code> 위치·이름(<code>.env.txt</code> 아닌지), Dashboards에 같은 비밀번호로 로그인되는지</td></tr><tr><td>Connection reset / <code>SSLError</code></td><td><code>use_ssl=True</code> 또는 <code>verify_certs=False</code>가 빠짐</td><td>위 점검 코드와 같은 연결 옵션 사용</td></tr>
+<tr><td>셀 3에서 오래 멈춤</td><td>임베딩 모델을 처음 내려받는 중 (수백 MB)</td><td>기다립니다. 두 번째부터는 빠릅니다</td></tr>
+<tr><td><code>resource_already_exists_exception</code></td><td>인덱스가 이미 있음</td><td>셀 4는 있으면 지우고 다시 만들도록 짜여 있음. Dev Tools 14탭이면 <code>DELETE rag_toy</code> 후 다시</td></tr>
+<tr><td>Dev Tools 오른쪽에 400 오류</td><td>JSON 오타, 붙여넣기 중 줄바꿈 깨짐</td><td>오른쪽 <code>error.reason</code> 한 줄을 읽기 (A4-M1 03탭)</td></tr></tbody></table></div>
+</section>
+
+<!-- 14 -->
+<section aria-labelledby="tab-u14" class="panel" hidden="" id="u14" role="tabpanel"><div class="crumb">Part 7. OpenSearch 실습 · A4-M3</div><h1>14. Dev Tools로 벡터 인덱스 — 플레이그라운드를 OpenSearch에 옮기기</h1><div class="where-bar"><span><b>📍 어디서</b> Dashboards → Dev Tools</span><span><b>✅ 먼저</b> 없음 (Part 7 첫 실습)</span></div><p class="lead">09탭 플레이그라운드의 5개 Chunk(3차원 벡터)를 OpenSearch에 그대로 넣고, 같은 질문으로 검색합니다. 위젯의 코사인 순위와 OpenSearch의 순위가 같은지 맞춰 보는 것이 목표입니다.</p>
+<div class="journey"><h3>이 탭의 흐름</h3><ol><li><code>rag_toy</code> 인덱스 만들기 — knn_vector 3차원</li><li>5개 Chunk Bulk로 넣기</li><li>kNN 검색과 점수 해석</li><li>필터 걸기 — knn 안 vs 밖</li></ol></div>
+<div class="codebox"><div class="codehead"><span>Dev Tools · 인덱스</span><button class="copy" type="button">코드 복사</button></div><pre><code>PUT rag_toy
+{
+  "settings": { "index": { "knn": true, "number_of_shards": 1, "number_of_replicas": 0 } },
+  "mappings": {
+    "properties": {
+      "text":   { "type": "text" },
+      "type":   { "type": "keyword" },
+      "year":   { "type": "integer" },
+      "embedding": {
+        "type": "knn_vector",
+        "dimension": 3,
+        "method": {
+          "name": "hnsw", "engine": "lucene", "space_type": "cosinesimil",
+          "parameters": { "m": 16, "ef_construction": 128 }
+        }
+      }
+    }
+  }
+}</code></pre></div>
+<div class="task"><h4>A4-M1의 sales Mapping과 다른 곳 세 군데</h4><ol><li><code>"knn": true</code> — 이 인덱스에서 벡터 그래프를 만든다는 스위치. 빠지면 벡터 필드가 거절됩니다.</li><li><code>knn_vector</code> 필드 — <code>dimension</code>이 넣을 벡터 길이(여기서는 3)와 같아야 합니다.</li><li><code>method</code> — 10탭의 HNSW와 파라미터, 09탭의 지표가 여기 들어갑니다. 만든 뒤에는 바꿀 수 없습니다.</li></ol></div>
+<p>실습 자료의 <code>rag_toy_bulk.txt</code> 전체를 복사해 붙여넣어도 되고, 아래 상자를 복사해도 됩니다. 내용은 같습니다.</p><div class="codebox"><div class="codehead"><span>Dev Tools · 5개 Chunk 넣기</span><button class="copy" type="button">코드 복사</button></div><pre><code>POST _bulk?refresh=true
+{"index":{"_index":"rag_toy","_id":"C1"}}
+{"text":"프레스 방호장치를 설치해야 합니다.","type":"기계안전","year":2026,"embedding":[0.91,0.82,0.10]}
+{"index":{"_index":"rag_toy","_id":"C2"}}
+{"text":"비상정지장치를 확인해야 합니다.","type":"기계안전","year":2025,"embedding":[0.84,0.78,0.15]}
+{"index":{"_index":"rag_toy","_id":"C3"}}
+{"text":"안전보호구를 착용해야 합니다.","type":"기계안전","year":2026,"embedding":[0.55,0.48,0.30]}
+{"index":{"_index":"rag_toy","_id":"C4"}}
+{"text":"지게차와 보행자 통로를 분리해야 합니다.","type":"지게차","year":2026,"embedding":[0.12,0.22,0.91]}
+{"index":{"_index":"rag_toy","_id":"C5"}}
+{"text":"화재 발생 시 비상구로 대피해야 합니다.","type":"화재","year":2026,"embedding":[0.20,0.31,0.79]}
+
+GET rag_toy/_count</code></pre></div>
+<h3>kNN 검색 — “프레스 손 끼임 예방”</h3>
+<div class="codebox"><div class="codehead"><span>Dev Tools</span><button class="copy" type="button">코드 복사</button></div><pre><code>GET rag_toy/_search
+{
+  "size": 3,
+  "_source": ["text", "type", "year"],
+  "query": {
+    "knn": { "embedding": { "vector": [0.94, 0.85, 0.12], "k": 3 } }
+  }
+}</code></pre></div>
+<div class="mock"><div class="mock-title">손 계산과 맞춰 보기 — 질문 [0.94, 0.85, 0.12] · 점수 = (1 + 코사인) ÷ 2</div><table><thead><tr><th>순위</th><th>Chunk</th><th>코사인 (09탭 위젯)</th><th>OpenSearch _score</th></tr></thead><tbody>
+<tr class="hl"><td>1</td><td>C1 방호장치</td><td>0.9999</td><td>≈ 0.9999</td></tr>
+<tr class="hl"><td>2</td><td>C2 비상정지</td><td>0.9993</td><td>≈ 0.9996</td></tr>
+<tr class="hl"><td>3</td><td>C3 보호구</td><td>0.9565</td><td>≈ 0.9783</td></tr>
+<tr><td class="dim">4</td><td class="dim">C5 화재</td><td class="dim">0.4922</td><td class="dim">(k=3이라 안 나옴)</td></tr>
+<tr><td class="dim">5</td><td class="dim">C4 지게차</td><td class="dim">0.3404</td><td class="dim">(k=3이라 안 나옴)</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>순위는 위젯과 똑같습니다. 점수 숫자만 다른데, OpenSearch가 코사인(−1~1)을 <b>(1 + 코사인) ÷ 2</b>로 바꿔 0~1 사이 “클수록 가까움” 점수로 주기 때문입니다. 점수 공식은 <code>space_type</code>과 엔진마다 다르지만 <b>클수록 가깝다</b>는 규칙은 같습니다. 마지막 자리 숫자는 부동소수점 때문에 조금 다를 수 있습니다.</p></div>
+<h3>필터 걸기 — 위치가 결과를 바꿉니다</h3>
+<div class="codebox"><div class="codehead"><span>Dev Tools · 두 요청을 차례로 실행</span><button class="copy" type="button">코드 복사</button></div><pre><code># ① knn 안의 filter — 2026년 문서 안에서 k개
+GET rag_toy/_search
+{
+  "_source": ["text", "year"],
+  "query": { "knn": { "embedding": {
+    "vector": [0.94, 0.85, 0.12], "k": 2,
+    "filter": { "term": { "year": 2026 } }
+  } } }
+}
+
+# ② post_filter — 먼저 k개 뽑고 나서 거르기
+GET rag_toy/_search
+{
+  "_source": ["text", "year"],
+  "query": { "knn": { "embedding": { "vector": [0.94, 0.85, 0.12], "k": 2 } } },
+  "post_filter": { "term": { "year": 2026 } }
+}</code></pre></div>
+<div class="mock"><div class="mock-title">결과 비교 — C2만 2025년</div><table><thead><tr><th>단계</th><th>① knn 안 filter</th><th>② post_filter</th></tr></thead><tbody>
+<tr><td>1</td><td>2026년 문서(C1, C3, C4, C5)만 대상으로</td><td>전체에서 top-2 → C1, C2</td></tr>
+<tr><td>2</td><td>그 안에서 top-2 → C1, C3</td><td>그중 2026년만 → C1</td></tr>
+<tr><td>결과</td><td class="hl">2건 (C1, C3)</td><td class="hl">1건 (C1)</td></tr></tbody></table></div>
+<div class="note"><b>외울 것 하나</b><p>벡터 검색에 조건을 거는 기본 위치는 <b>knn 안의 <code>filter</code></b>입니다. 밖에서 거르면 k개를 다 채우지 못하고, 조건이 까다로우면 0건이 됩니다. A3-M2에서 FAISS의 <code>IDSelectorBatch</code>로 하던 일을 OpenSearch가 이 한 줄로 해 줍니다.</p></div>
+<details class="qa"><summary>Q. engine을 faiss로 하면 안 되나요?</summary><p>됩니다. 다만 OpenSearch 버전에 따라 faiss 엔진이 <code>cosinesimil</code>을 지원하지 않을 수 있습니다. 그때는 벡터를 길이 1로 정규화해 넣고 <code>innerproduct</code>를 쓰면 코사인과 같은 순위가 나옵니다(정규화 + 내적 = 코사인, A3-M2). 이 모듈은 버전 영향이 적은 <code>lucene</code>으로 진행합니다.</p></details>
+</section>
+
+<!-- 15 -->
+<section aria-labelledby="tab-u15" class="panel" hidden="" id="u15" role="tabpanel"><div class="crumb">Part 7. OpenSearch 실습 · A4-M3</div><h1>15. Python으로 문서 준비 — Chunking, Embedding, 적재</h1><div class="where-bar"><span><b>📍 어디서</b> Jupyter 노트북 · 셀 1~4</span><span><b>✅ 먼저</b> ‘실습 안내’ 탭의 점검 4가지</span></div><p class="lead">이제 손으로 넣은 3차원 벡터 대신, 실습 자료의 문서 파일 6개를 <b>Python으로 읽고 잘라(07탭) 임베딩 모델로 384차원 벡터를 만들어(04탭) 메타데이터와 함께(05탭)</b> OpenSearch에 넣습니다. 저장 단계 ①~④를 코드로 옮기는 탭입니다.</p>
+<div class="journey"><h3>이 탭의 흐름</h3><ol><li>실습 자료 폴더 준비 (docs/ 문서 6개)</li><li>셀 1: 연결하고 문서를 쪽 단위로 읽기</li><li>셀 2: 쪽을 Chunk로 자르기 — 07탭 계산기와 같은 공식</li><li>셀 3: e5 임베딩 — passage: 접두어</li><li>셀 4: <code>rag_chunks</code> 인덱스 만들고 helpers.bulk</li></ol></div>
+<div class="note"><b>폴더 준비</b><p>‘실습 안내’ 탭에서 받은 <code>A4-M3_실습자료.zip</code>을 풀고, 그 폴더에서 노트북을 엽니다. 노트북 옆에 <code>docs/</code> 폴더와 <code>.env</code> 파일(OpenSearch 비밀번호)이 있어야 셀 1이 문서를 찾고 로그인합니다. 동봉된 <code>A4-M3_실습.ipynb</code>를 열면 셀 1~11이 이미 들어 있습니다.</p></div>
+<div class="codebox"><div class="codehead"><span>노트북 셀 1 · 연결하고 문서를 쪽 단위로 읽기</span><button class="copy" type="button">코드 복사</button></div><pre><code># pip install opensearch-py sentence-transformers python-dotenv
+import os, re
+from pathlib import Path
+from dotenv import load_dotenv
+from opensearchpy import OpenSearch, helpers
+
+load_dotenv()                                         # .env의 OPENSEARCH_PASSWORD (+ OPENAI_API_KEY)
+client = OpenSearch(
+    hosts=[{"host": "localhost", "port": 9200}],
+    http_auth=("admin", os.getenv("OPENSEARCH_PASSWORD")),   # 로그인 방식 (A4-M1 13탭)
+    use_ssl=True, verify_certs=False, ssl_show_warn=False,
+)
+print(client.ping())                                  # True면 연결
+
+DATA_DIR = Path("docs")
+
+def load_doc(path):
+    raw = path.read_text(encoding="utf-8")
+    head, body = raw.split("\n\n", 1)                 # 첫 빈 줄 위 = 메타데이터, 아래 = 본문
+    meta = dict(line.split(": ", 1) for line in head.splitlines())
+    meta["year"] = int(meta["year"])
+    meta["doc_id"] = path.stem
+    pages = re.split(r"=== page (\d+) ===", body)[1:]  # ['11', '본문', '12', '본문', ...]
+    return [{**meta, "page": int(pages[i]), "text": pages[i + 1].strip()}
+            for i in range(0, len(pages), 2)]
+
+PAGES = [p for f in sorted(DATA_DIR.glob("*.txt")) for p in load_doc(f)]
+print("문서", len(list(DATA_DIR.glob("*.txt"))), "개 / 쪽", len(PAGES), "개")
+print(PAGES[1]["source"], "p.", PAGES[1]["page"], "|", PAGES[1]["text"][:60], "...")</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>실행 결과</span><button class="copy" type="button">코드 복사</button></div><pre><code>True
+문서 6 개 / 쪽 12 개
+press_safety.pdf p. 12 | 2. 방호장치
+프레스 작업 시 작업자의 손이 금형 사이에 들어가지 않도록 방호장치를 설치해야 한다. 광전자식 ...</code></pre></div>
+<div class="mock"><div class="mock-title">파일 한 개가 Python에서 이렇게 바뀝니다 — 01_press_safety.txt</div><table><thead><tr><th>파일 안</th><th>Python 안 (PAGES의 한 항목)</th></tr></thead><tbody>
+<tr><td style="text-align:left"><code>title: 프레스 작업 안전지침</code><br/><code>source: press_safety.pdf</code><br/><code>type: 안전지침</code> …</td><td style="text-align:left">모든 쪽에 똑같이 복사되는 메타데이터<br/><code>{"source": "press_safety.pdf", "type": "안전지침", "year": 2026, "factory": "화성", …}</code></td></tr>
+<tr><td style="text-align:left"><code>=== page 12 ===</code></td><td style="text-align:left"><code>"page": 12</code></td></tr>
+<tr><td style="text-align:left">그 아래 본문 문단</td><td style="text-align:left"><code>"text": "2. 방호장치\n프레스 작업 시 …"</code></td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>실무에서는 PDF에서 텍스트를 뽑으면 “몇 쪽에 무슨 글”이 나옵니다. 실습 파일은 그 결과를 흉내 낸 것입니다. 맨 위 다섯 줄이 문서 정보(05탭의 메타데이터), <code>=== page N ===</code>이 쪽 구분입니다. 셀 1은 파일 6개를 읽어 <b>쪽 12개</b>로 만듭니다. 나중에 답변에 “press_safety.pdf 12쪽”처럼 출처를 붙일 수 있는 건 여기서 쪽 번호를 챙겼기 때문입니다.</p></div>
+<h3>chunk 함수 — 07탭 계산기와 같은 공식</h3>
+<div class="codebox"><div class="codehead"><span>노트북 셀 2 · 쪽을 Chunk로 자르기</span><button class="copy" type="button">코드 복사</button></div><pre><code>import math
+
+def chunk_text(text, size=200, overlap=40):
+    if overlap >= size:
+        raise ValueError("overlap은 size보다 작아야 합니다")
+    stride = size - overlap
+    n = 1 if len(text) &lt;= size else math.ceil((len(text) - overlap) / stride)
+    return [text[i * stride : i * stride + size] for i in range(n)]
+
+chunks = []
+for p in PAGES:
+    for i, piece in enumerate(chunk_text(p["text"])):
+        meta = {k: v for k, v in p.items() if k != "text"}
+        chunks.append({"chunk_id": f'{p["doc_id"]}-p{p["page"]}-{i}', "chunk_no": i, "text": piece, **meta})
+
+print("Chunk 수:", len(chunks))
+for c in chunks[:3]:
+    print(c["chunk_id"], "|", c["text"][:50], "...")</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>실행 결과</span><button class="copy" type="button">코드 복사</button></div><pre><code>Chunk 수: 15
+01_press_safety-p11-0 | 1. 적용 범위
+이 지침은 화성공장 프레스 라인(P1~P4)에서 금형 교체, 소재 투입,  ...
+01_press_safety-p12-0 | 2. 방호장치
+프레스 작업 시 작업자의 손이 금형 사이에 들어가지 않도록 방호장치를 설치해 ...
+01_press_safety-p12-1 |  무력화해서는 안 된다. 방호장치를 해제한 상태로 작업한 사실이 확인되면 즉시 작업을 중지 ...</code></pre></div>
+<div class="mock"><div class="mock-title">겹침(Overlap) 실물 — press_safety 12쪽(214자)이 두 조각이 됨</div><table><thead><tr><th>조각</th><th>범위</th><th>겹치는 부분</th></tr></thead><tbody>
+<tr><td>p12-0</td><td>0~200자</td><td style="text-align:left">끝 40자: “… <span class="mark">무력화해서는 안 된다. 방호장치를 해제한 상태로 작업한 사실이 확인되면</span>”</td></tr>
+<tr><td>p12-1</td><td>160~214자</td><td style="text-align:left">앞 40자: “<span class="mark">무력화해서는 안 된다. 방호장치를 해제한 상태로 작업한 사실이 확인되면</span> 즉시 작업을 중지시킨다.”</td></tr></tbody></table></div>
+<div class="task"><h4>화면에서 짚을 곳</h4><ol><li>쪽 12개 → Chunk 15개. 200자보다 긴 쪽(press 12·13쪽, fire 2쪽)만 두 조각이 됐습니다. 직접 <code>[len(p["text"]) for p in PAGES]</code>를 찍어 확인해 봅니다.</li><li>위 표처럼 p12-1이 p12-0의 끝 40자로 시작합니다. 07탭 위젯의 분홍 표시와 같은 것입니다. 겹침이 없으면 “확인되면 / 즉시 작업을 중지”가 두 조각으로 갈라져 뜻이 끊깁니다.</li><li>조각마다 쪽의 메타데이터(source, page, type, year, factory)가 그대로 붙습니다. 조각만 보고도 출처를 알 수 있어야 하기 때문입니다.</li><li>글자 단위로 자르니 단어 중간에서 끊길 수 있습니다. 실무에서는 문장·토큰 단위로 자릅니다. 이 실습은 공식을 눈으로 확인하는 것이 목적입니다.</li></ol></div>
+
+<h3>임베딩 — e5, passage: 접두어</h3>
+<div class="codebox"><div class="codehead"><span>노트북 셀 3 · 임베딩</span><button class="copy" type="button">코드 복사</button></div><pre><code>from sentence_transformers import SentenceTransformer
+
+MODEL_NAME = "intfloat/multilingual-e5-small"
+model = SentenceTransformer(MODEL_NAME)
+DIM = model.get_sentence_embedding_dimension()
+print("차원:", DIM)                                   # 384
+
+def embed_passages(texts):
+    return model.encode(["passage: " + t for t in texts], normalize_embeddings=True).tolist()
+
+def embed_query(text):
+    return model.encode("query: " + text, normalize_embeddings=True).tolist()
+
+vectors = embed_passages([c["text"] for c in chunks])
+print(len(vectors), "개 ×", len(vectors[0]), "차원")
+print("첫 Chunk의 벡터 앞 5개:", [round(x, 3) for x in vectors[0][:5]])</code></pre></div><div class="codebox outbox"><div class="codehead"><span>실행 결과 (모양 · 숫자는 예시)</span><button class="copy" type="button">코드 복사</button></div><pre><code>차원: 384
+.. 개 × 384 차원
+첫 Chunk의 벡터 앞 5개: [0.031, -0.012, 0.054, 0.007, -0.041]   ← 이런 숫자가 384개. “의미를 숫자로 바꾼 것”의 실물</code></pre></div>
+<h3>인덱스 만들고 넣기</h3>
+<div class="codebox"><div class="codehead"><span>노트북 셀 4 · 인덱스 만들고 넣기</span><button class="copy" type="button">코드 복사</button></div><pre><code>INDEX = "rag_chunks"
+body = {
+    "settings": {"index": {"knn": True, "number_of_shards": 1, "number_of_replicas": 0}},
+    "mappings": {
+        "_meta": {"embedding_model": MODEL_NAME, "dim": DIM},     # 어떤 모델로 만든 벡터인지 기록
+        "properties": {
+            "chunk_id": {"type": "keyword"}, "doc_id": {"type": "keyword"},
+            "source": {"type": "keyword"},   "type": {"type": "keyword"},
+            "factory": {"type": "keyword"},  "page": {"type": "integer"},
+            "year": {"type": "integer"},     "chunk_no": {"type": "integer"},
+            "text": {"type": "text"},
+            "embedding": {
+                "type": "knn_vector", "dimension": DIM,
+                "method": {"name": "hnsw", "engine": "lucene", "space_type": "cosinesimil",
+                           "parameters": {"m": 16, "ef_construction": 128}},
+            },
+        },
+    },
+}
+if client.indices.exists(index=INDEX):
+    client.indices.delete(index=INDEX)
+client.indices.create(index=INDEX, body=body)
+
+actions = [{"_index": INDEX, "_id": c["chunk_id"], "_source": {**c, "embedding": v}}
+           for c, v in zip(chunks, vectors)]
+ok, errors = helpers.bulk(client, actions, refresh=True)
+print("성공:", ok, "| 실패:", errors, "| count:", client.count(index=INDEX)["count"])</code></pre></div>
+<div class="task"><h4>화면에서 짚을 곳</h4><ol><li><code>"dimension": DIM</code> — 숫자를 손으로 쓰지 않고 모델에서 읽어 넣습니다. 04탭의 “차원 불일치” 실수를 코드로 막는 방법입니다.</li><li><code>_meta</code>에 모델 이름을 적어 둡니다. 나중에 다른 모델로 질문하는 실수를 잡을 때 씁니다(미션 7).</li><li>e5는 문서에 <code>passage: </code>, 질문에 <code>query: </code>를 붙여야 제 성능이 나옵니다. A3-M2에서 쓰던 규칙 그대로입니다.</li><li>count가 Chunk 수와 같으면 저장 단계 ①~④ 완료입니다. Dashboards Discover에서 <code>rag_chunks</code>를 열어 문서를 눈으로 확인해도 좋습니다(Index Pattern을 하나 더 만들면 됩니다).</li></ol></div>
+<details class="qa"><summary>Q. OpenAI 임베딩으로 바꾸려면요?</summary><p><code>embed_passages</code>, <code>embed_query</code> 두 함수만 바꾸면 됩니다. <code>from openai import OpenAI</code> → <code>oa = OpenAI()</code> → <code>oa.embeddings.create(model="text-embedding-3-small", input=texts)</code>의 <code>data[i].embedding</code>. 이때 차원이 1536이 되므로 <b>인덱스를 새로 만들어야</b> 합니다(MODEL_NAME, DIM도 함께 변경). e5의 접두어는 붙이지 않습니다.</p></details>
+</section>
+
+<!-- 16 -->
+<section aria-labelledby="tab-u16" class="panel" hidden="" id="u16" role="tabpanel"><div class="crumb">Part 7. OpenSearch 실습 · A4-M3</div><h1>16. Python으로 의미 검색 — k-NN, 필터, ef_search</h1><div class="where-bar"><span><b>📍 어디서</b> 같은 노트북 · 셀 5~7</span><span><b>✅ 먼저</b> 셀 1~4 실행 완료 (rag_chunks에 데이터가 있어야 함)</span></div><p class="lead">질문을 같은 모델로 벡터로 바꿔(⑥) 가까운 Chunk를 찾습니다(⑦). 14탭 Dev Tools의 쿼리가 <code>body=</code> 안에 그대로 들어갑니다. 단어가 겹치지 않는 질문으로 의미 검색의 힘을 확인합니다.</p>
+<div class="journey"><h3>이 탭의 흐름</h3><ol><li>search 함수 하나 만들기</li><li>단어가 안 겹치는 질문 세 개</li><li>메타데이터 필터</li><li>ef_search와 k·size</li></ol></div>
+<div class="codebox"><div class="codehead"><span>노트북 셀 5 · 검색 함수</span><button class="copy" type="button">코드 복사</button></div><pre><code>def search(question, k=3, filters=None, ef_search=None):
+    knn = {"vector": embed_query(question), "k": k}
+    if filters:
+        knn["filter"] = {"bool": {"filter": [{"term": {f: v}} for f, v in filters.items()]}}
+    if ef_search:
+        knn["method_parameters"] = {"ef_search": ef_search}
+    res = client.search(index=INDEX, body={
+        "size": k,
+        "_source": {"excludes": ["embedding"]},
+        "query": {"knn": {"embedding": knn}},
+    })
+    return [{"score": round(h["_score"], 4), **h["_source"]} for h in res["hits"]["hits"]]
+
+def show(hits):
+    for h in hits:
+        print(f'  {h["score"]}  [{h["source"]} p.{h["page"]}]  {h["text"][:40]}...')
+
+for q in ["기계에 손이 끼지 않게 하려면?", "불나면 어디로 나가요?", "포크리프트 속도 제한이 있나요?"]:
+    print(q); show(search(q))</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>실행 결과 (예시 · 점수와 일부 순위는 환경마다 다름)</span><button class="copy" type="button">코드 복사</button></div><pre><code>기계에 손이 끼지 않게 하려면?
+  0.9...  [press_safety.pdf p.12]  2. 방호장치 프레스 작업 시 작업자의 손이 금형 사이에...
+  ...
+불나면 어디로 나가요?
+  0.9...  [fire_manual.pdf p.1]  1. 화재 발생 시 행동 요령 화재 발생 시에는 비상구로...
+  ...
+포크리프트 속도 제한이 있나요?
+  0.9...  [forklift_guide.pdf p.4]  2. 운행 기준 평택공장 구내에서 지게차의 제한 속도는...
+  ...</code></pre></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>“불나면”과 “화재”, “포크리프트”와 “지게차”는 글자가 하나도 겹치지 않습니다. 그래도 맞는 문서가 위로 옵니다. 01탭에서 말한 “키워드 검색이 놓치는 경우”를 의미 검색이 해결하는 장면입니다. 결과에 출처(source, page)가 함께 나오는 것도 확인합니다. 18탭에서 LLM 답변에 출처를 붙일 때 그대로 씁니다.</p></div>
+<h3>메타데이터 필터</h3>
+<div class="codebox"><div class="codehead"><span>노트북 셀 6 · 필터</span><button class="copy" type="button">코드 복사</button></div><pre><code>q = "작업 중 사고를 예방하려면?"
+print("필터 없음");               show(search(q))
+print("화성 공장 · 2026년만");      show(search(q, filters={"factory": "화성", "year": 2026}))
+print("법령만");                  show(search(q, filters={"type": "법령"}))</code></pre></div>
+<div class="task"><h4>화면에서 짚을 곳</h4><ol><li>필터는 <b>knn 안</b>에 들어갑니다(14탭). 그래서 조건에 맞는 문서 안에서 k개를 채웁니다. 조건에 맞는 Chunk가 k개보다 적으면 그 개수만큼만 나옵니다.</li><li><code>"법령만"</code>의 점수는 다른 결과보다 낮을 수 있습니다. “조건 안에서 가장 가까운 것”이지 “질문과 아주 가까운 것”은 아닙니다. 18탭에서 기준 점수로 거르는 이유입니다.</li><li>필터 필드는 <code>keyword</code>·<code>integer</code>입니다. <code>text</code> 필드에 term을 걸면 조용히 0건이 나옵니다(A4-M1 10탭).</li></ol></div>
+<h3>ef_search, k와 size</h3>
+<div class="codebox"><div class="codehead"><span>노트북 셀 7 · ef_search</span><button class="copy" type="button">코드 복사</button></div><pre><code>show(search("방호장치", k=5))
+show(search("방호장치", k=5, ef_search=200))   # 10탭: 검색할 때 탐색 폭</code></pre></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>Chunk가 수십 개뿐이라 ef_search를 바꿔도 결과는 같습니다. HNSW가 이 정도 크기에서는 사실상 전부를 보기 때문입니다. 차이는 수만 건 이상에서 납니다. 여기서는 “검색할 때 바꿀 수 있는 손잡이가 어디 있는지”만 익힙니다. 코드에서는 <code>size</code>를 <code>k</code>와 같게 두었습니다. <code>k</code>는 그래프에서 뽑을 후보 수, <code>size</code>는 돌려받을 개수입니다.</p></div>
+</section>
+
+<!-- 17 -->
+<section aria-labelledby="tab-u17" class="panel" hidden="" id="u17" role="tabpanel"><div class="crumb">Part 7. OpenSearch 실습 · A4-M3</div><h1>17. Python으로 Hybrid 검색 — BM25 + k-NN, search pipeline</h1><div class="where-bar"><span><b>📍 어디서</b> 같은 노트북 · 셀 8 (pipeline은 Dev Tools로 만들어도 됨)</span><span><b>✅ 먼저</b> 셀 1~5 실행 완료</span></div><p class="lead">11탭 위젯의 α를 OpenSearch에서 실제로 구현합니다. 키워드 검색과 벡터 검색을 한 요청에 넣고, search pipeline이 두 점수를 0~1로 맞춘 뒤 가중 평균을 냅니다.</p>
+<div class="journey"><h3>이 탭의 흐름</h3><ol><li>벡터만으로 약한 질문 찾기</li><li>search pipeline 만들기 (Dev Tools / Python)</li><li>hybrid 쿼리</li><li>벡터 vs Hybrid 비교</li></ol></div>
+<div class="codebox"><div class="codehead"><span>Dev Tools · pipeline (Python으로도 아래에서 만듭니다)</span><button class="copy" type="button">코드 복사</button></div><pre><code>PUT _search/pipeline/hybrid-pipe
+{
+  "description": "BM25와 k-NN 점수를 0~1로 맞추고 3:7로 섞기",
+  "phase_results_processors": [
+    { "normalization-processor": {
+        "normalization": { "technique": "min_max" },
+        "combination": { "technique": "arithmetic_mean",
+                         "parameters": { "weights": [0.3, 0.7] } }
+    } }
+  ]
+}</code></pre></div>
+<div class="codebox"><div class="codehead"><span>노트북 셀 8 · Hybrid 검색</span><button class="copy" type="button">코드 복사</button></div><pre><code>def make_pipeline(name, w_keyword, w_vector):
+    body = {"phase_results_processors": [{"normalization-processor": {
+        "normalization": {"technique": "min_max"},
+        "combination": {"technique": "arithmetic_mean",
+                        "parameters": {"weights": [w_keyword, w_vector]}},
+    }}]}
+    client.transport.perform_request("PUT", f"/_search/pipeline/{name}", body=body)
+
+make_pipeline("hybrid-pipe", 0.3, 0.7)
+
+def hybrid_search(question, k=3, pipeline="hybrid-pipe"):
+    body = {
+        "size": k,
+        "_source": {"excludes": ["embedding"]},
+        "query": {"hybrid": {"queries": [
+            {"match": {"text": question}},                                   # 키워드 (weights 첫 번째)
+            {"knn": {"embedding": {"vector": embed_query(question), "k": k}}},  # 벡터 (weights 두 번째)
+        ]}},
+    }
+    res = client.search(index=INDEX, body=body, params={"search_pipeline": pipeline})
+    return [{"score": round(h["_score"], 4), **h["_source"]} for h in res["hits"]["hits"]]
+
+q = "제38조"
+print("벡터만");  show(search(q))
+print("Hybrid");  show(hybrid_search(q))</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>실행 결과 (예시)</span><button class="copy" type="button">코드 복사</button></div><pre><code>벡터만
+  ...  [press_safety.pdf p.12] ...      ← 숫자·조항 번호는 의미 벡터가 흐릿하게 다룸 (순위는 환경마다 다름)
+  ...
+Hybrid
+  ...  [산업안전보건법.pdf p.38] ...     ← "제38조" 글자가 정확히 들어간 Chunk가 키워드 점수로 확실히 위로
+  ...</code></pre></div>
+<div class="task"><h4>화면에서 짚을 곳</h4><ol><li><code>weights</code>의 순서 = <code>queries</code>의 순서. 첫 번째가 키워드, 두 번째가 벡터. 위젯의 α=0.7과 같습니다.</li><li>hybrid 쿼리는 <b>반드시 pipeline과 함께</b> 씁니다. <code>search_pipeline</code>을 빼먹는 실수가 가장 흔합니다.</li><li>기본 분석기는 한국어 조사를 떼지 못합니다. “제38조는”처럼 조사가 붙은 토큰은 “제38조”와 다른 토큰입니다. 그래도 질문의 다른 토큰이 겹치거나 벡터 점수가 받쳐 줍니다. 실무 한국어 검색은 <b>nori</b> 분석기를 씁니다.</li><li>어떤 결과가 나오든 “벡터만”과 “Hybrid”를 같은 질문으로 비교하는 습관이 핵심입니다. 미션 4에서 가중치를 바꿔 봅니다.</li></ol></div>
+<details class="qa"><summary>Q. hybrid 쿼리에서 오류가 나요.</summary><p>Hybrid 검색은 OpenSearch 2.10 이상, neural-search 플러그인이 필요합니다(기본 배포판에 포함). 버전은 A4-M1 13탭의 <code>client.info()["version"]["number"]</code>로 확인합니다. pipeline 이름 오타, <code>params</code>에 pipeline을 안 넣은 경우도 확인합니다.</p></details>
+</section>
+
+<!-- 18 -->
+<section aria-labelledby="tab-u18" class="panel" hidden="" id="u18" role="tabpanel"><div class="crumb">Part 7. OpenSearch 실습 · A4-M3</div><h1>18. RAG 완성 — 검색 결과를 LLM에 넘겨 답변 만들기</h1><div class="where-bar"><span><b>📍 어디서</b> 같은 노트북 · 셀 9~11</span><span><b>✅ 먼저</b> 셀 1~8 실행 완료. 셀 10은 OPENAI_API_KEY가 있을 때만</span></div><p class="lead">12탭의 STEP 1~5를 코드로 옮깁니다. OpenSearch가 찾은 Chunk를 근거로 묶어 LLM에 넘기고, 근거가 약하면 답하지 않게 막습니다. LLM API 키가 없어도 STEP 4까지(LLM에 넘길 프롬프트)는 출력해서 확인할 수 있습니다.</p>
+<div class="journey"><h3>이 탭의 흐름</h3><ol><li>근거 묶기 (Augmented)</li><li>프롬프트 만들기</li><li>LLM 호출 (Generation)</li><li>근거가 약할 때 멈추기</li></ol></div>
+<div class="codebox"><div class="codehead"><span>노트북 셀 9 · 근거와 프롬프트 (키 없이 동작)</span><button class="copy" type="button">코드 복사</button></div><pre><code>def build_context(hits):
+    return "\n".join(f'[{i}] ({h["source"]} p.{h["page"]}) {h["text"]}'
+                     for i, h in enumerate(hits, 1))
+
+def build_prompt(question, hits):
+    return (
+        "다음 [근거]만 사용해 질문에 한국어로 답하세요.\n"
+        "근거에 없는 내용은 '근거 문서에서 찾을 수 없습니다'라고 답하세요.\n"
+        "답변 끝에 사용한 근거 번호를 [1]처럼 표시하세요.\n\n"
+        f"[근거]\n{build_context(hits)}\n\n[질문]\n{question}"
+    )
+
+question = "프레스 작업 중 손 끼임을 어떻게 예방하나요?"
+hits = hybrid_search(question, k=3)          # STEP 2~3: Embedding + OpenSearch 검색
+print(build_prompt(question, hits))         # STEP 4: LLM에 넘어갈 내용을 먼저 눈으로 확인</code></pre></div>
+<div class="codebox"><div class="codehead"><span>노트북 셀 10 · LLM 호출 (API 키 있을 때만)</span><button class="copy" type="button">코드 복사</button></div><pre><code># pip install openai   ·   환경변수 OPENAI_API_KEY 필요
+from openai import OpenAI
+
+LLM_MODEL = "gpt-4o-mini"    # 강의 시점에 사용 가능한 모델명으로 바꿔 쓰세요
+llm = OpenAI()
+
+def generate(prompt):
+    resp = llm.chat.completions.create(
+        model=LLM_MODEL,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0,
+    )
+    return resp.choices[0].message.content
+
+print(generate(build_prompt(question, hits)))</code></pre></div>
+<h3>하나로 묶기 — 근거가 약하면 답하지 않기</h3>
+<div class="codebox"><div class="codehead"><span>노트북 셀 11 · rag_answer 완성</span><button class="copy" type="button">코드 복사</button></div><pre><code>MIN_SCORE = 0.90     # 벡터 점수 기준 — 출발값일 뿐, 미션 6에서 직접 정합니다
+
+def rag_answer(question, k=3, filters=None, use_llm=True):
+    vec_hits = search(question, k=k, filters=filters)
+    if not vec_hits or vec_hits[0]["score"] &lt; MIN_SCORE:
+        return "관련 근거를 찾지 못했습니다. 담당자에게 문의해 주세요.", []
+    prompt = build_prompt(question, vec_hits)
+    answer = generate(prompt) if use_llm else prompt
+    return answer, [(h["source"], h["page"]) for h in vec_hits]
+
+for q in ["불나면 엘리베이터 타도 되나요?", "오늘 점심 메뉴 추천해 줘"]:
+    answer, sources = rag_answer(q, use_llm=False)    # 키가 있으면 True
+    print("Q:", q); print(answer[:200]); print("출처:", sources); print("---")</code></pre></div>
+<div class="task"><h4>화면에서 짚을 곳</h4><ol><li><b>STEP 4를 먼저 출력하는 습관</b>: 답이 이상하면 LLM보다 먼저 “무엇이 넘어갔는지”를 봅니다(12탭).</li><li>프롬프트의 “근거에 없으면 찾을 수 없다고 답하라”는 00탭의 세 번째 문제(환각)를 줄이는 장치입니다. 근거 번호 표시는 출처를 보여 주기 위한 것입니다.</li><li>기준 점수(<code>MIN_SCORE</code>)는 <b>벡터 검색 점수</b>로 판단합니다. Hybrid 점수는 결과끼리 0~1로 다시 맞춘 값이라, 상관없는 질문에서도 1등이 높게 나올 수 있기 때문입니다.</li><li>0.90은 출발값일 뿐입니다. e5는 상관없는 문장끼리도 코사인이 꽤 높게 나오는 편이라 점수가 위쪽에 몰립니다. 모델과 데이터마다 분포가 다르므로 미션 6에서 직접 정합니다.</li><li>STEP 5 블록은 API 키가 있을 때만 실행합니다. 키가 없으면 <code>use_llm=False</code>로 프롬프트까지만 확인합니다.</li></ol></div>
+<details class="qa"><summary>Q. OpenAI 말고 다른 LLM도 되나요?</summary><p><code>generate()</code> 함수 하나만 바꾸면 됩니다. AWS Bedrock, 로컬 LLM(Ollama 등) 모두 “프롬프트 문자열을 넣고 답 문자열을 받는” 같은 자리에 들어갑니다. 검색(OpenSearch) 부분은 그대로입니다. 이것이 13탭 구성 A·B·C의 차이입니다.</p></details>
+</section>
+
+<!-- 19 -->
+<section aria-labelledby="tab-u19" class="panel" hidden="" id="u19" role="tabpanel"><div class="crumb">Part 8. 실습 미션 · A4-M3</div><h1>19. 실습 미션 — 손잡이를 하나씩 돌려 보기</h1><div class="where-bar"><span><b>📍 어디서</b> 미션마다 다름 — 표의 할 일에 적힌 곳</span><span><b>✅ 먼저</b> 14탭(Dev Tools)과 노트북 셀 1~11 실행 완료</span></div><p class="lead">12탭의 “품질 요소” 다섯 가지를 직접 바꿔 보며 결과가 어떻게 달라지는지 확인합니다. 미션마다 위젯 결과와 OpenSearch 결과를 나란히 놓고 비교하는 것이 핵심입니다. 막히면 힌트, 그래도 막히면 정답을 펼칩니다.</p>
+<div class="journey"><h3>진행 방법</h3><ol><li>미션 1~3: 기본 (Chunk, 검색, 필터)</li><li>미션 4~6: 품질 조정 (Hybrid, 검색 폭, 기준 점수)</li><li>미션 7~8: 일부러 망가뜨리고 고치기</li></ol></div>
+<div class="tablewrap"><table><thead><tr><th>미션</th><th>할 일</th><th>완료 기준</th></tr></thead><tbody>
+<tr><td>1</td><td>07탭 위젯 예시 문서를 <code>chunk_text(SAMPLE, 40, 10)</code>으로 잘라 조각 수 비교. size·overlap을 두 번 더 바꿔 반복</td><td>세 경우 모두 위젯 숫자 = Python 숫자</td></tr>
+<tr><td>2</td><td>Dev Tools <code>rag_toy</code>에서 질문 “화재 시 대피 방법” <code>[0.20, 0.33, 0.82]</code>으로 k=3 검색</td><td>09탭 위젯(코사인)과 같은 순위 C5 → C4 → C3</td></tr>
+<tr><td>3</td><td>Python에서 질문 “통로를 어떻게 나누나요?”를 필터 없이 / <code>factory="화성"</code>으로 검색</td><td>필터 후 forklift 문서가 사라지는 것 확인, 이유 설명</td></tr>
+<tr><td>4</td><td>pipeline을 키워드 0.7 : 벡터 0.3으로 하나 더 만들어 “제38조” 비교</td><td>세 결과(벡터만, 0.3:0.7, 0.7:0.3) 표로 정리</td></tr>
+<tr><td>5</td><td><code>search()</code>에서 k=1, 3, 10을 차례로 넣고 결과 개수와 마지막 결과 점수 보기</td><td>k가 Chunk 수보다 크면 어떻게 되는지 설명</td></tr>
+<tr><td>6</td><td>상관있는 질문 4개 / 상관없는 질문 4개의 벡터 1등 점수를 모아 <code>MIN_SCORE</code> 정하기</td><td>두 그룹을 가르는 값을 정하고 <code>rag_answer</code>로 확인</td></tr>
+<tr><td>7</td><td>다른 모델(all-MiniLM-L6-v2, 384차원)로 질문 벡터를 만들어 검색</td><td>오류 없이 엉뚱한 결과가 나오는 것 확인 → <code>_meta</code>로 막는 함수 작성</td></tr>
+<tr><td>8</td><td>질문 벡터를 <code>[0.94, 0.85]</code>(2개)로 <code>rag_toy</code>에 검색</td><td>오류 메시지에서 원인(dimension) 읽기</td></tr></tbody></table></div>
+<details class="qa"><summary>미션 1 정답</summary><div class="codebox"><div class="codehead"><span>Python</span><button class="copy" type="button">코드 복사</button></div><pre><code>SAMPLE = ("프레스 작업 시 작업자의 손이 금형 사이에 들어가지 않도록 방호장치를 설치해야 합니다. "
+          "작업 전에는 비상정지장치가 정상 작동하는지 확인해야 합니다. 작업자는 안전모와 안전화를 착용해야 합니다. "
+          "지게차 운행 시에는 보행자 통로와 운행 통로를 분리해야 합니다. 화재 발생 시에는 비상구로 신속히 대피해야 합니다.")
+print(len(SAMPLE))
+for size, ov in [(40, 10), (60, 0), (30, 25)]:
+    print(size, ov, "→", len(chunk_text(SAMPLE, size, ov)))</code></pre></div><p>위젯의 “전체 길이”와 <code>len(SAMPLE)</code>이 같은지 먼저 확인합니다. (30, 25)처럼 overlap이 size에 가까우면 조각 수가 급증하는 것도 확인합니다.</p></details>
+<details class="qa"><summary>미션 2 정답</summary><div class="codebox"><div class="codehead"><span>Dev Tools</span><button class="copy" type="button">코드 복사</button></div><pre><code>GET rag_toy/_search
+{ "_source": ["text"], "query": { "knn": { "embedding": { "vector": [0.20, 0.33, 0.82], "k": 3 } } } }</code></pre></div><p>코사인은 C5 0.9999, C4 0.9853, C3 0.7192이고, OpenSearch 점수는 (1+코사인)/2로 약 1.0, 0.9926, 0.8596입니다.</p></details>
+<details class="qa"><summary>미션 3 힌트 / 정답</summary><p><b>힌트:</b> <code>docs/02_forklift_guide.txt</code> 맨 위 메타데이터의 factory 값을 봅니다.</p><p><b>정답:</b> <code>show(search("통로를 어떻게 나누나요?"))</code>와 <code>show(search("통로를 어떻게 나누나요?", filters={"factory": "화성"}))</code>. forklift_guide.pdf는 평택이라 필터 후 빠지고, 화성 문서 중 가장 가까운 것이 대신 올라옵니다. 그 점수가 낮다면 “조건 안에서 가장 가까운 것”일 뿐이라는 16탭 설명과 연결합니다.</p></details>
+<details class="qa"><summary>미션 4 정답</summary><div class="codebox"><div class="codehead"><span>Python</span><button class="copy" type="button">코드 복사</button></div><pre><code>make_pipeline("hybrid-kw", 0.7, 0.3)
+q = "제38조"
+print("벡터만");      show(search(q))
+print("0.3 : 0.7");  show(hybrid_search(q, pipeline="hybrid-pipe"))
+print("0.7 : 0.3");  show(hybrid_search(q, pipeline="hybrid-kw"))</code></pre></div><p>키워드 가중치를 올릴수록 글자가 정확히 들어간 Chunk가 확실히 위로 갑니다. 11탭 위젯의 α를 0.3으로 내린 것과 같은 효과입니다. 반대로 “포크리프트 속도” 같은 질문은 키워드 가중치를 올리면 불리해질 수 있습니다. 같은 질문 묶음으로 비교해 고릅니다. 미션 6의 csv 코드에서 <code>search</code>를 <code>hybrid_search</code>로 바꾸면 가중치별 정답률(O의 개수)을 셀 수 있습니다.</p></details>
+<details class="qa"><summary>미션 5 정답</summary><div class="codebox"><div class="codehead"><span>Python</span><button class="copy" type="button">코드 복사</button></div><pre><code>for k in [1, 3, 10]:
+    hits = search("방호장치", k=k)
+    print(k, "→", len(hits), "건, 마지막 점수", hits[-1]["score"])
+print("전체 Chunk 수:", client.count(index=INDEX)["count"])</code></pre></div><p>k가 커질수록 마지막 결과의 점수가 낮아집니다. 관련 없는 Chunk까지 딸려 오는 것이고, 12탭의 “Top-k가 많으면 불필요한 컨텍스트 증가”가 이 장면입니다. k가 전체 Chunk 수보다 크면 오류 없이 있는 만큼만 돌려줍니다.</p></details>
+<details class="qa"><summary>미션 6 정답</summary><div class="codebox"><div class="codehead"><span>Python</span><button class="copy" type="button">코드 복사</button></div><pre><code>related   = ["손 끼임 예방", "화재 시 엘리베이터", "지게차 후진", "안전모 착용"]
+unrelated = ["오늘 날씨 어때요?", "파이썬 리스트 정렬", "점심 메뉴 추천", "주식 사도 될까요?"]
+for name, qs in [("관련", related), ("무관", unrelated)]:
+    print(name, [search(q, k=1)[0]["score"] for q in qs])</code></pre></div><p>관련 질문의 <b>가장 낮은</b> 점수와 무관 질문의 <b>가장 높은</b> 점수 사이에 <code>MIN_SCORE</code>를 둡니다. 두 그룹이 겹치면 기준 점수만으로는 가를 수 없는 것이니, 문서를 보강하거나 질문 분류를 따로 둡니다. 모델을 바꾸면 다시 정합니다.</p><p><b>실습 자료로 하기:</b> <code>rag_eval_questions.csv</code>의 20개 질문으로 같은 일을 하면 더 믿을 만합니다.</p><div class="codebox"><div class="codehead"><span>Python · 미션 6 (csv 사용)</span><button class="copy" type="button">코드 복사</button></div><pre><code>import csv
+with open("rag_eval_questions.csv", encoding="utf-8") as f:
+    evals = list(csv.DictReader(f))
+
+for row in evals:
+    top = search(row["question"], k=1)[0]
+    ok = "O" if top["source"] == row["expected_source"] else ("-" if row["related"] == "N" else "X")
+    print(row["related"], round(top["score"], 4), ok, row["question"], "→", top["source"])</code></pre></div><p>related=Y 줄의 점수 중 가장 낮은 값, related=N 줄의 점수 중 가장 높은 값을 찾아 그 사이에 기준을 둡니다. O/X 열은 1등 문서가 정답 문서인지(Hit@1)입니다.</p></details>
+<details class="qa"><summary>미션 7 정답</summary><div class="codebox"><div class="codehead"><span>Python</span><button class="copy" type="button">코드 복사</button></div><pre><code>other = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")    # 이것도 384차원
+qv = other.encode("기계에 손이 끼지 않게 하려면?").tolist()
+res = client.search(index=INDEX, body={"size": 3, "_source": ["text"],
+                    "query": {"knn": {"embedding": {"vector": qv, "k": 3}}}})
+print([h["_source"]["text"][:20] for h in res["hits"]["hits"]])        # 오류 없이 엉뚱할 수 있음
+
+def check_model(index, model_name):
+    m = next(iter(client.indices.get_mapping(index=index).values()))
+    saved = m["mappings"].get("_meta", {}).get("embedding_model")
+    if saved != model_name:
+        raise ValueError(f"모델 불일치: 인덱스={saved} / 지금={model_name}")
+
+check_model(INDEX, "sentence-transformers/all-MiniLM-L6-v2")             # ValueError</code></pre></div><p>차원이 같으면 OpenSearch는 오류를 내지 않습니다. 벡터가 어느 모델에서 왔는지 모르기 때문입니다. 그래서 15탭에서 <code>_meta</code>에 모델 이름을 적어 두고, 검색 전에 검사합니다.</p></details>
+<details class="qa"><summary>미션 8 정답</summary><div class="codebox"><div class="codehead"><span>Dev Tools</span><button class="copy" type="button">코드 복사</button></div><pre><code>GET rag_toy/_search
+{ "query": { "knn": { "embedding": { "vector": [0.94, 0.85], "k": 3 } } } }</code></pre></div><p>오른쪽 응답의 <code>error.reason</code>에 질문 벡터 길이와 매핑 dimension(3)이 다르다는 내용이 나옵니다. 미션 7과 대비: <b>차원이 다르면 오류가 나서 바로 알고, 차원이 같은 다른 모델이면 오류 없이 틀립니다.</b> 더 위험한 쪽은 후자입니다.</p></details>
+</section>
+
+<!-- 20 -->
+<section aria-labelledby="tab-u20" class="panel" hidden="" id="u20" role="tabpanel"><div class="crumb">Part 9. 점검 · 정리 · A4-M3</div><h1>20. 점검과 정리 — 퀴즈, 용어, 완료 체크</h1><p class="lead">보기를 눌러 바로 정답과 해설을 확인합니다. 마지막으로 용어 표와 완료 체크리스트로 모듈을 닫습니다.</p>
+<h3>인터랙티브 퀴즈</h3>
+<div id="quizArea"></div>
+<h3>핵심 용어 정리</h3>
+<div class="tablewrap"><table><thead><tr><th>용어</th><th>설명</th></tr></thead><tbody>
+<tr><td>RAG</td><td>외부 자료를 검색해 LLM의 컨텍스트로 제공하고 답변을 생성하는 방식</td></tr>
+<tr><td>Chunk / Size / Overlap</td><td>검색 단위로 나눈 조각 / 조각 크기 / 인접 조각 간 겹침</td></tr>
+<tr><td>Embedding · Vector · Dimension</td><td>의미의 수치화 · 그 결과 배열 · 배열 안 숫자 개수</td></tr>
+<tr><td>Similarity / Distance</td><td>Cosine · L2 · Inner Product 등 유사성 측정 기준 (OpenSearch <code>space_type</code>)</td></tr>
+<tr><td>k-NN · ANN · HNSW</td><td>가까운 k개 검색 · 근사 검색 · 그래프 기반 ANN 인덱스</td></tr>
+<tr><td>BM25</td><td>검색엔진의 대표적 키워드 관련도 방식</td></tr>
+<tr><td>Top-k · Hybrid · Metadata Filter</td><td>반환 상위 개수 · 키워드+벡터 결합 · 조건 기반 범위 제한</td></tr>
+<tr><td>knn_vector · search pipeline</td><td>OpenSearch의 벡터 필드 타입 · Hybrid 점수를 정규화·결합하는 처리기</td></tr></tbody></table></div>
+<h3>완료 체크</h3>
+<div class="task"><h4>개념</h4><ol><li>□ 00탭의 한 문단을 보지 않고 설명할 수 있다.</li><li>□ 임베딩 모델의 차원과 OpenSearch <code>dimension</code>이 왜 같아야 하는지 말할 수 있다.</li><li>□ Similarity(기준)와 k-NN(검색 방식)을 구분한다.</li><li>□ <code>m</code>, <code>ef_construction</code>, <code>ef_search</code> 중 검색할 때 바꾸는 것을 안다.</li><li>□ OpenSearch는 검색까지, 답변은 LLM이라는 것을 안다.</li></ol></div>
+<div class="task"><h4>실습</h4><ol><li>□ Dev Tools로 <code>rag_toy</code>를 만들고 위젯과 같은 순위를 확인했다.</li><li>□ knn 안 filter와 post_filter의 결과 차이를 확인했다.</li><li>□ Python으로 Chunk → Embedding → <code>rag_chunks</code> 적재를 끝냈다.</li><li>□ 단어가 겹치지 않는 질문으로 의미 검색을 확인했다.</li><li>□ Hybrid 검색으로 “제38조” 결과를 비교했다.</li><li>□ 근거 → 프롬프트 → (LLM) 답변까지 이어지는 <code>rag_answer</code>를 돌렸다.</li><li>□ 미션 1~8을 끝냈다.</li></ol></div>
+<h3>공식 문서</h3>
+<div class="tablewrap"><table><thead><tr><th>주제</th><th>링크</th></tr></thead><tbody>
+<tr><td>OpenSearch Vector Search</td><td><a href="https://docs.opensearch.org/latest/vector-search/" rel="noopener" target="_blank">docs.opensearch.org/vector-search</a></td></tr>
+<tr><td>Vector Search 기법 (Exact·Approximate)</td><td><a href="https://docs.opensearch.org/latest/vector-search/vector-search-techniques/" rel="noopener" target="_blank">vector-search-techniques</a></td></tr>
+<tr><td>Hybrid Search</td><td><a href="https://docs.opensearch.org/latest/vector-search/ai-search/hybrid-search/" rel="noopener" target="_blank">ai-search/hybrid-search</a></td></tr>
+<tr><td>Filtering Vector Search</td><td><a href="https://docs.opensearch.org/latest/vector-search/filter-search-knn/" rel="noopener" target="_blank">filter-search-knn</a></td></tr>
+<tr><td>FAISS · Qdrant · Weaviate · Milvus</td><td><a href="https://faiss.ai/" rel="noopener" target="_blank">faiss</a> · <a href="https://qdrant.tech/documentation/" rel="noopener" target="_blank">qdrant</a> · <a href="https://docs.weaviate.io/weaviate" rel="noopener" target="_blank">weaviate</a> · <a href="https://milvus.io/docs" rel="noopener" target="_blank">milvus</a></td></tr>
+<tr><td>pgvector · Pinecone</td><td><a href="https://github.com/pgvector/pgvector" rel="noopener" target="_blank">pgvector</a> · <a href="https://docs.pinecone.io/guides/get-started/overview" rel="noopener" target="_blank">pinecone</a></td></tr></tbody></table></div>
+</section>
+
+</main></div>
+<footer class="footer">© 2026 부성순. All rights reserved.<small>교안의 자체 해설 및 실습 예제에 대한 저작권 표시입니다. 외부 소프트웨어·라이브러리·모델의 권리는 각 권리자에게 있습니다. 실습 문서(안전지침·법령 요지)는 교육용 예시 문장이며, 위젯의 벡터 값은 개념 설명용 예시입니다.</small></footer>
+<script>(function(){
+const tabs=[...document.querySelectorAll('[role="tab"]')];
+function setTab(i,focus=false){tabs.forEach((t,j)=>{const on=i===j;t.setAttribute('aria-selected',on?'true':'false');t.tabIndex=on?0:-1;document.getElementById(t.getAttribute('aria-controls')).hidden=!on;});if(focus)tabs[i].focus({preventScroll:true});history.replaceState(null,'','#'+tabs[i].getAttribute('aria-controls'));window.scrollTo({top:0});}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>setTab(i));t.addEventListener('keydown',e=>{if(['ArrowDown','ArrowUp','ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();setTab((i+(e.key==='ArrowDown'||e.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length,true);}})});
+const index=tabs.findIndex(t=>'#'+t.getAttribute('aria-controls')===location.hash);if(index>=0)setTab(index);
+document.querySelectorAll('.copy').forEach(b=>{b.dataset.label=b.textContent;b.addEventListener('click',async()=>{const code=b.closest('.codebox').querySelector('pre').textContent;try{await navigator.clipboard.writeText(code);b.textContent='복사됨';}catch(e){b.textContent='복사 실패';}setTimeout(()=>b.textContent=b.dataset.label||'코드 복사',1500);});});
+})();</script>
+<script>(function(){
+"use strict";
+const fmt=(x,d=3)=>Number(x).toFixed(d);
+const dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0);
+const norm=a=>Math.sqrt(dot(a,a));
+const cosine=(a,b)=>dot(a,b)/(norm(a)*norm(b)||1e-9);
+const l2=(a,b)=>Math.sqrt(a.reduce((s,v,i)=>s+(v-b[i])**2,0));
+const esc=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const C={line:'#e2e8f0',brand:'#ff2e93',sel:'#2563eb',ink:'#0f172a',muted:'#64748b',surface:'#ffffff'};
+/* scatter */
+const PEOPLE=[{id:'A',v:[9,8]},{id:'B',v:[8,8]},{id:'C',v:[2,1]}];
+const sc=document.getElementById('scatter'),cp=document.getElementById('calcPanel');let hp='A';
+function drawScatter(){const W=380,H=320,pad=40,max=10,X=x=>pad+(x/max)*(W-pad*2),Y=y=>H-pad-(y/max)*(H-pad*2);let s='';
+for(let i=0;i<=10;i+=2){s+=`<line x1="${X(i)}" y1="${pad}" x2="${X(i)}" y2="${H-pad}" stroke="${C.line}"/><line x1="${pad}" y1="${Y(i)}" x2="${W-pad}" y2="${Y(i)}" stroke="${C.line}"/>`;}
+s+=`<text x="${W/2}" y="${H-10}" text-anchor="middle" fill="${C.muted}" font-size="12">커피 선호도 →</text><text x="14" y="${H/2}" text-anchor="middle" fill="${C.muted}" font-size="12" transform="rotate(-90 14 ${H/2})">운동 선호도 →</text>`;
+const h=PEOPLE.find(p=>p.id===hp);
+PEOPLE.forEach(p=>{if(p.id!==hp){const x1=X(h.v[0]),y1=Y(h.v[1]),x2=X(p.v[0]),y2=Y(p.v[1]);s+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${C.sel}" stroke-width="2" stroke-dasharray="5 3"/>`;let mx=(x1+x2)/2,my=(y1+y2)/2;const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy)||1;let nx=-dy/len,ny=dx/len;if(ny<0){nx=-nx;ny=-ny;}const off=Math.abs(dy)<6?26:18;mx+=nx*off;my+=ny*off+4;s+=`<text x="${mx}" y="${my}" text-anchor="middle" font-size="16" font-weight="800" fill="${C.sel}" paint-order="stroke" stroke="${C.surface}" stroke-width="4.5">${fmt(l2(h.v,p.v),2)}</text>`;}});
+PEOPLE.forEach(p=>{const col=hp===p.id?C.sel:C.brand;s+=`<circle cx="${X(p.v[0])}" cy="${Y(p.v[1])}" r="10" fill="${col}" stroke="#fff" stroke-width="2.5" style="cursor:pointer" data-id="${p.id}"/><text x="${X(p.v[0])}" y="${Y(p.v[1])-16}" text-anchor="middle" fill="${C.ink}" font-size="14" font-weight="800" paint-order="stroke" stroke="#fff" stroke-width="3">${p.id}</text>`;});
+sc.innerHTML=s;sc.querySelectorAll('circle[data-id]').forEach(c=>{const set=()=>{hp=c.getAttribute('data-id');drawScatter();renderCalc();};c.addEventListener('mouseenter',set);c.addEventListener('click',set);});}
+function renderCalc(){const h=PEOPLE.find(p=>p.id===hp);let t=`<div class="lab">기준 점 ${h.id} = [${h.v.join(', ')}]</div>`;
+PEOPLE.forEach(p=>{if(p.id!==hp){const dx=h.v[0]-p.v[0],dy=h.v[1]-p.v[1],sq=dx*dx+dy*dy;t+=`${h.id}↔${p.id}: √((${h.v[0]}−${p.v[0]})² + (${h.v[1]}−${p.v[1]})²) = √(${dx*dx}+${dy*dy}) = √${sq} = <span class="hl">${fmt(Math.sqrt(sq),2)}</span><br>`;}});
+t+=`<div class="muted" style="margin-top:6px">→ 값이 작을수록 ${h.id}와 가깝습니다. 점을 클릭해 기준을 바꿔 보세요.</div>`;cp.innerHTML=t;}
+drawScatter();renderCalc();
+/* chunk */
+const SAMPLE="프레스 작업 시 작업자의 손이 금형 사이에 들어가지 않도록 방호장치를 설치해야 합니다. 작업 전에는 비상정지장치가 정상 작동하는지 확인해야 합니다. 작업자는 안전모와 안전화를 착용해야 합니다. 지게차 운행 시에는 보행자 통로와 운행 통로를 분리해야 합니다. 화재 발생 시에는 비상구로 신속히 대피해야 합니다.";
+const cS=document.getElementById('cSize'),cO=document.getElementById('cOv');
+document.getElementById('sampleBox').innerHTML='<b>예시 문서 ('+SAMPLE.length+'자)</b><br>'+SAMPLE;
+function chunkCalc(){const L=SAMPLE.length;let size=+cS.value,ov=+cO.value;if(ov>=size)ov=size-5;const st=size-ov,n=L<=size?1:Math.ceil((L-ov)/st);
+document.getElementById('vSize').textContent=size+' 자';document.getElementById('vOv').textContent=ov+' 자';document.getElementById('stTotal').textContent=L;document.getElementById('stChunks').textContent=n;document.getElementById('stStride').textContent=st+' 자';document.getElementById('stCover').textContent=Math.round(ov/size*100)+'%';
+document.getElementById('chunkFormula').textContent=`Chunk 수 = ⌈(전체 − overlap) ÷ (size − overlap)⌉ = ⌈(${L} − ${ov}) ÷ ${st}⌉ = ${n}개`;
+const list=document.getElementById('chunkList');list.innerHTML='';const show=Math.min(n,8);
+for(let i=0;i<show;i++){const s0=i*st,e=Math.min(s0+size,L),full=SAMPLE.slice(s0,e);let inner;if(i>0&&ov>0){const k=Math.min(ov,full.length);inner='<mark>'+esc(full.slice(0,k))+'</mark>'+esc(full.slice(k));}else inner=esc(full);
+const d=document.createElement('div');d.className='chunk-item';d.innerHTML=`<span class="cid">C${i+1}</span><span class="muted" style="font-size:13px">[${s0}~${e}자]</span><br>${inner}`;list.appendChild(d);}
+if(n>show){const m=document.createElement('div');m.className='muted';m.textContent=`… 외 ${n-show}개 (총 ${n}개)`;list.appendChild(m);}}
+[cS,cO].forEach(el=>el.addEventListener('input',chunkCalc));chunkCalc();
+/* playground */
+const CH=[{id:'C1',text:'프레스 방호장치를 설치해야 합니다.',v:[0.91,0.82,0.10]},{id:'C2',text:'비상정지장치를 확인해야 합니다.',v:[0.84,0.78,0.15]},{id:'C3',text:'안전보호구를 착용해야 합니다.',v:[0.55,0.48,0.30]},{id:'C4',text:'지게차와 보행자 통로를 분리해야 합니다.',v:[0.12,0.22,0.91]},{id:'C5',text:'화재 발생 시 비상구로 대피해야 합니다.',v:[0.20,0.31,0.79]}];
+const q0=document.getElementById('q0'),q1=document.getElementById('q1'),q2=document.getElementById('q2'),ms=document.getElementById('metric'),kE=document.getElementById('kval'),qp=document.getElementById('qPresets');
+const clearP=()=>qp.querySelectorAll('.preset').forEach(b=>b.classList.remove('active'));
+function play(){const Q=[+q0.value,+q1.value,+q2.value];['vq0','vq1','vq2'].forEach((id,i)=>document.getElementById(id).textContent=fmt(Q[i],2));const k=+kE.value;document.getElementById('vk').textContent=k;const m=ms.value,sm=m==='l2';
+let rows=CH.map(c=>({...c,score:m==='cosine'?cosine(Q,c.v):m==='l2'?l2(Q,c.v):dot(Q,c.v)}));rows.sort((a,b)=>sm?a.score-b.score:b.score-a.score);
+const vals=rows.map(r=>r.score),mx=Math.max(...vals),mn=Math.min(...vals),box=document.getElementById('ranks');box.innerHTML='';
+rows.forEach((r,i)=>{const f=mx===mn?1:(sm?(mx-r.score)/(mx-mn):(r.score-mn)/(mx-mn)),d=document.createElement('div');d.className='rrow'+(i<k?' top':' dim');d.innerHTML=`<div class="rk">${i+1}</div><div class="txt"><span class="cid">${r.id}</span>${r.text}<div class="bar-bg"><div class="bar" style="width:${Math.max(6,f*100)}%"></div></div></div><div class="sc">${fmt(r.score,4)}</div>`;box.appendChild(d);});
+const lab=m==='cosine'?'코사인 유사도(내림차순)':m==='l2'?'L2 거리(오름차순)':'내적(내림차순)';document.getElementById('retrieved').innerHTML=`<b>Top-${k} 검색 결과 → LLM에 전달될 근거:</b> ${rows.slice(0,k).map(r=>r.id).join(', ')} · 정렬 기준: ${lab}`;}
+[q0,q1,q2,ms,kE].forEach(el=>el.addEventListener('input',()=>{clearP();play();}));
+qp.querySelectorAll('.preset').forEach(b=>b.addEventListener('click',()=>{const [a,c,d]=b.dataset.q.split(',').map(Number);q0.value=a;q1.value=c;q2.value=d;clearP();b.classList.add('active');play();}));play();
+/* hybrid */
+const HD=[{id:'D1',text:'산업안전보건법 제38조 · 방호장치 조항',kw:0.95,vec:0.55},{id:'D2',text:'프레스에 손이 끼지 않도록 하는 방법',kw:0.20,vec:0.93},{id:'D3',text:'프레스 방호장치 설치 기준 안내',kw:0.70,vec:0.80},{id:'D4',text:'지게차 보행자 통로 분리 지침',kw:0.30,vec:0.35}];
+const al=document.getElementById('alpha');
+function hyb(){const a=+al.value;document.getElementById('vAlpha').textContent=fmt(a,2);let rows=HD.map(d=>({...d,score:a*d.vec+(1-a)*d.kw})).sort((x,y)=>y.score-x.score);const mx=Math.max(...rows.map(r=>r.score)),mn=Math.min(...rows.map(r=>r.score)),el=document.getElementById('hybridRanks');el.innerHTML='';
+rows.forEach((r,i)=>{const w=Math.max(6,(mx===mn?1:(r.score-mn)/(mx-mn))*100),d=document.createElement('div');d.className='rrow'+(i===0?' top':'');d.innerHTML=`<div class="rk">${i+1}</div><div class="txt"><span class="cid">${r.id}</span>${r.text}<div class="muted" style="font-size:13px">키워드 ${fmt(r.kw,2)} · 벡터 ${fmt(r.vec,2)}</div><div class="bar-bg"><div class="bar" style="width:${w}%"></div></div></div><div class="sc">${fmt(r.score,3)}</div>`;el.appendChild(d);});
+document.getElementById('hybridNote').textContent=a<=0.05?'α=0 → 키워드 검색만. 정확한 법령·조항(D1)이 최상위입니다.':a>=0.95?'α=1 → 의미 검색만. 표현이 달라도 의미가 가까운 문서(D2)가 최상위입니다.':`결합 점수 = ${fmt(a,2)}×벡터 + ${fmt(1-a,2)}×키워드 — 양쪽이 고른 D3가 중간 구간에서 강세를 보입니다.`;}
+al.addEventListener('input',hyb);hyb();
+/* quiz */
+const QZ=[{q:'문서 1개는 항상 벡터 1개가 되는가?',o:['그렇다','아니다 — Chunk마다 벡터가 생성된다'],a:1,e:'문서를 여러 Chunk로 나누면 일반적으로 각 Chunk마다 벡터가 생성됩니다.'},
+{q:'Dimension과 Top-k는 같은 개념인가?',o:['같다','다르다'],a:1,e:'Dimension은 벡터 하나의 숫자 개수, Top-k는 검색 결과로 가져올 항목 수입니다.'},
+{q:'Cosine 유사도와 k-NN은 같은 것인가?',o:['같다','다르다 — 하나는 기준, 하나는 검색 방식'],a:1,e:'Cosine은 유사성 계산 기준이고, k-NN은 그 기준으로 가까운 k개를 찾는 검색 방식입니다.'},
+{q:'OpenSearch를 쓰려면 OpenAI API Key가 반드시 필요한가?',o:['필요하다','아니다 — Bedrock·로컬 모델로 대체 가능'],a:1,e:'임베딩과 LLM은 Bedrock, 로컬 모델, 기타 서비스로 대체할 수 있습니다. 이 모듈의 검색 실습은 키 없이 됩니다.'},
+{q:'OpenSearch가 최종 답변을 직접 작성하는가?',o:['그렇다','아니다 — 검색까지만, 답변은 LLM'],a:1,e:'OpenSearch는 관련 문서를 검색(Retrieval)하고, 최종 답변은 LLM이 생성합니다.'},
+{q:'벡터 검색에 메타데이터 조건을 거는 기본 위치는?',o:['post_filter','knn 쿼리 안의 filter'],a:1,e:'knn 안에 filter를 넣어야 조건에 맞는 문서 안에서 k개를 채웁니다. post_filter는 뽑은 뒤 거르므로 결과가 줄거나 0건이 될 수 있습니다(14탭).'},
+{q:'다른 임베딩 모델로 질문했는데 차원이 같다면?',o:['OpenSearch가 오류를 낸다','오류 없이 엉뚱한 결과가 나올 수 있다'],a:1,e:'OpenSearch는 벡터가 어느 모델에서 왔는지 모릅니다. 그래서 _meta에 모델 이름을 기록하고 검사합니다(미션 7).'},
+{q:'검색 정확도가 부족할 때 인덱스를 다시 만들지 않고 먼저 올려 볼 값은?',o:['m','ef_search'],a:1,e:'ef_search는 검색할 때 정하는 값이라 바로 바꿀 수 있습니다. m과 ef_construction은 인덱스를 다시 만들어야 합니다.'}];
+const qa=document.getElementById('quizArea');
+QZ.forEach((it,i)=>{const b=document.createElement('div');b.className='quiz';b.innerHTML=`<div class="q">Q${i+1}. ${it.q}</div><div class="opts">${it.o.map((o,j)=>`<button class="opt" type="button" data-q="${i}" data-o="${j}">${o}</button>`).join('')}</div><div class="exp" id="exp${i}">✅ ${it.e}</div>`;qa.appendChild(b);});
+qa.querySelectorAll('.opt').forEach(btn=>btn.addEventListener('click',()=>{const i=+btn.dataset.q,j=+btn.dataset.o,it=QZ[i],box=btn.closest('.quiz');box.querySelectorAll('.opt').forEach(b=>b.disabled=true);if(j===it.a)btn.classList.add('correct');else{btn.classList.add('wrong');box.querySelectorAll('.opt')[it.a].classList.add('correct');}document.getElementById('exp'+i).classList.add('show');}));
+})();</script>
+</body></html>

@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>A4-M6 RAG 검색 품질 평가와 모니터링</title><link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet"/><style>
+:root{--bg:#fff;--surface:#f8fafc;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--accent:#ff2e93;--soft:rgba(255,46,147,.065);--codebg:#101d34}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:'Pretendard',system-ui,'Malgun Gothic',sans-serif;font-size:18px;line-height:1.81;word-break:keep-all}
+.banner{background:linear-gradient(125deg,#fcfcff,#f8fafc);border-bottom:1px solid var(--line)}.banner-in{max-width:1320px;margin:auto;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:18px}.brand{font-size:16px;font-weight:850;letter-spacing:.03em}.who{font-size:15px;color:var(--muted)}.layout{max-width:1320px;margin:auto;padding:32px 24px 84px;display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:38px;align-items:start}.sidebar{order:2;position:sticky;top:22px;max-height:calc(100vh - 44px);overflow:auto;border:1px solid var(--line);border-radius:15px;background:var(--surface);padding:17px}.group{font-size:15px;color:var(--muted);font-weight:800;margin:3px 10px 14px}.tabs{display:flex;flex-direction:column;gap:5px}.tabs button{appearance:none;border:1px solid transparent;border-radius:9px;background:transparent;color:#253348;cursor:pointer;text-align:left;font:600 16px/1.55 'Pretendard',sans-serif;padding:9px 12px 9px 14px}.tabs button span{color:var(--accent);font-weight:850;margin-right:7px}.tabs button:hover{background:#fff;border-color:var(--line)}.tabs button[aria-selected=true]{background:var(--soft);border-color:var(--accent);color:#bd1366}.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+main{min-width:0}.panel[hidden]{display:none}.panel{display:block}.crumb{color:var(--accent);font-size:15px;font-weight:800;margin:0 0 8px}.panel h1{font-size:31px;line-height:1.4;margin:0 0 12px}.lead{font-size:19px;font-weight:550;color:#344255;margin:6px 0 26px}.panel h3{font-size:21px;margin:33px 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px}.panel h3:before{content:'▸ ';color:var(--accent)}.panel p{margin:13px 0}.panel b,.panel strong{font-weight:790}.panel code:not(pre code){font:15px/1.6 Consolas,monospace;word-break:break-word;background:#f1f5f9;border:1px solid #e5e7eb;padding:1px 5px;border-radius:4px}
+.panel ul,.panel ol{padding-left:27px;margin:12px 0}.panel li{margin:7px 0}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:17px 0 24px}.panel table{border-collapse:collapse;width:100%;font-size:17px;line-height:1.65}.panel th,.panel td{border-bottom:1px solid var(--line);padding:12px 14px;vertical-align:top;text-align:left}.panel th{font-size:16px;font-weight:800;background:#f1f5f9;color:#40516a}.panel tbody tr:last-child td{border:0}.panel tbody tr:nth-child(even){background:#fbfcfe}
+.note,.task{border:1px solid var(--line);border-radius:13px;background:#fafcff;padding:17px 19px;margin:24px 0}.note{border-left:4px solid var(--accent);background:var(--soft)}.note b{color:#ad155e}.note p{margin:6px 0}.task{background:#fff}.task h4{margin:0 0 9px;font-size:19px}.task ol{margin:0;padding-left:23px}.task li{margin:8px 0}
+.codebox{border:1px solid #243953;border-radius:13px;overflow:hidden;margin:21px 0 26px}.codehead{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:8px 13px;background:#1d3452;color:#dceafc;font-size:14px;font-weight:700}.copy{border:1px solid #8598b4;color:#fff;background:#314f78;border-radius:6px;padding:3px 10px;cursor:pointer;font-size:13px}.codebox pre{background:var(--codebg);color:#cbe9fb;margin:0;padding:20px;overflow-x:auto;font:15px/1.7 Consolas,'JetBrains Mono',monospace;word-break:normal;white-space:pre}
+.outbox .codehead{background:#203a2c}.outbox{border-color:#2f5a43}.outbox pre{background:#0d1f17;color:#c9f5d9}
+.qa{padding:13px 17px;margin:13px 0;border:1px solid var(--line);background:#fbfcff;border-radius:10px}.qa summary{font-size:17px;cursor:pointer;font-weight:780}.qa[open] summary{color:#c01168}.qa p{font-size:17px}
+.footer{max-width:1320px;margin:auto;border-top:1px solid var(--line);padding:20px 24px 38px;text-align:center;color:var(--muted);font-size:15px}.footer small{display:block;max-width:950px;margin:5px auto}
+.tabs .part-heading{display:block;margin:15px 4px 6px;padding:12px 11px;background:#e5e7eb;color:#334155;border:1px solid #cbd5e1;border-radius:9px;font-size:15px;font-weight:850;line-height:1.5;white-space:normal}.tabs .part-heading:first-child{margin-top:0}
+.journey{border-left:4px solid #ff2e93;background:#fff5fa;padding:16px 19px;margin:20px 0;border-radius:8px}.journey h3{border:0!important;margin:0 0 8px!important;padding:0!important;font-size:18px!important}.journey h3:before{content:none!important}.journey ol{margin:6px 0 0;padding-left:22px}.journey li{margin:4px 0;overflow-wrap:anywhere}
+.say{border-left:4px solid #94a3b8;background:#f8fafc;padding:12px 16px;border-radius:0 10px 10px 0;margin:16px 0}.say>b:first-child{display:block;color:#475569;font-size:14px;margin-bottom:4px}
+.flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;margin:18px 0 24px}.flow .fstep{flex:1 1 96px;min-width:92px;border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:10px;background:#fff;padding:10px 12px}.flow .fstep b{display:block;font-size:16px;color:#0f172a}.flow .fstep span{display:block;font-size:14px;color:var(--muted);line-height:1.5;margin-top:3px}.flow .arrow{align-self:center;color:var(--accent);font-weight:900}
+main p,main li,main td{overflow-wrap:anywhere}
+/* 화면 모형 */
+.mock{border:1px solid #cbd5e1;border-radius:14px;background:#f8fafc;padding:14px 16px;margin:20px 0}.mock-title{font-weight:800;font-size:15px;color:#475569;margin-bottom:10px}
+.browser{border:1px solid #cbd5e1;border-radius:10px;overflow:hidden;background:#fff}.bbar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#eef2f7;border-bottom:1px solid #e2e8f0}.dots i{display:inline-block;width:10px;height:10px;border-radius:50%;background:#cbd5e1;margin-right:4px}.url{flex:1;background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:2px 10px;font:14px Consolas,monospace;color:#334155}
+.browser pre{margin:0;padding:12px 14px;font:14px/1.6 Consolas,monospace;white-space:pre;overflow-x:auto;color:#0f172a;background:#fff}
+.dash{display:grid;grid-template-columns:210px 1fr;min-height:250px}.dash nav{background:#f8fafc;border-right:1px solid #e2e8f0;padding:10px;font-size:14px}.dash nav b{display:block;margin:10px 6px 4px;color:#64748b;font-size:12px}.dash nav div{padding:4px 8px;border-radius:6px;color:#334155}.dash nav .hl{background:#fde7f2;color:#bd1366;font-weight:800}.dash .home{padding:16px;font-size:15px;color:#334155}.dash .card{display:inline-block;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 6px 0 0;background:#fff}
+.console{display:grid;grid-template-columns:1fr 1fr}.console .ph{font-size:12px;font-weight:800;color:#64748b;padding:6px 14px;border-bottom:1px solid #e2e8f0;background:#f1f5f9;display:flex;justify-content:space-between}.console .left{border-right:1px solid #e2e8f0}.console .right pre{background:#f8fafc}.console .run{background:#e72281;color:#fff;border-radius:5px;padding:0 7px}
+.mark{background:#fde7f2;font-weight:800}
+.mock table{border-collapse:collapse;width:100%;font-size:15px;background:#fff}.mock td,.mock th{border:1px solid #e2e8f0;padding:6px 8px;text-align:center}.mock th{background:#f1f5f9}.mock .hl{background:#fde7f2;font-weight:800}.mock .dim{color:#94a3b8}
+@media(max-width:900px){.layout{grid-template-columns:1fr;gap:12px;padding:15px 16px 64px}.sidebar{order:0;position:sticky;top:0;z-index:10;border-radius:0;max-height:none;overflow:auto;padding:8px 0;background:#fff}.sidebar .group{display:none}.tabs{flex-direction:row;white-space:nowrap;overflow-x:auto}.tabs button{flex:none;font-size:15px}.tabs .part-heading{flex:none;margin:0 6px 0 0;white-space:nowrap;padding:9px 12px}.banner-in{flex-wrap:wrap}.panel h1{font-size:27px}}
+@media(max-width:760px){.dash,.console{grid-template-columns:1fr}.console .left{border-right:0;border-bottom:1px solid #e2e8f0}.dash nav{border-right:0;border-bottom:1px solid #e2e8f0}}
+@media(max-width:680px){body{font-size:17px}.panel table{font-size:16px}.panel th{font-size:15px}.panel h1{font-size:24px}.panel h3{font-size:20px}.codebox pre{font-size:14px;padding:15px}.flow .arrow{display:none}.flow .fstep{flex-basis:100%}}
+@media print{.sidebar,.copy{display:none}.layout{display:block}.panel[hidden]{display:block!important}.banner{background:#fff}}
+
+.shot{margin:20px 0 24px;border:1px solid var(--line);border-radius:13px;background:#fff;padding:12px}.shot img{display:block;max-width:100%;height:auto;margin:auto;border:1px solid var(--line);border-radius:8px}.shot figcaption{font-size:15px;font-weight:800;color:#40516a;margin-top:9px}.shot .cap-note{font-size:15px;color:var(--muted);margin-top:2px;line-height:1.6}
+.steps{list-style:none;counter-reset:st;padding-left:0!important;margin:16px 0}.steps li{counter-increment:st;position:relative;padding:4px 0 4px 46px;margin:10px 0}.steps li:before{content:counter(st);position:absolute;left:0;top:2px;width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;font-weight:850;font-size:15px;display:flex;align-items:center;justify-content:center}
+.file{display:inline-block;padding:9px 14px;margin:4px 6px 4px 0;background:var(--soft);border:1px solid var(--accent);border-radius:8px;text-decoration:none;color:#bd1366;font-weight:800;font-size:16px}
+.qa .codebox{margin:12px 0}
+
+.diagram{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:18px 0 22px;font:14.5px/1.7 Consolas,'JetBrains Mono',monospace;white-space:pre;overflow-x:auto;color:#1e293b}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}.cards.c3{grid-template-columns:repeat(3,minmax(0,1fr))}.card{border:1px solid var(--line);border-radius:12px;background:#fff;padding:14px 16px;font-size:16.5px;line-height:1.7}.card .h{font-weight:800;color:#bd1366;margin-bottom:6px;font-size:17px}
+.widget{border:2px solid var(--accent);border-radius:14px;margin:22px 0 26px;overflow:hidden;background:#fff}.wtitle{display:flex;align-items:center;gap:9px;padding:10px 16px;background:var(--soft);border-bottom:1px solid #fbcfe8;font-size:16px}.wtitle .dot{width:10px;height:10px;border-radius:50%;background:var(--accent)}.wtitle .tag{margin-left:auto;font-size:12px;font-weight:800;color:#bd1366;border:1px solid var(--accent);border-radius:999px;padding:1px 9px}.wbody{padding:16px 18px}
+.muted{color:var(--muted)}.scatter-wrap{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:16px;align-items:center}.legend{font-size:15px;display:flex;flex-direction:column;gap:8px}.sw{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.calc-panel,.readout{margin-top:12px;background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font:14.5px/1.8 Consolas,monospace;overflow-x:auto}.calc-panel .lab{font-weight:800;color:#334155}.hl{color:#bd1366;font-weight:800}
+.controls{display:flex;flex-wrap:wrap;gap:14px 22px;margin:12px 0}.ctrl{flex:1 1 200px;min-width:180px}.ctrl label{display:flex;justify-content:space-between;font-size:15px;font-weight:700;color:#334155}.ctrl .v{color:#bd1366;font-weight:850}.ctrl input[type=range]{width:100%;accent-color:#ff2e93}.ctrl select{width:100%;font:15px 'Pretendard',sans-serif;padding:6px 8px;border:1px solid var(--line);border-radius:8px;margin-top:4px}
+.samplebox{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:16px}
+.statrow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}.stat{border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}.stat .n{font-size:24px;font-weight:850;color:#bd1366}.stat .l{font-size:13px;color:var(--muted)}
+.chunk-list{display:flex;flex-direction:column;gap:8px}.chunk-item{border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:15.5px;background:#fff}.chunk-item mark{background:#fde7f2;color:#9d174d;border-radius:3px}.cid{display:inline-block;font-weight:850;color:#fff;background:var(--accent);border-radius:6px;padding:0 7px;margin-right:7px;font-size:13px}
+.presets{display:flex;flex-wrap:wrap;gap:8px}.preset{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 13px;font:600 14.5px 'Pretendard',sans-serif;cursor:pointer}.preset.active{background:var(--soft);border-color:var(--accent);color:#bd1366}
+.rrow{display:grid;grid-template-columns:34px minmax(0,1fr) 80px;gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin:7px 0;font-size:15.5px}.rrow.top{border-color:var(--accent);background:#fff7fb}.rrow.dim{opacity:.55}.rk{font-weight:850;color:#bd1366;text-align:center}.sc{font:700 15px Consolas,monospace;text-align:right}.bar-bg{height:7px;background:#f1f5f9;border-radius:99px;margin-top:6px}.bar{height:7px;background:var(--accent);border-radius:99px}
+.retrieved-note{margin-top:10px;background:var(--soft);border-radius:10px;padding:10px 13px;font-size:15.5px}
+.quiz{border:1px solid var(--line);border-radius:12px;padding:13px 16px;margin:12px 0;background:#fbfcff}.quiz .q{font-weight:800;font-size:17px}.opts{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}.opt{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 13px;font:600 15.5px 'Pretendard',sans-serif;cursor:pointer}.opt.correct{background:#dcfce7;border-color:#16a34a;color:#166534}.opt.wrong{background:#fee2e2;border-color:#dc2626;color:#991b1b}.exp{display:none;margin-top:9px;font-size:16px}.exp.show{display:block}
+@media(max-width:760px){.cards,.cards.c3{grid-template-columns:1fr}.scatter-wrap{grid-template-columns:1fr}.statrow{grid-template-columns:repeat(2,minmax(0,1fr))}.diagram{font-size:13px}}
+.where-bar{display:flex;flex-wrap:wrap;gap:8px 20px;background:#eef6ff;border:1px solid #bfdbfe;border-radius:10px;padding:9px 14px;margin:4px 0 14px;font-size:15.5px;color:#1e3a5f}</style></head><body>
+<header class="banner"><div class="banner-in"><div><div class="brand">Part A · A4-M6 · RAG 검색 품질 평가와 모니터링</div><div style="font-size:23px;font-weight:850">A4-M6 RAG 검색 품질 평가와 모니터링 · 청킹 → Golden Dataset → BM25·Vector·Hybrid → 지표 → 대시보드</div></div><div class="who">© 2026 부성순 · AI·클라우드 실무 과정<br/>부성순 강사(bakpak@empas.com)</div><a href="/lectures/files/index.html#section-a1" style="display:inline-block;padding:7px 11px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;color:#bd1366;text-decoration:none;font-weight:800;white-space:nowrap">📚 강의자료 라이브러리 · Part A</a></div></header>
+<div class="layout"><aside class="sidebar"><div class="group">A4-M6 · 세부 목차</div><nav aria-label="교안 세부 목차" class="tabs" role="tablist">
+<div aria-level="2" class="part-heading" role="heading">Part 0. 시작</div>
+<button aria-controls="u00" aria-selected="true" id="tab-u00" role="tab" tabindex="0" type="button"><span>00</span>이 모듈의 질문</button>
+<button aria-controls="u01" aria-selected="false" id="tab-u01" role="tab" tabindex="-1" type="button"><span>01</span>실습 폴더와 데이터</button>
+<div aria-level="2" class="part-heading" role="heading">Part 1. 데이터 품질</div>
+<button aria-controls="u02" aria-selected="false" id="tab-u02" role="tab" tabindex="-1" type="button"><span>02</span>문서·메타데이터 검증</button>
+<button aria-controls="u03" aria-selected="false" id="tab-u03" role="tab" tabindex="-1" type="button"><span>03</span>청킹 3가지 비교</button>
+<button aria-controls="u04" aria-selected="false" id="tab-u04" role="tab" tabindex="-1" type="button"><span>04</span>Golden Dataset</button>
+<div aria-level="2" class="part-heading" role="heading">Part 2. 검색 4종</div>
+<button aria-controls="u05" aria-selected="false" id="tab-u05" role="tab" tabindex="-1" type="button"><span>05</span>BM25 + Metadata</button>
+<button aria-controls="u06" aria-selected="false" id="tab-u06" role="tab" tabindex="-1" type="button"><span>06</span>Vector와 캐시</button>
+<button aria-controls="u07" aria-selected="false" id="tab-u07" role="tab" tabindex="-1" type="button"><span>07</span>Hybrid</button>
+<div aria-level="2" class="part-heading" role="heading">Part 3. 채점</div>
+<button aria-controls="u08" aria-selected="false" id="tab-u08" role="tab" tabindex="-1" type="button"><span>08</span>평가 지표 손 계산</button>
+<button aria-controls="u09" aria-selected="false" id="tab-u09" role="tab" tabindex="-1" type="button"><span>09</span>평가 결과 읽기</button>
+<button aria-controls="u10" aria-selected="false" id="tab-u10" role="tab" tabindex="-1" type="button"><span>10</span>모니터링 대시보드</button>
+<div aria-level="2" class="part-heading" role="heading">Part 4. OpenSearch로</div>
+<button aria-controls="u11" aria-selected="false" id="tab-u11" role="tab" tabindex="-1" type="button"><span>11</span>OpenSearch 대응표</button>
+<div aria-level="2" class="part-heading" role="heading">Part 5. 실습 미션</div>
+<button aria-controls="u12" aria-selected="false" id="tab-u12" role="tab" tabindex="-1" type="button"><span>12</span>미션 1~7</button>
+<div aria-level="2" class="part-heading" role="heading">Part 6. 정리</div>
+<button aria-controls="u13" aria-selected="false" id="tab-u13" role="tab" tabindex="-1" type="button"><span>13</span>에러 사전·정리</button>
+</nav></aside><main>
+<!-- 00 -->
+<section aria-labelledby="tab-u00" class="panel" id="u00" role="tabpanel"><div class="crumb">Part 0. 시작 · A4-M6</div><h1>00. 이 모듈의 질문 — “검색이 잘 되고 있나?”를 숫자로</h1><p class="lead">A4-M3~M5에서는 검색 결과를 눈으로 보고 “맞는 것 같다”고 판단했습니다. 문서가 16개, 질문이 20개만 돼도 눈으로는 안 됩니다. 이번 모듈은 <b>정답이 정해진 질문 세트로 검색을 채점</b>하고, K·청킹·검색 방식을 바꿔 가며 어느 조합이 나은지 숫자로 고릅니다.</p>
+<div class="journey"><h3>이 탭의 흐름</h3><ol><li>왜 “답변”보다 “검색”을 먼저 재나</li><li>전체 흐름 9단계</li><li>이 모듈에서 나오는 실제 숫자 미리보기</li><li>두 가지 진행 방식</li></ol></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>RAG의 답이 틀리는 이유는 두 가지입니다. ① 검색이 엉뚱한 문서를 가져왔거나, ② 맞는 문서를 가져왔는데 LLM이 잘못 썼거나. ①이 틀리면 ②는 아무리 고쳐도 소용없습니다. A4-M4 12탭에서 “답이 이상하면 넘어간 근거부터 본다”고 했던 것을, 이번에는 질문 20개 전체에 대해 <b>자동으로, 숫자로</b> 합니다. 답변 품질은 A4-M7에서 다룹니다.</p></div>
+<div class="flow"><div class="fstep"><b>① 데이터</b><span>문서 스캔, 메타데이터 검증</span></div><div class="arrow">→</div><div class="fstep"><b>② 청킹</b><span>3가지 방식 비교</span></div><div class="arrow">→</div><div class="fstep"><b>③ 정답지</b><span>Golden Dataset 20문항</span></div><div class="arrow">→</div><div class="fstep"><b>④ 검색 4종</b><span>BM25 · Meta+BM25 · Vector · Hybrid</span></div><div class="arrow">→</div><div class="fstep"><b>⑤ 채점</b><span>Precision·Recall·Hit·MRR·nDCG</span></div><div class="arrow">→</div><div class="fstep"><b>⑥ 대시보드</b><span>K·청킹 추천</span></div></div>
+<h3>미리 보는 실제 결과 (heading 청킹, K=3)</h3>
+<div class="mock"><div class="mock-title">BM25와 Metadata+BM25 — 이 실습 데이터로 계산한 실제 값 (Vector·Hybrid는 각자 실행해서 채움)</div><table><thead><tr><th>검색 방식</th><th>Precision@3</th><th>Recall@3</th><th>Hit@3</th><th>MRR</th><th>nDCG@3</th><th>Context(자)</th></tr></thead><tbody>
+<tr><td>BM25</td><td>0.517</td><td>0.888</td><td>0.95</td><td>0.900</td><td>0.886</td><td>246</td></tr>
+<tr class="hl"><td>Metadata+BM25</td><td>0.533</td><td>0.912</td><td>0.95</td><td>0.950</td><td>0.946</td><td>217</td></tr>
+<tr><td>Vector</td><td colspan="6" class="dim">09탭에서 각자 결과로 채우기</td></tr>
+<tr><td>Hybrid</td><td colspan="6" class="dim">09탭에서 각자 결과로 채우기</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>질문에서 지역·연도 같은 조건을 뽑아 먼저 거르기만 해도(Metadata) MRR이 0.900 → 0.950, 넘기는 글자 수는 246 → 217자로 좋아집니다. 그리고 두 방식 모두 <b>Q011 한 문제를 똑같이 틀립니다</b>. 그 원인을 찾아 고치면(미션 1) Hit@3가 1.0이 됩니다. 이렇게 “어디가 왜 틀렸고, 고치면 몇 점이 오르는지”를 숫자로 말하는 것이 이 모듈의 목표입니다.</p></div>
+<h3>두 가지 진행 방식</h3>
+<div class="tablewrap"><table><thead><tr><th>방식</th><th>하는 법</th><th>어울리는 수강생</th></tr></thead><tbody>
+<tr><td><b>A. 제공 코드 실행</b> (교안 기본)</td><td><code>src/s01~s08</code>, <code>app_dashboard.py</code>를 차례로 실행하며 결과 해석</td><td>지표와 품질 판단에 집중하고 싶을 때</td></tr>
+<tr><td>B. Claude Code로 만들기</td><td>원본 설계대로 <code>instructions/01~09</code>를 Claude Code에 한 단계씩 요청 (<code>CLAUDE.md</code> 규칙 적용)</td><td>AI 코딩 도구로 프로젝트를 직접 만들어 보고 싶을 때. 결과는 A의 숫자와 비교</td></tr></tbody></table></div>
+<div class="note"><b>제공 코드는 지시서를 그대로 따릅니다</b><p><code>src/</code>의 각 파일은 <code>instructions/</code>의 같은 번호 지시서를 구현한 것입니다(산출물 이름, 지표, 재실행 규칙까지). B 방식으로 만든 결과와 A 결과를 비교하는 것 자체가 좋은 실습입니다(미션 6).</p></div>
+</section>
+
+<!-- 01 -->
+<section aria-labelledby="tab-u01" class="panel" hidden="" id="u01" role="tabpanel"><div class="crumb">Part 0. 시작 · A4-M6</div><h1>01. 실습 폴더와 데이터 — 일부러 헷갈리게 만든 문서 16개</h1><p class="lead">이번 데이터는 검색을 시험하기 위해 <b>서로 아주 비슷하게</b> 만든 문서들입니다. 지역 4곳 × 문서 4종, 그리고 2025년판과 2026년판이 섞여 있습니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> <code>A4-M6_실습자료</code> 폴더 · VS Code 터미널</span><span><b>✅ 먼저</b> <code>pip install -r requirements.txt</code>, <code>.env</code> (06탭부터 OpenAI 키)</span></div>
+<pre class="diagram">A4-M6_실습자료/
+├─ docs/  서울·부산·광주·대전 / 각 4개 = 16개 문서 (.md)
+├─ data/
+│  ├─ metadata.csv          ← 문서 16개의 연도·지역·고객·제품·유형·제품코드
+│  └─ golden_dataset.json   ← 정답이 정해진 질문 20개
+├─ instructions/ 00~09      ← 원본 단계별 지시서 (B 방식)
+├─ CLAUDE.md  README.md     ← 원본 프로젝트 규칙과 설명
+├─ src/                     ← 제공 코드 (A 방식): s01~s08, app_dashboard.py, config.py, common.py
+├─ outputs/                 ← 실행하면 결과 CSV·JSON이 쌓이는 곳 (처음엔 비어 있음)
+├─ requirements.txt  .env.example</pre>
+<div class="tablewrap"><table><thead><tr><th>문서 종류 (지역마다 1개씩)</th><th>연도</th><th>고객</th><th>제품</th><th>제품 코드 예</th></tr></thead><tbody>
+<tr><td>시장현황</td><td>2026</td><td>전체</td><td>전체</td><td>(없음)</td></tr>
+<tr><td>공공기관 노트북 전략</td><td>2026</td><td>공공기관</td><td>노트북</td><td>NB-SEOUL-26</td></tr>
+<tr><td>공공기관 노트북 전략</td><td>2025</td><td>공공기관</td><td>노트북</td><td>NB-SEOUL-25</td></tr>
+<tr><td>기업 복합기 전략</td><td>2026</td><td>기업</td><td>복합기</td><td>MFP-SEOUL-26</td></tr></tbody></table></div>
+<div class="codebox"><div class="codehead"><span>파일 열어 보기 · docs/서울/2026_서울_공공기관_노트북전략.md</span><button class="copy" type="button">코드 복사</button></div><pre><code># 2026 서울 공공기관 노트북 전략
+
+## 대상
+서울 소재 공공기관
+
+## 핵심 키워드
+NB-SEOUL-26, 노트북, 공공기관, 조달, 보안, 유지보수
+
+## 수요 특성
+공공기관은 단순 최저가보다 보안 요구사항, 납기 안정성, 유지보수 조건을 함께 검토한다.
+
+## 제안 전략
+- 제품 코드 NB-SEOUL-26 기준 제안서 사용
+- 3년 유지보수 조건 명시
+- 대량 납품 일정과 설치 범위 명확화
+- 조달 절차에 맞춘 문서 제공
+
+## 주의
+동일한 노트북 전략 문서가 다른 지역과 2025년에도 존재하므로 연도와 지역을 구분해야 한다.</code></pre></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>부산·광주·대전의 2026 공공기관 노트북 전략은 <b>지역 이름과 제품 코드만 다르고 문장이 똑같습니다</b>. 2025년판도 2026년판과 거의 같습니다. 의미(벡터)만으로는 “서울 2026”과 “부산 2026”을 구별하기 어렵습니다. 그래서 정확한 글자(BM25: “NB-SEOUL-26”)와 조건(Metadata: 지역=서울, 연도=2026)이 필요해집니다. 문서 설계 자체가 “벡터만으로는 부족하다”를 보여 주려는 장치입니다.</p></div>
+<div class="note"><b>.env</b><p><code>.env.example</code>을 <code>.env</code>로 복사하고 <code>OPENAI_API_KEY</code>를 넣습니다(06 Vector부터 필요). 키가 없으면 <code>EMBED_BACKEND=fake</code> 줄의 주석을 풀어 흐름만 확인할 수 있습니다. 이때 Vector·Hybrid 숫자는 의미가 없습니다.</p></div>
+<div class="codebox"><div class="codehead"><span>터미널 · 모든 단계는 프로젝트 폴더에서 이렇게 실행</span><button class="copy" type="button">코드 복사</button></div><pre><code>pip install -r requirements.txt
+python src/s01_document_scan.py</code></pre></div>
+</section>
+
+<!-- 02 -->
+<section aria-labelledby="tab-u02" class="panel" hidden="" id="u02" role="tabpanel"><div class="crumb">Part 1. 데이터 품질 · A4-M6</div><h1>02. 문서 스캔과 메타데이터 검증 (s01 · s02)</h1><p class="lead">검색을 재기 전에 재료부터 점검합니다. 빈 문서, 제목 없는 문서, 메타데이터와 짝이 안 맞는 문서가 있으면 이후 모든 숫자가 틀립니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> 터미널</span><span><b>✅ 먼저</b> 01탭</span></div>
+<div class="codebox"><div class="codehead"><span>터미널</span><button class="copy" type="button">코드 복사</button></div><pre><code>python src/s01_document_scan.py
+python src/s02_metadata.py</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>실행 결과 (실제 값)</span><button class="copy" type="button">코드 복사</button></div><pre><code>문서 수: 16 | 폴더: {'광주': 4, '대전': 4, '부산': 4, '서울': 4}
+제목 없음: [] | 빈 문서: [] | 중복 파일명: []
+평균 글자수: 280.2
+
+metadata 행: 16 | 실제 문서: 16 | 1:1 대응: True
+파일 없음: []
+doc_id 중복: [] | 필수값 누락: []
+product_code 빈 문서(시장현황): 4
+  year: {2026: 12, 2025: 4}
+  region: {'서울': 4, '부산': 4, '광주': 4, '대전': 4}
+  customer_type: {'전체': 4, '공공기관': 8, '기업': 4}
+  product: {'전체': 4, '노트북': 8, '복합기': 4}
+  doc_type: {'시장현황': 4, '제품전략': 12}</code></pre></div>
+<div class="tablewrap"><table><thead><tr><th>산출물 (outputs/)</th><th>내용</th></tr></thead><tbody>
+<tr><td><code>document_inventory.csv</code></td><td>문서마다 H1 제목, H2 개수, 섹션 이름, 글자 수</td></tr>
+<tr><td><code>document_tree.txt</code></td><td>폴더/파일 목록</td></tr>
+<tr><td><code>metadata_validation.csv</code></td><td>문서마다 파일 존재, doc_id 중복, 필수값 누락</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>문서 평균이 <b>280자</b>라는 숫자를 기억해 둡니다. 다음 탭에서 “500자로 자르기”가 왜 사실상 “문서 통째”가 되는지의 답입니다. 그리고 시장현황 문서 4개는 고객·제품이 <b>“전체”</b>입니다. 05탭에서 필터를 걸 때 “전체”를 어떻게 다룰지가 결과를 바꿉니다.</p></div>
+<div class="note"><b>원칙: 검증만 하고 고치지 않는다</b><p>metadata.csv를 문서 내용으로 추측해 고치지 않습니다(02 지시서). 사람이 정한 정답 정보이기 때문입니다. 문제가 있으면 목록으로 남기고 사람이 판단합니다.</p></div>
+</section>
+
+<!-- 03 -->
+<section aria-labelledby="tab-u03" class="panel" hidden="" id="u03" role="tabpanel"><div class="crumb">Part 1. 데이터 품질 · A4-M6</div><h1>03. 청킹 3가지 비교 (s03) — 숫자로 보는 청크 품질</h1><p class="lead">같은 16개 문서를 세 가지로 자르고, 크기·개수·중복·메타데이터 상속을 숫자로 비교합니다. A4-M3에서 위젯으로 본 Chunk Size·Overlap을 실제 문서에 적용한 결과입니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> 터미널</span><span><b>✅ 먼저</b> 02탭</span></div>
+<div class="tablewrap"><table><thead><tr><th>방식</th><th>규칙</th></tr></thead><tbody>
+<tr><td><code>heading</code></td><td><code>##</code> 섹션마다 한 조각. 각 조각 앞에 문서 제목(<code># 2026 서울 …</code>)을 붙임. 40자 미만 섹션은 다음과 합침</td></tr>
+<tr><td><code>fixed_300</code></td><td>300자씩 자름, 겹침 없음</td></tr>
+<tr><td><code>fixed_500_overlap_100</code></td><td>500자씩, 100자 겹침</td></tr></tbody></table></div>
+<div class="codebox"><div class="codehead"><span>터미널</span><button class="copy" type="button">코드 복사</button></div><pre><code>python src/s03_chunking.py</code></pre></div>
+<div class="mock"><div class="mock-title">outputs/chunk_stats.csv (실제 값)</div><table><thead><tr><th>방식</th><th>청크 수</th><th>평균</th><th>최소</th><th>최대</th><th>너무 짧음(&lt;40)</th><th>완전 중복</th><th>메타 상속</th></tr></thead><tbody>
+<tr><td>heading</td><td>60</td><td>87.5</td><td>65</td><td>118</td><td>0</td><td>0</td><td>1.0</td></tr>
+<tr><td>fixed_300</td><td>20</td><td>224.2</td><td class="hl">4</td><td>300</td><td class="hl">4</td><td class="hl">2</td><td>1.0</td></tr>
+<tr><td>fixed_500_overlap_100</td><td class="hl">16</td><td>280.2</td><td>255</td><td>308</td><td>0</td><td>0</td><td>1.0</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p><b>fixed_500은 청크가 16개 = 문서 수</b>입니다. 문서가 모두 500자보다 짧아서 잘리지 않고 통째로 한 조각이 됐습니다. “청킹을 했다”고 생각했지만 실제로는 문서 단위 검색입니다. <b>fixed_300의 최소 4자</b> 청크는 300자를 조금 넘는 문서 4개의 꼬리입니다. 실제 내용은 <code>"한다.\n"</code>, <code>"분해야 한다.\n"</code> 같은 의미 없는 조각이고, 같은 꼬리가 두 문서에서 나와 <b>완전 중복 2건</b>이 생겼습니다. 이런 조각은 검색 결과 자리만 차지합니다.</p><p>heading은 60조각 모두 65~118자로 고르고, 각 조각이 “# 2026 서울 공공기관 노트북 전략 / ## 제안 전략 …”처럼 <b>어느 문서의 어느 부분인지</b>를 품고 있습니다. 제목을 붙인 덕분에 “서울”, “2026” 같은 단어가 모든 조각에 들어갑니다.</p></div>
+<div class="codebox outbox"><div class="codehead"><span>heading 청크 실물 · outputs/chunks_heading.json 의 앞 두 개</span><button class="copy" type="button">코드 복사</button></div><pre><code># 2026 서울 시장현황
+## 시장 개요
+기업 및 공공기관 수요가 크고, 보안·유지보수·납기 조건을 중요하게 본다.
+---
+# 2026 서울 시장현황
+## 고객 구성
+서울 지역은 기업 고객과 공공기관 고객이 모두 존재한다.
+대량 구매에서는 가격 외에도 납기, 유지보수, 설치 지원을 함께 검토한다.</code></pre></div>
+<div class="note"><b>메타 상속 1.0</b><p>모든 청크가 부모 문서의 연도·지역·고객·제품·유형·코드를 그대로 물려받았다는 뜻입니다. 05탭의 Metadata 필터는 이 값으로 동작하므로 1.0이 아니면 필터 결과를 믿을 수 없습니다.</p></div>
+</section>
+
+<!-- 04 -->
+<section aria-labelledby="tab-u04" class="panel" hidden="" id="u04" role="tabpanel"><div class="crumb">Part 1. 데이터 품질 · A4-M6</div><h1>04. Golden Dataset (s04) — 채점용 정답지 20문항</h1><p class="lead">질문마다 “이 문서들을 찾아야 정답”이 정해져 있습니다. 이 정답지가 있어야 검색을 채점할 수 있습니다. 정답지가 틀리면 채점도 틀리므로 먼저 검증합니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> VS Code로 <code>data/golden_dataset.json</code> 열기 → 터미널</span><span><b>✅ 먼저</b> 02탭</span></div>
+<div class="codebox"><div class="codehead"><span>파일 열어 보기 · golden_dataset.json 중 한 문항</span><button class="copy" type="button">코드 복사</button></div><pre><code>{
+  "query_id": "Q008",
+  "question": "서울 2025년과 2026년 공공기관 노트북 전략을 비교해줘",
+  "query_type": "comparison",
+  "relevant_doc_ids": ["SEOUL_2025_PUBLIC_NOTEBOOK", "SEOUL_2026_PUBLIC_NOTEBOOK"],
+  "required_metadata": {"region": "서울", "customer_type": "공공기관", "product": "노트북"},
+  "expected_keywords": ["NB-SEOUL-25", "NB-SEOUL-26"],
+  "difficulty": "hard"
+}</code></pre></div>
+<div class="codebox"><div class="codehead"><span>터미널</span><button class="copy" type="button">코드 복사</button></div><pre><code>python src/s04_golden.py</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>실행 결과 (실제 값)</span><button class="copy" type="button">코드 복사</button></div><pre><code>질문 수: 20
+query_type: {'year': 2, 'exact_code': 4, 'semantic': 5, 'region': 3, 'comparison': 4, 'product': 1, 'customer': 1}
+difficulty: {'easy': 7, 'medium': 7, 'hard': 6}
+정답 문서 수 분포: {1: 11, 2: 5, 4: 3, 3: 1}</code></pre></div>
+<div class="tablewrap"><table><thead><tr><th>query_type</th><th>예시 질문</th><th>유리할 것 같은 검색</th></tr></thead><tbody>
+<tr><td>exact_code</td><td>NB-SEOUL-26 제품 코드를 사용하는 문서는?</td><td>BM25 (정확한 글자)</td></tr>
+<tr><td>year / region / customer / product</td><td>2025년 부산 공공기관 노트북 전략을 찾아줘</td><td>Metadata 필터</td></tr>
+<tr><td>semantic</td><td>조달이 아니라 렌탈과 SLA가 중요한 문서들은?</td><td>Vector (뜻)</td></tr>
+<tr><td>comparison</td><td>2026년 각 지역의 시장 특성을 비교하려면?</td><td>정답이 여러 개 → Recall과 K가 중요</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>정답 문서가 4개인 질문(Q009, Q016, Q020)은 K=3이면 <b>최대 3개밖에 못 찾습니다</b>. Recall이 1.0이 될 수 없는 질문이 있다는 것을 알고 K를 골라야 합니다. 검증 결과 “검토 필요” 줄이 없으면 정답 문서가 모두 실제로 존재하고, 기대 키워드가 문서에 들어 있다는 뜻입니다.</p></div>
+</section>
+
+<!-- 05 -->
+<section aria-labelledby="tab-u05" class="panel" hidden="" id="u05" role="tabpanel"><div class="crumb">Part 2. 검색 4종 · A4-M6</div><h1>05. BM25와 Metadata 필터 (s05)</h1><p class="lead">BM25는 “같은 단어가 얼마나, 얼마나 드물게 나오나”로 점수를 매깁니다(A4-M2 02탭의 match, A4-M3의 키워드 검색과 같은 원리). 여기에 질문에서 지역·연도 같은 조건을 뽑아 먼저 거르는 Metadata 필터를 더합니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> 터미널 · <code>src/common.py</code>를 옆에 열어 두고</span><span><b>✅ 먼저</b> 03탭</span></div>
+<div class="codebox"><div class="codehead"><span>src/common.py · 질문에서 조건 뽑기 (핵심만)</span><button class="copy" type="button">코드 복사</button></div><pre><code>def extract_filters(question):
+    """질문에 '하나만' 분명히 나오는 조건만 필터로 쓴다. 둘 이상이면 비교 질문이라 걸지 않는다."""
+    regions = [r for r in ["서울", "부산", "광주", "대전"] if r in question]
+    years = [y for y in [2025, 2026] if str(y) in question]
+    ...
+    if len(regions) == 1: f["region"] = regions[0]
+    if len(years) == 1:   f["year"] = years[0]
+    ...
+
+def match_filters(chunk, filters):
+    """메타데이터 값이 '전체'인 문서(시장현황)는 고객·제품 조건에 걸러지지 않게 둔다."""</code></pre></div>
+<div class="codebox"><div class="codehead"><span>터미널</span><button class="copy" type="button">코드 복사</button></div><pre><code>python src/s05_bm25.py</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>실행 결과 (실제 값 · heading, Top-3 문서와 BM25 점수)</span><button class="copy" type="button">코드 복사</button></div><pre><code>저장: 864 행 → outputs/bm25_results.csv
+
+질문: NB-SEOUL-26 제품 코드를 사용하는 문서는? | 필터: {}
+  BM25           [('SEOUL_2026_PUBLIC_NOTEBOOK', 5.14), ('SEOUL_2025_PUBLIC_NOTEBOOK', 3.25), ('BUSAN_2025_PUBLIC_NOTEBOOK', 3.25)]
+  Metadata+BM25  [('SEOUL_2026_PUBLIC_NOTEBOOK', 5.14), ('SEOUL_2025_PUBLIC_NOTEBOOK', 3.25), ('BUSAN_2025_PUBLIC_NOTEBOOK', 3.25)]
+
+질문: 2025년 부산 공공기관 노트북 전략을 찾아줘 | 필터: {'region': '부산', 'year': 2025, 'customer_type': '공공기관', 'product': '노트북'}
+  BM25           [('BUSAN_2025_PUBLIC_NOTEBOOK', 4.36), ('BUSAN_2026_PUBLIC_NOTEBOOK', 4.3), ('SEOUL_2025_PUBLIC_NOTEBOOK', 2.65)]
+  Metadata+BM25  [('BUSAN_2025_PUBLIC_NOTEBOOK', 4.36)]</code></pre></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>첫 질문은 제품 코드가 정확히 들어 있어 BM25가 1등을 바로 맞힙니다(필터 조건이 없어 두 방식이 같음). 두 번째 질문에서 BM25 1등과 2등의 점수 차이는 <b>4.36 vs 4.30</b>, 거의 없습니다. 2025년판과 2026년판 문장이 거의 같기 때문입니다. 필터를 걸면 조건에 맞는 문서가 하나뿐이라 <b>그것만 남습니다</b>. 이 “1등과 2등의 차이”가 08탭의 <b>score separation</b>입니다.</p></div>
+<div class="note"><b>필터는 강하지만 위험합니다</b><p>필터가 틀리면 정답 문서가 후보에서 아예 사라집니다. 예를 들어 “대전 연구기관과 <b>기술기업</b>이 많은 시장”(Q012)에서 “기업”이 들어 있으니 고객=기업 필터가 걸립니다. 정답(대전 시장현황)은 고객이 “전체”라서, “전체는 통과” 규칙이 없었다면 사라졌을 것입니다. A4-M2 11탭에서 GPT 쿼리를 검증했듯, 자동으로 뽑은 조건도 검증 대상입니다.</p></div>
+<div class="tablewrap"><table><thead><tr><th>OpenSearch로 하면 (A4-M2·M3)</th><th>이 코드에서는</th></tr></thead><tbody>
+<tr><td><code>{"match": {"content": 질문}}</code></td><td><code>BM25Okapi(...).get_scores(tokenize(질문))</code></td></tr>
+<tr><td><code>{"bool": {"filter": [{"term": {"region": "부산"}}, …]}}</code></td><td><code>extract_filters</code> + <code>match_filters</code></td></tr>
+<tr><td>분석기 (standard, nori)</td><td><code>tokenize()</code> — 미션 1에서 고침</td></tr></tbody></table></div>
+</section>
+
+<!-- 06 -->
+<section aria-labelledby="tab-u06" class="panel" hidden="" id="u06" role="tabpanel"><div class="crumb">Part 2. 검색 4종 · A4-M6</div><h1>06. Vector 검색 (s06) — 임베딩 캐시와 재생성 규칙</h1><p class="lead">청킹 방식마다 따로 FAISS 인덱스를 만듭니다(A4-M4와 같은 text-embedding-3-small + IndexFlatIP). 새로 등장하는 것은 <b>임베딩 캐시</b>와 <b>언제 다시 만드는가</b>의 규칙입니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> 터미널</span><span><b>✅ 먼저</b> 03탭, <code>.env</code>의 OPENAI_API_KEY</span></div>
+<div class="codebox"><div class="codehead"><span>터미널</span><button class="copy" type="button">코드 복사</button></div><pre><code>python src/s06_faiss.py</code></pre></div>
+<div class="codebox outbox"><div class="codehead"><span>실행 결과 (모양 · 차원은 1536)</span><button class="copy" type="button">코드 복사</button></div><pre><code>  임베딩 새로 생성 60개 (캐시 총 60개)
+heading: 벡터 60개, 차원 1536
+  임베딩 새로 생성 20개 (캐시 총 80개)
+fixed_300: 벡터 20개, 차원 1536
+  임베딩 새로 생성 16개 (캐시 총 96개)
+fixed_500_overlap_100: 벡터 16개, 차원 1536
+저장: 600 행 → outputs/vector_results.csv</code></pre></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>한 번 더 실행해 보면 “임베딩 새로 생성” 줄이 사라집니다. <code>outputs/embedding_cache.json</code>에 문장별 벡터가 저장돼 있어 API를 다시 부르지 않기 때문입니다. 실험을 수십 번 반복하는 품질 평가에서는 캐시가 없으면 비용과 시간이 그대로 반복됩니다.</p></div>
+<div class="tablewrap"><table><thead><tr><th>바꾼 것</th><th>다시 해야 하는 것</th><th>다시 안 해도 되는 것</th></tr></thead><tbody>
+<tr><td>K</td><td>평가(s08)</td><td>청킹, 임베딩, 인덱스, 검색</td></tr>
+<tr><td>Hybrid 가중치</td><td>Hybrid(s07), 평가</td><td>청킹, 임베딩, 인덱스</td></tr>
+<tr><td>Golden Dataset</td><td>검색 결과 파일 재생성(s05~s07), 평가</td><td>청킹, 임베딩, 인덱스</td></tr>
+<tr><td>토크나이저</td><td>BM25(s05), Hybrid, 평가</td><td>임베딩, 인덱스</td></tr>
+<tr class="hl"><td>청킹 방식</td><td>청킹, 임베딩, 인덱스, 전부</td><td>—</td></tr>
+<tr class="hl"><td>임베딩 모델</td><td>임베딩, 인덱스, 이후 전부</td><td>청킹</td></tr></tbody></table></div>
+<div class="note"><b>CLAUDE.md의 재실행 규칙과 같습니다</b><p>“K만 바꿀 때 Vector DB를 다시 만들지 않는다.” 이 표를 알면 실험이 빨라지고, AI 코딩 도구에게 일을 시킬 때도 불필요한 재생성을 막을 수 있습니다.</p></div>
+<div class="note"><b>API 키 없이 해 보기</b><p><code>.env</code>에 <code>EMBED_BACKEND=fake</code>를 넣으면 무작위 벡터로 흐름만 돌아갑니다. 코드가 끝까지 도는지 확인하는 용도이고, Vector 점수는 의미가 없습니다(Hit@3가 0.15 정도로 나옵니다 — 아무렇게나 고른 수준).</p></div>
+</section>
+
+<!-- 07 -->
+<section aria-labelledby="tab-u07" class="panel" hidden="" id="u07" role="tabpanel"><div class="crumb">Part 2. 검색 4종 · A4-M6</div><h1>07. Hybrid (s07) — 필터 → BM25 + Vector → 정규화 → 가중 합</h1><p class="lead">A4-M3에서 OpenSearch search pipeline이 하던 일을 Python으로 직접 합니다. 순서와 정규화가 눈에 보이도록 함수 하나에 담았습니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> 터미널 · <code>src/s07_hybrid.py</code></span><span><b>✅ 먼저</b> 05·06탭</span></div>
+<pre class="diagram">질문 ─ extract_filters ─→ 조건에 맞는 청크만 남김
+          ├─ BM25 점수   (예: 0 ~ 5.1)   ─ min-max → 0~1
+          └─ Vector 점수 (예: 0.2 ~ 0.7) ─ min-max → 0~1
+                       ↓
+        Hybrid = 0.4 × BM25(정규화) + 0.6 × Vector(정규화)   ← config.HYBRID_WEIGHTS
+                       ↓
+              청크 순위 → 문서 순위 Top-K</pre>
+<div class="codebox"><div class="codehead"><span>src/s07_hybrid.py · hybrid_search (핵심)</span><button class="copy" type="button">코드 복사</button></div><pre><code>keep = [i for i, c in enumerate(chunks) if match_filters(c, filters)]
+bn, vn = _minmax(b[keep]), _minmax(v[keep])          # 남은 후보끼리 0~1로
+score = weights["bm25"] * bn + weights["vector"] * vn</code></pre></div>
+<div class="codebox"><div class="codehead"><span>터미널</span><button class="copy" type="button">코드 복사</button></div><pre><code>python src/s07_hybrid.py</code></pre></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>BM25 점수는 5까지 가고 코사인은 1을 넘지 않으니, 그냥 더하면 BM25가 결과를 독차지합니다. 그래서 둘 다 0~1로 맞춘 뒤(A4-M3 17탭의 <code>min_max</code>) 가중치를 곱합니다. 결과 파일의 <code>bm25_norm</code>, <code>vector_norm</code> 열을 보면 1등이 어느 쪽 덕분에 올라왔는지 알 수 있습니다. 가중치는 <code>config.py</code>에 있고, 바꿔도 인덱스를 다시 만들 필요가 없습니다(미션 3).</p></div>
+<div class="tablewrap"><table><thead><tr><th>A4-M3 OpenSearch Hybrid</th><th>이 코드</th></tr></thead><tbody>
+<tr><td><code>hybrid.queries: [match, knn]</code></td><td><code>bm25_scores</code>, <code>vector_scores</code></td></tr>
+<tr><td><code>normalization: min_max</code></td><td><code>_minmax</code></td></tr>
+<tr><td><code>combination: arithmetic_mean, weights [0.3, 0.7]</code></td><td><code>HYBRID_WEIGHTS = {"bm25": 0.4, "vector": 0.6}</code></td></tr>
+<tr><td>knn 안의 <code>filter</code></td><td><code>match_filters</code>로 후보를 먼저 거름</td></tr></tbody></table></div>
+</section>
+
+<!-- 08 -->
+<section aria-labelledby="tab-u08" class="panel" hidden="" id="u08" role="tabpanel"><div class="crumb">Part 3. 채점 · A4-M6</div><h1>08. 평가 지표 7개 — 질문 하나로 손 계산하기</h1><p class="lead">지표 이름은 어렵지만 계산은 간단합니다. 실제 결과 하나(Q001, BM25, K=3)를 손으로 계산해 보면 모두 잡힙니다.</p>
+<div class="mock"><div class="mock-title">Q001 “2026년 서울 공공기관 노트북 판매 전략은?” · 정답: SEOUL_2026_PUBLIC_NOTEBOOK 1개 · BM25 Top-3 (실제 결과)</div><table><thead><tr><th>순위</th><th>검색된 문서</th><th>정답?</th></tr></thead><tbody>
+<tr><td>1</td><td>SEOUL_<b>2025</b>_PUBLIC_NOTEBOOK</td><td>X</td></tr>
+<tr class="hl"><td>2</td><td>SEOUL_2026_PUBLIC_NOTEBOOK</td><td>O</td></tr>
+<tr><td>3</td><td>BUSAN_2025_PUBLIC_NOTEBOOK</td><td>X</td></tr></tbody></table></div>
+<div class="tablewrap"><table><thead><tr><th>지표</th><th>뜻</th><th>계산</th><th>Q001</th></tr></thead><tbody>
+<tr><td><b>Precision@K</b></td><td>가져온 K개 중 정답 비율</td><td>정답 수 ÷ K</td><td>1 ÷ 3 = <b>0.333</b></td></tr>
+<tr><td><b>Recall@K</b></td><td>찾아야 할 정답 중 찾은 비율</td><td>찾은 정답 ÷ 전체 정답</td><td>1 ÷ 1 = <b>1.0</b></td></tr>
+<tr><td><b>Hit Rate@K</b></td><td>정답이 하나라도 있으면 1</td><td>있으면 1, 없으면 0</td><td><b>1</b></td></tr>
+<tr><td><b>MRR</b></td><td>첫 정답이 몇 등인가</td><td>1 ÷ 첫 정답 순위</td><td>1 ÷ 2 = <b>0.5</b></td></tr>
+<tr><td><b>nDCG@K</b></td><td>정답이 위쪽에 있을수록 높음</td><td>Σ 1/log₂(순위+1) ÷ 이상적인 값</td><td>(1/log₂3) ÷ (1/log₂2) = <b>0.631</b></td></tr>
+<tr><td>Latency</td><td>질문 1건 검색 시간</td><td>ms</td><td>환경마다 다름</td></tr>
+<tr><td>Context Size</td><td>LLM에 넘길 K개 청크의 글자 수</td><td>글자 수 합</td><td>heading이면 약 250자</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>Hit와 Recall은 “찾았다”만 보지만, MRR과 nDCG는 “<b>몇 등으로</b> 찾았나”까지 봅니다. Q001은 정답을 찾긴 했는데 2등입니다. 1등에 2025년판이 올라온 것은 질문의 “2026<b>년</b>”이 토큰 하나(<code>2026년</code>)로 묶여 문서의 “2026”과 안 맞았기 때문입니다(미션 1). Metadata 필터를 걸면 2025년판이 빠져 MRR 1.0이 됩니다.</p></div>
+<div class="mock"><div class="mock-title">정답이 여러 개일 때 — Q009 “2026년 각 지역의 시장 특성을 비교하려면?” · 정답 4개 · K=3</div><table><thead><tr><th>지표</th><th>값</th><th>이유</th></tr></thead><tbody>
+<tr><td>Precision@3</td><td>1.0</td><td>3개 모두 시장현황 (정답)</td></tr>
+<tr><td>Recall@3</td><td class="hl">0.75</td><td>정답 4개 중 3개 — K=3이라 하나는 들어갈 자리가 없음</td></tr></tbody></table></div>
+<div class="tablewrap"><table><thead><tr><th>추가 모니터링</th><th>뜻</th><th>나쁘면</th></tr></thead><tbody>
+<tr><td>Score separation</td><td>1등 점수 − 2등 점수</td><td>작으면 1등이 “간신히” 이긴 것 → 2025/2026처럼 헷갈리는 문서</td></tr>
+<tr><td>Retrieval coverage</td><td>정답 문서 전체 중 한 번이라도 검색된 비율</td><td>낮으면 어떤 질문에도 안 나오는 “묻힌 문서”가 있음</td></tr>
+<tr><td>Over-retrieved chunk</td><td>여러 질문에 자꾸 나오는 청크</td><td>특정 청크가 다른 정답을 밀어냄</td></tr>
+<tr><td>질문 유형별 성능</td><td>query_type마다 지표 평균</td><td>exact_code만 낮다 → 토큰화 문제 같은 원인이 보임</td></tr></tbody></table></div>
+</section>
+
+<!-- 09 -->
+<section aria-labelledby="tab-u09" class="panel" hidden="" id="u09" role="tabpanel"><div class="crumb">Part 3. 채점 · A4-M6</div><h1>09. 평가 실행과 결과 읽기 (s08)</h1><p class="lead">05·06·07이 만든 결과 파일을 읽어 지표를 계산합니다. 검색을 다시 돌리지 않고 계산만 하므로 빠릅니다. 아래 표의 BM25 숫자는 이 데이터로 계산한 실제 값이고, Vector·Hybrid 칸은 각자 결과로 채웁니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> 터미널</span><span><b>✅ 먼저</b> 05·06·07 실행 (06·07 없이도 BM25만 평가됨)</span></div>
+<div class="codebox"><div class="codehead"><span>터미널</span><button class="copy" type="button">코드 복사</button></div><pre><code>python src/s08_evaluation.py</code></pre></div>
+<h3>① 검색 방식 비교 (heading, K=3)</h3>
+<div class="mock"><div class="mock-title">outputs/evaluation_summary.csv 중</div><table><thead><tr><th>검색 방식</th><th>Precision</th><th>Recall</th><th>Hit</th><th>MRR</th><th>nDCG</th><th>Context</th></tr></thead><tbody>
+<tr><td>BM25</td><td>0.517</td><td>0.888</td><td>0.95</td><td>0.900</td><td>0.886</td><td>246</td></tr>
+<tr class="hl"><td>Metadata+BM25</td><td>0.533</td><td>0.912</td><td>0.95</td><td>0.950</td><td>0.946</td><td>217</td></tr>
+<tr><td>Vector</td><td>___</td><td>___</td><td>___</td><td>___</td><td>___</td><td>___</td></tr>
+<tr><td>Hybrid</td><td>___</td><td>___</td><td>___</td><td>___</td><td>___</td><td>___</td></tr></tbody></table></div>
+<h3>② K 비교 (Metadata+BM25, heading)</h3>
+<div class="mock"><div class="mock-title">outputs/k_comparison.csv 중</div><table><thead><tr><th>K</th><th>Precision</th><th>Recall</th><th>Hit</th><th>nDCG</th><th>Context(자)</th></tr></thead><tbody>
+<tr><td>1</td><td>0.950</td><td>0.679</td><td>0.95</td><td>0.950</td><td>84</td></tr>
+<tr><td>2</td><td>0.675</td><td>0.833</td><td>0.95</td><td>0.931</td><td>165</td></tr>
+<tr class="hl"><td>3</td><td>0.533</td><td>0.912</td><td>0.95</td><td>0.946</td><td>217</td></tr>
+<tr><td>5</td><td>0.350</td><td>0.950</td><td>0.95</td><td>0.946</td><td>275</td></tr>
+<tr><td>10</td><td>0.180</td><td>1.000</td><td>1.00</td><td>0.963</td><td>380</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>K를 늘리면 <b>Recall은 오르고 Precision은 떨어집니다</b>. 정답을 놓치지 않으려고 많이 가져올수록 엉뚱한 것도 섞이기 때문입니다. 그리고 LLM에 넘길 글자 수(Context)가 늘어 비용과 혼란이 커집니다. K=3에서 Recall 0.912, K=5에서 0.950 — 2개를 더 가져와 얻는 것이 0.038입니다. 이 데이터에서는 <b>K=3</b>이 균형점입니다. 대시보드의 추천 규칙(Recall ≥ 0.9, Hit ≥ 0.95 중 가장 작은 K)도 같은 답을 냅니다.</p></div>
+<h3>③ 청킹 방식 비교 (Metadata+BM25, K=3)</h3>
+<div class="mock"><div class="mock-title">evaluation_summary.csv 중</div><table><thead><tr><th>청킹</th><th>Recall</th><th>MRR</th><th>nDCG</th><th>Context(자)</th></tr></thead><tbody>
+<tr class="hl"><td>heading</td><td>0.912</td><td>0.950</td><td>0.946</td><td>217</td></tr>
+<tr><td>fixed_300</td><td>0.888</td><td>0.925</td><td>0.908</td><td>704</td></tr>
+<tr><td>fixed_500_overlap_100</td><td>0.862</td><td>0.925</td><td>0.893</td><td>706</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>heading이 점수도 높고 넘기는 글자도 <b>3분의 1</b>입니다. 문서 통째(fixed_500)는 정답 문서를 찾아도 질문과 상관없는 섹션까지 다 넘깁니다. 03탭에서 본 청크 통계(꼬리 조각, 문서 통째)가 그대로 검색 점수의 차이로 나타난 것입니다.</p></div>
+<h3>④ 실패 질문 — Q011</h3>
+<div class="mock"><div class="mock-title">outputs/failure_cases.csv · BM25와 Metadata+BM25 모두 Hit@3 = 0</div><table><thead><tr><th>질문</th><th>정답</th><th>실제 Top-3</th></tr></thead><tbody>
+<tr><td>MFP-GWANGJU-26은 어떤 고객을 위한 코드인가?</td><td>GWANGJU_2026_CORP_MFP</td><td>SEOUL_2026_MARKET &gt; BUSAN_2026_MARKET &gt; GWANGJU_2026_MARKET</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>제품 코드가 정확히 들어 있는데 BM25가 틀렸습니다. <code>tokenize()</code>가 “MFP-GWANGJU-26<b>은</b>”을 한 덩어리 토큰 <code>mfp-gwangju-26은</code>으로 만들어서, 문서의 <code>mfp-gwangju-26</code>과 맞지 않은 것입니다. 한글 질문 지역명 “광주”도 없어서 필터도 걸리지 않았습니다. 질문 유형별 표(<code>evaluation_by_type.csv</code>)에서 <b>exact_code만 Hit 0.75</b>로 낮은 것도 같은 원인입니다. 실패 질문 하나를 끝까지 따라가면 원인(토크나이저)과 고칠 곳(<code>common.py</code>)이 나옵니다. 미션 1에서 고칩니다.</p></div>
+</section>
+
+<!-- 10 -->
+<section aria-labelledby="tab-u10" class="panel" hidden="" id="u10" role="tabpanel"><div class="crumb">Part 3. 채점 · A4-M6</div><h1>10. 품질 모니터링 대시보드 (app_dashboard.py)</h1><p class="lead">outputs/의 CSV를 읽어 8개 화면으로 보여 줍니다. 검색 방식·청킹·K를 사이드바에서 바꾸면 숫자가 바뀝니다. 평가를 다시 돌리면 화면도 새 결과를 보여 줍니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> 터미널 → 브라우저 <code>http://localhost:8501</code></span><span><b>✅ 먼저</b> s08까지 실행</span></div>
+<div class="codebox"><div class="codehead"><span>터미널</span><button class="copy" type="button">코드 복사</button></div><pre><code>streamlit run src/app_dashboard.py</code></pre></div>
+<div class="tablewrap"><table><thead><tr><th>화면</th><th>보는 것</th><th>읽는 파일</th></tr></thead><tbody>
+<tr><td>Overview</td><td>문서·청크·질문 수, 선택한 조합의 5개 지표 (마우스를 올리면 설명)</td><td>evaluation_summary, chunk_stats</td></tr>
+<tr><td>Chunk Monitor</td><td>청크 크기 분포, 원문 ↔ 청크 비교</td><td>chunks_*.json</td></tr>
+<tr><td>Golden Dataset</td><td>질문 20개, 유형, 정답 문서</td><td>golden_dataset.json</td></tr>
+<tr><td>K Experiment</td><td>K별 선 그래프 (검색 방식별)</td><td>evaluation_summary</td></tr>
+<tr><td>Chunking Experiment</td><td>청킹별 Hit 막대</td><td>evaluation_summary</td></tr>
+<tr><td>Query Type</td><td>질문 유형별 Hit</td><td>evaluation_by_type</td></tr>
+<tr><td>Failure Analysis</td><td>실패 질문, 기대 vs 실제, 자주 나오는 청크</td><td>failure_cases, over_retrieved</td></tr>
+<tr><td>Recommendation</td><td>추천 검색 방식·청킹·K와 근거</td><td>evaluation_summary</td></tr></tbody></table></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>A4-M1의 Dashboard가 “매출이 어떤가”를 보여 줬다면, 이 대시보드는 “<b>검색이 어떤가</b>”를 보여 줍니다. 추천은 규칙(Recall ≥ 0.9, Hit ≥ 0.95 중 K가 가장 작고 nDCG가 높은 것)으로 계산하고, 화면에 “현재 샘플 기준”이라고 적어 둡니다. 질문셋이 바뀌면 추천도 바뀌기 때문입니다.</p></div>
+<div class="note"><b>운영에서는</b><p>새 문서를 넣거나 청킹·모델을 바꿀 때마다 같은 Golden Dataset으로 다시 채점해 이 화면이 나빠지지 않았는지 확인합니다. “고쳤더니 다른 질문이 틀어졌다”를 잡는 장치입니다.</p></div>
+</section>
+
+<!-- 11 -->
+<section aria-labelledby="tab-u11" class="panel" hidden="" id="u11" role="tabpanel"><div class="crumb">Part 4. OpenSearch로 · A4-M6</div><h1>11. 같은 평가를 OpenSearch에서 하려면</h1><p class="lead">이번 모듈의 검색 4종은 모두 A4-M2·M3·M5에서 OpenSearch로 해 본 것입니다. 평가 코드(s08)는 “질문마다 문서 순위 목록”만 받으면 되므로, 검색을 OpenSearch로 바꿔도 그대로 씁니다.</p>
+<div class="tablewrap"><table><thead><tr><th>이 모듈 (Python)</th><th>OpenSearch</th><th>배운 곳</th></tr></thead><tbody>
+<tr><td>BM25 (<code>rank-bm25</code>)</td><td><code>{"match": {"content": 질문}}</code></td><td>A4-M2 02탭</td></tr>
+<tr><td>Metadata 필터</td><td><code>{"bool": {"filter": [{"term": {"region": "서울"}}, …]}}</code></td><td>A4-M2 04탭</td></tr>
+<tr><td>Vector (FAISS)</td><td><code>{"knn": {"embedding": {"vector": …, "k": K}}}</code></td><td>A4-M3, A4-M5</td></tr>
+<tr><td>Metadata + Vector</td><td>knn 안의 <code>filter</code></td><td>A4-M3 14탭, A4-M5 미션 4</td></tr>
+<tr><td>Hybrid (min-max + 가중 합)</td><td><code>hybrid</code> 쿼리 + search pipeline</td><td>A4-M3 17탭</td></tr>
+<tr><td>토크나이저</td><td>분석기 (standard, nori)</td><td>A4-M2 02탭</td></tr>
+<tr><td>Over-retrieved, 실패 질문 화면</td><td>Dashboards에 검색 로그 인덱스를 만들어 시각화</td><td>A4-M1</td></tr></tbody></table></div>
+<div class="codebox"><div class="codehead"><span>예시 · heading 청크를 OpenSearch에 넣고 Metadata+BM25로 검색 (도전 미션 7의 뼈대)</span><button class="copy" type="button">코드 복사</button></div><pre><code>import json, os
+from dotenv import load_dotenv
+from opensearchpy import OpenSearch, helpers
+load_dotenv()
+c = OpenSearch(hosts=[{"host": "localhost", "port": 9200}],
+               http_auth=("admin", os.getenv("OPENSEARCH_PASSWORD")),
+               use_ssl=True, verify_certs=False, ssl_show_warn=False)
+
+chunks = json.load(open("outputs/chunks_heading.json", encoding="utf-8"))
+if c.indices.exists(index="m6_chunks"): c.indices.delete(index="m6_chunks")
+c.indices.create(index="m6_chunks", body={"mappings": {"properties": {
+    "content": {"type": "text"}, "doc_id": {"type": "keyword"}, "region": {"type": "keyword"},
+    "year": {"type": "integer"}, "customer_type": {"type": "keyword"}, "product": {"type": "keyword"}}}})
+helpers.bulk(c, [{"_index": "m6_chunks", "_id": ch["chunk_id"], "_source": ch} for ch in chunks], refresh=True)
+
+res = c.search(index="m6_chunks", body={"size": 10, "_source": ["doc_id"],
+      "query": {"bool": {"must": [{"match": {"content": "2025년 부산 공공기관 노트북 전략"}}],
+                         "filter": [{"term": {"region": "부산"}}, {"term": {"year": 2025}}]}}})
+print([h["_source"]["doc_id"] for h in res["hits"]["hits"]])</code></pre></div>
+<div class="say"><b>이렇게 풀어서 설명합니다</b><p>OpenSearch에서 결과 doc_id 순위만 뽑으면, 그 목록을 <code>common.py</code>의 지표 함수에 그대로 넣어 같은 방식으로 채점할 수 있습니다. 검색 엔진이 무엇이든 <b>정답지와 채점 방법은 같다</b>는 것이 품질 평가의 핵심입니다. 한국어 조사 문제는 OpenSearch에서 nori 분석기로 해결합니다.</p></div>
+</section>
+
+<!-- 12 -->
+<section aria-labelledby="tab-u12" class="panel" hidden="" id="u12" role="tabpanel"><div class="crumb">Part 5. 실습 미션 · A4-M6</div><h1>12. 실습 미션 — 고치고, 바꾸고, 다시 채점하기</h1><p class="lead">모든 미션의 끝은 같습니다. <b>s08로 다시 채점하고 숫자로 비교</b>. 바꾸기 전 <code>outputs/evaluation_summary.csv</code>를 다른 이름으로 복사해 두면 비교가 쉽습니다. 06탭의 재실행 표를 보고 꼭 필요한 단계만 다시 돌립니다.</p>
+<div class="where-bar"><span><b>📍 어디서</b> 실습 폴더 (src/ 파일 수정)</span><span><b>✅ 먼저</b> s01~s08 한 번 완주</span></div>
+<div class="tablewrap"><table><thead><tr><th>미션</th><th>할 일</th><th>다시 돌릴 단계</th><th>완료 기준</th></tr></thead><tbody>
+<tr><td>1</td><td>토크나이저 고치기 (Q011)</td><td>s05, s07, s08</td><td>BM25 Hit@3 = 1.0</td></tr>
+<tr><td>2</td><td>K 고르기 — 내 기준으로</td><td>없음 (대시보드)</td><td>추천 K와 근거 한 문장</td></tr>
+<tr><td>3</td><td>Hybrid 가중치 바꾸기</td><td>s07, s08</td><td>세 가중치 비교표</td></tr>
+<tr><td>4</td><td>Golden 질문 2개 추가</td><td>s04, s05~s07, s08</td><td>질문 22개로 채점</td></tr>
+<tr><td>5</td><td>청킹 방식 하나 추가</td><td>s03부터 전부</td><td>heading과 비교</td></tr>
+<tr><td>6</td><td>(선택) Claude Code로 instructions 수행</td><td>—</td><td>내 결과 vs 제공 코드 결과</td></tr>
+<tr><td>7</td><td>(도전) OpenSearch로 검색해 같은 정답지로 채점</td><td>—</td><td>Meta+BM25 숫자 비교</td></tr></tbody></table></div>
+
+<h3>미션 1 · 토크나이저 고치기</h3>
+<ol class="steps"><li><code>src/common.py</code>의 <code>tokenize</code>에서 정규식을 찾습니다: <code>r"[0-9A-Za-z가-힣/\-]+"</code></li><li>영문·숫자와 한글이 붙어 있으면 따로 떼도록 바꿉니다(빈칸 채우기).</li><li><code>python src/s05_bm25.py</code> → <code>s07</code> → <code>s08</code></li></ol>
+<div class="codebox"><div class="codehead"><span>src/common.py · tokenize의 한 줄</span><button class="copy" type="button">코드 복사</button></div><pre><code>for t in re.findall(r"________________________", text.lower()):</code></pre></div>
+<details class="qa"><summary>정답과 결과 (실제 값)</summary><p>정규식: <code>r"[0-9a-z/\-]+|[가-힣]+"</code> (소문자로 바꾼 뒤라 a-z면 충분). “MFP-GWANGJU-26은 2026년” → <code>['mfp-gwangju-26', '은', '2026', '년']</code>.</p><div class="mock"><table><thead><tr><th>heading, K=3</th><th>Precision</th><th>Recall</th><th>Hit</th><th>MRR</th><th>nDCG</th><th>실패</th></tr></thead><tbody><tr><td>BM25 (전)</td><td>0.517</td><td>0.888</td><td>0.95</td><td>0.900</td><td>0.886</td><td>Q011</td></tr><tr class="hl"><td>BM25 (후)</td><td>0.550</td><td>0.963</td><td>1.00</td><td>0.975</td><td>0.974</td><td>없음</td></tr><tr><td>Meta+BM25 (전)</td><td>0.533</td><td>0.912</td><td>0.95</td><td>0.950</td><td>0.946</td><td>Q011</td></tr><tr class="hl"><td>Meta+BM25 (후)</td><td>0.550</td><td>0.963</td><td>1.00</td><td>1.000</td><td>0.996</td><td>없음</td></tr></tbody></table></div><p>Q011이 맞고, “2026년”이 “2026”과 맞으면서 Q001도 1등으로 올라옵니다. 코드 한 줄로 Recall이 0.888 → 0.963. <b>실패 질문 분석 → 원인 → 수정 → 재채점</b>의 한 바퀴입니다. 임베딩은 토큰화와 상관없으니 s06은 다시 돌리지 않습니다.</p></details>
+
+<h3>미션 2 · K 고르기</h3>
+<ol class="steps"><li>대시보드 K Experiment에서 검색 방식을 바꿔 가며 Recall과 Context 그래프를 봅니다.</li><li>“Recall이 얼마 이상이어야 하나”, “Context는 몇 자까지 괜찮나” 내 기준을 정합니다.</li><li>내 기준으로 K를 고르고 근거를 한 문장으로 씁니다.</li></ol>
+<details class="qa"><summary>확인 포인트</summary><p>정답은 하나가 아닙니다. 예: “Meta+BM25, heading에서 K=3. Recall 0.912로 0.9를 넘고, K=5로 늘려도 Recall은 0.038만 오르는데 Context는 217 → 275자로 늘어난다.” 비교 질문(정답 4개)을 중요하게 본다면 K=5를 고를 수도 있습니다. <b>숫자를 근거로 고른다</b>는 것이 핵심입니다.</p></details>
+
+<h3>미션 3 · Hybrid 가중치</h3>
+<ol class="steps"><li><code>src/config.py</code>의 <code>HYBRID_WEIGHTS</code>를 <code>{"bm25": 0.7, "vector": 0.3}</code>으로 바꾸고 s07 → s08.</li><li><code>{"bm25": 0.2, "vector": 0.8}</code>로 한 번 더.</li><li>기본(0.4/0.6)과 함께 Hybrid 행을 표로 정리하고, query_type별로 어디가 달라졌는지 봅니다.</li></ol>
+<details class="qa"><summary>확인 포인트</summary><p>BM25 쪽을 올리면 exact_code·year 유형이, Vector 쪽을 올리면 semantic 유형이 유리해지는 경향을 봅니다. 숫자는 각자의 임베딩 결과에 따라 다릅니다. s06은 다시 돌리지 않습니다(임베딩·인덱스 그대로).</p></details>
+
+<h3>미션 4 · Golden 질문 추가</h3>
+<ol class="steps"><li><code>data/golden_dataset.json</code>을 백업합니다.</li><li>아래 두 문항을 배열 끝에 추가합니다(앞 항목 뒤에 쉼표).</li><li>s04로 검증 → s05~s07 → s08.</li></ol>
+<div class="codebox"><div class="codehead"><span>추가할 문항</span><button class="copy" type="button">코드 복사</button></div><pre><code>{
+  "query_id": "Q021", "question": "MFP-DAEJEON-26 렌탈 제안에서 함께 비교할 비용은?",
+  "query_type": "exact_code", "relevant_doc_ids": ["DAEJEON_2026_CORP_MFP"],
+  "required_metadata": {"region": "대전", "year": 2026, "product": "복합기"},
+  "expected_keywords": ["MFP-DAEJEON-26", "소모품", "운영비"], "difficulty": "easy"
+},
+{
+  "query_id": "Q022", "question": "항만과 물류 고객이 있는 지역의 시장 문서는?",
+  "query_type": "semantic", "relevant_doc_ids": ["BUSAN_2026_MARKET"],
+  "required_metadata": {"region": "부산", "year": 2026},
+  "expected_keywords": ["항만", "물류"], "difficulty": "medium"
+}</code></pre></div>
+<details class="qa"><summary>확인 포인트</summary><p>Q021은 미션 1을 했는지에 따라 결과가 갈립니다(“MFP-DAEJEON-26” 바로 뒤에 띄어쓰기가 있어 원래 토크나이저로도 맞을 수 있음 — 직접 확인). Q022는 질문에 “부산”이 없어 필터가 안 걸리고, “항만과”의 조사 처리가 관건입니다. 정답지를 늘릴수록 평가가 믿을 만해진다는 것, 그리고 문항을 만들 때 문서에 실제로 있는 표현만 써야 한다는 것(CLAUDE.md 데이터 무결성)을 확인합니다.</p></details>
+
+<h3>미션 5 · 청킹 방식 추가</h3>
+<ol class="steps"><li><code>src/s03_chunking.py</code>의 <code>SPLITTERS</code>에 <code>"fixed_150_overlap_30": lambda t: chunk_fixed(t, 150, 30)</code>을 추가합니다.</li><li><code>src/config.py</code>의 <code>CHUNK_METHODS</code>에도 같은 이름을 추가합니다.</li><li>s03 → s05 → s06 → s07 → s08 (청킹이 바뀌었으니 전부).</li><li>chunk_stats와 Chunking Experiment에서 heading과 비교합니다.</li></ol>
+<details class="qa"><summary>확인 포인트</summary><p>150자면 문서가 실제로 2~4조각으로 나뉩니다(문서 평균 280자). 짧은 꼬리 조각과 문장 중간 끊김이 생기는지, heading보다 점수가 나은지 봅니다. 임베딩 캐시 덕분에 기존 세 방식의 청크는 다시 임베딩하지 않고 새 청크만 API를 부릅니다(06탭 출력의 “새로 생성” 수).</p></details>
+
+<h3>미션 6 · (선택) Claude Code로 만들어 보기</h3>
+<ol class="steps"><li>원본 Part3 폴더를 새로 복사합니다(src/ 없는 상태).</li><li>Claude Code에서 “instructions/01_DOCUMENT_SCAN.md를 수행해”부터 한 단계씩 요청합니다. <code>CLAUDE.md</code>가 규칙을 지키게 합니다.</li><li>Step 08까지 끝나면 BM25 결과를 이 교안의 숫자와 비교하고, 다르면 왜 다른지(토크나이저, 필터 규칙, 문서 순위 방식) 찾습니다.</li></ol>
+
+<h3>미션 7 · (도전) OpenSearch로 같은 채점</h3>
+<ol class="steps"><li>11탭 예시 코드로 heading 청크를 <code>m6_chunks</code> 인덱스에 넣습니다.</li><li>질문 20개마다 Metadata+BM25 쿼리를 보내 doc_id 순위(중복 제거)를 받습니다. 필터 조건은 <code>common.extract_filters</code>를 재사용합니다.</li><li><code>common.py</code>의 지표 함수로 K=3 평균을 계산해 09탭 표와 비교합니다.</li></ol>
+<details class="qa"><summary>확인 포인트</summary><p>OpenSearch 기본 분석기(standard)와 우리 <code>tokenize</code>는 쪼개는 방식이 달라 숫자가 조금 다를 수 있습니다. 그 차이가 어느 질문에서 나는지 찾는 것이 목표입니다. 시장현황(고객 “전체”) 처리는 <code>terms</code>에 <code>["기업", "전체"]</code>처럼 넣으면 같은 규칙이 됩니다.</p></details>
+</section>
+
+<!-- 13 -->
+<section aria-labelledby="tab-u13" class="panel" hidden="" id="u13" role="tabpanel"><div class="crumb">Part 6. 정리 · A4-M6</div><h1>13. 에러 사전과 정리</h1>
+<div class="tablewrap"><table><thead><tr><th>메시지에 보이면</th><th>원인</th><th>할 일</th></tr></thead><tbody>
+<tr><td><code>ModuleNotFoundError: config</code> / <code>common</code></td><td>src 폴더 밖에서 모듈을 찾음</td><td>프로젝트 폴더에서 <code>python src/파일.py</code>로 실행</td></tr>
+<tr><td><code>FileNotFoundError: outputs/chunks_heading.json</code></td><td>s03을 안 돌림</td><td>s03부터 순서대로</td></tr>
+<tr><td><code>No module named 'rank_bm25'</code></td><td>패키지 미설치</td><td><code>pip install -r requirements.txt</code></td></tr>
+<tr><td>OpenAI 401 / <code>api_key</code> 관련</td><td>.env 키 없음</td><td>.env 확인, 또는 <code>EMBED_BACKEND=fake</code>로 흐름만</td></tr>
+<tr><td>s07에서 <code>index.faiss</code> 없음</td><td>s06을 안 돌림</td><td>s06 먼저</td></tr>
+<tr><td>대시보드 <code>evaluation_summary.csv</code> 없음</td><td>s08을 안 돌림</td><td>s08 먼저</td></tr>
+<tr><td>JSON 오류 (미션 4)</td><td>문항 사이 쉼표, 따옴표</td><td>s04가 읽히는지 먼저 확인</td></tr></tbody></table></div>
+<h3>오류 없이 틀리는 실수</h3>
+<div class="task"><h4>점검 습관</h4><ol><li>① <b>Golden을 바꾸고 s05~s07을 안 돌림</b> → 결과 파일의 is_relevant가 옛 정답 기준.</li><li>② <b>청킹을 바꾸고 s06을 안 돌림</b> → Vector가 옛 청크로 검색.</li><li>③ <b>평균만 봄</b> → Hit 0.95여도 실패 질문 하나에 중요한 원인(토크나이저)이 숨어 있음. 실패 목록을 꼭 봄.</li><li>④ <b>K=10이 제일 좋다</b> → Recall만 보고 Context 비용을 안 봄.</li><li>⑤ <b>추천값을 일반화</b> → 질문 20개, 문서 16개 기준. 데이터가 바뀌면 다시 채점.</li></ol></div>
+<h3>완료 체크</h3>
+<div class="task"><h4>할 수 있나요</h4><ol><li>□ s01~s08을 완주하고 대시보드를 열었다.</li><li>□ 청크 통계에서 fixed_500이 “문서 통째”인 이유를 설명할 수 있다.</li><li>□ Precision·Recall·Hit·MRR·nDCG를 Q001로 손 계산할 수 있다.</li><li>□ K를 늘리면 무엇이 오르고 무엇이 나빠지는지 말할 수 있다.</li><li>□ 실패 질문 Q011의 원인을 찾아 고치고 재채점했다.</li><li>□ 무엇을 바꾸면 무엇을 다시 돌려야 하는지(재실행 표)를 안다.</li><li>□ 이 평가를 OpenSearch 검색에 적용하는 방법을 말할 수 있다.</li></ol></div>
+<div class="flow"><div class="fstep"><b>A4-M3~M5</b><span>검색을 만든다</span></div><div class="arrow">→</div><div class="fstep"><b>A4-M6</b><span>검색을 채점하고 고른다</span></div><div class="arrow">→</div><div class="fstep"><b>A4-M7</b><span>답변을 채점하고 운영한다</span></div></div>
+</section>
+
+
+</main></div>
+<footer class="footer">© 2026 부성순. All rights reserved.<small>교안의 자체 해설 및 실습 예제에 대한 저작권 표시입니다. 외부 소프트웨어·라이브러리·모델의 권리는 각 권리자에게 있습니다. 실습 데이터(지역 문서 16개, Golden Dataset 20문항)는 교육용 가상 데이터입니다. BM25·Metadata+BM25 지표는 실습 데이터로 계산한 실제 값이며, Vector·Hybrid 값은 임베딩 결과에 따라 달라집니다.</small></footer>
+<script>(function(){
+const tabs=[...document.querySelectorAll('[role="tab"]')];
+function setTab(i,focus=false){tabs.forEach((t,j)=>{const on=i===j;t.setAttribute('aria-selected',on?'true':'false');t.tabIndex=on?0:-1;document.getElementById(t.getAttribute('aria-controls')).hidden=!on;});if(focus)tabs[i].focus({preventScroll:true});history.replaceState(null,'','#'+tabs[i].getAttribute('aria-controls'));window.scrollTo({top:0});}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>setTab(i));t.addEventListener('keydown',e=>{if(['ArrowDown','ArrowUp','ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();setTab((i+(e.key==='ArrowDown'||e.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length,true);}})});
+const index=tabs.findIndex(t=>'#'+t.getAttribute('aria-controls')===location.hash);if(index>=0)setTab(index);
+document.querySelectorAll('.copy').forEach(b=>{b.dataset.label=b.textContent;b.addEventListener('click',async()=>{const code=b.closest('.codebox').querySelector('pre').textContent;try{await navigator.clipboard.writeText(code);b.textContent='복사됨';}catch(e){b.textContent='복사 실패';}setTimeout(()=>b.textContent=b.dataset.label||'코드 복사',1500);});});
+})();</script></body></html>
