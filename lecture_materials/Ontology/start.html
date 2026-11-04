@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>온톨로지 30일 목차</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* 레이아웃: 상단 배너 + 묶음 요약 띠 + 묶음 머리줄로 나눈 목차 표 */
+:root{
+  --bg:#F5F7F8; --paper:#FFFFFF; --ink:#0F1B2A; --muted:#4A5868; --line:#DCE2E7; --line2:#E9EDF1;
+  --accent:#0B7C77; --accent-ink:#075A56; --soft:#E8F4F3; --navy:#0F1B2A; --on-navy:#FFFFFF; --navy-sub:#BFD0DD;
+  --g1:#0B7C77; --g1s:#DDF1EF; --g2:#1D5FD1; --g2s:#E3ECFC; --g3:#9A5B00; --g3s:#FCEFD9; --g4:#6D3FC9; --g4s:#EEE7FB; --g5:#B3245E; --g5s:#FBE6EE;
+  --font:'Noto Sans KR',system-ui,'Malgun Gothic',sans-serif; --mono:'IBM Plex Mono',Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F151D; --paper:#161E28; --ink:#E6ECF2; --muted:#A3B0BF; --line:#2B3644; --line2:#222C38;
+  --accent:#4FC9BF; --accent-ink:#7FDAD2; --soft:#16302F; --navy:#0A0F15; --on-navy:#F1F5F9; --navy-sub:#9FB2C4;
+  --g1:#4FC9BF; --g1s:#16302F; --g2:#7DA9F5; --g2s:#1A2840; --g3:#F2B866; --g3s:#33270F; --g4:#B79BF2; --g4s:#271F3C; --g5:#F28AB3; --g5s:#3A1B29; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F151D; --paper:#161E28; --ink:#E6ECF2; --muted:#A3B0BF; --line:#2B3644; --line2:#222C38;
+  --accent:#4FC9BF; --accent-ink:#7FDAD2; --soft:#16302F; --navy:#0A0F15; --on-navy:#F1F5F9; --navy-sub:#9FB2C4;
+  --g1:#4FC9BF; --g1s:#16302F; --g2:#7DA9F5; --g2s:#1A2840; --g3:#F2B866; --g3s:#33270F; --g4:#B79BF2; --g4s:#271F3C; --g5:#F28AB3; --g5s:#3A1B29; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16.5px;line-height:1.7;word-break:keep-all}
+h1,h2{text-wrap:balance}
+.wrap{max-width:1180px;margin:auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.banner{background:var(--paper);border-bottom:1px solid var(--line)}
+.banner .wrap{padding-block:20px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.brand{font-size:15px;font-weight:700;letter-spacing:.04em;color:var(--accent)}
+.btitle{font-size:26px;font-weight:900;letter-spacing:-.01em;line-height:1.35;margin:0}
+.who{font-size:14.5px;color:var(--muted);line-height:1.7}
+main.wrap{padding-block:28px 64px}
+.lead{color:var(--muted);font-size:17px;margin:0 0 20px;max-width:48em}
+.lead b{color:var(--ink)}
+
+.phases{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:0 0 26px}
+.ph{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-width:0}
+.ph .d{font-family:var(--mono);font-size:12.5px;font-weight:600;letter-spacing:.06em;color:var(--c)}
+.ph .n{font-weight:700;font-size:16px;margin:2px 0}
+.ph .s{font-size:13.5px;color:var(--muted);line-height:1.55}
+.ph .bar{height:4px;border-radius:99px;background:var(--line2);margin-top:10px;overflow:hidden}
+.ph .bar i{display:block;height:100%;background:var(--c)}
+.p1{--c:var(--g1);--s:var(--g1s)}.p2{--c:var(--g2);--s:var(--g2s)}.p3{--c:var(--g3);--s:var(--g3s)}.p4{--c:var(--g4);--s:var(--g4s)}.p5{--c:var(--g5);--s:var(--g5s)}
+
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--paper)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:15.5px;line-height:1.6}
+th,td{border-bottom:1px solid var(--line2);padding:11px 14px;text-align:left;vertical-align:top}
+thead th{font-size:13.5px;font-weight:700;color:var(--muted);background:var(--bg);letter-spacing:.02em}
+td.day{font-family:var(--mono);font-weight:600;color:var(--c);white-space:nowrap;width:64px;font-variant-numeric:tabular-nums}
+td.title{font-weight:700;white-space:nowrap;width:30%}
+tr.grp td{background:var(--s);border-bottom:1px solid var(--line);padding:9px 14px}
+tr.grp .gname{font-weight:700;color:var(--c)}
+tr.grp .gmeta{font-size:13.5px;color:var(--muted);margin-left:10px}
+tr.now td{background:var(--soft)}
+tr.now td.title{white-space:normal;max-width:320px}
+.chip{display:inline-block;font-size:12px;font-weight:700;padding:1px 8px;border-radius:99px;background:var(--accent);color:var(--paper);margin-left:6px;vertical-align:2px;white-space:nowrap}
+tbody tr:last-child td{border-bottom:0}
+
+.note{margin:18px 0 0;font-size:14.5px;color:var(--muted)}
+.footer{border-top:1px solid var(--line);padding-block:18px 32px;text-align:center;color:var(--muted);font-size:14px}
+
+@media (max-width:900px){.phases{grid-template-columns:repeat(2,minmax(0,1fr))}.btitle{font-size:22px}}
+@media (max-width:480px){.phases{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head><body>
+
+<header class="banner"><div class="wrap">
+  <div>
+    <div class="brand">온톨로지 학습 과정</div>
+    <h1 class="btitle">온톨로지 30일 과정 목차</h1>
+  </div>
+  <div class="who">© 2026 부성순 · AI·클라우드 실무 과정<br>부성순 (bakpak@empas.com)</div>
+</div></header>
+
+<main class="wrap">
+  <p class="lead">개념을 익히고, 파일과 그래프로 적고, 현장 데이터를 다룬 뒤, LLM과 RAG에 붙입니다. 1~20일차는 <b>모아상점 주문</b>, 21~30일차는 같은 상점의 <b>고객센터 정책 문서</b>를 예시로 씁니다.</p>
+
+  <div class="phases">
+    <div class="ph p1"><div class="d">1 – 7일차</div><div class="n">기초 다지기</div><div class="s">키워드와 설계서</div><div class="bar"><i style="width:100%"></i></div></div>
+    <div class="ph p2"><div class="d">8 – 14일차</div><div class="n">적고 그리기</div><div class="s">JSON · 그래프 · 표준</div><div class="bar"><i style="width:100%"></i></div></div>
+    <div class="ph p3"><div class="d">15 – 20일차</div><div class="n">현장 데이터</div><div class="s">인터뷰 · 정리 · 변경</div><div class="bar"><i style="width:100%"></i></div></div>
+    <div class="ph p4"><div class="d">21 – 29일차</div><div class="n">LLM과 RAG</div><div class="s">추출 · 검색 · 답변 · 평가</div><div class="bar"><i style="width:100%"></i></div></div>
+    <div class="ph p5"><div class="d">30일차</div><div class="n">마무리</div><div class="s">최종 발표</div><div class="bar"><i style="width:100%"></i></div></div>
+  </div>
+
+  <div class="tw"><table>
+    <thead><tr><th>일차</th><th>제목</th><th>핵심 내용</th></tr></thead>
+    <tbody>
+      <tr class="grp p1"><td colspan="3"><span class="gname">1. 기초 다지기</span><span class="gmeta">1 – 7일차 · 모아상점 주문</span></td></tr>
+      <tr class="p1 now"><td class="day">01</td><td class="title">쇼핑몰 주문으로 배우는 온톨로지 핵심 키워드 7<span class="chip">교안 완성</span></td><td>온톨로지 · 개념 · 인스턴스 · 속성 · 관계 · 규칙 · 트리플, FDE 현장 관점</td></tr>
+      <tr class="p1"><td class="day">02</td><td class="title">개념의 계층</td><td>상위 · 하위 개념(상품 → 냉장식품), 하위가 상위의 성질을 물려받음</td></tr>
+      <tr class="p1"><td class="day">03</td><td class="title">속성 깊이 보기</td><td>값의 종류(글자 · 숫자 · 날짜 · 목록), 필수와 선택, 허용값</td></tr>
+      <tr class="p1"><td class="day">04</td><td class="title">관계 깊이 보기</td><td>몇 대 몇, 반대 방향 관계, 관계에 붙는 값(주문항목)</td></tr>
+      <tr class="p1"><td class="day">05</td><td class="title">규칙과 예외</td><td>검사 규칙, 예외, 적용 범위</td></tr>
+      <tr class="p1"><td class="day">06</td><td class="title">이름 짓기와 별칭</td><td>용어 정의서, 같은 뜻 다른 표기 모으기</td></tr>
+      <tr class="p1"><td class="day">07</td><td class="title">1주 정리</td><td>모아상점 온톨로지 설계서를 종이로 완성</td></tr>
+
+      <tr class="grp p2"><td colspan="3"><span class="gname">2. 적고 그리기</span><span class="gmeta">8 – 14일차 · 모아상점 주문</span></td></tr>
+      <tr class="p2"><td class="day">08</td><td class="title">JSON으로 적기</td><td>설계서를 스키마 파일로 옮기기</td></tr>
+      <tr class="p2"><td class="day">09</td><td class="title">그래프로 보기</td><td>점과 선, NetworkX로 그리기</td></tr>
+      <tr class="p2"><td class="day">10</td><td class="title">표준 맛보기</td><td>RDF · OWL에서는 같은 내용을 어떻게 적나</td></tr>
+      <tr class="p2"><td class="day">11</td><td class="title">관계 따라 묻기</td><td>그래프 탐색으로 질문에 답하기</td></tr>
+      <tr class="p2"><td class="day">12</td><td class="title">규칙을 코드로</td><td>파이썬으로 데이터 검사하기</td></tr>
+      <tr class="p2"><td class="day">13</td><td class="title">표를 온톨로지로</td><td>데이터베이스 표 → 개념 · 속성 · 관계로 옮기기</td></tr>
+      <tr class="p2"><td class="day">14</td><td class="title">2주 정리</td><td>모아상점 지식 그래프 완성</td></tr>
+
+      <tr class="grp p3"><td colspan="3"><span class="gname">3. 현장 데이터</span><span class="gmeta">15 – 20일차 · 모아상점 주문</span></td></tr>
+      <tr class="p3"><td class="day">15</td><td class="title">인터뷰로 개념 캐내기</td><td>현업 질문법, 경계 확인</td></tr>
+      <tr class="p3"><td class="day">16</td><td class="title">화면 · 엑셀에서 뽑기</td><td>양식과 시트에서 개념 · 속성 찾기</td></tr>
+      <tr class="p3"><td class="day">17</td><td class="title">같은 대상 가려내기</td><td>중복 · 동명이인 판별 기준</td></tr>
+      <tr class="p3"><td class="day">18</td><td class="title">값 정리하기</td><td>상태값 통일, 바꾸기 표</td></tr>
+      <tr class="p3"><td class="day">19</td><td class="title">온톨로지가 바뀔 때</td><td>버전 관리, 바뀐 뜻의 영향 범위</td></tr>
+      <tr class="p3"><td class="day">20</td><td class="title">3주 정리</td><td>현장 메모 → 설계서 다시 쓰기</td></tr>
+
+      <tr class="grp p4"><td colspan="3"><span class="gname">4. LLM과 RAG</span><span class="gmeta">21 – 29일차 · 모아상점 고객센터 정책 문서</span></td></tr>
+      <tr class="p4"><td class="day">21</td><td class="title">문서에서 트리플 뽑기</td><td>LLM으로 정책 문서 → 사실 한 줄씩</td></tr>
+      <tr class="p4"><td class="day">22</td><td class="title">뽑은 트리플 검사</td><td>스키마에 맞는지, 틀린 관계 걸러내기</td></tr>
+      <tr class="p4"><td class="day">23</td><td class="title">질문어와 문서어 맞추기</td><td>별칭으로 “취소” ↔ “주문 철회” 잇기</td></tr>
+      <tr class="p4"><td class="day">24</td><td class="title">그래프 검색</td><td>관계 따라 근거 문서 찾기</td></tr>
+      <tr class="p4"><td class="day">25</td><td class="title">벡터 검색과 합치기</td><td>의미 검색 + 그래프 검색</td></tr>
+      <tr class="p4"><td class="day">26</td><td class="title">근거 있는 답변</td><td>그래프RAG 답변과 출처 인용</td></tr>
+      <tr class="p4"><td class="day">27</td><td class="title">규칙을 가드레일로</td><td>답변이 규정에 맞는지 검사</td></tr>
+      <tr class="p4"><td class="day">28</td><td class="title">에이전트 도구 설계</td><td>온톨로지로 도구의 입력값과 동작 정하기</td></tr>
+      <tr class="p4"><td class="day">29</td><td class="title">평가</td><td>테스트 질문 세트로 정확도 확인</td></tr>
+
+      <tr class="grp p5"><td colspan="3"><span class="gname">마무리</span><span class="gmeta">30일차</span></td></tr>
+      <tr class="p5"><td class="day">30</td><td class="title">최종 발표</td><td>현장 문제 하나를 온톨로지 기반 AI로 풀기</td></tr>
+    </tbody></table></div>
+  <p class="note">21~29일차의 정책 문서 예시는 배송비 환불, 냉장식품, 제주 · 도서산간 같은 예외 조항을 다룹니다.</p>
+</main>
+<footer class="footer wrap">© 2026 부성순. All rights reserved.</footer>
+</body></html>

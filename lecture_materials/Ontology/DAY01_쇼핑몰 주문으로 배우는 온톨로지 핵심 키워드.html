@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>온톨로지 핵심 키워드 7</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* 레이아웃: 상단 배너(원본 유지) + 본문 / 오른쪽 목차. 색: 청록 강조 + 남색 잉크, 다섯 가지 구성요소마다 고유색 */
+:root{
+  --bg:#F5F7F8; --paper:#FFFFFF; --ink:#0F1B2A; --muted:#4A5868; --line:#DCE2E7; --line2:#E9EDF1;
+  --accent:#0B7C77; --accent-ink:#075A56; --soft:#E8F4F3; --navy:#0F1B2A; --on-navy:#FFFFFF; --navy-sub:#BFD0DD;
+  --ok:#15803D; --ok-soft:#E8F6EC; --no:#B42318; --no-soft:#FDECEA; --warn:#9A5B00; --warn-soft:#FFF4E0;
+  --c-con:#0B7C77; --c-con-s:#DDF1EF; --c-ins:#1D5FD1; --c-ins-s:#E3ECFC; --c-att:#9A5B00; --c-att-s:#FCEFD9;
+  --c-rel:#6D3FC9; --c-rel-s:#EEE7FB; --c-rul:#B3245E; --c-rul-s:#FBE6EE;
+  --font:'Noto Sans KR',system-ui,'Malgun Gothic',sans-serif; --mono:'IBM Plex Mono',Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F151D; --paper:#161E28; --ink:#E6ECF2; --muted:#A3B0BF; --line:#2B3644; --line2:#222C38;
+  --accent:#4FC9BF; --accent-ink:#7FDAD2; --soft:#16302F; --navy:#0A0F15; --on-navy:#F1F5F9; --navy-sub:#9FB2C4;
+  --ok:#5BD08A; --ok-soft:#163222; --no:#FF8A80; --no-soft:#3A1C1C; --warn:#F2B866; --warn-soft:#33270F;
+  --c-con:#4FC9BF; --c-con-s:#16302F; --c-ins:#7DA9F5; --c-ins-s:#1A2840; --c-att:#F2B866; --c-att-s:#33270F;
+  --c-rel:#B79BF2; --c-rel-s:#271F3C; --c-rul:#F28AB3; --c-rul-s:#3A1B29; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F151D; --paper:#161E28; --ink:#E6ECF2; --muted:#A3B0BF; --line:#2B3644; --line2:#222C38;
+  --accent:#4FC9BF; --accent-ink:#7FDAD2; --soft:#16302F; --navy:#0A0F15; --on-navy:#F1F5F9; --navy-sub:#9FB2C4;
+  --ok:#5BD08A; --ok-soft:#163222; --no:#FF8A80; --no-soft:#3A1C1C; --warn:#F2B866; --warn-soft:#33270F;
+  --c-con:#4FC9BF; --c-con-s:#16302F; --c-ins:#7DA9F5; --c-ins-s:#1A2840; --c-att:#F2B866; --c-att-s:#33270F;
+  --c-rel:#B79BF2; --c-rel-s:#271F3C; --c-rul:#F28AB3; --c-rul-s:#3A1B29; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:17px;line-height:1.8;word-break:keep-all}
+h1,h2,h3,h4{text-wrap:balance}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* 상단 배너 (원본 구조 유지) */
+.banner{background:var(--paper);border-bottom:1px solid var(--line)}
+.banner-in{max-width:1320px;margin:auto;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.brand{font-size:15px;font-weight:700;letter-spacing:.04em;color:var(--accent)}
+.brand .day{font-family:var(--mono);font-weight:600;background:var(--soft);padding:1px 8px;border-radius:6px;margin-right:6px}
+.btitle{font-size:26px;font-weight:900;letter-spacing:-.01em;line-height:1.35}
+.who{font-size:14.5px;color:var(--muted);line-height:1.7}
+
+.layout{max-width:1320px;margin:auto;padding-block:32px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:36px;align-items:start}
+main{min-width:0}
+.sidebar{order:2;position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px);border:1px solid var(--line);border-radius:14px;background:var(--paper);padding:16px}
+.group{font-size:13px;color:var(--muted);font-weight:700;letter-spacing:.06em;margin:2px 8px 10px}
+.tabs{display:flex;flex-direction:column;gap:4px}
+.tabs button{appearance:none;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--ink);cursor:pointer;text-align:left;font-size:15.5px;font-weight:500;line-height:1.5;padding:9px 12px;display:flex;gap:10px;align-items:baseline}
+.tabs button .n{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--accent)}
+.tabs button:hover{background:var(--bg)}
+.tabs button[aria-selected=true]{background:var(--soft);border-color:var(--accent);font-weight:700}
+.tabs button.done .n::after{content:" ✓";color:var(--ok)}
+.meter{margin:14px 8px 4px;font-size:13px;color:var(--muted)}
+.meter .bar{height:6px;border-radius:99px;background:var(--line2);overflow:hidden;margin-top:6px}
+.meter .bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+
+/* 본문 */
+.crumb{font-family:var(--mono);color:var(--accent);font-size:13.5px;font-weight:600;letter-spacing:.04em}
+.panel h1{font-size:30px;line-height:1.35;margin:6px 0 10px;font-weight:900}
+.lead{font-size:18.5px;color:var(--muted);margin:0 0 24px;max-width:46em}
+.panel h3{font-size:21px;margin:40px 0 12px;font-weight:700;display:flex;gap:10px;align-items:baseline}
+.panel h3 .k{font-family:var(--mono);font-size:14px;color:var(--accent);font-weight:600}
+.panel p{margin:12px 0;max-width:48em}
+.panel b{font-weight:700}
+code{font-family:var(--mono);font-size:.88em;background:var(--line2);padding:1px 6px;border-radius:5px}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:16px 0 22px;background:var(--paper)}
+table{border-collapse:collapse;width:100%;font-size:16px;line-height:1.65}
+th,td{border-bottom:1px solid var(--line2);padding:11px 14px;text-align:left;vertical-align:top}
+th{font-size:14.5px;font-weight:700;color:var(--muted);background:var(--bg)}
+tbody tr:last-child td{border-bottom:0}
+td.nw,th.nw{white-space:nowrap}
+
+/* 오늘의 흐름 */
+.flow{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 26px;padding:0;list-style:none}
+.flow li{border:1px solid var(--line);background:var(--paper);border-radius:99px;padding:4px 12px;font-size:14px;color:var(--muted)}
+.flow li b{color:var(--accent);font-family:var(--mono);font-weight:600;margin-right:4px}
+
+/* 샘플 화면 */
+.label{font-family:var(--mono);font-size:12.5px;font-weight:600;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+.browser{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--paper);margin:14px 0 22px}
+.bbar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg);border-bottom:1px solid var(--line)}
+.dots{display:flex;gap:5px}.dots i{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.url{flex:1;min-width:0;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:1px 10px;font:13px var(--mono);color:var(--muted);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.browser .tw{margin:14px;border-radius:8px}
+.pill{display:inline-block;font-size:13px;font-weight:700;padding:1px 9px;border-radius:99px;white-space:nowrap}
+.p-ok{background:var(--ok-soft);color:var(--ok)}.p-wait{background:var(--warn-soft);color:var(--warn)}.p-no{background:var(--no-soft);color:var(--no)}.p-ship{background:var(--c-ins-s);color:var(--c-ins)}
+
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:14px 0}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0}
+.card{border:1px solid var(--line);border-radius:12px;background:var(--paper);padding:16px 18px;min-width:0}
+.card h4{margin:0 0 6px;font-size:17px}
+.card p{margin:6px 0;font-size:15.5px}
+.card .big{font-size:34px;font-weight:900;font-family:var(--mono);color:var(--accent);line-height:1.2}
+.card.navy{background:var(--navy);color:var(--on-navy);border-color:var(--navy)}
+.card.navy p{color:var(--navy-sub)}
+
+/* 안내 상자 */
+.box{border-radius:12px;padding:14px 18px;margin:20px 0}
+.box>.t{display:block;font-weight:700;font-size:15px;margin-bottom:4px}
+.box p{margin:4px 0}
+.box.fail{background:var(--no-soft);color:var(--ink)}.box.fail>.t{color:var(--no)}
+.box.fix{background:var(--ok-soft)}.box.fix>.t{color:var(--ok)}
+.box.key{background:var(--soft)}.box.key>.t{color:var(--accent-ink)}
+.box.think{border:1px dashed var(--c-rel);background:var(--c-rel-s)}.box.think>.t{color:var(--c-rel)}
+.box.think textarea{margin-top:8px}
+
+/* 다섯 가지 색 */
+.t-con{--c:var(--c-con);--s:var(--c-con-s)}.t-ins{--c:var(--c-ins);--s:var(--c-ins-s)}.t-att{--c:var(--c-att);--s:var(--c-att-s)}.t-rel{--c:var(--c-rel);--s:var(--c-rel-s)}.t-rul{--c:var(--c-rul);--s:var(--c-rul-s)}
+.tag{display:inline-block;font-size:13px;font-weight:700;padding:0 8px;border-radius:6px;background:var(--s);color:var(--c);white-space:nowrap}
+
+/* 문장 해부 */
+.anat{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:14px 0 22px}
+.anat .ctrl{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.chipbtn{border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:99px;padding:6px 14px;font-size:14px;font-weight:700;cursor:pointer;min-height:36px}
+.chipbtn[aria-pressed=true]{background:var(--s,var(--soft));border-color:var(--c,var(--accent));color:var(--c,var(--accent-ink))}
+.sent{font-size:18.5px;line-height:2.2}
+.sent span[data-k]{border-radius:5px;padding:2px 3px;transition:background .2s,color .2s}
+.anat[data-show="all"] .sent span[data-k],.anat[data-show="con"] .sent [data-k=con],.anat[data-show="ins"] .sent [data-k=ins],.anat[data-show="att"] .sent [data-k=att],.anat[data-show="rel"] .sent [data-k=rel],.anat[data-show="rul"] .sent [data-k=rul]{background:var(--s);color:var(--c);font-weight:700}
+.anat .why{font-size:15px;color:var(--muted);margin:10px 0 0;min-height:1.8em}
+
+/* 설계도 그림 */
+.diagram{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px;margin:14px 0 8px;overflow-x:auto}
+.diagram svg{display:block;width:100%;min-width:620px;height:auto}
+.diagram .cls rect{fill:var(--c-con-s);stroke:var(--c-con);stroke-width:1.5}
+.diagram .cls text{fill:var(--c-con);font-weight:700;font-size:15px}
+.diagram .ins rect{fill:var(--c-ins-s);stroke:var(--c-ins);stroke-width:1.2}
+.diagram .ins text{fill:var(--c-ins);font-weight:700;font-size:13.5px}
+.diagram .rel line,.diagram .rel path{stroke:var(--c-rel);stroke-width:1.8;fill:none}
+.diagram .rel text{fill:var(--c-rel);font-size:13px;font-weight:700}
+.diagram .io line{stroke:var(--muted);stroke-width:1;stroke-dasharray:4 4}
+.diagram .io text{fill:var(--muted);font-size:11.5px}
+.diagram .att text{fill:var(--c-att);font-size:12.5px;font-weight:700}
+.diagram .layer text{fill:var(--muted);font-size:12px;font-family:var(--mono);letter-spacing:.08em}
+.diagram .layer line{stroke:var(--line);stroke-width:1}
+.diagram .facts{transition:opacity .3s}
+.diagram[data-facts="off"] .facts{opacity:0}
+.arrowhead{fill:var(--c-rel)}
+.toggle{display:inline-flex;gap:8px;align-items:center;font-size:15px;font-weight:700;cursor:pointer;margin:6px 0 2px;min-height:36px}
+.toggle input{width:18px;height:18px;accent-color:var(--accent)}
+
+.triple{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px;align-items:center;margin:8px 0}
+.triple>span{border-radius:8px;padding:6px 10px;text-align:center;font-weight:700;font-size:15px}
+.triple .s,.triple .o{background:var(--c-ins-s);color:var(--c-ins)}
+.triple .p{background:var(--c-rel-s);color:var(--c-rel)}
+
+/* 분류 연습 */
+.sort{display:flex;flex-direction:column;gap:10px;margin:14px 0}
+.sitem{border:1px solid var(--line);border-radius:12px;background:var(--paper);padding:12px 14px}
+.sitem .st{font-weight:700;margin-bottom:8px}
+.sitem .opts{display:flex;flex-wrap:wrap;gap:6px}
+.sitem .opts button{border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:5px 12px;font-size:14px;cursor:pointer;min-height:36px}
+.sitem .opts button:hover{border-color:var(--accent)}
+.sitem .opts button.right{background:var(--ok-soft);border-color:var(--ok);color:var(--ok);font-weight:700}
+.sitem .opts button.wrong{background:var(--no-soft);border-color:var(--no);color:var(--no)}
+.sitem .fb{font-size:14.5px;margin-top:8px;color:var(--muted)}
+.score{font-family:var(--mono);font-weight:600;color:var(--accent)}
+
+/* 쓰기 연습 */
+.answerbox{border:1px solid var(--line);border-radius:12px;margin:12px 0;background:var(--paper);padding:14px 16px}
+.answerbox .q{font-weight:700;margin:0 0 8px}
+textarea{font:inherit;font-size:15.5px;width:100%;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:10px 12px;min-height:56px;resize:vertical;line-height:1.6}
+details{margin-top:10px}
+summary{cursor:pointer;font-weight:700;color:var(--accent-ink);font-size:15px;min-height:32px}
+.sol{background:var(--soft);padding:10px 14px;border-radius:8px;margin-top:8px;font-size:15.5px}
+.sol p{margin:4px 0}
+
+/* 퀴즈 */
+.quiz{border:1px solid var(--line);border-radius:12px;background:var(--paper);padding:16px 18px;margin:12px 0}
+.quiz .qq{font-weight:700;margin:0 0 10px}
+.quiz .qq .qn{font-family:var(--mono);color:var(--accent);margin-right:6px}
+.quiz label{display:flex;gap:10px;align-items:flex-start;padding:7px 10px;border-radius:8px;cursor:pointer;font-size:16px;line-height:1.55}
+.quiz label:hover{background:var(--bg)}
+.quiz input{margin-top:5px;accent-color:var(--accent);flex:none}
+.quiz label.right{background:var(--ok-soft)}.quiz label.wrong{background:var(--no-soft)}
+.qbtn{border:1px solid var(--accent);background:var(--accent);color:var(--paper);border-radius:8px;padding:6px 14px;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;min-height:36px}
+.qfb{margin-top:10px;padding:10px 14px;border-radius:8px;font-size:15.5px}
+.qfb.ok{background:var(--ok-soft)}.qfb.no{background:var(--no-soft)}
+.qfb b{display:block}
+.scorebar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--navy);color:var(--on-navy);border-radius:12px;padding:14px 18px;margin:18px 0}
+.scorebar .big{font-family:var(--mono);font-size:26px;font-weight:600}
+.scorebar p{margin:0;color:var(--navy-sub);font-size:15px}
+
+/* 체크리스트 · 용어 */
+.check{list-style:none;padding:0;margin:12px 0}
+.check li{margin:6px 0}
+.check label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
+.check input{width:18px;height:18px;margin-top:4px;accent-color:var(--accent);flex:none}
+.gloss{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin:14px 0}
+.gloss .card h4{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.gloss .card h4 small{font-family:var(--mono);font-size:12px;color:var(--muted);font-weight:500}
+
+.actions{display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--line);margin-top:34px;padding-top:18px}
+.actions button{background:var(--paper);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:8px 18px;cursor:pointer;font-weight:700;min-height:42px}
+.actions button.next{background:var(--accent);border-color:var(--accent);color:var(--paper)}
+.actions button:disabled{opacity:.4;cursor:default}
+
+.footer{max-width:1320px;margin:auto;border-top:1px solid var(--line);padding-block:20px 38px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));text-align:center;color:var(--muted);font-size:14px}
+.footer small{display:block;max-width:900px;margin:4px auto}
+
+@media (max-width:960px){
+  .layout{grid-template-columns:minmax(0,1fr);gap:16px;padding-top:12px}
+  .sidebar{order:0;position:sticky;top:env(safe-area-inset-top,0px);z-index:5;border-radius:12px;padding:8px}
+  .group,.meter{display:none}
+  .tabs{flex-direction:row;overflow-x:auto;white-space:nowrap}
+  .tabs button{flex:none;font-size:14.5px}
+  .grid3,.grid2{grid-template-columns:minmax(0,1fr)}
+  .panel h1{font-size:25px}
+  .btitle{font-size:22px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<style>
+.kwline{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;margin:6px 0 4px}
+.kwline h1{margin:0}
+.kwline .en{font-family:var(--mono);font-size:15px;color:var(--muted)}
+.qline{font-size:18px;color:var(--muted);margin:0 0 22px}
+.qline b{color:var(--c,var(--accent))}
+.def{border-radius:12px;padding:16px 20px;margin:18px 0;background:var(--s,var(--soft));border:1px solid var(--c,var(--accent))}
+.def .t{display:block;font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--c,var(--accent-ink));font-family:var(--mono)}
+.def p{margin:4px 0;font-size:19px;font-weight:700}
+.def p.sub{font-size:15.5px;font-weight:400;color:var(--muted)}
+.words{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.words button{border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:99px;padding:6px 14px;font-size:15px;cursor:pointer;min-height:38px}
+.words button[aria-pressed=true]{border-color:var(--accent);background:var(--soft);font-weight:700}
+.words button.right{border-color:var(--ok);background:var(--ok-soft);color:var(--ok);font-weight:700}
+.words button.wrong{border-color:var(--no);background:var(--no-soft);color:var(--no)}
+.words button.miss{border-style:dashed;border-color:var(--ok);color:var(--ok)}
+.fbline{font-size:15px;color:var(--muted);margin:6px 0 0}
+.mold{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}
+.mold .m{border:1px solid var(--line);border-radius:12px;background:var(--paper);padding:12px}
+.mold .m .c{display:block;text-align:center;font-weight:700;border-radius:8px;padding:6px;background:var(--c-con-s);color:var(--c-con);margin-bottom:8px}
+.mold .m .i{display:block;text-align:center;font-size:14px;border-radius:6px;padding:3px;background:var(--c-ins-s);color:var(--c-ins);margin:5px 0}
+.matchrow{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--paper);margin:8px 0}
+.matchrow .what{font-weight:700;min-width:170px}
+.matchrow select{font:inherit;font-size:15px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);min-height:38px}
+.matchrow .r{font-size:14.5px}
+.matchrow .r.ok{color:var(--ok);font-weight:700}.matchrow .r.no{color:var(--no);font-weight:700}
+.notice{border:1px solid var(--line);border-radius:12px;background:var(--paper);padding:18px 22px;margin:14px 0 22px}
+.notice h4{margin:0 0 8px;font-size:17px}
+.notice ol{margin:6px 0;padding-left:22px}.notice li{margin:4px 0}
+.flip{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:12px 0}
+.flip .triple{flex:1 1 360px;margin:0}
+.builder{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+.builder select{font:inherit;font-size:15px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);min-height:40px}
+.builder .arr{color:var(--c-rel);font-weight:700}
+.minihead{font-size:15px;font-weight:700;color:var(--muted);margin:30px 0 4px;font-family:var(--mono);letter-spacing:.06em}
+@media (max-width:960px){.mold{grid-template-columns:repeat(2,minmax(0,1fr))}.matchrow .what{min-width:0;flex:1 1 100%}}
+.triple.con .s,.triple.con .o{background:var(--c-con-s);color:var(--c-con)}
+.lv{display:grid;gap:6px;margin:14px 0 20px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.lv .triple{margin:0 0 6px}
+.src{font-size:13.5px;color:var(--muted);margin:8px 0 0}
+.def p.src{font-size:13.5px;font-weight:400}
+.src a,.refs a{color:var(--accent-ink);text-underline-offset:2px}
+.refs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0}
+.refs h4{font-size:16.5px;margin:4px 0 6px}
+.tl{list-style:none;padding:0!important;margin:8px 0 0}
+.tl li{border-left:3px solid var(--line);padding:4px 0 8px 14px;margin:0 0 6px}
+.tl li b{display:block;color:var(--accent-ink)}
+@media (max-width:960px){.refs{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head><body>
+
+<header class="banner"><div class="banner-in">
+  <div>
+    <div class="brand">온톨로지란 무엇인가?</div>
+    <div class="btitle">쇼핑몰 주문으로 배우는 온톨로지 핵심 키워드 7</div>
+  </div>
+  <div class="who">© 2026 부성순 · AI·클라우드 실무 과정<br>부성순 (bakpak@empas.com)</div>
+</div></header>
+
+<div class="layout">
+<aside class="sidebar">
+  <div class="group">목차</div>
+  <nav class="tabs" role="tablist" aria-label="학습 세부 목차">
+    <button type="button" role="tab" id="tab-p01" aria-controls="p01" aria-selected="true"><span class="n">01</span>온톨로지</button>
+    <button type="button" role="tab" id="tab-p02" aria-controls="p02" aria-selected="false" tabindex="-1"><span class="n">02</span>개념</button>
+    <button type="button" role="tab" id="tab-p03" aria-controls="p03" aria-selected="false" tabindex="-1"><span class="n">03</span>인스턴스</button>
+    <button type="button" role="tab" id="tab-p04" aria-controls="p04" aria-selected="false" tabindex="-1"><span class="n">04</span>속성</button>
+    <button type="button" role="tab" id="tab-p05" aria-controls="p05" aria-selected="false" tabindex="-1"><span class="n">05</span>관계</button>
+    <button type="button" role="tab" id="tab-p06" aria-controls="p06" aria-selected="false" tabindex="-1"><span class="n">06</span>규칙</button>
+    <button type="button" role="tab" id="tab-p07" aria-controls="p07" aria-selected="false" tabindex="-1"><span class="n">07</span>트리플</button>
+    <button type="button" role="tab" id="tab-p08" aria-controls="p08" aria-selected="false" tabindex="-1"><span class="n">08</span>한눈에 보기</button>
+    <button type="button" role="tab" id="tab-p09" aria-controls="p09" aria-selected="false" tabindex="-1"><span class="n">09</span>이해도 확인</button>
+    <button type="button" role="tab" id="tab-p10" aria-controls="p10" aria-selected="false" tabindex="-1"><span class="n">10</span>정리</button>
+    <button type="button" role="tab" id="tab-p11" aria-controls="p11" aria-selected="false" tabindex="-1"><span class="n">11</span>FDE 현장에서는</button>
+    <button type="button" role="tab" id="tab-p12" aria-controls="p12" aria-selected="false" tabindex="-1"><span class="n">12</span>참고 자료</button>
+  </nav>
+  <div class="meter">본 탭 <span id="seen">1</span> / 12<div class="bar"><i id="seenbar"></i></div></div>
+</aside>
+
+<main>
+<!-- 01 온톨로지 -->
+<section class="panel" id="p01" role="tabpanel" aria-labelledby="tab-p01">
+  <div class="crumb">KEYWORD 1 / 7</div>
+  <div class="kwline"><h1>온톨로지</h1><span class="en">Ontology</span></div>
+  <p class="qline">같은 말을 모두가 <b>같은 뜻</b>으로 쓰려면 무엇이 필요한가?</p>
+
+  <h3><span class="k">1</span>샘플: 모아상점의 오늘 주문</h3>
+  <div class="browser" role="img" aria-label="모아상점 관리자 주문 목록 화면">
+    <div class="bbar"><span class="dots"><i></i><i></i><i></i></span><span class="url">모아상점 관리자 / 주문 관리 / 11월 4일</span></div>
+    <div class="tw"><table>
+      <thead><tr><th class="nw">주문</th><th class="nw">고객</th><th>상품</th><th class="nw">주문 상태</th><th class="nw">배송</th></tr></thead>
+      <tbody>
+        <tr><td class="nw"><b>키보드 주문</b></td><td class="nw">이지수</td><td>무선 키보드 1개</td><td><span class="pill p-ok">결제완료</span></td><td class="nw"><span class="pill p-ship">배송준비</span></td></tr>
+        <tr><td class="nw"><b>마우스 주문</b></td><td class="nw">박민서</td><td>블루투스 마우스 1개</td><td><span class="pill p-wait">결제대기</span></td><td class="nw">—</td></tr>
+        <tr><td class="nw"><b>허브 주문</b></td><td class="nw">최도윤</td><td>USB 허브 2개</td><td><span class="pill p-no">취소</span></td><td class="nw">—</td></tr>
+      </tbody></table></div>
+  </div>
+
+  <h3><span class="k">2</span>“오늘 주문 몇 건이에요?”</h3>
+  <div class="grid3">
+    <div class="card"><div class="label">주문팀</div><div class="big">3건</div><p>“주문 버튼을 누르면 주문이죠.”</p></div>
+    <div class="card"><div class="label">고객센터</div><div class="big">2건</div><p>“결제를 한 번이라도 한 것이 주문이죠.” (키보드, 허브)</p></div>
+    <div class="card"><div class="label">배송팀</div><div class="big">1건</div><p>“보낼 물건이 있어야 주문이죠.” (키보드)</p></div>
+  </div>
+  <div class="box fail"><span class="t">안 되는 장면</span><p>셋 다 바르게 셌습니다. <b>‘주문’이라는 말의 뜻이 팀마다 달랐을 뿐</b>입니다. 보고서 숫자가 어긋나고, 시스템을 이으면 배송이 엉뚱하게 붙거나 빠집니다.</p></div>
+  <div class="box fix"><span class="t">그래서 이렇게 합니다</span><p>말의 뜻부터 적어 둡니다. “<b>주문</b>은 고객이 주문 버튼을 눌러 만든 구매 요청이다. 주문에는 <b>주문상태</b>가 있고 값은 결제대기 · 결제완료 · 취소 중 하나다.” 이제 질문은 “주문 몇 건?”(3건), “결제완료 몇 건?”(1건)처럼 한 가지로만 읽힙니다.</p></div>
+
+  <div class="def"><span class="t">ONTOLOGY</span><p>업무에 나오는 말의 뜻 · 연결 · 규칙을 모두가 같게 쓰도록 적어 둔 약속</p><p class="sub">정확한 말로는 “어떤 업무 영역의 개념, 속성, 관계, 규칙을 일관되게 정리한 지식 모델”입니다.</p><p class="src">근거: <a href="https://tomgruber.org/writing/ontolingua-kaj-1993/" target="_blank" rel="noopener">Gruber, 1993</a> · <a href="https://protege.stanford.edu/conference/2004/slides/Ontology101_tutorial.pdf" target="_blank" rel="noopener">Ontology Development 101 (Stanford)</a></p></div>
+
+  <h3><span class="k">3</span>온톨로지를 이루는 재료</h3>
+  <div class="tw"><table>
+    <thead><tr><th class="nw">재료</th><th>답하는 질문</th><th>모아상점 예</th></tr></thead>
+    <tbody>
+      <tr class="t-con"><td class="nw"><span class="tag">개념</span></td><td>어떤 종류의 대상이 있나?</td><td>고객, 주문</td></tr>
+      <tr class="t-ins"><td class="nw"><span class="tag">인스턴스</span></td><td>실제로 있는 하나는?</td><td>이지수, 키보드 주문</td></tr>
+      <tr class="t-att"><td class="nw"><span class="tag">속성</span></td><td>대상이 가진 값은?</td><td>주문상태</td></tr>
+      <tr class="t-rel"><td class="nw"><span class="tag">관계</span></td><td>대상끼리 어떻게 이어지나?</td><td>고객이 주문을 넣는다</td></tr>
+      <tr class="t-rul"><td class="nw"><span class="tag">규칙</span></td><td>무엇을 지켜야 하나?</td><td>주문상태 값은 셋 중 하나</td></tr>
+      <tr><td class="nw"><span class="tag t-rel">트리플</span></td><td>사실을 어떻게 적나?</td><td>이지수 · 넣는다 · 키보드 주문</td></tr>
+    </tbody></table></div>
+
+  <div class="box think"><span class="t">생각해 보기</span><p>내 주변에서 같은 단어를 사람마다 다르게 쓰는 예를 하나 적어 보세요. (예: ‘회원’, ‘출석’, ‘완료’)</p>
+    <label class="label" for="th1">내 생각</label><textarea id="th1" placeholder="단어: … / A는 …, B는 …"></textarea></div>
+  <div class="minihead">개념 풀이 · 8문항</div><div class="mini" data-set="m1"></div>
+  <div class="actions"><button type="button" class="prev" disabled>이전</button><button type="button" class="next">다음</button></div>
+</section>
+
+<!-- 02 개념 -->
+<section class="panel t-con" id="p02" role="tabpanel" aria-labelledby="tab-p02" hidden>
+  <div class="crumb">KEYWORD 2 / 7</div>
+  <div class="kwline"><h1>개념</h1><span class="en">Concept · Class</span></div>
+  <p class="qline">이 업무에는 <b>어떤 종류</b>의 대상이 있는가?</p>
+
+  <h3><span class="k">1</span>샘플: 관리자 화면의 메뉴</h3>
+  <div class="browser" role="img" aria-label="모아상점 관리자 메뉴">
+    <div class="bbar"><span class="dots"><i></i><i></i><i></i></span><span class="url">모아상점 관리자</span></div>
+    <div class="grid3" style="grid-template-columns:repeat(4,minmax(0,1fr));margin:14px">
+      <div class="card"><h4>고객 관리</h4><p>4명</p></div><div class="card"><h4>주문 관리</h4><p>3건</p></div><div class="card"><h4>상품 관리</h4><p>3개</p></div><div class="card"><h4>배송 관리</h4><p>1건</p></div>
+    </div>
+  </div>
+  <p>메뉴 이름 하나하나가 이 상점이 다루는 <b>대상의 종류</b>입니다. 고객이 4명이든 4만 명이든 ‘고객’이라는 종류는 하나입니다.</p>
+  <div class="def"><span class="t">CONCEPT</span><p>대상의 종류. 같은 성격을 가진 것들을 묶은 이름</p><p class="sub">클래스(class)라고도 부릅니다. 그 종류가 무엇인지 뜻을 함께 적어야 개념이 완성됩니다.</p><p class="src">근거: <a href="https://protege.stanford.edu/conference/2004/slides/Ontology101_tutorial.pdf" target="_blank" rel="noopener">Ontology Development 101 (Stanford)</a> — Classes</p></div>
+
+  <h3><span class="k">2</span>모아상점의 개념 네 개</h3>
+  <div class="tw"><table>
+    <thead><tr><th class="nw">개념</th><th>뜻 (약속)</th><th>여기에 들지 않는 것</th></tr></thead>
+    <tbody>
+      <tr><td class="nw"><span class="tag">고객</span></td><td>모아상점에 가입해 주문할 수 있는 사람</td><td>가입하지 않은 방문자</td></tr>
+      <tr><td class="nw"><span class="tag">주문</span></td><td>고객이 주문 버튼을 눌러 만든 구매 요청</td><td>장바구니에만 담긴 상품</td></tr>
+      <tr><td class="nw"><span class="tag">상품</span></td><td>모아상점이 판매하는 물품</td><td>판매를 끝낸 단종 물품</td></tr>
+      <tr><td class="nw"><span class="tag">배송</span></td><td>주문한 상품을 보내는 일 한 건</td><td>반품으로 돌려받는 일</td></tr>
+    </tbody></table></div>
+  <p>‘여기에 들지 않는 것’까지 적으면 경계가 분명해집니다. 01의 세 팀이 다툰 것도 바로 이 경계였습니다.</p>
+
+  <h3><span class="k">3</span>찾아보기: 개념만 고르세요</h3>
+  <div class="words" id="pick-con" role="group" aria-label="개념 고르기"></div>
+  <button type="button" class="qbtn" data-check="pick-con">확인</button>
+  <p class="fbline" id="pick-con-fb" aria-live="polite"></p>
+
+  <div class="box fail"><span class="t">자주 헷갈리는 것</span><p><b>결제완료</b>는 개념이 아닙니다. 주문이 가진 <b>값</b>입니다. ‘결제완료’라는 종류의 대상이 따로 있는 것이 아니라, 주문의 상태 칸에 들어가는 글자입니다.</p></div>
+  <div class="box think"><span class="t">생각해 보기</span><p>모아상점이 ‘쿠폰’을 새로 도입합니다. 쿠폰은 개념이 될까요? 된다면 뜻을 한 줄로 적어 보세요.</p>
+    <label class="label" for="th2">내 생각</label><textarea id="th2"></textarea>
+    <details><summary>예시 답 보기</summary><div class="sol"><p>됩니다. 쿠폰은 여러 장이 생기고 각자 다른 값을 가지는 <b>대상의 종류</b>입니다. 예: “쿠폰은 주문 금액을 깎아 주는, 고객에게 발급된 할인권이다.”</p></div></details></div>
+  <div class="minihead">개념 풀이 · 8문항</div><div class="mini" data-set="m2"></div>
+  <div class="actions"><button type="button" class="prev">이전</button><button type="button" class="next">다음</button></div>
+</section>
+
+<!-- 03 인스턴스 -->
+<section class="panel t-ins" id="p03" role="tabpanel" aria-labelledby="tab-p03" hidden>
+  <div class="crumb">KEYWORD 3 / 7</div>
+  <div class="kwline"><h1>인스턴스</h1><span class="en">Instance</span></div>
+  <p class="qline">그 종류에 속한 <b>실제 하나</b>는 무엇인가?</p>
+
+  <h3><span class="k">1</span>샘플: 고객 목록</h3>
+  <div class="browser" role="img" aria-label="고객 목록 화면">
+    <div class="bbar"><span class="dots"><i></i><i></i><i></i></span><span class="url">모아상점 관리자 / 고객 관리</span></div>
+    <div class="tw"><table>
+      <thead><tr><th class="nw">이름</th><th>가입일</th><th>사는 곳</th></tr></thead>
+      <tbody><tr><td class="nw"><b>이지수</b></td><td>3월 2일</td><td>서울</td></tr><tr><td class="nw"><b>박민서</b></td><td>7월 15일</td><td>부산</td></tr><tr><td class="nw"><b>최도윤</b></td><td>10월 28일</td><td>대전</td></tr><tr><td class="nw"><b>이지수</b></td><td>11월 1일</td><td>광주</td></tr></tbody></table></div>
+  </div>
+  <p>표의 줄 하나하나가 ‘고객’이라는 개념에 속한 <b>실제 한 명</b>입니다.</p>
+  <div class="def"><span class="t">INSTANCE</span><p>개념에 속한 실제 대상 하나. 다른 것과 구분되어야 한다</p><p class="sub">개념이 붕어빵 틀이라면 인스턴스는 그 틀에서 나온 붕어빵 하나입니다.</p><p class="src">근거: <a href="https://protege.stanford.edu/conference/2004/slides/Ontology101_tutorial.pdf" target="_blank" rel="noopener">Ontology Development 101 (Stanford)</a> — Instances</p></div>
+
+  <h3><span class="k">2</span>틀과 붕어빵</h3>
+  <div class="mold">
+    <div class="m"><span class="c">고객</span><span class="i">이지수</span><span class="i">박민서</span><span class="i">최도윤</span></div>
+    <div class="m"><span class="c">주문</span><span class="i">키보드 주문</span><span class="i">마우스 주문</span><span class="i">허브 주문</span></div>
+    <div class="m"><span class="c">상품</span><span class="i">무선 키보드</span><span class="i">블루투스 마우스</span><span class="i">USB 허브</span></div>
+    <div class="m"><span class="c">배송</span><span class="i">키보드 배송</span></div>
+  </div>
+  <div class="box fail"><span class="t">이름만으로는 구분이 안 될 때</span><p>고객 목록에 <b>이지수가 두 명</b>입니다. “이지수 고객의 주문”이라고 하면 누구인지 알 수 없습니다. 인스턴스는 서로 <b>구분할 수 있어야</b> 합니다. 실제 시스템은 회원마다 겹치지 않는 값을 붙여 가립니다. 이 교안에서 ‘이지수’는 3월에 가입한 이지수를 말합니다.</p></div>
+
+  <h3><span class="k">3</span>연결하기: 어느 틀에서 나왔을까?</h3>
+  <div id="match"></div>
+  <button type="button" class="qbtn" id="matchCheck">확인</button>
+  <p class="fbline" id="matchFb" aria-live="polite"></p>
+
+  <div class="box think"><span class="t">생각해 보기</span><p>무선 키보드가 100개 팔렸습니다. ‘무선 키보드’ 인스턴스는 1개일까요, 100개일까요?</p>
+    <details><summary>예시 답 보기</summary><div class="sol"><p>무엇을 하나로 볼지 <b>약속하기 나름</b>입니다. 모아상점은 ‘판매하는 물품’을 상품으로 정했으므로 무선 키보드는 상품 인스턴스 1개입니다. 물건 한 대 한 대를 따로 관리하려면 ‘재고품’ 같은 개념을 새로 만들어야 합니다.</p></div></details></div>
+  <div class="minihead">개념 풀이 · 8문항</div><div class="mini" data-set="m3"></div>
+  <div class="actions"><button type="button" class="prev">이전</button><button type="button" class="next">다음</button></div>
+</section>
+
+<!-- 04 속성 -->
+<section class="panel t-att" id="p04" role="tabpanel" aria-labelledby="tab-p04" hidden>
+  <div class="crumb">KEYWORD 4 / 7</div>
+  <div class="kwline"><h1>속성</h1><span class="en">Property · Attribute</span></div>
+  <p class="qline">그 대상은 <b>어떤 값</b>을 가지고 있는가?</p>
+
+  <h3><span class="k">1</span>샘플: 키보드 주문 상세</h3>
+  <div class="browser" role="img" aria-label="키보드 주문 상세 화면">
+    <div class="bbar"><span class="dots"><i></i><i></i><i></i></span><span class="url">모아상점 관리자 / 주문 상세 / 키보드 주문</span></div>
+    <div class="tw"><table><tbody>
+      <tr><th class="nw">주문일</th><td>11월 4일</td></tr>
+      <tr><th class="nw">주문상태</th><td><span class="pill p-ok">결제완료</span></td></tr>
+      <tr><th class="nw">결제금액</th><td>39,000원</td></tr>
+    </tbody></table></div>
+  </div>
+  <p>왼쪽 칸 이름(주문일, 주문상태, 결제금액)이 <b>속성</b>, 오른쪽에 들어간 것이 <b>속성값</b>입니다.</p>
+  <div class="def"><span class="t">PROPERTY</span><p>대상이 가지는 값의 칸. 칸 이름은 개념에, 값은 인스턴스에 붙는다</p><p class="sub">“주문에는 주문상태가 있다”는 설계, “키보드 주문의 주문상태는 결제완료다”는 사실입니다.</p><p class="src">근거: <a href="https://protege.stanford.edu/conference/2004/slides/Ontology101_tutorial.pdf" target="_blank" rel="noopener">Ontology Development 101 (Stanford)</a> — Slots, allowed values</p></div>
+
+  <h3><span class="k">2</span>개념마다 가지는 속성</h3>
+  <div class="tw"><table>
+    <thead><tr><th class="nw">개념</th><th>속성 (칸 이름)</th><th>값의 예</th></tr></thead>
+    <tbody>
+      <tr><td class="nw"><span class="tag t-con">고객</span></td><td>이름, 가입일</td><td>이지수, 3월 2일</td></tr>
+      <tr><td class="nw"><span class="tag t-con">주문</span></td><td>주문일, 주문상태, 결제금액</td><td>11월 4일, 결제완료, 39,000원</td></tr>
+      <tr><td class="nw"><span class="tag t-con">상품</span></td><td>상품명, 판매가</td><td>무선 키보드, 39,000원</td></tr>
+      <tr><td class="nw"><span class="tag t-con">배송</span></td><td>배송상태</td><td>배송준비</td></tr>
+    </tbody></table></div>
+
+  <h3><span class="k">3</span>값도 약속합니다</h3>
+  <p>모아상점은 <b>주문상태의 값을 결제대기 · 결제완료 · 취소 셋 중 하나</b>로 정했습니다. 아래 값이 들어오면 받아도 될까요?</p>
+  <div class="sort" id="attval"></div>
+
+  <div class="box fail"><span class="t">속성과 관계를 헷갈릴 때</span><p>칸에 들어가는 것이 <b>글자나 숫자</b>(결제완료, 39,000원)면 속성입니다. 칸에 들어가는 것이 <b>다른 대상</b>(고객 이지수, 상품 무선 키보드)이면 관계입니다. 다음 탭에서 봅니다.</p></div>
+  <div class="minihead">개념 풀이 · 8문항</div><div class="mini" data-set="m4"></div>
+  <div class="actions"><button type="button" class="prev">이전</button><button type="button" class="next">다음</button></div>
+</section>
+
+<!-- 05 관계 -->
+<section class="panel t-rel" id="p05" role="tabpanel" aria-labelledby="tab-p05" hidden>
+  <div class="crumb">KEYWORD 5 / 7</div>
+  <div class="kwline"><h1>관계</h1><span class="en">Relation</span></div>
+  <p class="qline">대상과 대상은 <b>어떻게 이어지는가</b>?</p>
+
+  <h3><span class="k">1</span>샘플: 키보드 주문에 걸린 링크</h3>
+  <div class="browser" role="img" aria-label="키보드 주문 상세 화면의 연결 정보">
+    <div class="bbar"><span class="dots"><i></i><i></i><i></i></span><span class="url">모아상점 관리자 / 주문 상세 / 키보드 주문</span></div>
+    <div class="tw"><table><tbody>
+      <tr><th class="nw">주문을 넣은 고객</th><td><u>이지수</u> →</td></tr>
+      <tr><th class="nw">담긴 상품</th><td><u>무선 키보드</u> → (1개)</td></tr>
+      <tr><th class="nw">처리하는 배송</th><td><u>키보드 배송</u> →</td></tr>
+    </tbody></table></div>
+  </div>
+  <p>이 칸들에는 글자 값이 아니라 <b>다른 대상</b>이 들어 있고, 누르면 그 대상의 화면으로 넘어갑니다. 대상과 대상을 잇는 이 연결이 관계입니다.</p>
+  <div class="def"><span class="t">RELATION</span><p>두 대상을 잇는 연결. 이름 · 방향 · 양쪽 끝의 종류를 약속한다</p><p class="sub">“고객 —넣는다→ 주문”은 ‘고객이 주문을 넣는다’로 읽습니다. 출발은 고객, 도착은 주문입니다.</p><p class="src">근거: <a href="https://protege.stanford.edu/conference/2004/slides/Ontology101_tutorial.pdf" target="_blank" rel="noopener">Ontology Development 101 (Stanford)</a> — Cardinality, Inverse slots · <a href="https://www.w3.org/TR/swbp-n-aryRelations/" target="_blank" rel="noopener">W3C Defining N-ary Relations</a></p></div>
+
+  <h3><span class="k">2</span>관계도 두 층입니다: 설계와 사실</h3>
+  <div class="lv">
+    <span class="label">설계 · 종류끼리 약속</span>
+    <div class="triple con"><span class="s">고객</span><span class="p">넣는다 →</span><span class="o">주문</span></div>
+    <span class="label">사실 · 실제 대상끼리 연결</span>
+    <div class="triple"><span class="s">이지수</span><span class="p">넣는다 →</span><span class="o">키보드 주문</span></div>
+    <div class="triple"><span class="s">박민서</span><span class="p">넣는다 →</span><span class="o">마우스 주문</span></div>
+  </div>
+  <p>설계는 “고객과 주문 사이에는 ‘넣는다’ 연결이 있을 수 있다”는 약속 하나입니다. 사실은 그 약속을 따라 실제 대상끼리 이어진 선이고, 주문이 늘 때마다 늘어납니다.</p>
+
+  <h3><span class="k">3</span>모아상점의 관계 세 개</h3>
+  <div class="tw"><table>
+    <thead><tr><th class="nw">관계</th><th class="nw">출발 → 도착</th><th>읽는 법</th><th>몇 개와 이어지나</th></tr></thead>
+    <tbody>
+      <tr><td class="nw"><span class="tag">넣는다</span></td><td class="nw">고객 → 주문</td><td>고객이 주문을 넣는다</td><td>고객 한 명은 주문을 <b>여러 개</b> 넣을 수 있다. 주문 하나는 고객 <b>한 명</b>이 넣는다</td></tr>
+      <tr><td class="nw"><span class="tag">담는다</span></td><td class="nw">주문 → 상품</td><td>주문이 상품을 담는다</td><td>주문 하나에 상품 <b>여러 가지</b>. 상품 하나도 <b>여러 주문</b>에 담긴다</td></tr>
+      <tr><td class="nw"><span class="tag">처리한다</span></td><td class="nw">배송 → 주문</td><td>배송이 주문을 처리한다</td><td>배송 하나는 주문 <b>하나</b>를 처리한다. 주문에는 배송이 <b>없을 수도</b> 있다</td></tr>
+    </tbody></table></div>
+  <p>‘몇 개와 이어지나’도 약속입니다. 샘플에서 마우스 주문과 허브 주문에는 배송이 없습니다. “주문에는 배송이 없을 수도 있다”고 약속해 두었기 때문에 이상한 데이터가 아닙니다.</p>
+
+  <h3><span class="k">4</span>방향을 뒤집어 보기</h3>
+  <div class="flip">
+    <div class="triple" id="flipT"><span class="s">이지수</span><span class="p">넣는다 →</span><span class="o">키보드 주문</span></div>
+    <button type="button" class="chipbtn" id="flipBtn">방향 뒤집기</button>
+  </div>
+  <p class="fbline" id="flipFb" aria-live="polite">“이지수가 키보드 주문을 넣는다.” 약속한 방향과 같습니다.</p>
+
+  <h3><span class="k">5</span>관계를 따라가면 답이 나온다</h3>
+  <p>“이지수는 무엇을 샀나?”라는 질문에는 따로 ‘샀다’ 관계가 없어도 답할 수 있습니다.</p>
+  <div class="lv">
+    <div class="triple"><span class="s">이지수</span><span class="p">넣는다 →</span><span class="o">키보드 주문</span></div>
+    <div class="triple"><span class="s">키보드 주문</span><span class="p">담는다 →</span><span class="o">무선 키보드</span></div>
+  </div>
+  <p>두 관계를 이어 따라가면 <b>무선 키보드</b>가 나옵니다. 이미 있는 관계로 알 수 있는 것을 또 다른 관계로 만들 필요는 없습니다. 관계는 업무에 꼭 필요한 연결만 약속합니다.</p>
+
+  <div class="box think"><span class="t">생각해 보기</span><p>허브 주문에는 USB 허브가 <b>2개</b> 담겼습니다. 이 ‘2’는 주문의 속성일까요, 상품의 속성일까요?</p>
+    <label class="label" for="th5">내 생각</label><textarea id="th5"></textarea>
+    <details><summary>예시 답 보기</summary><div class="sol"><p>둘 다 딱 맞지 않습니다. 주문에 붙이면 상품이 여러 가지일 때 어느 상품이 2개인지 모르고, 상품에 붙이면 다른 주문의 개수와 섞입니다.</p><p>‘2’는 <b>“이 주문에 이 상품을 몇 개”라는 연결 자체에 붙는 값</b>입니다. 실무에서는 ‘주문항목’이라는 개념을 따로 두어 주문 → 주문항목(수량 2) → 상품처럼 풀어냅니다.</p></div></details></div>
+  <div class="minihead">개념 풀이 · 8문항</div><div class="mini" data-set="m5"></div>
+  <div class="actions"><button type="button" class="prev">이전</button><button type="button" class="next">다음</button></div>
+</section>
+
+<!-- 06 규칙 -->
+<section class="panel t-rul" id="p06" role="tabpanel" aria-labelledby="tab-p06" hidden>
+  <div class="crumb">KEYWORD 6 / 7</div>
+  <div class="kwline"><h1>규칙</h1><span class="en">Rule · Constraint</span></div>
+  <p class="qline">무엇을 <b>지켜야</b> 하는가?</p>
+
+  <h3><span class="k">1</span>샘플: 운영 안내문</h3>
+  <div class="notice">
+    <h4>모아상점 주문 · 배송 운영 기준</h4>
+    <ol>
+      <li>주문상태는 결제대기 · 결제완료 · 취소 중 하나로만 적는다.</li>
+      <li>주문 하나에는 상품이 하나 이상 담겨야 한다.</li>
+      <li>배송은 주문상태가 결제완료인 주문에만 만든다.</li>
+    </ol>
+  </div>
+  <p>안내문의 문장들은 특정 주문 이야기가 아닙니다. <b>모든 주문이 지켜야 할 약속</b>입니다.</p>
+  <div class="def"><span class="t">RULE</span><p>모든 대상에 똑같이 적용하는 약속이나 제한</p><p class="sub">제약(constraint)이라고도 합니다. 규칙이 있으면 잘못된 데이터를 걸러낼 수 있습니다.</p><p class="src">근거: <a href="https://protege.stanford.edu/conference/2004/slides/Ontology101_tutorial.pdf" target="_blank" rel="noopener">Ontology Development 101 (Stanford)</a> — Slot facets (cardinality, value type)</p></div>
+
+  <h3><span class="k">2</span>사실과 규칙은 다릅니다</h3>
+  <div class="grid2">
+    <div class="card t-att"><span class="tag">사실</span><p><b>“마우스 주문은 결제대기다.”</b></p><p>주문 한 건의 지금 상태. 내일 바뀔 수 있습니다.</p></div>
+    <div class="card t-rul"><span class="tag">규칙</span><p><b>“결제완료인 주문에만 배송을 만든다.”</b></p><p>모든 주문에 적용되는 약속. 주문마다 다르지 않습니다.</p></div>
+  </div>
+
+  <h3><span class="k">3</span>규칙으로 검사하기</h3>
+  <p>안내문 3번 규칙으로 판단하세요. 이 주문에 배송을 만들어도 될까요?</p>
+  <div class="sort" id="rulecheck"></div>
+
+  <div class="box fail"><span class="t">흔한 실수</span><p>규칙은 <b>그 상점이 정한 약속</b>입니다. 다른 상점에 그대로 옮기면 안 되고, 디지털 상품처럼 배송이 아예 없는 경우가 생기면 규칙의 범위를 다시 정해야 합니다.</p></div>
+  <div class="minihead">개념 풀이 · 8문항</div><div class="mini" data-set="m6"></div>
+  <div class="actions"><button type="button" class="prev">이전</button><button type="button" class="next">다음</button></div>
+</section>
+
+<!-- 07 트리플 -->
+<section class="panel" id="p07" role="tabpanel" aria-labelledby="tab-p07" hidden>
+  <div class="crumb">KEYWORD 7 / 7</div>
+  <div class="kwline"><h1>트리플</h1><span class="en">Triple</span></div>
+  <p class="qline">실제 사실을 <b>어떻게 한 줄로</b> 적는가?</p>
+
+  <h3><span class="k">1</span>샘플: 키보드 주문을 문장으로</h3>
+  <div class="notice"><p style="margin:0">“이지수 고객이 키보드 주문을 넣었고, 그 주문에는 무선 키보드가 담겼으며, 키보드 배송이 이 주문을 처리한다.”</p></div>
+  <p>긴 문장을 <b>주어 · 관계 · 대상</b> 세 칸으로 쪼개면 이렇게 됩니다.</p>
+  <div class="triple"><span class="s">이지수</span><span class="p">넣는다</span><span class="o">키보드 주문</span></div>
+  <div class="triple"><span class="s">키보드 주문</span><span class="p">담는다</span><span class="o">무선 키보드</span></div>
+  <div class="triple"><span class="s">키보드 배송</span><span class="p">처리한다</span><span class="o">키보드 주문</span></div>
+  <div class="def t-rel"><span class="t">TRIPLE</span><p>주어 · 관계 · 대상, 세 칸으로 적은 사실 한 줄</p><p class="sub">세 칸이라서 트리플(triple)입니다. 가운데 칸에는 관계 탭에서 약속한 관계 이름만 씁니다.</p><p class="src">근거: <a href="https://www.w3.org/TR/rdf11-primer/Overview.html" target="_blank" rel="noopener">W3C RDF 1.1 Primer</a> — Triples</p></div>
+
+  <h3><span class="k">2</span>왜 세 칸으로 쪼개나?</h3>
+  <div class="grid2">
+    <div class="card"><h4>문장 그대로</h4><p>쓰는 사람마다 표현이 달라 기계가 읽기 어렵습니다. “넣었다”, “주문했다”, “구매했다”가 모두 섞입니다.</p></div>
+    <div class="card"><h4>세 칸으로</h4><p>관계 이름이 하나로 정해져 있어 “이지수가 넣은 주문 모두”처럼 정확하게 찾을 수 있습니다.</p></div>
+  </div>
+
+  <h3><span class="k">3</span>직접 만들기: 마우스 주문</h3>
+  <p>마우스 주문 화면: 고객 박민서, 상품 블루투스 마우스, 배송 없음. 세 칸을 골라 약속에 맞는지 확인하세요.</p>
+  <div class="builder">
+    <label class="label" for="bs">주어</label><select id="bs"><option>박민서</option><option>마우스 주문</option><option>블루투스 마우스</option><option>마우스 배송</option></select>
+    <span class="arr">—</span>
+    <label class="label" for="bp">관계</label><select id="bp"><option>넣는다</option><option>담는다</option><option>처리한다</option><option>구매했다</option></select>
+    <span class="arr">→</span>
+    <label class="label" for="bo">대상</label><select id="bo"><option>마우스 주문</option><option>박민서</option><option>블루투스 마우스</option></select>
+    <button type="button" class="qbtn" id="bCheck" style="margin-top:0">확인</button>
+  </div>
+  <p class="fbline" id="bFb" aria-live="polite">세 칸을 골라 확인을 누르세요. 맞는 줄은 두 개입니다.</p>
+  <div class="minihead">개념 풀이 · 8문항</div><div class="mini" data-set="m7"></div>
+  <div class="actions"><button type="button" class="prev">이전</button><button type="button" class="next">다음</button></div>
+</section>
+
+<!-- 08 한눈에 -->
+<section class="panel" id="p08" role="tabpanel" aria-labelledby="tab-p08" hidden>
+  <div class="crumb">SUMMARY</div>
+  <div class="kwline"><h1>일곱 개를 한 장에</h1></div>
+  <p class="qline">위층은 <b>틀(설계)</b>, 아래층은 <b>사실(실제 주문)</b>입니다.</p>
+  <label class="toggle" for="factsToggle"><input type="checkbox" id="factsToggle" checked>사실도 함께 보기</label>
+  <div class="diagram" id="diag" data-facts="on">
+    <svg viewBox="0 0 860 400" role="img" aria-label="위층: 고객, 주문, 상품, 배송 개념과 관계. 아래층: 이지수, 키보드 주문, 무선 키보드, 키보드 배송">
+      <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="arrowhead"/></marker></defs>
+      <g class="layer"><text x="10" y="22">설계 · 틀</text><line x1="10" y1="200" x2="850" y2="200"/><text x="10" y="226">사실 · 실제 주문</text></g>
+      <g class="rel"><line x1="190" y1="90" x2="318" y2="90" marker-end="url(#ah)"/><text x="254" y="80" text-anchor="middle">넣는다</text>
+        <line x1="442" y1="90" x2="570" y2="90" marker-end="url(#ah)"/><text x="506" y="80" text-anchor="middle">담는다</text>
+        <path d="M 700 172 L 380 172 L 380 118" marker-end="url(#ah)"/><text x="540" y="164" text-anchor="middle">처리한다</text></g>
+      <g class="cls"><rect x="70" y="66" width="120" height="48" rx="10"/><text x="130" y="96" text-anchor="middle">고객</text></g>
+      <g class="cls"><rect x="320" y="66" width="120" height="48" rx="10"/><text x="380" y="96" text-anchor="middle">주문</text></g>
+      <g class="cls"><rect x="572" y="66" width="120" height="48" rx="10"/><text x="632" y="96" text-anchor="middle">상품</text></g>
+      <g class="att"><text x="372" y="140" text-anchor="end">속성: 주문상태</text></g>
+      <g class="cls"><rect x="700" y="152" width="120" height="40" rx="10"/><text x="760" y="178" text-anchor="middle">배송</text></g>
+      <g class="facts">
+        <g class="io"><line x1="130" y1="114" x2="130" y2="262"/><line x1="345" y1="114" x2="345" y2="262"/><line x1="632" y1="114" x2="632" y2="262"/><line x1="760" y1="192" x2="760" y2="330"/><text x="138" y="246">~의 인스턴스</text></g>
+        <g class="rel"><line x1="190" y1="286" x2="318" y2="286" marker-end="url(#ah)"/><text x="254" y="276" text-anchor="middle">넣는다</text>
+          <line x1="442" y1="286" x2="570" y2="286" marker-end="url(#ah)"/><text x="506" y="276" text-anchor="middle">담는다</text>
+          <path d="M 700 352 L 380 352 L 380 312" marker-end="url(#ah)"/><text x="540" y="344" text-anchor="middle">처리한다</text></g>
+        <g class="ins"><rect x="70" y="264" width="120" height="44" rx="8"/><text x="130" y="291" text-anchor="middle">이지수</text></g>
+        <g class="ins"><rect x="320" y="264" width="120" height="44" rx="8"/><text x="380" y="291" text-anchor="middle">키보드 주문</text></g>
+        <g class="ins"><rect x="572" y="264" width="120" height="44" rx="8"/><text x="632" y="291" text-anchor="middle">무선 키보드</text></g>
+        <g class="ins"><rect x="700" y="332" width="120" height="40" rx="8"/><text x="760" y="357" text-anchor="middle">키보드 배송</text></g>
+        <g class="att"><text x="372" y="332" text-anchor="end">주문상태 = 결제완료</text></g>
+      </g>
+    </svg>
+  </div>
+  <p style="font-size:14.5px;color:var(--muted)"><span class="tag t-con">개념</span> 위층 네모 · <span class="tag t-ins">인스턴스</span> 아래층 네모 · <span class="tag t-rel">관계</span> 보라 화살표 · <span class="tag t-att">속성</span> 주황 글자 · 아래층 화살표 한 개 = <span class="tag t-rel">트리플</span> 한 줄</p>
+
+  <h3><span class="k">1</span>틀과 사실 구분 요령</h3>
+  <div class="grid2">
+    <div class="card t-con"><span class="tag">틀 · 설계</span><p><b>“주문에는 주문상태가 있다.”</b></p><p>종류 이름(주문)만 나옵니다. 주문이 늘어도 이 문장은 하나입니다.</p></div>
+    <div class="card t-ins"><span class="tag">사실 · 데이터</span><p><b>“키보드 주문의 주문상태는 결제완료다.”</b></p><p>실제 대상(키보드 주문)이 나옵니다. 주문이 늘면 이런 문장도 늘어납니다.</p></div>
+  </div>
+  <h3><span class="k">2</span>비슷해 보이지만 다른 것</h3>
+  <div class="tw"><table>
+    <thead><tr><th class="nw">무엇</th><th>관심 질문</th><th>모아상점 예</th></tr></thead>
+    <tbody>
+      <tr><td class="nw"><b>데이터베이스</b></td><td>기록을 어떻게 저장하고 꺼낼까?</td><td>주문 표에 키보드 주문, 결제완료를 저장</td></tr>
+      <tr><td class="nw"><b>온톨로지</b></td><td>말과 값의 뜻을 어떻게 정할까?</td><td>주문이 무엇이고 주문상태 값이 무슨 뜻인지 정의</td></tr>
+      <tr><td class="nw"><b>그래프 그림</b></td><td>관계를 어떤 모양으로 보여줄까?</td><td>위의 그림</td></tr>
+    </tbody></table></div>
+  <div class="actions"><button type="button" class="prev">이전</button><button type="button" class="next">다음</button></div>
+</section>
+
+<!-- 09 확인 -->
+<section class="panel" id="p09" role="tabpanel" aria-labelledby="tab-p09" hidden>
+  <div class="crumb">CHECK</div>
+  <div class="kwline"><h1>이해도 확인</h1></div>
+  <p class="qline">일곱 키워드를 <b>구분</b>할 수 있는지 봅니다.</p>
+  <h3><span class="k">1</span>분류하기 <span class="score" id="sortScore">0 / 8</span></h3>
+  <div class="sort" id="sort"></div>
+  <h3><span class="k">2</span>종합 문제</h3>
+  <div class="scorebar"><span class="big" id="qscore">0 / 15</span><p id="qmsg">아직 푼 문제가 없습니다.</p></div>
+  <div id="quiz"></div>
+  <div class="actions"><button type="button" class="prev">이전</button><button type="button" class="next">다음</button></div>
+</section>
+
+<!-- 10 정리 -->
+<section class="panel" id="p10" role="tabpanel" aria-labelledby="tab-p10" hidden>
+  <div class="crumb">REVIEW</div>
+  <div class="kwline"><h1>키워드 7개 정리</h1></div>
+  <div class="tw"><table>
+    <thead><tr><th class="nw">키워드</th><th>한 줄 뜻</th><th>구별 요령</th><th>모아상점 예</th></tr></thead>
+    <tbody>
+      <tr><td class="nw"><b>온톨로지</b></td><td>말의 뜻 · 연결 · 규칙을 적은 약속</td><td>아래 여섯을 모두 담는다</td><td>모아상점 주문 업무 약속</td></tr>
+      <tr class="t-con"><td class="nw"><span class="tag">개념</span></td><td>대상의 종류</td><td>여러 개를 묶는 종류 이름</td><td>주문</td></tr>
+      <tr class="t-ins"><td class="nw"><span class="tag">인스턴스</span></td><td>종류에 속한 실제 하나</td><td>딱 하나를 가리키고, 다른 것과 구분된다</td><td>키보드 주문</td></tr>
+      <tr class="t-att"><td class="nw"><span class="tag">속성</span></td><td>대상이 가진 값의 칸</td><td>칸에 글자 · 숫자가 들어간다</td><td>주문상태 = 결제완료</td></tr>
+      <tr class="t-rel"><td class="nw"><span class="tag">관계</span></td><td>대상과 대상의 연결</td><td>칸에 다른 대상이 들어간다. 방향과 ‘몇 개와’가 있다</td><td>고객 —넣는다→ 주문</td></tr>
+      <tr class="t-rul"><td class="nw"><span class="tag">규칙</span></td><td>모두가 지킬 약속</td><td>특정 대상 없이 “~만, ~해야”</td><td>결제완료일 때만 배송</td></tr>
+      <tr><td class="nw"><span class="tag t-rel">트리플</span></td><td>사실 한 줄, 세 칸</td><td>주어 · 관계 · 대상</td><td>이지수 · 넣는다 · 키보드 주문</td></tr>
+    </tbody></table></div>
+  <div class="answerbox"><p class="q">“온톨로지는 ______ 이다.” 내 말로 채워 보세요.</p><label class="label" for="wf">답</label><textarea id="wf"></textarea>
+    <details><summary>예시 답 보기</summary><div class="sol"><p>“온톨로지는 쇼핑몰의 고객 · 주문 · 상품 같은 <b>개념</b>과 그 <b>속성</b>, <b>관계</b>, <b>규칙</b>을 모두가 같게 이해하도록 정리한 약속이다.”</p></div></details></div>
+  <div class="box think"><span class="t">처음 질문으로 돌아가기</span><p>“오늘 주문 몇 건?”에 세 팀이 같은 숫자를 내려면 어떻게 답해야 할까요?</p>
+    <details><summary>예시 답 보기</summary><div class="sol"><p>약속한 뜻대로 “주문은 3건. 주문상태로 보면 결제완료 1건(키보드), 결제대기 1건(마우스), 취소 1건(허브)”처럼 기준을 붙여 답합니다.</p></div></details></div>
+  <h3><span class="k">1</span>스스로 점검</h3>
+  <ul class="check" id="checklist">
+    <li><label for="c1"><input type="checkbox" id="c1">온톨로지가 왜 필요한지 ‘주문 몇 건’ 예로 설명할 수 있다</label></li>
+    <li><label for="c2"><input type="checkbox" id="c2">개념과 값(결제완료)을 구분할 수 있다</label></li>
+    <li><label for="c3"><input type="checkbox" id="c3">인스턴스가 서로 구분되어야 하는 이유를 안다</label></li>
+    <li><label for="c4"><input type="checkbox" id="c4">속성과 관계를 ‘칸에 무엇이 들어가나’로 가를 수 있다</label></li>
+    <li><label for="c5"><input type="checkbox" id="c5">관계의 방향과 ‘몇 개와 이어지나’를 말할 수 있다</label></li>
+    <li><label for="c6"><input type="checkbox" id="c6">사실과 규칙을 구분하고, 규칙으로 데이터를 검사할 수 있다</label></li>
+    <li><label for="c7"><input type="checkbox" id="c7">새 주문을 트리플로 적을 수 있다</label></li>
+  </ul>
+  <p style="font-size:14.5px;color:var(--muted)">체크한 내용은 이 브라우저에만 저장됩니다.</p>
+  <div class="actions"><button type="button" class="prev">이전</button><button type="button" class="next">다음</button></div>
+</section>
+
+<!-- 11 FDE -->
+<section class="panel" id="p11" role="tabpanel" aria-labelledby="tab-p11" hidden>
+  <div class="crumb">IN THE FIELD</div>
+  <div class="kwline"><h1>FDE 현장에서 보면</h1><span class="en">Forward Deployed Engineer</span></div>
+  <p class="qline">고객 현장에 들어간 FDE에게 일곱 키워드는 <b>첫 주의 할 일 목록</b>입니다.</p>
+
+  <h3><span class="k">1</span>샘플: 모아상점 착수 첫 주 현장 메모</h3>
+  <div class="notice">
+    <h4>요청 — “주문 데이터로 배송 지연을 줄이는 AI 비서를 만들어 주세요.”</h4>
+    <ol class="tl">
+      <li><b>1일차 · 착수 회의</b> 부서마다 ‘오늘 주문’ 숫자가 3 · 2 · 1건으로 다름 → 무엇을 만들기 전에 ‘주문’의 뜻부터 맞추기로 함 <span class="tag t-con">온톨로지</span></li>
+      <li><b>2일차 · 화면과 엑셀 훑기</b> 관리자 메뉴, 엑셀 시트, 운영 안내문에서 다루는 대상 네 가지를 뽑음. “장바구니도 주문인가요?”를 현업에 물음 <span class="tag t-con">개념</span></li>
+      <li><b>3일차 · 실데이터 받기</b> 이지수가 두 명. 주문 시스템과 고객 시스템에 같은 사람이 다르게 들어간 경우도 발견 <span class="tag t-ins">인스턴스</span><br>주문상태가 ‘결제완료 · 결제 완료 · 결제됨’으로 섞여 있음 <span class="tag t-att">속성</span></li>
+      <li><b>4일차 · 시스템 잇기</b> 주문과 배송을 잇다가 배송 없는 주문을 발견. “없을 수도 있다”는 약속을 현업과 확인 <span class="tag t-rel">관계</span><br>운영 기준 3개를 검사 로직으로 옮김 <span class="tag t-rul">규칙</span></li>
+      <li><b>5일차 · AI 비서가 찾을 재료 만들기</b> 주문 · 배송 기록과 안내문을 사실 한 줄씩으로 모음 <span class="tag t-rel">트리플</span></li>
+    </ol>
+  </div>
+  <p>메모에 나오는 일은 모두 앞에서 배운 키워드입니다. 차이는 <b>정답 약속이 미리 주어지지 않는다</b>는 점입니다. 현장에서는 FDE가 현업과 함께 그 약속을 찾아내야 합니다.</p>
+
+  <h3><span class="k">2</span>키워드별 현장 일과 산출물</h3>
+  <div class="tw"><table>
+    <thead><tr><th class="nw">키워드</th><th>교안에서</th><th>FDE 현장에서</th><th class="nw">남기는 것</th></tr></thead>
+    <tbody>
+      <tr><td class="nw"><b>온톨로지</b></td><td>세 팀이 주문을 다르게 셈</td><td>부서마다 다른 지표 정의를 한자리에서 맞춤</td><td>용어 정의서</td></tr>
+      <tr class="t-con"><td class="nw"><span class="tag">개념</span></td><td>메뉴에서 종류 찾기</td><td>화면 · 엑셀 · 양식에서 업무 대상을 뽑고 경계를 현업에 확인</td><td>개념 목록과 뜻</td></tr>
+      <tr class="t-ins"><td class="nw"><span class="tag">인스턴스</span></td><td>이지수 두 명</td><td>시스템마다 다르게 들어간 같은 대상을 가려냄</td><td>같은 대상 판별 기준</td></tr>
+      <tr class="t-att"><td class="nw"><span class="tag">속성</span></td><td>결제완료 · 결제 완료</td><td>제각각인 값을 허용값으로 모음. AI 도구의 입력 선택지가 됨</td><td>값 목록 · 바꾸기 표</td></tr>
+      <tr class="t-rel"><td class="nw"><span class="tag">관계</span></td><td>넣는다 · 담는다 · 처리한다</td><td>흩어진 시스템을 무엇으로 이을지, 몇 대 몇인지 정함</td><td>관계도</td></tr>
+      <tr class="t-rul"><td class="nw"><span class="tag">규칙</span></td><td>결제완료일 때만 배송</td><td>운영 기준을 검사 로직과 AI의 안전장치로 옮김</td><td>검증 규칙</td></tr>
+      <tr><td class="nw"><span class="tag t-rel">트리플</span></td><td>이지수 · 넣는다 · 키보드 주문</td><td>문서와 데이터에서 사실을 한 줄씩 뽑아 AI가 따라가며 찾게 함</td><td>지식 그래프</td></tr>
+    </tbody></table></div>
+
+  <h3><span class="k">3</span>실제 현장 도구에서는 이렇게 부릅니다</h3>
+  <p>FDE 직무를 널리 알린 Palantir는 고객 데이터를 <b>Ontology</b>라는 틀로 옮겨 업무 앱을 만듭니다. 공식 문서의 용어를 이 교안의 키워드와 나란히 놓으면 이렇습니다.</p>
+  <div class="tw"><table>
+    <thead><tr><th class="nw">이 교안</th><th class="nw">Palantir Ontology 용어</th><th>데이터베이스로 치면</th></tr></thead>
+    <tbody>
+      <tr><td class="nw"><span class="tag t-con">개념</span></td><td class="nw">Object type</td><td>데이터 표</td></tr>
+      <tr><td class="nw"><span class="tag t-ins">인스턴스</span></td><td class="nw">Object</td><td>표의 한 줄</td></tr>
+      <tr><td class="nw"><span class="tag t-att">속성</span></td><td class="nw">Property</td><td>표의 칸(열)</td></tr>
+      <tr><td class="nw"><span class="tag t-rel">관계</span></td><td class="nw">Link type</td><td>표와 표를 잇는 연결(조인)</td></tr>
+    </tbody></table></div>
+  <p class="src">근거: <a href="https://www.palantir.com/docs/foundry/ontology/core-concepts" target="_blank" rel="noopener">Palantir Foundry 문서 · Ontology Core concepts</a></p>
+
+  <div class="grid2">
+    <div class="card"><div class="label">SW 엔지니어</div><p><b>정리된 요구사항을 받는다.</b> 개념 · 관계 · 규칙이 이미 명세에 적혀 있다.</p></div>
+    <div class="card navy"><div class="label" style="color:var(--navy-sub)">FDE</div><p style="color:var(--on-navy)"><b>현장에서 직접 캐낸다.</b> 현업과 함께 일곱 가지를 찾아 요구사항을 만든다.</p></div>
+  </div>
+
+  <div class="box think"><span class="t">생각해 보기</span><p>내가 FDE로 모아상점 착수 회의에 들어간다면, 가장 먼저 던질 질문 세 가지는?</p>
+    <label class="label" for="th11">내 생각</label><textarea id="th11"></textarea>
+    <details><summary>예시 답 보기</summary><div class="sol"><p>① “여기서 ‘주문’은 언제부터 주문인가요? 결제 전도 포함하나요?” (개념의 경계)</p><p>② “주문상태는 어떤 값들이 있고, 누가 바꾸나요?” (속성과 값 목록)</p><p>③ “주문에 배송이 안 붙는 경우가 있나요? 있다면 언제인가요?” (관계와 규칙)</p></div></details></div>
+  <div class="minihead">개념 풀이 · 7문항</div><div class="mini" data-set="m8"></div>
+  <div class="actions"><button type="button" class="prev">이전</button><button type="button" class="next">다음</button></div>
+</section>
+
+<!-- 12 참고 자료 -->
+<section class="panel" id="p12" role="tabpanel" aria-labelledby="tab-p12" hidden>
+  <div class="crumb">REFERENCES</div>
+  <div class="kwline"><h1>근거 자료</h1></div>
+  <p class="qline">키워드의 뜻과 구성은 아래 공개 자료의 내용과 <b>맞춰</b> 정리했습니다.</p>
+  <div class="refs">
+    <div class="card"><div class="label">개념 · 인스턴스 · 속성 · 관계 · 규칙</div><h4><a href="https://protege.stanford.edu/conference/2004/slides/Ontology101_tutorial.pdf" target="_blank" rel="noopener">Ontology Development 101</a></h4><p>Natalya F. Noy · Deborah L. McGuinness, Stanford. 온톨로지를 만드는 이유(공통 이해 공유), 클래스와 인스턴스, 속성(slot), 개수 제한(cardinality)과 허용값, 반대 방향 관계(inverse slot)를 다룹니다.</p><p class="src">02 · 03 · 04 · 05 · 06 탭</p></div>
+    <div class="card"><div class="label">온톨로지의 뜻</div><h4><a href="https://tomgruber.org/writing/ontolingua-kaj-1993/" target="_blank" rel="noopener">A Translation Approach to Portable Ontology Specifications</a></h4><p>Thomas R. Gruber, <i>Knowledge Acquisition</i> 5(2), 1993. 온톨로지를 ‘한 영역에서 함께 쓰는 표현 어휘의 명세’로 설명한 고전 논문입니다.</p><p class="src">01 탭</p></div>
+    <div class="card"><div class="label">트리플</div><h4><a href="https://www.w3.org/TR/rdf11-primer/Overview.html" target="_blank" rel="noopener">RDF 1.1 Primer</a></h4><p>W3C Working Group Note, 2014. 사실을 주어(subject) · 술어(predicate) · 목적어(object) 세 부분으로 적고, 그래서 ‘트리플’이라 부른다고 설명합니다.</p><p class="src">07 탭</p></div>
+    <div class="card"><div class="label">관계에 붙는 값 (수량 2)</div><h4><a href="https://www.w3.org/TR/swbp-n-aryRelations/" target="_blank" rel="noopener">Defining N-ary Relations on the Semantic Web</a></h4><p>W3C Working Group Note, 2006. 관계 자체에 값이 붙어야 할 때 관계를 새 개념으로 만들어 푸는 방법입니다. ‘주문항목’ 풀이의 근거입니다.</p><p class="src">05 탭 생각해 보기</p></div>
+    <div class="card"><div class="label">FDE 현장 도구</div><h4><a href="https://www.palantir.com/docs/foundry/ontology/core-concepts" target="_blank" rel="noopener">Palantir Foundry · Ontology Core concepts</a></h4><p>Object type · Object · Property · Link type · Action type의 정의와, 데이터 표 · 줄 · 칸 · 조인과의 대응을 설명합니다.</p><p class="src">11 탭</p></div>
+    <div class="card"><div class="label">FDE 직무</div><h4><a href="https://jobs.lever.co/palantir/dab396d4-2f14-4796-aac0-0d82883dccf0" target="_blank" rel="noopener">Palantir · Forward Deployed Software Engineer 채용 공고</a></h4><p>고객 곁에서 함께 일하며 어려운 문제를 이해하고, 조직의 데이터와 AI 도구로 해결책을 만들어 배포까지 이끄는 역할로 설명합니다. 채용 공고라 내려갈 수 있습니다.</p><p class="src">11 탭</p></div>
+    <div class="card"><div class="label">FDE 직무</div><h4><a href="https://en.wikipedia.org/wiki/Forward_Deployed_Engineer" target="_blank" rel="noopener">Forward Deployed Engineer — Wikipedia</a></h4><p>Palantir가 널리 알린 직무명이며, 고객 조직과 밀착해 요구 분석부터 배포까지 맡는 역할로 정리되어 있습니다.</p><p class="src">11 탭</p></div>
+  </div>
+  <div class="box key"><span class="t">이 교안에서 새로 만든 것</span><p>모아상점, 고객 · 주문 · 상품 이름, 화면 모형, 연습과 문제는 이 교안을 위해 새로 만든 교육용 예시입니다. 위 자료에서 가져온 사례가 아닙니다.</p></div>
+  <div class="actions"><button type="button" class="prev">이전</button><button type="button" class="next" disabled>다음</button></div>
+</section>
+</main>
+</div>
+<footer class="footer">© 2026 부성순. All rights reserved.<small>모아상점과 주문 · 배송 사례는 온톨로지 입문을 위한 교육용 가상 자료입니다. 특정 쇼핑몰의 실제 정책 · 데이터를 뜻하지 않습니다.</small></footer>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const tabs=[...document.querySelectorAll('[role=tab]')];
+const panels=tabs.map(t=>$(t.getAttribute('aria-controls')));
+const seen=new Set([0]);
+function meter(){$('seen').textContent=seen.size;$('seenbar').style.width=(seen.size/tabs.length*100)+'%';tabs.forEach((t,i)=>t.classList.toggle('done',seen.has(i)&&t.getAttribute('aria-selected')!=='true'));}
+function activate(i,focus){
+  tabs.forEach((t,j)=>{const on=i===j;t.setAttribute('aria-selected',String(on));t.tabIndex=on?0:-1;panels[j].hidden=!on;});
+  seen.add(i);meter();if(focus)tabs[i].focus({preventScroll:true});
+  try{history.replaceState(null,'','#'+panels[i].id);}catch(e){}
+  window.scrollTo({top:0});
+}
+tabs.forEach((t,i)=>{t.addEventListener('click',()=>activate(i));
+  t.addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){e.preventDefault();const d=(e.key==='ArrowRight'||e.key==='ArrowDown')?1:-1;activate((i+d+tabs.length)%tabs.length,true);}});});
+panels.forEach((p,i)=>{p.querySelector('.prev')?.addEventListener('click',()=>activate(Math.max(0,i-1)));p.querySelector('.next')?.addEventListener('click',()=>activate(Math.min(tabs.length-1,i+1)));});
+function fromHash(){const k=panels.findIndex(p=>'#'+p.id===location.hash);if(k>=0)activate(k);}
+fromHash();window.addEventListener('hashchange',fromHash);meter();
+
+/* 버튼 고르기형 연습 */
+function buildChoice(host,items,cats,onScore){
+  let right=0;const done=new Set();
+  items.forEach((it,idx)=>{
+    const d=document.createElement('div');d.className='sitem';
+    const st=document.createElement('div');st.className='st';st.textContent=(idx+1)+'. '+it[0];d.appendChild(st);
+    const ops=document.createElement('div');ops.className='opts';ops.setAttribute('role','group');ops.setAttribute('aria-label',(idx+1)+'번 고르기');
+    const fb=document.createElement('div');fb.className='fb';fb.setAttribute('aria-live','polite');
+    cats.forEach(([k,label])=>{const b=document.createElement('button');b.type='button';b.textContent=label;
+      b.addEventListener('click',()=>{ops.querySelectorAll('button').forEach(x=>x.classList.remove('right','wrong'));
+        const ok=k===it[1];b.classList.add(ok?'right':'wrong');const ans=cats.find(c=>c[0]===it[1])[1];
+        fb.textContent=(ok?'맞습니다. ':'답은 「'+ans+'」. ')+it[2];
+        if(!done.has(idx)){done.add(idx);if(ok)right++;onScore&&onScore(right,done.size,items.length);}});
+      ops.appendChild(b);});
+    d.appendChild(ops);d.appendChild(fb);host.appendChild(d);});
+}
+/* 객관식 */
+function buildQuiz(host,Q,onScore){
+  let sc=0;const done=new Set();const name=host.dataset.set||host.id;
+  Q.forEach((q,i)=>{
+    const d=document.createElement('div');d.className='quiz';
+    const p=document.createElement('p');p.className='qq';const n=document.createElement('span');n.className='qn';n.textContent='Q'+String(i+1).padStart(2,'0');p.appendChild(n);p.appendChild(document.createTextNode(q[0]));d.appendChild(p);
+    q[1].forEach((o,j)=>{const l=document.createElement('label');const r=document.createElement('input');r.type='radio';r.name=name+'_'+i;r.id=name+'_'+i+'_'+j;r.value=j;l.htmlFor=r.id;l.appendChild(r);l.appendChild(document.createTextNode(o));d.appendChild(l);});
+    const b=document.createElement('button');b.type='button';b.className='qbtn';b.textContent='확인';d.appendChild(b);
+    const fb=document.createElement('div');fb.setAttribute('aria-live','polite');d.appendChild(fb);
+    b.addEventListener('click',()=>{const c=d.querySelector('input:checked');d.querySelectorAll('label').forEach(x=>x.classList.remove('right','wrong'));
+      if(!c){fb.className='qfb no';fb.textContent='보기를 먼저 고르세요.';return;}
+      const ok=+c.value===q[2];c.parentElement.classList.add(ok?'right':'wrong');if(!ok)d.querySelectorAll('label')[q[2]].classList.add('right');
+      fb.className='qfb '+(ok?'ok':'no');fb.innerHTML='';const bb=document.createElement('b');bb.textContent=ok?'맞습니다.':'아쉽습니다. 초록색이 정답입니다.';fb.appendChild(bb);fb.appendChild(document.createTextNode(q[3]));
+      if(!done.has(i)){done.add(i);if(ok)sc++;onScore&&onScore(sc,done.size,Q.length);}});
+    host.appendChild(d);});
+}
+const MINI={
+ m1:[['세 팀이 “오늘 주문”을 3 · 2 · 1건으로 다르게 센 진짜 이유는?',['한 팀이 계산을 틀려서','팀마다 보는 화면이 달라서','‘주문’이라는 말의 뜻을 다르게 써서','주문이 계속 바뀌어서'],2,'세 팀 모두 같은 화면을 바르게 셌습니다. 다른 것은 ‘주문’의 뜻이었습니다.'],
+     ['온톨로지에 가장 가까운 것은?',['주문을 저장하는 표','업무 말의 뜻 · 연결 · 규칙을 적은 약속','관계를 그린 그림','주문을 처리하는 프로그램'],1,'저장(표)이나 그림, 프로그램이 아니라 뜻의 약속입니다.'],
+     ['온톨로지를 만들면 가장 먼저 좋아지는 것은?',['서버가 빨라진다','같은 말을 모두가 같은 뜻으로 쓴다','화면이 예뻐진다','데이터가 저절로 입력된다'],1,'뜻이 하나로 정해지면 보고서 숫자와 시스템 연결이 어긋나지 않습니다.'],
+     ['“주문 몇 건?”이 한 가지로만 읽히려면 무엇을 먼저 정해야 하나?',['주문 화면 디자인','‘주문’과 ‘주문상태’의 뜻','택배 회사','고객 수'],1,'무엇을 주문이라 부르는지, 상태값이 무슨 뜻인지 정하면 질문이 한 가지로만 읽힙니다.'],
+     ['온톨로지는 보통 어디까지를 다루나?',['세상의 모든 지식','정해진 한 업무 영역 (여기서는 모아상점 주문 업무)','한 사람의 생각','프로그램 코드 전체'],1,'업무 영역마다 따로 약속합니다. 같은 ‘주문’도 다른 상점에서는 뜻이 다를 수 있습니다.'],
+     ['다음 중 온톨로지의 재료가 아닌 것은?',['개념','관계','규칙','화면 글꼴'],3,'재료는 개념 · 인스턴스 · 속성 · 관계 · 규칙이고, 사실은 트리플로 적습니다. 글꼴은 화면 꾸밈입니다.'],
+     ['모아상점의 약속대로 세면 오늘 ‘결제완료’ 주문은 몇 건인가?',['0건','1건','2건','3건'],1,'키보드 주문만 결제완료입니다. 마우스 주문은 결제대기, 허브 주문은 취소입니다.'],
+     ['데이터베이스에 주문 표가 이미 있는데도 온톨로지가 필요한 이유는?',['표는 저장 방법일 뿐, 결제대기도 주문인지 같은 뜻은 따로 약속해야 해서','표를 지워야 해서','온톨로지가 더 빨라서','필요 없다'],0,'표는 기록을 담는 그릇입니다. 그릇에 담긴 말의 뜻은 따로 정해야 합니다.']],
+ m2:[['다음 중 개념은?',['이지수','결제완료','상품','39,000원'],2,'상품은 종류 이름입니다. 이지수는 인스턴스, 결제완료와 39,000원은 값입니다.'],
+     ['다음 중 개념이 아닌 것은?',['고객','배송','넣는다','주문'],2,'넣는다는 고객과 주문을 잇는 관계 이름입니다.'],
+     ['개념에 “여기에 들지 않는 것”까지 적는 이유는?',['표를 길게 만들려고','경계를 분명히 해서 사람마다 다르게 해석하지 않으려고','규칙을 없애려고','인스턴스를 줄이려고'],1,'‘장바구니도 주문인가?’ 같은 다툼을 미리 막습니다.'],
+     ['모아상점 약속으로 ‘장바구니에만 담긴 상품’은 주문인가?',['주문이다','주문이 아니다'],1,'주문은 ‘주문 버튼을 눌러 만든 구매 요청’으로 약속했습니다. 장바구니는 아직 주문이 아닙니다.'],
+     ['가입하지 않고 둘러보기만 한 방문자는 ‘고객’에 드는가?',['든다','들지 않는다'],1,'고객은 ‘가입해 주문할 수 있는 사람’으로 약속했습니다.'],
+     ['고객이 4명에서 4만 명으로 늘면 ‘고객’ 개념은 몇 개인가?',['1개','4개','4만 개','0개'],0,'늘어나는 것은 인스턴스입니다. 종류 이름인 ‘고객’은 하나입니다.'],
+     ['개념을 만들 때 반드시 함께 적어야 하는 것은?',['뜻 (무엇이 들고 무엇이 안 드는지)','담당자 연락처','화면 색','가입일'],0,'개념은 이름만으로는 부족합니다. 무엇을 그 종류로 볼지 뜻이 필요합니다.'],
+     ['모아상점이 반품 접수를 시작했다. 가장 알맞은 판단은?',['배송 개념에 넣는다','‘반품’을 새 개념으로 만들고 뜻을 적는다','주문 이름을 반품으로 바꾼다','아무것도 하지 않는다'],1,'배송의 뜻에서 ‘반품으로 돌려받는 일’은 빼기로 약속했습니다. 반품도 건마다 생기고 저마다 값을 가지므로 새 개념으로 두는 것이 자연스럽습니다.']],
+ m3:[['인스턴스가 서로 구분되어야 하는 이유는?',['같은 이름의 고객이 있으면 누구의 주문인지 헷갈려서','화면이 복잡해서','개념이 줄어들어서','규칙 때문에'],0,'고객 목록에 이지수가 두 명 있었습니다.'],
+     ['‘허브 주문’은 어느 개념의 인스턴스인가?',['고객','주문','상품','배송'],1,'최도윤이 넣은 실제 주문 하나입니다.'],
+     ['다음 중 인스턴스는?',['상품','블루투스 마우스','판매가','담는다'],1,'블루투스 마우스는 상품이라는 종류에 속한 실제 상품 하나입니다.'],
+     ['3월에 가입한 이지수와 11월에 가입한 이지수는?',['같은 사람이다','이름은 같지만 서로 다른 인스턴스다','하나의 인스턴스다','둘 다 개념이다'],1,'가입일도 사는 곳도 다릅니다. 이름이 같을 뿐 다른 고객입니다.'],
+     ['지금 ‘배송’ 개념의 인스턴스는 몇 개인가?',['0개','1개','3개','4개'],1,'키보드 배송 하나뿐입니다. 마우스 주문과 허브 주문에는 배송이 없습니다.'],
+     ['마우스 주문을 넣은 고객은?',['이지수','박민서','최도윤'],1,'샘플 화면에서 마우스 주문의 고객은 박민서입니다.'],
+     ['개념과 인스턴스를 붕어빵에 빗대면?',['개념 = 붕어빵, 인스턴스 = 틀','개념 = 틀, 인스턴스 = 붕어빵','둘 다 틀','둘 다 붕어빵'],1,'틀(개념) 하나로 붕어빵(인스턴스)이 계속 나옵니다.'],
+     ['새 고객 정하은이 가입했다. 무엇이 생기나?',['새 개념 ‘정하은’','고객 개념의 새 인스턴스','새 관계 이름','새 규칙'],1,'틀은 그대로이고 붕어빵이 하나 늘어납니다.']],
+ m4:[['다음 중 속성값은?',['주문상태','결제완료','주문','결제금액'],1,'주문상태 · 결제금액은 칸 이름(속성), 결제완료는 그 칸에 든 값입니다.'],
+     ['다음 중 속성(칸 이름)은?',['39,000원','결제금액','키보드 주문','넣는다'],1,'결제금액이 칸 이름이고 39,000원이 그 값입니다.'],
+     ['주문 화면의 “주문을 넣은 고객: 이지수”는 속성일까 관계일까?',['속성','관계'],1,'칸에 글자 값이 아니라 다른 대상(고객 이지수)이 들어 있으므로 관계입니다.'],
+     ['“주문에는 결제금액이 있다”는?',['설계 (틀)','사실 (데이터)'],0,'특정 주문 없이 모든 주문에 해당하는 설계입니다.'],
+     ['“키보드 주문의 결제금액은 39,000원이다”는?',['설계 (틀)','사실 (데이터)'],1,'실제 주문 한 건의 값입니다.'],
+     ['주문상태 값으로 받을 수 있는 것은?',['배송준비','결제완료','결제 완료','환불중'],1,'약속한 값은 결제대기 · 결제완료 · 취소 셋뿐입니다. 띄어쓰기가 달라도 다른 값입니다.'],
+     ['‘배송준비’는 어느 개념의 속성값인가?',['주문','배송','고객','상품'],1,'키보드 배송의 배송상태 값입니다. 주문상태와 배송상태는 다른 칸입니다.'],
+     ['속성의 값 목록을 미리 정해 두는 이유는?',['결제완료 · 결제 완료 · 결제됨처럼 같은 상태를 다르게 적는 것을 막아 정확히 세려고','칸을 늘리려고','저장 공간을 아끼려고','화면을 꾸미려고'],0,'값이 제각각이면 “결제완료 몇 건?”을 정확히 셀 수 없습니다.']],
+ m5:[['“고객 —넣는다→ 주문”에서 출발하는 쪽은?',['고객','주문','넣는다'],0,'‘고객이 주문을 넣는다’. 화살표는 고객에서 출발해 주문에 닿습니다.'],
+     ['모아상점의 약속에 맞는 줄은?',['키보드 주문 —넣는다→ 이지수','키보드 배송 —처리한다→ 키보드 주문','무선 키보드 —담는다→ 키보드 주문'],1,'처리한다는 배송 → 주문입니다. 나머지 둘은 방향이 거꾸로입니다.'],
+     ['“고객 —넣는다→ 주문”과 “이지수 —넣는다→ 키보드 주문”의 차이는?',['앞은 종류끼리의 약속(설계), 뒤는 실제 대상끼리의 연결(사실)','같은 문장이다','앞은 규칙, 뒤는 속성이다','뒤의 문장은 틀렸다'],0,'관계도 설계와 사실 두 층이 있습니다.'],
+     ['관계와 속성의 차이로 맞는 것은?',['관계의 끝에는 다른 대상, 속성의 끝에는 글자 · 숫자 값이 온다','관계는 숫자, 속성은 대상이다','둘은 같은 것이다','관계는 규칙의 다른 이름이다'],0,'“칸에 무엇이 들어가나”로 가르면 됩니다.'],
+     ['고객 한 명은 주문을 몇 개 넣을 수 있나?',['딱 하나','여러 개','넣을 수 없다'],1,'이지수는 내일 또 주문할 수 있습니다. 반대로 주문 하나를 넣는 고객은 한 명입니다.'],
+     ['주문 하나에 이어진 배송은 몇 개인가?',['반드시 1개','없거나 1개','언제나 여러 개'],1,'마우스 주문과 허브 주문처럼 배송이 없을 수도 있다고 약속했습니다.'],
+     ['“키보드 주문 —넣는다→ 이지수”를 바르게 고치는 방법은?',['방향을 약속대로 되돌리거나, 반대쪽에서 읽고 싶으면 ‘주문자’처럼 다른 이름의 관계를 약속한다','그대로 둔다','관계는 뒤집을 수 없으니 지운다','이지수를 개념으로 바꾼다'],0,'같은 이름으로 방향만 뒤집으면 “주문이 이지수를 넣는다”가 됩니다. 반대 방향은 이름을 따로 정합니다.'],
+     ['“이지수는 무엇을 샀나?”에 답하려면?',['넣는다 → 담는다, 관계 두 개를 이어 따라간다','‘샀다’ 관계를 새로 만들어야만 한다','상품의 속성만 본다','규칙을 본다'],0,'이지수 → 키보드 주문 → 무선 키보드. 이미 있는 관계로 답이 나옵니다.']],
+ m6:[['다음 중 규칙은?',['마우스 주문은 결제대기다','주문에는 상품이 하나 이상 담겨야 한다','키보드 배송은 배송준비다','이지수는 3월에 가입했다'],1,'특정 대상 없이 모든 주문에 적용되는 약속입니다.'],
+     ['마우스 주문(결제대기)에 배송을 만들어도 될까?',['된다','안 된다'],1,'규칙상 결제완료인 주문에만 배송을 만듭니다.'],
+     ['규칙에 어긋나는 데이터는?',['키보드 주문의 주문상태 = 결제완료','아무 상품도 담기지 않은 가방 주문','키보드 배송 —처리한다→ 키보드 주문','박민서 —넣는다→ 마우스 주문'],1,'안내문 2번 “주문 하나에는 상품이 하나 이상”에 어긋납니다.'],
+     ['“허브 주문은 취소다”는?',['사실','규칙'],0,'주문 한 건의 지금 상태입니다.'],
+     ['규칙을 정해 두면 좋은 점은?',['잘못된 데이터를 들어오기 전에 걸러낼 수 있다','데이터가 늘어난다','관계가 필요 없어진다','개념이 필요 없어진다'],0,'“주문상태 = 배송중”이나 상품 없는 주문을 바로 막을 수 있습니다.'],
+     ['다른 상점 ‘하나몰’에 모아상점 규칙을 그대로 가져가도 될까?',['그대로 써도 된다','그 상점의 업무에 맞는지 확인하고 정해야 한다'],1,'규칙은 그 상점이 정한 약속입니다.'],
+     ['규칙을 “결제완료 주문에는 모두 배송을 만든다”로 바꾼 뒤 전자책(다운로드 상품)을 팔기 시작했다. 생기는 문제는?',['보낼 물건이 없는데 배송을 만들어야 한다. 예외나 범위를 정해야 한다','문제 없다','전자책은 주문이 아니다','주문상태를 지워야 한다'],0,'업무가 바뀌면 규칙의 범위와 예외를 다시 봐야 합니다.'],
+     ['“키보드 주문은 결제완료”와 “배송은 결제완료 주문에만 만든다”를 합치면 알 수 있는 것은?',['키보드 주문에는 배송을 만들 수 있다','키보드 주문에는 반드시 배송이 있다','키보드 주문은 취소다','알 수 있는 것이 없다'],0,'규칙은 ‘만들어도 된다’는 조건입니다. 실제로 배송이 있는지는 사실(키보드 배송)을 봐야 압니다.']],
+ m8:[['착수 첫 주에 부서마다 ‘주문’ 숫자가 다르다는 걸 발견했다. FDE가 먼저 할 일은?',['숫자가 큰 부서를 믿는다','화면부터 만든다','부서들과 함께 ‘주문’의 뜻을 정하고 용어 정의서로 남긴다','못 본 척한다'],2,'뜻이 맞지 않은 채로 만들면 AI 비서도 부서마다 다른 답을 냅니다.'],
+     ['같은 고객이 두 시스템에 다르게 들어가 있다. 어느 키워드의 문제인가?',['개념','인스턴스','규칙','트리플'],1,'같은 대상인지 가려내는 일, 곧 인스턴스를 구분하는 문제입니다.'],
+     ['상태값이 ‘결제완료 · 결제 완료 · 결제됨’으로 섞여 있다. FDE가 남길 산출물은?',['허용값 목록과 바꾸기 표','새 개념','새 관계','아무것도 남기지 않는다'],0,'속성의 값 목록을 정하고, 다른 표기를 약속한 값으로 바꾸는 표를 만듭니다.'],
+     ['LLM 에이전트 도구의 입력 선택지로 바로 쓸 수 있는 것은?',['속성의 허용값 목록','고객 이름 전체','화면 색상','회의록'],0,'예: 주문상태를 고르는 칸의 선택지는 결제대기 · 결제완료 · 취소입니다.'],
+     ['업무 규정을 AI 비서에 넣을 때 ‘규칙’의 역할은?',['규정에 어긋나는 답이나 동작을 막는 검사 장치','화면 꾸밈','데이터 저장','필요 없다'],0,'“결제 전 주문에 배송을 만들어 줘” 같은 요청을 규칙으로 막을 수 있습니다.'],
+     ['Palantir Ontology의 Object type · Property · Link type은 이 교안의 무엇과 짝인가?',['개념 · 속성 · 관계','인스턴스 · 규칙 · 트리플','속성 · 개념 · 규칙','관계 · 인스턴스 · 속성'],0,'Object는 인스턴스와 짝입니다. 11 탭 3번 표를 보세요.'],
+     ['SW 엔지니어와 비교한 FDE의 차이로 맞는 것은?',['정리된 요구사항만 받아 구현한다','현장에서 개념 · 관계 · 규칙을 직접 찾아 요구사항을 만든다','데이터를 다루지 않는다','고객을 만나지 않는다'],1,'FDE는 고객 곁에서 문제를 이해하고 해결책을 만듭니다.']],
+ m7:[['트리플 「박민서 · 넣는다 · 마우스 주문」의 가운데 칸은?',['개념','관계','속성값','규칙'],1,'트리플의 가운데는 늘 관계 이름입니다.'],
+     ['이 교안의 트리플에서 첫 칸과 셋째 칸에 오는 것은?',['관계 이름','실제 대상 (인스턴스)','규칙','개념 이름'],1,'박민서, 마우스 주문처럼 실제 대상이 양 끝에 옵니다.'],
+     ['“박민서 고객이 마우스 주문을 넣었다”를 바르게 적은 트리플은?',['박민서 · 넣는다 · 마우스 주문','마우스 주문 · 넣는다 · 박민서','박민서 · 주문했어요 · 마우스 주문','박민서 · 담는다 · 마우스 주문'],0,'약속한 관계 이름과 방향을 그대로 씁니다.'],
+     ['“박민서 · 주문했어요 · 마우스 주문”이 안 되는 이유는?',['‘주문했어요’는 약속한 관계 이름이 아니라서','너무 짧아서','틀린 곳이 없다','세 칸이 아니라서'],0,'같은 뜻이라도 약속한 이름(넣는다)만 써야 정확히 찾을 수 있습니다.'],
+     ['허브 주문에 대해 적을 수 있는 트리플은 몇 줄인가?',['1줄','2줄','3줄','4줄'],1,'최도윤 —넣는다→ 허브 주문, 허브 주문 —담는다→ USB 허브. 취소된 주문이라 배송 줄은 없습니다.'],
+     ['「키보드 주문 · 담는다 · 무선 키보드」와 「키보드 주문 · 담는다 · 블루투스 마우스」가 둘 다 있다면?',['키보드 주문에 상품 두 가지가 담겼다','둘 중 하나는 틀렸다','두 상품은 같은 상품이다','규칙 위반이다'],0,'주문 하나에 상품은 여러 가지 담길 수 있습니다. 규칙은 “하나 이상”입니다.'],
+     ['트리플 목록에서 “이지수가 산 상품”을 찾는 순서는?',['이지수 · 넣는다 · ? 로 주문을 찾고, 그 주문 · 담는다 · ? 로 상품을 찾는다','상품 목록을 처음부터 읽는다','규칙부터 찾는다','찾을 수 없다'],0,'트리플을 두 번 이어 따라가면 무선 키보드가 나옵니다.'],
+     ['문장 대신 트리플로 적으면 좋은 점은?',['글이 예뻐진다','관계 이름이 하나로 정해져 정확히 찾을 수 있다','규칙이 필요 없어진다','개념이 필요 없어진다'],1,'“주문했다 · 넣었다 · 구매했다”가 ‘넣는다’ 하나로 모입니다.']]};
+document.querySelectorAll('.mini').forEach(h=>{const sc=document.createElement('p');sc.className='fbline';sc.setAttribute('aria-live','polite');const set=MINI[h.dataset.set];sc.textContent='맞힌 수 0 / '+set.length;
+  buildQuiz(h,set,(s,n,t)=>{sc.textContent='맞힌 수 '+s+' / '+t+(n<t?' (푼 문제 '+n+')':(s===t?' · 모두 맞혔습니다':' · 틀린 문제의 설명을 읽고 위 내용을 다시 보세요'));});h.appendChild(sc);});
+
+/* 02 개념 고르기 */
+const WORDS=[['고객',1],['이지수',0],['주문',1],['결제완료',0],['상품',1],['넣는다',0],['배송',1],['39,000원',0],['무선 키보드',0]];
+const pc=$('pick-con');
+WORDS.forEach(([w,ok])=>{const b=document.createElement('button');b.type='button';b.textContent=w;b.dataset.ok=ok;b.setAttribute('aria-pressed','false');b.addEventListener('click',()=>{b.classList.remove('right','wrong','miss');b.setAttribute('aria-pressed',String(b.getAttribute('aria-pressed')!=='true'));});pc.appendChild(b);});
+document.querySelector('[data-check="pick-con"]').addEventListener('click',()=>{
+  let good=0,bad=0,miss=0;pc.querySelectorAll('button').forEach(b=>{b.classList.remove('right','wrong','miss');const on=b.getAttribute('aria-pressed')==='true',ok=b.dataset.ok==='1';
+    if(on&&ok){b.classList.add('right');good++;}else if(on&&!ok){b.classList.add('wrong');bad++;}else if(!on&&ok){b.classList.add('miss');miss++;}});
+  $('pick-con-fb').textContent=(bad===0&&miss===0)?'모두 맞습니다. 고객 · 주문 · 상품 · 배송, 네 개가 개념입니다.':'맞게 고른 것 '+good+'개. 빨간색은 개념이 아니고(실제 대상 · 값 · 관계), 점선은 빠뜨린 개념입니다.';});
+
+/* 03 연결하기 */
+const MATCH=[['최도윤','고객'],['마우스 주문','주문'],['USB 허브','상품'],['키보드 배송','배송'],['박민서','고객']];
+const mh=$('match');
+MATCH.forEach(([w,a],i)=>{const r=document.createElement('div');r.className='matchrow';const s=document.createElement('span');s.className='what';s.textContent=w;
+  const lab=document.createElement('label');lab.className='label';lab.htmlFor='m'+i;lab.textContent='개념';
+  const sel=document.createElement('select');sel.id='m'+i;['고르세요','고객','주문','상품','배송'].forEach(o=>{const op=document.createElement('option');op.textContent=o;sel.appendChild(op);});
+  const res=document.createElement('span');res.className='r';r.append(s,lab,sel,res);r.dataset.a=a;mh.appendChild(r);});
+$('matchCheck').addEventListener('click',()=>{let n=0;mh.querySelectorAll('.matchrow').forEach(r=>{const v=r.querySelector('select').value,ok=v===r.dataset.a;const res=r.querySelector('.r');res.className='r '+(ok?'ok':'no');res.textContent=ok?'맞음':'답: '+r.dataset.a;if(ok)n++;});
+  $('matchFb').textContent=n+' / '+MATCH.length+' 맞았습니다. “이것은 어떤 종류의 하나인가?”를 물으면 틀이 보입니다.';});
+
+/* 04 값 검사 */
+buildChoice($('attval'),[['가방 주문의 주문상태 = 결제완료','o','약속한 세 값 중 하나입니다.'],['모자 주문의 주문상태 = 배송중','x','‘배송중’은 주문상태 값으로 약속하지 않았습니다. 배송의 상태에 들어갈 값입니다.'],['컵 주문의 주문상태 = 결제 완료','x','띄어쓰기 하나만 달라도 약속한 값이 아닙니다. 그래서 값 목록을 정해 둡니다.']],[['o','받는다'],['x','받지 않는다']]);
+
+/* 05 방향 뒤집기 */
+let flipped=false;$('flipBtn').addEventListener('click',()=>{flipped=!flipped;const t=$('flipT');const s=t.querySelector('.s'),o=t.querySelector('.o');[s.textContent,o.textContent]=[o.textContent,s.textContent];
+  $('flipFb').textContent=flipped?'“키보드 주문이 이지수를 넣는다.” 뜻이 이상해졌습니다. ‘넣는다’는 고객 → 주문으로 약속했으므로 이 줄은 틀립니다. 주문 쪽에서 읽고 싶다면 “키보드 주문 —주문자→ 이지수”처럼 다른 이름의 관계를 따로 약속해야 합니다.':'“이지수가 키보드 주문을 넣는다.” 약속한 방향과 같습니다.';});
+
+/* 06 규칙 검사 */
+buildChoice($('rulecheck'),[['키보드 주문 · 결제완료','o','결제완료이므로 배송을 만들 수 있습니다. 실제로 키보드 배송이 있습니다.'],['마우스 주문 · 결제대기','x','아직 결제가 확인되지 않았습니다.'],['허브 주문 · 취소','x','취소된 주문에는 배송을 만들지 않습니다.']],[['o','만든다'],['x','만들지 않는다']]);
+
+/* 07 트리플 만들기 */
+const OKT={'박민서|넣는다|마우스 주문':'맞습니다. 고객 → 주문, 약속한 방향입니다.','마우스 주문|담는다|블루투스 마우스':'맞습니다. 주문 → 상품, 약속한 방향입니다.'};
+$('bCheck').addEventListener('click',()=>{const s=$('bs').value,p=$('bp').value,o=$('bo').value,k=s+'|'+p+'|'+o;let m=OKT[k];
+  if(!m){if(p==='구매했다')m='‘구매했다’는 약속한 관계 이름이 아닙니다. 같은 뜻이라도 ‘넣는다’만 씁니다.';else if(s==='마우스 배송')m='마우스 배송은 없습니다. 마우스 주문은 결제대기라 배송이 아직 없습니다.';else if(p==='처리한다')m='처리한다는 배송 → 주문입니다. 마우스 주문에는 배송이 없으니 이 줄은 만들 수 없습니다.';else if(s===o)m='주어와 대상이 같습니다. 서로 다른 두 대상을 이어야 합니다.';else m='약속한 방향과 맞지 않습니다. 넣는다는 고객 → 주문, 담는다는 주문 → 상품입니다.';$('bFb').style.color='var(--no)';}else{$('bFb').style.color='var(--ok)';}
+  $('bFb').textContent=s+' —'+p+'→ '+o+' : '+m;});
+
+/* 08 그림 */
+$('factsToggle').addEventListener('change',e=>{$('diag').dataset.facts=e.target.checked?'on':'off';});
+
+/* 09 분류 + 종합 */
+const CATS=[['con','개념'],['ins','인스턴스'],['att','속성'],['rel','관계'],['rul','규칙']];
+buildChoice($('sort'),[
+ ['블루투스 마우스','ins','상품이라는 종류에 속한 실제 상품 하나입니다.'],['상품','con','판매하는 물품의 종류입니다.'],['마우스 주문의 주문상태 = 결제대기','att','주문 한 건이 가진 값입니다.'],['박민서 —넣는다→ 마우스 주문','rel','두 대상을 잇는 연결입니다.'],
+ ['결제완료인 주문에만 배송을 만든다','rul','모든 주문에 적용하는 약속입니다.'],['주문에는 결제금액이 있다','att','주문이 가지는 값의 칸(속성)을 정한 설계입니다.'],['배송','con','여러 건을 묶는 종류 이름입니다.'],['주문 하나에는 상품이 하나 이상 담겨야 한다','rul','모든 주문이 지켜야 할 약속입니다.']],CATS,(r,n,t)=>{$('sortScore').textContent=r+' / '+t+' (첫 시도 기준)';});
+const Q=[
+ ['온톨로지에 가장 가까운 설명은?',['상품 가격을 계산하는 함수','업무 말의 뜻 · 속성 · 관계 · 규칙을 정리한 약속','고객이 넣은 주문 목록','데이터를 그래프로 그리는 프로그램'],1,'계산이나 화면이 아니라 말의 뜻과 연결을 정리한 것입니다.'],
+ ['「상품」과 「무선 키보드」의 관계로 알맞은 것은?',['둘 다 종류 이름이다','상품은 관계, 무선 키보드는 속성이다','상품은 개념, 무선 키보드는 그 인스턴스다','무선 키보드는 개념, 상품은 값이다'],2,'틀과 붕어빵입니다.'],
+ ['다음 중 개념이 아닌 것은?',['고객','배송','결제완료','주문'],2,'결제완료는 주문상태 칸에 들어가는 값입니다.'],
+ ['「키보드 주문의 주문상태는 결제완료」는?',['인스턴스의 속성값','규칙','관계','개념'],0,'실제 주문 한 건이 가진 값입니다.'],
+ ['칸에 다른 대상(고객 이지수)이 들어 있으면?',['속성','관계','규칙','개념'],1,'글자 · 숫자면 속성, 다른 대상이면 관계입니다.'],
+ ['「무선 키보드 —담는다→ 키보드 주문」이 틀린 이유는?',['무선 키보드가 없는 상품이라서','담는다는 주문 → 상품인데 방향이 거꾸로라서','관계 이름이 길어서','트리플은 두 칸이라서'],1,'관계는 방향까지 약속합니다.'],
+ ['「배송은 결제완료 주문에만 만든다」는?',['사실','규칙','속성값','인스턴스'],1,'모든 주문에 적용하는 약속입니다.'],
+ ['트리플을 바르게 설명한 것은?',['개념 세 개를 묶은 것','주어 · 관계 · 대상 세 칸으로 적은 사실 한 줄','규칙 세 개','속성 세 개'],1,'세 칸짜리 사실 한 줄입니다.'],
+ ['마우스 주문에 대해 적을 수 없는 트리플은?',['박민서 —넣는다→ 마우스 주문','마우스 주문 —담는다→ 블루투스 마우스','마우스 배송 —처리한다→ 마우스 주문'],2,'마우스 주문은 결제대기라 배송이 없습니다. 없는 대상을 지어내면 안 됩니다.'],
+ ['틀(설계)에 해당하는 것만 고르면? ① 마우스 주문은 결제대기다 ② 주문은 주문상태를 가진다 ③ 박민서는 7월에 가입했다',['①만','②만','①과 ③','모두'],1,'②만 특정 대상 없이 모든 주문에 해당합니다.'],
+ ['‘개념 · 인스턴스 · 속성 · 관계’ 순서로 바르게 짝지은 것은?',['주문 · 키보드 주문 · 주문상태 · 담는다','키보드 주문 · 주문 · 담는다 · 주문상태','주문상태 · 주문 · 키보드 주문 · 담는다','담는다 · 주문상태 · 주문 · 키보드 주문'],0,'종류 이름 · 실제 하나 · 값의 칸 · 대상을 잇는 이름 순서입니다.'],
+ ['새 상품 ‘노트북 거치대’를 등록하면 늘어나는 것은?',['개념','인스턴스','관계 이름','규칙'],1,'상품이라는 틀은 그대로이고 실제 상품이 하나 늘어납니다.'],
+ ['쿠폰을 도입하며 ‘주문 —사용한다→ 쿠폰’을 정했다. 설계에서 늘어나는 것은?',['인스턴스만','개념(쿠폰)과 관계(사용한다)','속성값만','아무것도 늘지 않는다'],1,'새 종류와 새 연결을 약속했으므로 틀(설계)이 커집니다.'],
+ ['마우스 주문이 결제되어 결제완료로 바뀌었다. 무엇이 바뀌었나?',['개념의 뜻','사실 (마우스 주문의 속성값)','규칙','관계 이름'],1,'틀은 그대로이고 주문 한 건의 값만 바뀌었습니다. 이제 규칙상 배송을 만들 수 있습니다.'],
+ ['어떤 팀이 ‘결제완료’ 대신 ‘결제됨’이라고 적기 시작했다. 알맞은 대응은?',['그냥 둔다','약속한 값 ‘결제완료’로 맞추고, ‘결제됨’은 같은 뜻의 다른 표기로 등록해 둔다','‘결제됨’을 새 개념으로 만든다','관계로 바꾼다'],1,'같은 뜻에는 하나의 약속된 값을 쓰고, 다른 표기는 그 값으로 모읍니다.']];
+buildQuiz($('quiz'),Q,(s,n,t)=>{$('qscore').textContent=s+' / '+t;$('qmsg').textContent=n<t?n+'문제 풀었습니다. 첫 시도에 맞힌 수를 셉니다.':(s>=12?'모두 풀었습니다. 일곱 키워드를 잘 구분하고 있습니다.':'모두 풀었습니다. 틀린 문제의 키워드 탭을 다시 보세요.');});
+
+/* 점검표 */
+const KEY='onto-keywords7-check';let saved={};try{saved=JSON.parse(localStorage.getItem(KEY)||'{}')||{};}catch(e){saved={};}
+document.querySelectorAll('#checklist input').forEach(c=>{c.checked=!!saved[c.id];c.addEventListener('change',()=>{saved[c.id]=c.checked;try{localStorage.setItem(KEY,JSON.stringify(saved));}catch(e){}});});
+})();
+</script>
+</body></html>
