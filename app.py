@@ -42,6 +42,12 @@ def guide_html():
     return RedirectResponse("/guide", status_code=308)
 
 
+@app.get("/samsung-display")
+@app.get("/samsung-display/")
+def samsung_display(request: Request):
+    return render(request, "samsung_display.html", page_title="삼성디스플레이 강의")
+
+
 @app.get("/team/{team_id}")
 def team_redirect(team_id: str):
     team = next((item for item in site["teams"] if item["id"] == team_id), None)
