@@ -35,6 +35,8 @@
 .track-label { font-size:11px; font-weight:900; letter-spacing:.1em; color:#7928ca; }
 .track-b .track-label { color:#1479c9; }
 .track-guide .track-label { color:#108a66; }
+.track-display .track-label { color:#0b5ed7; }
+.track-display:hover { border-color:#0b5ed7; }
 .track-card h3 { margin:34px 0 12px; font-size:26px; line-height:1.25; letter-spacing:-.08em; }
 .track-card p { margin:0; color:#758195; font-size:13px; line-height:1.7; }
 .track-card strong { display:flex; justify-content:space-between; align-items:center; margin-top:auto; padding-top:20px; border-top:1px solid #edf0f3; color:#ff2e93; font-size:13px; }

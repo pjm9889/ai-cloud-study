@@ -109,6 +109,12 @@ async def guide(request: Request):
 async def guide_html():
     from fastapi.responses import RedirectResponse
     return RedirectResponse('/guide', status_code=308)
+@app.get('/samsung-display')
+@app.get('/samsung-display/')
+async def samsung_display(request: Request):
+    return templates.TemplateResponse(request=request, name='samsung_display.html', context={
+        'site': site, 'page_title': '삼성디스플레이 강의'
+    })
 @app.get('/lectures')
 @app.get('/lectures/')
 async def lectures_home(request: Request):
