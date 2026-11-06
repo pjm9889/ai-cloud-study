@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>핫팩 10개 최저가 비교</title>
+  <style>
+    :root{--bg:#f6f7fb;--card:#fff;--ink:#172033;--muted:#667085;--line:#e7eaf0;--accent:#2563eb;--accent-soft:#eaf1ff;--good:#087f5b}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;line-height:1.55}
+    .wrap{max-width:1180px;margin:0 auto;padding:34px 20px 56px}.hero{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:24px}.eyebrow{color:var(--accent);font-weight:700;font-size:13px;letter-spacing:.04em}.hero h1{font-size:clamp(28px,4vw,44px);line-height:1.15;margin:6px 0 8px}.hero p{margin:0;color:var(--muted)}
+    .panel,.stat,.insight{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 24px #1d2a4410}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}.stat{padding:18px}.stat .label{color:var(--muted);font-size:13px}.stat .value{font-size:25px;font-weight:800;margin-top:5px}.stat .sub{font-size:12px;color:var(--muted);margin-top:3px}
+    .toolbar{display:flex;gap:10px;align-items:center;padding:14px;margin-bottom:14px;flex-wrap:wrap}.search{flex:1;min-width:230px;border:1px solid var(--line);border-radius:11px;padding:12px 14px;font-size:15px;outline:none}.search:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}select{border:1px solid var(--line);border-radius:11px;background:#fff;padding:12px;font-size:14px;color:var(--ink)}.count{margin-left:auto;color:var(--muted);font-size:13px}
+    .table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse;min-width:760px}.table th,.table td{padding:14px 16px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}.table th{font-size:12px;color:var(--muted);font-weight:700;background:#fbfcfe;white-space:nowrap}.table tr:last-child td{border-bottom:0}.product{font-weight:700}.seller-note{font-size:12px;color:var(--muted);margin-top:2px}.price{font-weight:800;white-space:nowrap}.total{color:var(--good);font-weight:800;white-space:nowrap}.rating{white-space:nowrap}.badge{display:inline-block;padding:3px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:700;margin-left:6px}.empty{text-align:center!important;color:var(--muted);padding:40px!important}
+    .insights{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px}.insight{padding:20px}.insight h2{font-size:18px;margin:0 0 12px}.insight ul{margin:0;padding-left:19px}.note{color:var(--muted);font-size:12px;margin:16px 2px 0}
+    #cursor-dot{position:fixed;z-index:9999;left:50%;top:50%;width:18px;height:18px;border:3px solid #fff;border-radius:50%;background:#ef233c;box-shadow:0 1px 8px #8b1020aa;pointer-events:none;transform:translate(-50%,-50%);display:block;animation:pulse-pointer 1.2s ease-in-out infinite}
+    #cursor-dot::after{content:'테스트 포인터';position:absolute;left:15px;top:-10px;white-space:nowrap;background:#ef233c;color:#fff;border-radius:6px;padding:3px 7px;font-size:11px;font-weight:700;box-shadow:0 1px 5px #8b102055}
+    @keyframes pulse-pointer{50%{box-shadow:0 0 0 8px #ef233c22,0 1px 8px #8b1020aa}}
+    @media(max-width:700px){.wrap{padding:24px 14px 42px}.hero{display:block}.stats{grid-template-columns:1fr}.insights{grid-template-columns:1fr}.count{margin-left:0;width:100%}.toolbar{align-items:stretch}.search,select{width:100%}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div id="cursor-dot" aria-hidden="true"></div>
+    <section class="hero"><div><div class="eyebrow">NAVER SHOPPING · 2026. 11. 06.</div><h1>핫팩 10개 최저가 비교</h1><p>가격순 검색 결과를 배송비 포함 실결제 기준으로 비교했습니다.</p></div></section>
+    <section class="stats" aria-label="요약 통계">
+      <article class="stat"><div class="label">배송비 포함 평균</div><div class="value" id="avgTotal">-</div><div class="sub">표에 포함된 10개 상품 기준</div></article>
+      <article class="stat"><div class="label">상품가 평균</div><div class="value" id="avgPrice">-</div><div class="sub">배송비 제외</div></article>
+      <article class="stat"><div class="label">최저 실결제</div><div class="value" id="minTotal">-</div><div class="sub" id="minName">-</div></article>
+    </section>
+    <section class="panel toolbar" aria-label="상품 검색 및 정렬">
+      <input id="search" class="search" type="search" placeholder="상품명 검색…" aria-label="상품명 검색">
+      <select id="shipping" aria-label="배송비 필터"><option value="all">배송비 전체</option><option value="free">무료배송만</option><option value="paid">유료배송만</option></select>
+      <select id="sort" aria-label="정렬"><option value="total">실결제 낮은순</option><option value="price">상품가 낮은순</option><option value="rating">평점 높은순</option></select>
+      <span class="count" id="count"></span>
+    </section>
+    <section class="panel table-wrap">
+      <table class="table"><thead><tr><th>상품</th><th>상품가</th><th>배송비</th><th>실결제</th><th>평점</th></tr></thead><tbody id="rows"></tbody></table>
+    </section>
+    <section class="insights">
+      <article class="insight"><h2>인사이트</h2><ul><li>배송비 포함 최저가는 <strong>핫앤핫 붙이는 핫팩 10개</strong>입니다.</li><li>상품가만 보면 듀플렉스가 가장 저렴하지만 배송비를 더하면 무료배송 상품보다 비쌉니다.</li><li>가성비와 평점을 함께 보면 쟈니베어 180g 10개가 균형이 좋습니다.</li></ul></article>
+      <article class="insight"><h2>선택 가이드</h2><ul><li><strong>최저가 우선:</strong> 핫앤핫 붙이는 핫팩</li><li><strong>대용량·고평점:</strong> 쟈니베어 군인 핫팩</li><li><strong>붙이는 타입:</strong> 핫앤핫 또는 핫타임 발핫팩</li></ul></article>
+    </section>
+    <p class="note">※ 네이버 쇼핑 가격·배송비·재고는 판매자, 배송지, 쿠폰에 따라 달라질 수 있습니다. 평균은 위 표의 10개 상품을 기준으로 계산합니다.</p>
+  </main>
+  <script>
+    const products = [
+      {name:'듀플렉스 손난로형 핫팩 60g 10개', price:3230, shipping:3000, rating:null},
+      {name:'핫앤핫 붙이는 핫팩 파스형 50g 10개', price:3980, shipping:0, rating:4.87},
+      {name:'핫타임 대용량 흔드는 고급형 핫팩 95g 10개', price:3500, shipping:3000, rating:4.83},
+      {name:'라온행복 충성핫팩 국산 100g 중형 10개', price:4000, shipping:2500, rating:4.85},
+      {name:'핫앤핫 프리미엄 핫팩 레드 10개', price:5000, shipping:0, rating:4.87},
+      {name:'해피데이 따뜻해 포켓용 핫팩 100g 10개', price:5900, shipping:0, rating:4.81},
+      {name:'쟈니베어 군인 핫팩 특대형 180g 10개', price:5980, shipping:0, rating:4.91},
+      {name:'주머니 핫팩 100g 휴대용 국산 10개', price:6800, shipping:0, rating:4.92},
+      {name:'푸르내 핫팩 포켓형 80g 10개', price:6900, shipping:0, rating:4.84},
+      {name:'핫타임 보온대 핫팩 160g 10개', price:7500, shipping:0, rating:4.92}
+    ];
+    const cursorDot = document.querySelector('#cursor-dot');
+    document.addEventListener('mousemove', event => {
+      cursorDot.style.left = event.clientX + 'px';
+      cursorDot.style.top = event.clientY + 'px';
+      cursorDot.style.display = 'block';
+    });
+    const won = n => n.toLocaleString('ko-KR')+'원';
+    const avg = key => Math.round(products.reduce((s,p)=>s+p[key],0)/products.length);
+    document.querySelector('#avgPrice').textContent = won(avg('price'));
+    document.querySelector('#avgTotal').textContent = won(Math.round(products.reduce((s,p)=>s+p.price+p.shipping,0)/products.length));
+    const min = products.reduce((a,b)=>(a.price+a.shipping)<(b.price+b.shipping)?a:b);
+    document.querySelector('#minTotal').textContent = won(min.price+min.shipping);
+    document.querySelector('#minName').textContent = min.name;
+    function render(){
+      const q = document.querySelector('#search').value.trim().toLowerCase();
+      const ship = document.querySelector('#shipping').value;
+      const sort = document.querySelector('#sort').value;
+      let list = products.filter(p => p.name.toLowerCase().includes(q) && (ship==='all' || (ship==='free' ? p.shipping===0 : p.shipping>0)));
+      list.sort((a,b)=>sort==='price'?a.price-b.price:sort==='rating'?(b.rating||0)-(a.rating||0):(a.price+a.shipping)-(b.price+b.shipping));
+      document.querySelector('#count').textContent = `${list.length}개 상품`;
+      document.querySelector('#rows').innerHTML = list.length ? list.map((p,i)=>`<tr><td><div class="product">${p.name}${i===0&&sort==='total'?'<span class="badge">추천</span>':''}</div></td><td class="price">${won(p.price)}</td><td>${p.shipping===0?'무료배송':won(p.shipping)}</td><td class="total">${won(p.price+p.shipping)}</td><td class="rating">${p.rating?`★ ${p.rating}`:'-'}</td></tr>`).join('') : '<tr><td colspan="5" class="empty">검색 결과가 없습니다.</td></tr>';
+    }
+    ['search','shipping','sort'].forEach(id=>document.querySelector('#'+id).addEventListener(id==='search'?'input':'change',render));
+    render();
+  </script>
+</body>
+</html>
