@@ -54,13 +54,29 @@ jobs:
                       if path.is_file():
                           z.write(path, path.as_posix())
           PY
-          cat gabia-deploy.zip \
-            | sshpass -e ssh \
-              -o StrictHostKeyChecking=no \
-              -o HostKeyAlgorithms=+ssh-rsa \
-              -o PubkeyAuthentication=no \
-              -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-              "mkdir -p -- '$GABIA_TARGET_DIR' && cd '$GABIA_TARGET_DIR' && cat > gabia-deploy.zip && python3 -c 'import zipfile; zipfile.ZipFile(\"gabia-deploy.zip\").extractall(\".\")' && rm -f gabia-deploy.zip"
+          split -b 1m gabia-deploy.zip gabia-deploy.part-
+          sshpass -e ssh \
+            -o StrictHostKeyChecking=no \
+            -o HostKeyAlgorithms=+ssh-rsa \
+            -o PubkeyAuthentication=no \
+            -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
+            "mkdir -p -- '$GABIA_TARGET_DIR' && cd '$GABIA_TARGET_DIR' && : > gabia-deploy.zip"
+          for part in gabia-deploy.part-*; do
+            cat "$part" \
+              | sshpass -e ssh \
+                -o StrictHostKeyChecking=no \
+                -o HostKeyAlgorithms=+ssh-rsa \
+                -o PubkeyAuthentication=no \
+                -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
+                "cd '$GABIA_TARGET_DIR' && cat >> gabia-deploy.zip"
+            sleep 1
+          done
+          sshpass -e ssh \
+            -o StrictHostKeyChecking=no \
+            -o HostKeyAlgorithms=+ssh-rsa \
+            -o PubkeyAuthentication=no \
+            -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
+            "cd '$GABIA_TARGET_DIR' && python3 -c 'import zipfile; zipfile.ZipFile(\"gabia-deploy.zip\").extractall(\".\")' && rm -f gabia-deploy.zip"
       - name: Restart FastAPI application
         shell: bash
         env:
