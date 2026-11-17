@@ -47,13 +47,12 @@ jobs:
           with zipfile.ZipFile('gabia-deploy.zip', 'w', zipfile.ZIP_DEFLATED) as z:
               for path in files:
                   z.write(path, path)
-              for root in ('templates', 'static'):
-                  for path in __import__('pathlib').Path(root).rglob('*'):
+              for path in [__import__('pathlib').Path('templates/home.html'), __import__('pathlib').Path('lecture_materials/index.html')]:
+                  z.write(path, path.as_posix())
+              for folder in ('B1', 'B2', 'B3', 'B4'):
+                  for path in __import__('pathlib').Path('lecture_materials', folder).rglob('*'):
                       if path.is_file():
                           z.write(path, path.as_posix())
-              for path in __import__('pathlib').Path('lecture_materials').rglob('*'):
-                  if path.is_file():
-                      z.write(path, path.as_posix())
           PY
           cat gabia-deploy.zip \
             | sshpass -e ssh \
