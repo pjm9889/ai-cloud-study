@@ -37,46 +37,12 @@ jobs:
           set -euo pipefail
           sudo apt-get update -qq
           sudo apt-get install -y -qq sshpass
-          python3 - <<'PY'
-          import zipfile
-          files = [
-              'app.py', 'main.py', 'gpt_module.py', 'naver_blog_routes.py',
-              'admin.html', 'mcp.html', 'requirements.txt', 'README.md',
-              'data/site.json',
-          ]
-          with zipfile.ZipFile('gabia-deploy.zip', 'w', zipfile.ZIP_DEFLATED) as z:
-              for path in files:
-                  z.write(path, path)
-              for path in [__import__('pathlib').Path('templates/home.html'), __import__('pathlib').Path('lecture_materials/index.html')]:
-                  z.write(path, path.as_posix())
-              for folder in ('B1', 'B2', 'B3', 'B4'):
-                  for path in __import__('pathlib').Path('lecture_materials', folder).rglob('*'):
-                      if path.is_file():
-                          z.write(path, path.as_posix())
-          PY
-          split -b 1m gabia-deploy.zip gabia-deploy.part-
           sshpass -e ssh \
             -o StrictHostKeyChecking=no \
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-            "mkdir -p -- '$GABIA_TARGET_DIR' && cd '$GABIA_TARGET_DIR' && : > gabia-deploy.zip"
-          for part in gabia-deploy.part-*; do
-            cat "$part" \
-              | sshpass -e ssh \
-                -o StrictHostKeyChecking=no \
-                -o HostKeyAlgorithms=+ssh-rsa \
-                -o PubkeyAuthentication=no \
-                -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-                "cd '$GABIA_TARGET_DIR' && cat >> gabia-deploy.zip"
-            sleep 1
-          done
-          sshpass -e ssh \
-            -o StrictHostKeyChecking=no \
-            -o HostKeyAlgorithms=+ssh-rsa \
-            -o PubkeyAuthentication=no \
-            -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-            "cd '$GABIA_TARGET_DIR' && python3 -c 'import zipfile; zipfile.ZipFile(\"gabia-deploy.zip\").extractall(\".\")' && rm -f gabia-deploy.zip"
+            "mkdir -p -- '$GABIA_TARGET_DIR' && cd '$GABIA_TARGET_DIR' && curl -fsSL 'https://github.com/pjm9889/ai-cloud-study/archive/refs/heads/main.zip' -o /tmp/ai-cloud-study-main.zip && python3 -c 'import os,pathlib,zipfile; p=\"/tmp/ai-cloud-study-main.zip\"; z=zipfile.ZipFile(p); prefix=z.namelist()[0].split(\"/\",1)[0]+\"/\"; wanted=(\"templates/home.html\",\"lecture_materials/index.html\",\"lecture_materials/B1/\",\"lecture_materials/B2/\",\"lecture_materials/B3/\",\"lecture_materials/B4/\"); [(pathlib.Path(n[len(prefix):]).parent.mkdir(parents=True,exist_ok=True), pathlib.Path(n[len(prefix):]).write_bytes(z.read(n))) for n in z.namelist() if n.startswith(prefix) and any(n[len(prefix):]==w or n[len(prefix):].startswith(w) for w in wanted)]; z.close(); os.remove(p)'"
       - name: Restart FastAPI application
         shell: bash
         env:
