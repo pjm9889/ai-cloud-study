@@ -1,0 +1,1093 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>03 조건분기 · 서브그래프 · LangGraph 교안</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{word-break:keep-all;overflow-wrap:break-word;font-family:var(--body)}
+
+/* Layout: 왼쪽 고정 사이드바(단원 목차) + 오른쪽 본문 패널. 휴대폰 폭에서는 사이드바가 상단 가로 스크롤 바로 바뀜 */
+:root{
+  --bg:#f6f7fb; --paper:#ffffff; --ink:#1b2236; --muted:#5a6380; --line:#d9deeb;
+  --node:#24305e; --nodeText:#ffffff; --edge:#9aa4c2;
+  --teal:#0f8f83; --amber:#d98a1f; --coral:#d4553f; --violet:#6b5bd2;
+  --soft:#eef1f9; --tealSoft:#e2f4f1; --amberSoft:#fbf0dd; --coralSoft:#fbe7e3;
+  --code:#ffffff; --codeLine:#c9d0e2; --codeCmt:#6a7697; --outBg:#f4fbfa; --shadow:rgba(27,34,54,.08);
+  --kw:#6b5bd2; --str:#0f7d73; --fn:#b4561f;
+  --display:"Do Hyeon","IBM Plex Sans KR","Malgun Gothic",sans-serif;
+  --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12151f; --paper:#1a1e2b; --ink:#e7eaf4; --muted:#a2aac2; --line:#2e3447;
+  --node:#8f9cf0; --nodeText:#10131c; --edge:#5b6584;
+  --teal:#3cc4b5; --amber:#f0b04f; --coral:#f07a63; --violet:#a597ff;
+  --soft:#222839; --tealSoft:#163331; --amberSoft:#3a2e17; --coralSoft:#3d211c; --code:#0d1017; --codeLine:#3a4157; --codeCmt:#8d97b5; --outBg:#10201f; --shadow:rgba(0,0,0,.3);
+  --kw:#b3a8ff; --str:#5fd3c4; --fn:#f0a36a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12151f; --paper:#1a1e2b; --ink:#e7eaf4; --muted:#a2aac2; --line:#2e3447;
+  --node:#8f9cf0; --nodeText:#10131c; --edge:#5b6584;
+  --teal:#3cc4b5; --amber:#f0b04f; --coral:#f07a63; --violet:#a597ff;
+  --soft:#222839; --tealSoft:#163331; --amberSoft:#3a2e17; --coralSoft:#3d211c; --code:#0d1017; --codeLine:#3a4157; --codeCmt:#8d97b5; --outBg:#10201f; --shadow:rgba(0,0,0,.3);
+  --kw:#b3a8ff; --str:#5fd3c4; --fn:#f0a36a; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:16px/1.75 var(--body);margin:0;word-break:keep-all;overflow-wrap:break-word}
+.panel{margin-top:30px;padding-top:24px;border-top:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+.layout{max-width:1220px;margin:0 auto;display:grid;grid-template-columns:252px minmax(0,1fr);gap:40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{min-width:0;padding-block:28px 64px;max-width:900px}
+h1,h2,h3{text-wrap:balance}
+h1{font:400 clamp(30px,5vw,44px)/1.2 var(--display);margin:6px 0 10px;letter-spacing:.5px}
+h2{font:400 28px/1.3 var(--display);margin:0 0 6px;display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+h2 .no{font:inherit;color:var(--teal)}
+h3{font-size:18px;margin:26px 0 6px}
+h4{font-size:16px;margin:18px 0 4px}
+p{margin:8px 0;max-width:72ch}
+ol,ul{padding-left:22px;margin:8px 0}
+li{margin:4px 0}
+.lead{color:var(--muted);font-size:17px}
+.kicker{font:600 12px var(--mono);letter-spacing:2px;color:var(--teal);text-transform:uppercase}
+.byline{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.6}
+section{margin-top:40px}
+.panel > section:first-child{margin-top:8px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.card h4{margin-top:0}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+code,.mono{font-family:var(--mono);font-size:.9em}
+code{background:var(--soft);padding:1px 6px;border-radius:5px;word-break:break-word}
+pre{background:var(--code);border:1px solid var(--codeLine);box-shadow:0 1px 3px var(--shadow);border-radius:10px;padding:14px 16px;overflow-x:auto;font:13.5px/1.6 var(--mono);margin:8px 0;color:var(--ink);tab-size:4}
+pre .c{color:var(--codeCmt);font-style:italic}
+pre .s{color:var(--str)}
+pre .k{color:var(--kw);font-weight:600}
+pre.out{background:var(--outBg);border-style:dashed;box-shadow:none;white-space:pre-wrap;word-break:break-word;font-size:13px}
+pre.out::before{content:"출력";display:block;font:600 11px var(--mono);letter-spacing:1.5px;color:var(--teal);margin-bottom:4px}
+pre.out.ex::before{content:"출력 예시 · 모델 답변은 실행마다 달라짐"}
+pre.err{background:var(--coralSoft);border-color:var(--coral);box-shadow:none;white-space:pre-wrap;word-break:break-word;font-size:13px}
+pre.err::before{content:"에러";display:block;font:600 11px var(--mono);letter-spacing:1.5px;color:var(--coral);margin-bottom:4px}
+.codehead{display:flex;justify-content:space-between;align-items:center;gap:8px;font:600 12px var(--mono);color:var(--muted);margin:16px 0 -4px;flex-wrap:wrap}
+.copy{font:500 12px var(--body);border:1px solid var(--line);background:var(--paper);color:var(--muted);border-radius:6px;padding:2px 10px;cursor:pointer}
+.copy:hover{color:var(--ink)}
+.tw{overflow-x:auto;margin:10px 0}
+table{border-collapse:collapse;font-size:14px;min-width:100%}
+th,td{border-bottom:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+th{background:var(--soft);font-weight:600;white-space:nowrap}
+td code{white-space:nowrap}
+.note{background:var(--amberSoft);border-radius:10px;padding:12px 14px;font-size:15px;margin-top:12px}
+.note b{color:var(--amber)}
+.ragbox{background:var(--tealSoft);border-left:4px solid var(--teal);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:15px}
+.ragbox b{color:var(--teal)}
+.warn{background:var(--coralSoft);border-left:4px solid var(--coral);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:15px}
+.warn b{color:var(--coral)}
+.fix{background:var(--soft);border-left:4px solid var(--violet);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:15px}
+.fix b{color:var(--violet)}
+.note p,.ragbox p,.warn p,.fix p{margin:4px 0}
+.note ul,.ragbox ul,.warn ul,.fix ul{margin:4px 0}
+.fig{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px;overflow-x:auto;margin-top:12px}
+.fig svg{display:block;width:100%;height:auto;min-width:560px}
+svg text{font-family:var(--body)}
+.cap{font-size:13px;color:var(--muted);margin:6px 4px 0}
+.chip{display:inline-block;font:500 12px var(--body);padding:1px 10px;border-radius:999px;background:var(--soft);color:var(--muted);vertical-align:middle}
+.chip.ok{background:var(--tealSoft);color:var(--teal)}
+.chip.draft{background:var(--amberSoft);color:var(--amber)}
+.chip.ai{background:var(--coralSoft);color:var(--coral)}
+a{color:var(--teal)}
+.example{background:var(--soft);border-radius:10px;padding:12px 16px;margin:10px 0;font-size:15.5px}
+.example b{color:var(--node)}
+.steps{list-style:none;padding:0;margin:10px 0 0;counter-reset:st}
+.steps>li{counter-increment:st;padding:10px 0;border-top:1px dashed var(--line);margin:0}
+.steps>li::before{content:counter(st) ". ";font:600 14px var(--mono);color:var(--teal)}
+.steps>li:first-child{border-top:0}
+.steps .lbl{font-weight:700;color:var(--node)}
+.think{margin-top:8px;font-size:14.5px;color:var(--muted)}
+.think-h{display:inline-block;font:600 12px var(--body);color:var(--muted);margin-right:6px}
+mark{background:var(--amberSoft);color:inherit;border-bottom:2px solid var(--amber);padding:0 1px}
+details{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-top:8px}
+details summary{cursor:pointer;font-weight:600}
+details[open] summary{margin-bottom:6px}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:500 13.5px var(--mono);margin:10px 0}
+.flow span{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:4px 10px}
+.flow span.n{background:var(--node);color:var(--nodeText);border-color:var(--node)}
+.flow i{font-style:normal;color:var(--edge)}
+
+/* sidebar */
+.side{position:sticky;top:env(safe-area-inset-top,0px);align-self:start;max-height:100vh;overflow-y:auto;padding-block:28px 28px;scrollbar-width:thin}
+.side .brand{font:400 22px/1.2 var(--display);margin-bottom:2px}
+.side .brand-sub{font-size:12.5px;color:var(--muted);margin-bottom:14px}
+.prog{height:6px;background:var(--soft);border-radius:999px;overflow:hidden;margin:0 0 4px}
+.prog i{display:block;height:100%;width:0;background:var(--teal);transition:width .3s}
+.prog-t{font:500 12px var(--mono);color:var(--muted);margin-bottom:14px}
+.grp{font:600 11px var(--mono);letter-spacing:1.6px;color:var(--teal);text-transform:uppercase;margin:16px 0 6px}
+.navlist{display:flex;flex-direction:column;gap:2px}
+.navlist button{display:grid;grid-template-columns:28px minmax(0,1fr) 16px;align-items:center;gap:4px;width:100%;text-align:left;font:500 14px/1.35 var(--body);border:0;background:transparent;color:var(--ink);border-radius:8px;padding:7px 8px;cursor:pointer}
+.navlist button .n{font:600 12px var(--mono);color:var(--muted)}
+.navlist button .d{font-size:12px;color:var(--teal);visibility:hidden}
+.navlist button.done .d{visibility:visible}
+.navlist button:hover{background:var(--soft)}
+.navlist button[aria-selected="true"]{background:var(--node);color:var(--nodeText)}
+.navlist button[aria-selected="true"] .n,.navlist button[aria-selected="true"] .d{color:var(--nodeText)}
+.navlist button:focus-visible,.pager button:focus-visible,.copy:focus-visible,.donebtn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+
+/* panel footer */
+.pfoot{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center}
+.donebtn{font:600 14px var(--body);border:2px solid var(--teal);background:var(--paper);color:var(--teal);border-radius:999px;padding:6px 16px;cursor:pointer}
+.donebtn[aria-pressed="true"]{background:var(--teal);color:var(--paper)}
+.pager{display:flex;gap:8px;flex-wrap:wrap}
+.pager button{font:500 14px var(--body);border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:6px 14px;cursor:pointer;max-width:100%}
+.pager button[disabled]{opacity:.4;cursor:default}
+footer{margin-top:50px;font-size:13px;color:var(--muted)}
+
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr);gap:0}
+  .side{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);max-height:none;overflow:visible;padding-block:10px;border-bottom:1px solid var(--line);margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .side .brand,.side .brand-sub,.grp,.prog,.prog-t{display:none}
+  .navwrap{display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin;padding-bottom:2px}
+  .navlist{flex-direction:row;gap:6px}
+  .navlist button{display:flex;flex:0 0 auto;width:auto;white-space:nowrap;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13.5px}
+  .navlist button .d{display:none}
+  .navlist button.done .n{color:var(--teal)}
+  main{padding-top:18px}
+}
+@media (max-width:600px){h2{font-size:24px} pre{font-size:12.5px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+.tg{display:inline-block;font:600 11.5px/1.5 var(--body);border-radius:5px;padding:1px 7px;margin-left:6px;vertical-align:middle;white-space:nowrap;letter-spacing:.2px}
+.tg.rag{background:var(--tealSoft);color:var(--teal);border:1px solid var(--teal)}
+.tg.lg1{background:var(--violet);color:var(--paper);border:1px solid var(--violet)}
+.tg.ag{background:var(--amberSoft);color:var(--amber);border:1px solid var(--amber)}
+.sm.ag{background:var(--amber);border-radius:2px}
+.tg.lg2{background:transparent;color:var(--violet);border:1px dashed var(--violet)}
+h2 .tg{font-size:12px;position:relative;top:-3px}
+.mhead .tgs{display:inline-flex;gap:0}
+.mhead .tgs .tg:first-child{margin-left:0}
+.sm{display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:6px;vertical-align:middle}
+.sm.rag{background:var(--teal)}
+.sm.lg1{background:var(--violet)}
+.sm.lg2{border:1.5px solid var(--violet)}
+.mhead .tgs:empty{display:none}
+.navlist a[aria-current="page"] .sm{box-shadow:0 0 0 1.5px var(--nodeText)}
+.bridge{display:grid;gap:6px;margin-top:14px}
+.bridge div{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:baseline;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14.5px;line-height:1.6}
+.bridge .tg{margin-left:0}
+.legend2{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:13px;color:var(--muted);margin-top:8px}
+.legend2 .tg{margin-left:0}
+.path{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin-top:10px}
+.path .card h4{margin:0 0 6px}
+.path ol{margin:4px 0 0}
+.ucard .tgrow{display:flex;flex-wrap:wrap;gap:4px}
+.ucard .tgrow .tg{margin-left:0}
+
+.copyright{font-size:14px;color:var(--muted);line-height:1.6;margin-top:8px}
+/* 탭: 모든 화면 폭에서 왼쪽 세로 배치 */
+@media (max-width:900px){
+  .layout{grid-template-columns:200px minmax(0,1fr) !important;gap:22px !important}
+  .side{position:sticky !important;top:env(safe-area-inset-top,0px) !important;max-height:100vh !important;overflow-y:auto !important;border-bottom:0 !important;margin:0 !important;padding:22px 0 !important;background:transparent !important}
+  .side .brand,.side .brand-sub{display:block !important}
+  .navwrap{display:block !important;overflow:visible !important}
+  .navlist{flex-direction:column !important;gap:2px !important}
+  .navlist button{display:grid !important;grid-template-columns:26px minmax(0,1fr) auto !important;width:100% !important;white-space:normal !important;border:0 !important;background:transparent !important;border-radius:8px !important;padding:7px 6px !important;font-size:14px !important}
+  .navlist button[aria-selected="true"]{background:var(--node) !important}
+  .navlist button .sm{display:inline-block !important}
+  main{padding-top:24px !important}
+}
+@media (max-width:600px){
+  .layout{grid-template-columns:112px minmax(0,1fr) !important;gap:12px !important}
+  .navlist button{grid-template-columns:minmax(0,1fr) auto !important;font-size:13px !important;padding:6px 5px !important}
+  .navlist button .n,.navlist button .sm,.side .brand-sub{display:none !important}
+  .side .brand{font-size:15px !important}
+}
+.view{margin-top:26px;background:var(--paper);border:1px solid var(--line);border-left:5px solid var(--violet);border-radius:12px;padding:14px 18px 10px}
+.view-h{font:700 15px var(--body);color:var(--violet);letter-spacing:.3px;margin-bottom:4px}
+.view ul{margin:4px 0 0;padding-left:20px}
+.view li{margin:10px 0;line-height:1.8}
+.view li b{color:var(--ink)}
+/* 가독성: 글꼴 크기 */
+body{font-size:17.5px;line-height:1.85}
+p{max-width:78ch}
+h1{font-size:clamp(32px,5vw,46px)}
+h2{font-size:31px}
+h3{font-size:20.5px;margin-top:30px}
+h4{font-size:17.5px}
+pre{font-size:15px;line-height:1.7}
+pre.out,pre.err{font-size:14.5px}
+table{font-size:15.5px}
+th,td{padding:9px 12px}
+.cap{font-size:14.5px}
+.note,.warn,.ragbox,.fix{font-size:16px}
+.goal{font-size:16.5px}
+.navlist button{font-size:15.5px !important}
+.side .brand-sub{font-size:13.5px}
+.checks li{font-size:16px}
+.mhead h3{font-size:19.5px}
+.lv{font-size:13px}
+.tg{font-size:12.5px}
+.bridge div{font-size:15.5px}
+.legend2{font-size:14px}
+@media (max-width:600px){body{font-size:17px} pre{font-size:13.5px} h2{font-size:26px} table{font-size:14.5px}}
+
+.solo{max-width:1100px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.solo main{max-width:none}
+.navlist button{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:start;gap:4px;width:100%;text-align:left;font:500 14px/1.4 var(--body);border:0;background:transparent;color:var(--ink);border-radius:8px;padding:8px 8px;cursor:pointer}
+.navlist button .n{font:600 12px/1.6 var(--mono);color:var(--muted)}
+.navlist button .mc{font:500 11px var(--mono);color:var(--muted)}
+.navlist button:hover{background:var(--soft)}
+.navlist button[aria-selected="true"]{background:var(--node);color:var(--nodeText)}
+.navlist button[aria-selected="true"] .n,.navlist button[aria-selected="true"] .mc{color:var(--nodeText)}
+.navlist button[aria-selected="true"] .sm{box-shadow:0 0 0 1.5px var(--nodeText)}
+.navlist button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.side .brand{font:400 24px/1.25 var(--display);margin-bottom:4px}
+.uhead{padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:22px}
+.uhead h1{margin-bottom:0}
+.pane > section{margin-top:0}
+.pane #missions{margin-top:0;padding-top:0;border-top:0}
+.pane > section > h2{margin-bottom:12px}
+@media (max-width:900px){
+  .navlist button{display:flex;flex:0 0 auto;width:auto;white-space:nowrap;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13.5px;gap:6px}
+  .navlist button .sm{display:none}
+  .side .brand{font-size:18px}
+}
+
+.time{font:600 14px var(--body);color:var(--ink);margin-top:2px}
+.time span{font-weight:400;color:var(--muted)}
+.goal{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--node);border-radius:10px;padding:10px 14px;margin-top:12px;font-size:15px}
+.goal b{color:var(--node)}
+.goal ul{margin:4px 0 0}
+.sumlist{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 18px 14px 36px;margin-top:10px}
+.sumlist li{margin:6px 0}
+.ucard .tm{font:500 12px var(--mono);color:var(--muted)}
+
+.navlist a{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:4px;width:100%;font:500 14px/1.35 var(--body);color:var(--ink);text-decoration:none;border-radius:8px;padding:7px 8px}
+.navlist a .n{font:600 12px var(--mono);color:var(--muted)}
+.navlist a .mc{font:500 11px var(--mono);color:var(--muted)}
+.navlist a.full .mc{color:var(--teal);font-weight:600}
+.navlist a:hover{background:var(--soft)}
+.navlist a[aria-current="page"]{background:var(--node);color:var(--nodeText)}
+.navlist a[aria-current="page"] .n,.navlist a[aria-current="page"] .mc{color:var(--nodeText)}
+.navlist a:focus-visible,.pager a:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.side .brand a{color:inherit;text-decoration:none}
+.unit-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+.unit-meta a.go{font:600 13px var(--body);background:var(--teal);color:var(--paper);text-decoration:none;border-radius:999px;padding:4px 14px}
+.unit-panel{margin-top:30px;padding-top:24px;border-top:1px solid var(--line)}
+.unit-panel > section:first-child{margin-top:0}
+/* missions */
+#missions{scroll-margin-top:72px;margin-top:56px;padding-top:28px;border-top:3px double var(--line)}
+.mlegend{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 6px}
+.mprog{font:500 13px var(--mono);color:var(--muted)}
+.mission{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-top:16px;scroll-margin-top:70px}
+.mission.is-done{border-color:var(--teal);background:linear-gradient(var(--outBg),var(--outBg))}
+.mhead{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.mhead h3{margin:0;font-size:18px;flex:1 1 220px;min-width:0}
+.lv{font:600 12px var(--body);border-radius:6px;padding:2px 9px;white-space:nowrap}
+.lv1{background:var(--tealSoft);color:var(--teal)}
+.lv2{background:var(--amberSoft);color:var(--amber)}
+.lv3{background:var(--coralSoft);color:var(--coral)}
+.mdone{display:inline-flex;align-items:center;gap:6px;font:600 13px var(--body);color:var(--muted);cursor:pointer;border:1px solid var(--line);border-radius:999px;padding:3px 12px;background:var(--bg)}
+.mdone input{accent-color:var(--teal);width:16px;height:16px;margin:0}
+.mission.is-done .mdone{color:var(--teal);border-color:var(--teal)}
+.mlabel{font:600 11px var(--mono);letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin:14px 0 2px}
+.checks{list-style:none;padding:0;margin:4px 0 0}
+.checks li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:6px;align-items:start;margin:3px 0;font-size:15px}
+.checks input{accent-color:var(--teal);width:16px;height:16px;margin:5px 0 0}
+.checks label{cursor:pointer}
+.mission details{margin-top:10px}
+.mission details.ans summary{color:var(--violet)}
+.mission details.hint summary{color:var(--amber)}
+.mission .note{margin-top:10px}
+.pager{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;width:100%}
+.pager a{font:500 14px var(--body);border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:8px 14px;text-decoration:none;max-width:100%}
+.pager a:hover{border-color:var(--teal)}
+.pager .sp{flex:1}
+@media (max-width:900px){
+  .navlist a{display:flex;flex:0 0 auto;width:auto;white-space:nowrap;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13.5px;gap:6px}
+  .navlist a .mc{display:none}
+  .navlist a.full .n{color:var(--teal)}
+}
+/* index */
+.ucards{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));margin-top:10px}
+.ucard{display:flex;flex-direction:column;gap:6px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-decoration:none;color:var(--ink);min-width:0}
+.ucard:hover{border-color:var(--teal)}
+.ucard .n{font:600 12px var(--mono);color:var(--teal)}
+.ucard b{font-size:16px}
+.ucard .d{font-size:13.5px;color:var(--muted);line-height:1.55}
+.ucard .bar{height:5px;background:var(--soft);border-radius:999px;overflow:hidden;margin-top:auto}
+.ucard .bar i{display:block;height:100%;width:0;background:var(--teal)}
+.ucard .mc{font:500 12px var(--mono);color:var(--muted)}
+</style>
+</head>
+<body data-unit="sub">
+<style>
+.mission .mlabel.st{font:700 13px var(--body);letter-spacing:.5px;color:var(--teal);text-transform:none;margin-top:22px;padding-top:12px;border-top:1px dashed var(--line)}
+.mission .mlabel.st:first-of-type{border-top:0;padding-top:0}
+.qcard{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:10px;padding:10px 14px;margin-top:10px}
+.qcard b{color:var(--teal)}
+.navlist .grp{margin:14px 8px 4px;display:flex;justify-content:space-between}
+.chip.must{background:var(--coralSoft);color:var(--coral);font-weight:700}
+.chip.rec{background:var(--amberSoft);color:var(--amber)}
+</style>
+<div class="layout">
+<aside class="side" aria-label="소단원">
+<div class="brand">03 조건분기 · 서브그래프</div>
+<div class="brand-sub">LangGraph 교안 · 모듈화</div>
+<nav class="navwrap" role="tablist" aria-label="소단원" aria-orientation="vertical"><div class="navlist">
+<button type="button" role="tab" id="tab-intro" aria-controls="pane-intro" data-t="intro"><span class="n">0</span><span>개요 · 읽을 페이지</span></button>
+<button type="button" role="tab" id="tab-cond" aria-controls="pane-cond" data-t="cond"><span class="n">1</span><span>조건분기 다시 보기<i class="sm lg1" title="LangGraph 필수"></i></span></button>
+<button type="button" role="tab" id="tab-design" aria-controls="pane-design" data-t="design"><span class="n">2</span><span>서브그래프 설계 이슈<i class="sm rag" title="RAG"></i><i class="sm ag" title="에이전트"></i></span></button>
+<button type="button" role="tab" id="tab-syntax" aria-controls="pane-syntax" data-t="syntax"><span class="n">3</span><span>서브그래프 문법 한 장<i class="sm lg1" title="LangGraph 필수"></i></span></button>
+<button type="button" role="tab" id="tab-ex1" aria-controls="pane-ex1" data-t="ex1"><span class="n">4</span><span>실제예 ① 검색 서브그래프 재사용<i class="sm rag" title="RAG"></i></span></button>
+<button type="button" role="tab" id="tab-ex2" aria-controls="pane-ex2" data-t="ex2"><span class="n">5</span><span>실제예 ② 스키마가 다른 번역 모듈<i class="sm ag" title="에이전트"></i></span></button>
+<div class="grp"><span>미션</span><span class="mc" id="mcount">0/7</span></div>
+<button type="button" role="tab" id="tab-m1" aria-controls="pane-m1" data-t="m1"><span class="n">M1</span><span>장애 티켓 3갈래 분기</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m2" aria-controls="pane-m2" data-t="m2"><span class="n">M2</span><span>서브그래프 실행 순서 예측</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m3" aria-controls="pane-m3" data-t="m3"><span class="n">M3</span><span>요약 모듈을 붙였더니 KeyError</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m4" aria-controls="pane-m4" data-t="m4"><span class="n">M4</span><span>로그가 두 번 찍힌다</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m5" aria-controls="pane-m5" data-t="m5"><span class="n">M5</span><span>끝나지 않는 재처리</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m6" aria-controls="pane-m6" data-t="m6"><span class="n">M6</span><span>질문 유형별 서브그래프로 보내기</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m7" aria-controls="pane-m7" data-t="m7"><span class="n">M7</span><span>결재 서브그래프 재사용 (HITL)</span><span class="d">✓</span></button>
+</div></nav></aside>
+<main>
+<header class="uhead"><div class="kicker">LangGraph 교안 · 03</div><h1>조건분기 · 서브그래프</h1><div class="copyright">© 2026 부성순 · AI·클라우드 실무 과정<br>부성순 (bakpak@empas.com)</div></header>
+
+<!-- ============ 0. 개요 ============ -->
+<div class="pane" role="tabpanel" id="pane-intro" aria-labelledby="tab-intro"><section><h2><span class="no">0</span>개요 · 읽을 페이지</h2>
+<div class="goal"><b>학습 목표</b><ul>
+<li>조건부 엣지로 여러 갈래 흐름을 만들고, 기본 경로와 루프 종료 조건을 빠뜨리지 않는다.</li>
+<li>그래프를 서브그래프로 나눌지 판단하고, 두 가지 연결 방법(노드로 추가 / 래퍼 노드에서 호출) 중 하나를 이유를 들어 고른다.</li>
+<li>공유 키 · 리듀서 · 체크포인터 때문에 생기는 서브그래프 버그를 진단한다.</li>
+<li>분기 + 서브그래프를 조합해 "질문 유형별 전문 모듈"과 "재사용 결재 모듈"을 만든다.</li>
+</ul></div>
+<div class="note"><b>전제</b> 01 리듀서, 02 노드·엣지(조건부 엣지 · Command · 루프)를 마쳤습니다.</div>
+<h3>위키독스 3페이지</h3>
+<div class="tw"><table><thead><tr><th>구분</th><th>페이지</th><th>여기서 가져갈 것</th></tr></thead><tbody>
+<tr><td><span class="chip must">필수 1</span></td><td><a href="https://wikidocs.net/261583" target="_blank" rel="noopener">1-5. 서브그래프 (Sub-graph)</a></td><td>연결 방법 2가지, 서브그래프 스트리밍, 체크포인터 전파, 상태 조회</td></tr>
+<tr><td><span class="chip must">필수 2</span></td><td><a href="https://wikidocs.net/261602" target="_blank" rel="noopener">1-5-1. 서브그래프 구현</a></td><td>서브그래프 하나를 만들어 단독 실행</td></tr>
+<tr><td><span class="chip must">필수 3</span></td><td><a href="https://wikidocs.net/264592" target="_blank" rel="noopener">1-5-2. 메인 그래프에 통합하여 구현</a></td><td>전처리 → 서브그래프 → 조건분기 → 후처리</td></tr>
+<tr><td><span class="chip rec">복습</span></td><td><a href="https://wikidocs.net/293535" target="_blank" rel="noopener">1-3-4-3. 조건부 엣지</a></td><td>조건분기 문법 (02에서 학습)</td></tr>
+</tbody></table></div>
+<h3>교재에서 바로잡을 곳 (LangGraph 1.2.20으로 실행 확인)</h3>
+<div class="tw"><table><thead><tr><th>페이지</th><th>문제</th><th>바르게</th></tr></thead><tbody>
+<tr><td>1-5, 1-5-2</td><td>"부모 그래프에 <code>compile(checkpointer=True)</code>를 쓰면 InMemorySaver가 자동 생성"</td><td>실제로는 <b>RuntimeError: checkpointer=True cannot be used for root graphs</b>. 부모에는 <code>InMemorySaver()</code> 같은 실제 체크포인터를 넣고, <code>True</code>는 서브그래프에만 씁니다(독립 기억이 필요할 때). → M7</td></tr>
+<tr><td>1-5-2</td><td>"error"면 preprocessing으로 돌아가는 재처리 루프</td><td>입력에 error가 들어 있으면 매번 같은 결과라 <b>무한 루프</b>(GraphRecursionError). 재시도 횟수와 포기 경로가 필요합니다. → M5</td></tr>
+<tr><td>1-5-2</td><td>"같은 키를 쓰면 덮어쓴다"는 주의만 있음</td><td>공유 키에 <code>add</code> 리듀서가 있으면 덮어쓰기가 아니라 <b>중복</b>이 생깁니다. → M4</td></tr>
+<tr><td>1-5</td><td><code>MemorySaver</code></td><td>지금 이름은 <code>InMemorySaver</code> (옛 이름도 동작)</td></tr>
+</tbody></table></div>
+<div class="bridge">
+<div><span class="tg rag">RAG</span><span>검색 · 문서 평가 · 답변 생성을 각각 서브그래프로 만들어 여러 챗봇에서 재사용합니다.</span></div>
+<div><span class="tg lg1">LangGraph 필수</span><span>조건분기로 "어느 모듈로 갈지"를 정하고, 서브그래프가 "그 모듈 안의 일"을 맡습니다.</span></div>
+<div><span class="tg ag">MCP·에이전트</span><span>멀티 에이전트는 "에이전트 하나 = 서브그래프 하나"입니다. 결재·검토 같은 HITL 단계도 서브그래프로 재사용합니다.</span></div>
+</div>
+</section></div>
+
+<!-- ============ 1. 조건분기 다시 보기 ============ -->
+<div class="pane" role="tabpanel" id="pane-cond" aria-labelledby="tab-cond" hidden><section><h2><span class="no">1</span>조건분기 다시 보기<span class="tg lg1">LangGraph 필수</span></h2>
+<p>서브그래프와 함께 쓸 때 가장 많이 쓰는 것이 조건분기입니다. 02에서 배운 것 중 꼭 필요한 것만 다시 정리합니다.</p>
+<h3>모양: 라우터 함수 + 후보</h3>
+<pre class="py">from typing import Literal
+
+def route(state) -&gt; Literal["faq", "calc", "fallback"]:     # ① 후보 전부를 타입힌트로
+    if "계산" in state["question"]:
+        return "calc"
+    if "연차" in state["question"]:
+        return "faq"
+    return "fallback"                                       # ② 기본 경로
+
+g.add_conditional_edges("classify", route)                 # 출발 노드, 라우터</pre>
+<div class="flow"><span class="n">classify</span><i>→</i><span>route(state)</span><i>→</i><span class="n">faq</span><i>/</i><span class="n">calc</span><i>/</i><span class="n">fallback</span></div>
+<h3>체크리스트 4가지</h3>
+<ol class="steps">
+<li><span class="lbl">후보를 전부 적었나?</span> 라우터가 돌려줄 수 있는 값이 경로 맵(또는 Literal)에 다 있어야 합니다. 없으면 KeyError.</li>
+<li><span class="lbl">기본 경로가 있나?</span> 마지막 <code>return</code>이 "모르는 경우"를 받아야 합니다. LLM이 분류할 때는 특히 중요합니다.</li>
+<li><span class="lbl">라우터는 읽기만 하나?</span> 라우터 안에서 상태를 바꿔도 저장되지 않습니다. 횟수 증가 같은 일은 노드가 합니다.</li>
+<li><span class="lbl">되돌아가는 길에 탈출구가 있나?</span> 성공 조건과 포기 조건(횟수) 두 개, 그리고 <code>recursion_limit</code>.</li>
+</ol>
+<h3>조건부 엣지 vs Command (02 복습)</h3>
+<div class="tw"><table><thead><tr><th></th><th>조건부 엣지</th><th>Command</th></tr></thead><tbody>
+<tr><td>어디에 쓰나</td><td>노드 밖, 라우터 함수</td><td>노드 안, 반환값</td></tr>
+<tr><td>상태 변경</td><td>불가 (고르기만)</td><td>가능 (<code>update=</code>)</td></tr>
+<tr><td>서브그래프와</td><td>부모에서 "어느 서브그래프로" 고를 때</td><td>서브그래프 안에서 부모 노드로 넘길 때 <code>graph=Command.PARENT</code></td></tr>
+</tbody></table></div>
+<div class="ragbox"><b>이번 단원에서의 분기 위치</b> "어느 모듈로 갈지"는 <b>부모 그래프</b>에서, "모듈 안에서 어떻게 처리할지"는 <b>서브그래프 안</b>에서 분기합니다. 분기를 어디에 둘지가 서브그래프 설계의 일부입니다.</div>
+</section></div>
+
+<!-- ============ 2. 설계 이슈 ============ -->
+<div class="pane" role="tabpanel" id="pane-design" aria-labelledby="tab-design" hidden><section><h2><span class="no">2</span>서브그래프 설계 이슈<span class="tg rag">RAG</span><span class="tg ag">MCP·에이전트</span></h2>
+<h3>서브그래프란</h3>
+<p>컴파일된 그래프를 다른 그래프의 <b>노드 하나처럼</b> 쓰는 것입니다. 함수를 나눠 모듈로 만드는 것과 같습니다. 문제는 부모와 서브그래프가 <b>상태를 어떻게 주고받느냐</b>에서 생깁니다.</p>
+<h3>서브그래프를 만들 때 던질 5가지 질문</h3>
+<div class="qcard"><b>Q1. 정말 묶을 가치가 있나?</b><br>여러 그래프에서 재사용하거나, 따로 개발·테스트하거나, 에이전트마다 독립 상태가 필요할 때 묶습니다. 아니면 노드 몇 개로 충분합니다.</div>
+<div class="qcard"><b>Q2. 부모와 상태 키를 공유하나?</b><br>공유하면 <b>방법 1</b>: <code>add_node("이름", 컴파일된_서브그래프)</code>. 키 이름이 다르면 <b>방법 2</b>: 래퍼 노드 안에서 <code>subgraph.invoke()</code>로 부모 → 서브 → 부모 변환.</div>
+<div class="qcard"><b>Q3. 공유 키에 리듀서가 있나?</b><br>방법 1에서 서브그래프는 끝날 때 공유 키의 <b>전체 값</b>을 부모에 돌려줍니다. 덮어쓰기 키는 괜찮지만, <code>add</code> 키는 부모가 이미 가진 값이 <b>한 번 더 더해집니다</b>. (<code>add_messages</code>는 id로 합쳐서 괜찮습니다.)</div>
+<div class="qcard"><b>Q4. 분기는 어디에 두나?</b><br>"어느 서브그래프로"는 부모에서, "서브그래프 안의 세부 흐름"은 서브그래프 안에서 분기합니다. 서브그래프 결과로 부모가 되돌아가는 루프라면 탈출 조건(횟수)은 <b>부모 상태</b>에 둡니다.</div>
+<div class="qcard"><b>Q5. 멈추고 기다리거나(interrupt) 기억해야 하나?</b><br>체크포인터는 <b>부모에만</b> 넣으면 서브그래프로 전파됩니다. 서브그래프가 따로 기억해야 할 때만 서브그래프를 <code>compile(checkpointer=True)</code>로 컴파일합니다.</div>
+<h3>Q2의 답 → 연결 방법</h3>
+<div class="tw"><table><thead><tr><th></th><th>방법 1: 노드로 추가</th><th>방법 2: 래퍼 노드에서 호출</th></tr></thead><tbody>
+<tr><td>코드</td><td><code>g.add_node("search", search_graph)</code></td><td><code>def call(s): r = sub.invoke({...}); return {...}</code></td></tr>
+<tr><td>상태</td><td>같은 이름의 키가 자동으로 오감</td><td>직접 변환 (이름이 달라도 됨)</td></tr>
+<tr><td>서브 전용 키</td><td>부모에 안 보임</td><td>부모에 안 보임</td></tr>
+<tr><td>좋은 때</td><td>question · context처럼 키가 같을 때</td><td>스키마가 다를 때, 공유 키 리듀서 문제를 피할 때, 에이전트별 독립 메시지</td></tr>
+<tr><td>상태 조회·interrupt</td><td colspan="2">둘 다 됩니다 (단, 도구 함수 안에서 호출하면 안 됨)</td></tr>
+</tbody></table></div>
+<h3>설계를 안 하면 생기는 5가지 문제</h3>
+<div class="tw"><table><thead><tr><th>증상</th><th>원인 (놓친 질문)</th><th>해결</th><th>어디서</th></tr></thead><tbody>
+<tr><td>서브 전용 키가 결과에 없음</td><td>정상 동작 (캡슐화) — 몰랐을 뿐 (Q2)</td><td><code>subgraphs=True</code> 스트림으로 확인</td><td>M2</td></tr>
+<tr><td><code>KeyError: 'text'</code></td><td>공유 키가 없는데 방법 1로 붙임 (Q2)</td><td>방법 2 래퍼</td><td>M3</td></tr>
+<tr><td>로그·문서가 두 번 들어감</td><td>add 리듀서 공유 키 (Q3)</td><td>래퍼에서 새 몫만, 또는 공유 안 함</td><td>M4</td></tr>
+<tr><td><code>GraphRecursionError</code></td><td>서브그래프 결과로 되돌아가는 루프에 탈출구 없음 (Q4)</td><td>부모 상태에 횟수 + 포기 경로</td><td>M5</td></tr>
+<tr><td><code>RuntimeError</code> (checkpointer=True)</td><td>부모에 True를 씀 (Q5)</td><td>부모엔 <code>InMemorySaver()</code></td><td>M7</td></tr>
+</tbody></table></div>
+</section></div>
+
+<!-- ============ 3. 문법 ============ -->
+<div class="pane" role="tabpanel" id="pane-syntax" aria-labelledby="tab-syntax" hidden><section><h2><span class="no">3</span>서브그래프 문법 한 장<span class="tg lg1">LangGraph 필수</span></h2>
+<h3>방법 1: 컴파일한 서브그래프를 노드로 추가 (키 공유)</h3>
+<pre class="py">sub = sub_builder.compile()               # 서브그래프는 따로 만들고 컴파일
+parent.add_node("search", sub)            # 노드처럼 추가 (함수 자리에 그래프)
+parent.add_edge("receive", "search")</pre>
+<h3>방법 2: 래퍼 노드에서 호출 (키가 다름)</h3>
+<pre class="py">def call_translator(s: ParentState):
+    r = translate_graph.invoke({"src": s["answer_ko"], "lang": "en"})   # 부모 → 서브
+    return {"answer_en": r["out"]}                                       # 서브 → 부모
+parent.add_node("translate", call_translator)</pre>
+<h3>서브그래프 안까지 보기</h3>
+<pre class="py">for ns, upd in app.stream(입력, stream_mode="updates", subgraphs=True):
+    print(ns, upd)        # ns == () 이면 부모, ('search:…',) 이면 search 서브그래프 안
+app.get_graph(xray=True).draw_mermaid()   # 그림에 서브그래프 내부까지 표시</pre>
+<h3>체크포인터 · interrupt · 상태 조회</h3>
+<pre class="py">from langgraph.checkpoint.memory import InMemorySaver
+
+app = parent.compile(checkpointer=InMemorySaver())     # 부모에만. 서브그래프로 전파됨
+# parent.compile(checkpointer=True)  ← 부모에는 불가 (RuntimeError)
+# sub_builder.compile(checkpointer=True)  ← 서브그래프가 따로 기억해야 할 때만
+
+cfg = {"configurable": {"thread_id": "t-1"}}
+app.invoke(입력, cfg)                                 # 서브그래프 안 interrupt 에서 멈춤
+st = app.get_state(cfg, subgraphs=True)
+st.tasks[0].state.values                               # 멈춘 서브그래프의 상태
+app.invoke(Command(resume="승인"), cfg)               # 재개</pre>
+<h3>서브그래프에서 부모 노드로 넘기기 (02 복습)</h3>
+<pre class="py">return Command(goto="human_agent", graph=Command.PARENT, update={"messages": [...]})
+# 부모에 human_agent 노드가 있어야 하고, update 하는 키는 부모 상태에도 있어야 함</pre>
+</section></div>
+
+<!-- ============ 실제예 1 ============ -->
+<div class="pane" role="tabpanel" id="pane-ex1" aria-labelledby="tab-ex1" hidden><section><h2><span class="no">4</span>실제예 ① 사내 규정 검색 서브그래프 재사용<span class="tg rag">RAG</span><span class="tg lg1">LangGraph 필수</span></h2>
+<div class="mission">
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>사내 규정 검색(키워드 추출 → 문서 조회)을 HR 챗봇, IT 챗봇, 신입 온보딩 봇에서 모두 쓰려 합니다. 검색 부분을 서브그래프로 만들어 붙입니다.</p>
+<div class="mlabel st">STEP 2 · 설계 (Q1~Q3)</div>
+<div class="tw"><table><thead><tr><th>질문</th><th>답</th></tr></thead><tbody>
+<tr><td>Q1 묶을 가치</td><td>세 챗봇에서 재사용 → 예</td></tr>
+<tr><td>Q2 공유 키</td><td><code>question</code>(입력), <code>context</code>(출력)를 부모와 같은 이름으로 → <b>방법 1</b></td></tr>
+<tr><td>Q3 리듀서</td><td>공유 키 둘 다 덮어쓰기 → 문제 없음. <code>keywords</code>는 서브 전용</td></tr>
+</tbody></table></div>
+<div class="mlabel st">STEP 3 · 서브그래프 만들고 단독 테스트</div>
+<pre class="py">from typing_extensions import TypedDict
+from langgraph.graph import StateGraph, START, END
+
+DOCS = {"연차": "연차는 입사 1년 후 15일", "출장": "출장 일비는 5만원", "보안": "비밀번호는 90일마다 변경"}
+
+class SearchState(TypedDict):
+    question: str          # 공유 (입력)
+    context: str           # 공유 (출력)
+    keywords: list[str]    # 서브그래프 전용
+
+def extract(s): return {"keywords": [k for k in DOCS if k in s["question"]]}
+def lookup(s):  return {"context": " / ".join(DOCS[k] for k in s["keywords"]) or "관련 문서 없음"}
+
+sb = StateGraph(SearchState)
+sb.add_node("extract", extract); sb.add_node("lookup", lookup)
+sb.add_edge(START, "extract"); sb.add_edge("extract", "lookup"); sb.add_edge("lookup", END)
+search_graph = sb.compile()
+
+print(search_graph.invoke({"question": "연차랑 출장 규정 알려줘"}))</pre>
+<pre class="out">{'question': '연차랑 출장 규정 알려줘', 'context': '연차는 입사 1년 후 15일 / 출장 일비는 5만원', 'keywords': ['연차', '출장']}</pre>
+<div class="mlabel st">STEP 4 · 부모 그래프에 노드로 붙이기</div>
+<pre class="py">class QaState(TypedDict):          # 부모: keywords 없음
+    question: str
+    context: str
+    answer: str
+
+def generate(s): return {"answer": f"답변: {s['context']}"}
+
+pb = StateGraph(QaState)
+pb.add_node("search", search_graph)            # 방법 1
+pb.add_node("generate", generate)
+pb.add_edge(START, "search"); pb.add_edge("search", "generate"); pb.add_edge("generate", END)
+qa = pb.compile()
+
+for ns, upd in qa.stream({"question": "연차 며칠이야?"}, stream_mode="updates", subgraphs=True):
+    print(ns[0].split(":")[0] if ns else "(부모)", upd)</pre>
+<div class="mlabel st">STEP 5 · 결과 확인</div>
+<pre class="out">search {'extract': {'keywords': ['연차']}}
+search {'lookup': {'context': '연차는 입사 1년 후 15일'}}
+(부모) {'search': {'question': '연차 며칠이야?', 'context': '연차는 입사 1년 후 15일'}}
+(부모) {'generate': {'answer': '답변: 연차는 입사 1년 후 15일'}}</pre>
+<ol class="steps">
+<li><span class="lbl">서브 전용 키는 부모에 안 간다.</span> 부모가 받은 업데이트에는 question, context만 있고 keywords는 없습니다.</li>
+<li><span class="lbl">단독 테스트가 된다.</span> 서브그래프는 그 자체로 그래프라서 따로 invoke해 검증할 수 있습니다. 팀 단위 개발의 장점입니다.</li>
+<li><span class="lbl">재사용은 붙이기만.</span> IT 챗봇에도 <code>add_node("search", search_graph)</code> 한 줄이면 됩니다(키 이름만 맞으면).</li>
+</ol>
+</div>
+</section></div>
+
+<!-- ============ 실제예 2 ============ -->
+<div class="pane" role="tabpanel" id="pane-ex2" aria-labelledby="tab-ex2" hidden><section><h2><span class="no">5</span>실제예 ② 스키마가 다른 번역 모듈<span class="tg lg1">LangGraph 필수</span><span class="tg ag">MCP·에이전트</span></h2>
+<div class="mission">
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>다른 팀이 만든 번역 서브그래프(<code>src</code>, <code>lang</code> → <code>out</code>)를 글로벌 사내 챗봇에 붙이려 합니다. 부모는 <code>answer_ko</code>, <code>answer_en</code>이라는 키를 씁니다. 번역 팀 코드는 바꿀 수 없습니다.</p>
+<div class="mlabel st">STEP 2 · 설계 (Q2)</div>
+<p>공유하는 키 이름이 하나도 없습니다 → <b>방법 2</b>. 래퍼 노드가 "부모 → 서브 입력"과 "서브 출력 → 부모"를 변환하는 어댑터 역할을 합니다.</p>
+<div class="flow"><span>answer_ko</span><i>→</i><span class="n">래퍼: src=answer_ko</span><i>→</i><span class="n">번역 서브그래프</span><i>→</i><span class="n">래퍼: answer_en=out</span></div>
+<div class="mlabel st">STEP 3 · 번역 서브그래프 (다른 팀 코드)</div>
+<pre class="py">class TranslateState(TypedDict):
+    src: str
+    lang: str
+    out: str
+
+def translate(s):
+    table = {"연차는 입사 1년 후 15일": "15 days of annual leave after 1 year"}
+    return {"out": table.get(s["src"], f"[{s['lang']}] {s['src']}")}
+
+tb = StateGraph(TranslateState)
+tb.add_node("translate", translate); tb.add_edge(START, "translate")
+translate_graph = tb.compile()</pre>
+<div class="mlabel st">STEP 4 · 부모 그래프와 래퍼 노드</div>
+<pre class="py">class GlobalQa(TypedDict):
+    question: str
+    answer_ko: str
+    answer_en: str
+
+def answer_ko(s): return {"answer_ko": "연차는 입사 1년 후 15일"}
+
+def call_translator(s: GlobalQa):
+    r = translate_graph.invoke({"src": s["answer_ko"], "lang": "en"})   # 부모 → 서브
+    return {"answer_en": r["out"]}                                       # 서브 → 부모
+
+gb = StateGraph(GlobalQa)
+gb.add_node("answer_ko", answer_ko); gb.add_node("translate", call_translator)
+gb.add_edge(START, "answer_ko"); gb.add_edge("answer_ko", "translate"); gb.add_edge("translate", END)
+print(gb.compile().invoke({"question": "연차 며칠?"}))</pre>
+<div class="mlabel st">STEP 5 · 결과 확인</div>
+<pre class="out">{'question': '연차 며칠?', 'answer_ko': '연차는 입사 1년 후 15일', 'answer_en': '15 days of annual leave after 1 year'}</pre>
+<ol class="steps">
+<li><span class="lbl">래퍼 = 어댑터.</span> 남의 모듈을 고치지 않고 이름만 맞춰 끼웁니다.</li>
+<li><span class="lbl">무엇이 오가는지 눈에 보인다.</span> 방법 1과 달리 넘기는 값과 받는 값이 코드에 드러나 실수가 적습니다.</li>
+<li><span class="lbl">에이전트에서는</span> 각 에이전트가 자기만의 메시지 기록을 가져야 할 때 이 방법을 씁니다(위키독스 1-5의 <code>subgraph_messages</code> 예).</li>
+</ol>
+</div>
+</section></div>
+
+<!-- ============ M1 ============ -->
+<div class="pane" role="tabpanel" id="pane-m1" aria-labelledby="tab-m1" hidden><section>
+<div class="mission" id="sub-m1" data-mid="sub-m1">
+<div class="mhead"><span class="lv lv1">★ 기본</span><span class="tgs"><span class="tg lg1">LangGraph 필수</span></span><h3>M1. 장애 티켓을 세 갈래로 보내기 (조건분기 복습)</h3><label class="mdone"><input type="checkbox" id="sub-m1-done" data-done="sub-m1"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>IT 장애 티켓을 심각도에 따라 처리합니다. "서버 다운"이나 "전체"가 들어가면 당직 엔지니어, "오류"가 들어가면 헬프데스크, 나머지는 FAQ 봇이 받습니다.</p>
+<div class="mlabel st">STEP 2 · 설계</div>
+<p>상태 필드(text, level, handled_by)와 노드 4개(triage, oncall, helpdesk, faq_bot)를 정하고, 라우터가 돌려줄 수 있는 값을 <b>전부</b> 적으세요. 기본 경로는 어디인가요?</p>
+<details class="ans"><summary>확인</summary><p>triage가 level을 critical / normal / low로 정하고, 라우터는 oncall / helpdesk / faq_bot 중 하나를 돌려줍니다. 기본 경로는 faq_bot입니다.</p></details>
+<div class="mlabel st">STEP 3 · 작성</div>
+<pre class="py">class TicketState(TypedDict):
+    text: str
+    level: str
+    handled_by: str
+
+def triage(s): ...            # level 정하기
+def route_ticket(s): ...      # Literal 타입힌트 + 기본 경로
+def oncall(s):   return {"handled_by": "당직 엔지니어 호출"}
+def helpdesk(s): return {"handled_by": "헬프데스크 티켓 생성"}
+def faq_bot(s):  return {"handled_by": "FAQ 봇 답변"}
+
+for t in ["전체 서버 다운!", "메일 전송 오류", "프린터 위치 알려줘"]:
+    print(t, "→", app.invoke({"text": t})["handled_by"])</pre>
+<details class="hint"><summary>힌트 보기</summary><p>라우터에서 dict의 <code>.get(키, 기본값)</code>을 쓰면 기본 경로를 한 줄로 쓸 수 있습니다.</p></details>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">def triage(s):
+    t = s["text"]
+    if "서버 다운" in t or "전체" in t: return {"level": "critical"}
+    if "오류" in t: return {"level": "normal"}
+    return {"level": "low"}
+
+def route_ticket(s) -&gt; Literal["oncall", "helpdesk", "faq_bot"]:
+    return {"critical": "oncall", "normal": "helpdesk"}.get(s["level"], "faq_bot")
+
+g = StateGraph(TicketState)
+for n, f in [("triage", triage), ("oncall", oncall), ("helpdesk", helpdesk), ("faq_bot", faq_bot)]:
+    g.add_node(n, f)
+g.add_edge(START, "triage")
+g.add_conditional_edges("triage", route_ticket)
+for n in ["oncall", "helpdesk", "faq_bot"]:
+    g.add_edge(n, END)
+app = g.compile()</pre>
+<pre class="out">전체 서버 다운! → 당직 엔지니어 호출
+메일 전송 오류 → 헬프데스크 티켓 생성
+프린터 위치 알려줘 → FAQ 봇 답변</pre></details>
+<div class="mlabel st">STEP 4 · 확장</div>
+<p>"보안"이 들어가면 보안팀(security) 노드로 보내도록 추가하세요. 바꿔야 하는 곳이 몇 군데인지 세어 보세요.</p>
+<details class="ans"><summary>확인</summary><p>4곳: triage에 조건 추가, 라우터의 Literal과 매핑에 security 추가, security 노드 추가, security → END 엣지. 하나라도 빠지면 KeyError나 "도달할 수 없는 노드"가 생깁니다.</p></details>
+<div class="mlabel st">STEP 5 · 확인</div>
+<ul class="checks">
+<li><input type="checkbox" id="sub-m1-c1" data-chk="sub-m1-c1"><label for="sub-m1-c1">세 문장이 각각 다른 곳으로 간다</label></li>
+<li><input type="checkbox" id="sub-m1-c2" data-chk="sub-m1-c2"><label for="sub-m1-c2">아무 키워드도 없는 문장이 FAQ 봇으로 간다</label></li>
+<li><input type="checkbox" id="sub-m1-c3" data-chk="sub-m1-c3"><label for="sub-m1-c3">security 갈래를 추가했다</label></li>
+</ul>
+</div>
+</section></div>
+
+<!-- ============ M2 ============ -->
+<div class="pane" role="tabpanel" id="pane-m2" aria-labelledby="tab-m2" hidden><section>
+<div class="mission" id="sub-m2" data-mid="sub-m2">
+<div class="mhead"><span class="lv lv1">★ 기본</span><span class="tgs"><span class="tg lg1">LangGraph 필수</span></span><h3>M2. 서브그래프 실행 순서 예측하기</h3><label class="mdone"><input type="checkbox" id="sub-m2-done" data-done="sub-m2"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>위키독스 1-5의 방법 1 예제입니다. 서브그래프 전용 키 <code>bar</code>가 어디까지 보이는지 확인합니다.</p>
+<pre class="py">class SubgraphState(TypedDict):
+    foo: str      # 부모와 공유
+    bar: str      # 서브그래프 전용
+
+def subgraph_node_1(s): return {"bar": "bar"}
+def subgraph_node_2(s): return {"foo": s["foo"] + s["bar"]}
+
+sb = StateGraph(SubgraphState)
+sb.add_node(subgraph_node_1); sb.add_node(subgraph_node_2)
+sb.add_edge(START, "subgraph_node_1"); sb.add_edge("subgraph_node_1", "subgraph_node_2")
+subgraph = sb.compile()
+
+class ParentState(TypedDict):
+    foo: str
+
+def node_1(s): return {"foo": "hi! " + s["foo"]}
+
+b = StateGraph(ParentState)
+b.add_node("node_1", node_1); b.add_node("node_2", subgraph)
+b.add_edge(START, "node_1"); b.add_edge("node_1", "node_2")
+graph = b.compile()</pre>
+<div class="mlabel st">STEP 2 · 예측 ①: 기본 stream</div>
+<p><code>for c in graph.stream({"foo": "foo"}): print(c)</code>의 출력을 적으세요. bar는 보일까요?</p>
+<details class="ans"><summary>실제 출력</summary><pre class="out">{'node_1': {'foo': 'hi! foo'}}
+{'node_2': {'foo': 'hi! foobar'}}</pre><p>서브그래프 전체가 노드 하나(node_2)로 보이고, 부모에는 공유 키 foo만 전달됩니다.</p></details>
+<div class="mlabel st">STEP 3 · 예측 ②: subgraphs=True</div>
+<p><code>graph.stream({"foo": "foo"}, stream_mode="updates", subgraphs=True)</code>는 몇 줄이 나오고, 어느 줄에서 bar가 보일까요?</p>
+<details class="ans"><summary>실제 출력</summary><pre class="out">((), {'node_1': {'foo': 'hi! foo'}})
+(('node_2:66999e6e-…',), {'subgraph_node_1': {'bar': 'bar'}})
+(('node_2:66999e6e-…',), {'subgraph_node_2': {'foo': 'hi! foobar'}})
+((), {'node_2': {'foo': 'hi! foobar'}})</pre><p>4줄. 앞의 튜플이 "어디서 나온 업데이트인가"(namespace)입니다. <code>()</code>은 부모, <code>('node_2:…',)</code>은 node_2 서브그래프 안. bar는 서브그래프 안쪽 줄에서만 보입니다.</p></details>
+<div class="mlabel st">STEP 4 · 그림으로 확인</div>
+<p><code>graph.get_graph().draw_mermaid()</code>와 <code>graph.get_graph(xray=True).draw_mermaid()</code>를 비교하세요.</p>
+<details class="ans"><summary>확인</summary><p>xray=True에서만 node_2 안의 subgraph_node_1, subgraph_node_2가 보입니다. 서브그래프가 많은 시스템을 설명할 때 쓰세요.</p></details>
+<div class="mlabel st">STEP 5 · 확인</div>
+<ul class="checks">
+<li><input type="checkbox" id="sub-m2-c1" data-chk="sub-m2-c1"><label for="sub-m2-c1">두 출력을 모두 실행 전에 맞혔다</label></li>
+<li><input type="checkbox" id="sub-m2-c2" data-chk="sub-m2-c2"><label for="sub-m2-c2">namespace로 부모와 서브그래프 업데이트를 구분하는 코드를 짰다</label></li>
+<li><input type="checkbox" id="sub-m2-c3" data-chk="sub-m2-c3"><label for="sub-m2-c3">"서브 전용 키가 안 보이는 건 버그가 아니라 캡슐화"를 설명했다</label></li>
+</ul>
+</div>
+</section></div>
+
+<!-- ============ M3 ============ -->
+<div class="pane" role="tabpanel" id="pane-m3" aria-labelledby="tab-m3" hidden><section>
+<div class="mission" id="sub-m3" data-mid="sub-m3">
+<div class="mhead"><span class="lv lv1">★ 기본</span><span class="tgs"><span class="tg rag">RAG</span></span><h3>M3. 요약 모듈을 붙였더니 KeyError</h3><label class="mdone"><input type="checkbox" id="sub-m3-done" data-done="sub-m3"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>보고서 그래프에 요약 서브그래프를 노드로 붙였는데 바로 에러가 납니다.</p>
+<pre class="py">class SummState(TypedDict):          # 요약 서브그래프
+    text: str
+    summary: str
+def summarize(s): return {"summary": s["text"][:10] + "…"}
+smb = StateGraph(SummState); smb.add_node("summarize", summarize); smb.add_edge(START, "summarize")
+summ_graph = smb.compile()
+
+class ReportState(TypedDict):        # 부모
+    document: str
+    report: str
+
+b = StateGraph(ReportState)
+b.add_node("summ", summ_graph)        # 방법 1
+b.add_edge(START, "summ")
+b.compile().invoke({"document": "2026년 3분기 매출은 전년 대비 12% 증가했다"})</pre>
+<div class="mlabel st">STEP 2 · 설계 점검 (Q2)</div>
+<p>부모와 서브그래프가 공유하는 키를 적어 보세요.</p>
+<details class="ans"><summary>확인</summary><p>하나도 없습니다. 서브그래프는 text를 기대하는데 부모에는 document만 있습니다.</p></details>
+<div class="mlabel st">STEP 3 · 결과 예측</div>
+<details class="ans"><summary>실제 출력</summary><pre class="err">KeyError: 'text'</pre></details>
+<div class="mlabel st">STEP 4 · 고치기 (서브그래프는 수정 금지)</div>
+<details class="hint"><summary>힌트 보기</summary><p>실제예 ②의 래퍼 노드 방식입니다. document → text, summary → report.</p></details>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">def call_summ(s: ReportState):
+    r = summ_graph.invoke({"text": s["document"]})
+    return {"report": r["summary"]}
+
+b.add_node("summ", call_summ)</pre>
+<pre class="out">{'document': '2026년 3분기 매출은 전년 대비 12% 증가했다', 'report': '2026년 3분기 …'}</pre></details>
+<div class="mlabel st">STEP 5 · 확인</div>
+<ul class="checks">
+<li><input type="checkbox" id="sub-m3-c1" data-chk="sub-m3-c1"><label for="sub-m3-c1">서브그래프 코드를 한 줄도 바꾸지 않았다</label></li>
+<li><input type="checkbox" id="sub-m3-c2" data-chk="sub-m3-c2"><label for="sub-m3-c2">"부모 키 이름을 text로 바꾸는 방법"과 비교해 래퍼가 나은 이유를 적었다</label></li>
+</ul>
+<details class="ans"><summary>설명 예시</summary><p>부모 키를 바꾸면 부모의 다른 노드도 전부 고쳐야 하고, 다른 모듈을 붙일 때마다 같은 문제가 생깁니다. 래퍼는 연결 지점 한 곳에서만 이름을 맞춥니다.</p></details>
+</div>
+</section></div>
+
+<!-- ============ M4 ============ -->
+<div class="pane" role="tabpanel" id="pane-m4" aria-labelledby="tab-m4" hidden><section>
+<div class="mission" id="sub-m4" data-mid="sub-m4">
+<div class="mhead"><span class="lv lv2">★★ 응용</span><span class="tgs"><span class="tg rag">RAG</span><span class="tg lg1">LangGraph 필수</span></span><h3>M4. 처리 로그가 두 번 찍힌다</h3><label class="mdone"><input type="checkbox" id="sub-m4-done" data-done="sub-m4"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>부모와 검색 서브그래프 모두 <code>logs: Annotated[list[str], add]</code>를 씁니다. 에러는 없는데 "질문 접수"가 두 번 찍힙니다.</p>
+<pre class="py">class SubLog(TypedDict):
+    logs: Annotated[list[str], add]
+    query: str
+def sub_search(s): return {"logs": [f"검색: {s['query']}"]}
+slb = StateGraph(SubLog); slb.add_node("search", sub_search); slb.add_edge(START, "search")
+sub_log_graph = slb.compile()
+
+class ParentLog(TypedDict):
+    logs: Annotated[list[str], add]
+    query: str
+def receive(s): return {"logs": ["질문 접수"]}
+def answer(s):  return {"logs": ["답변 완료"]}
+
+b = StateGraph(ParentLog)
+b.add_node("receive", receive); b.add_node("search", sub_log_graph); b.add_node("answer", answer)
+b.add_edge(START, "receive"); b.add_edge("receive", "search")
+b.add_edge("search", "answer"); b.add_edge("answer", END)
+print(b.compile().invoke({"logs": [], "query": "연차"}))</pre>
+<div class="mlabel st">STEP 2 · 단계별로 따라가기 (Q3)</div>
+<p>다음 표를 채우세요: 서브그래프가 <b>시작할 때</b> 받은 logs / 서브그래프가 <b>끝날 때</b> 부모에 돌려준 logs / 부모가 add로 합친 결과.</p>
+<details class="ans"><summary>확인</summary><div class="tw"><table><thead><tr><th>시점</th><th>logs</th></tr></thead><tbody>
+<tr><td>receive 후 부모</td><td>['질문 접수']</td></tr>
+<tr><td>서브그래프 시작</td><td>['질문 접수'] (부모 값을 받음)</td></tr>
+<tr><td>서브그래프 끝 (돌려준 값)</td><td>['질문 접수', '검색: 연차'] ← <b>전체 값</b></td></tr>
+<tr><td>부모가 add</td><td>['질문 접수'] + ['질문 접수', '검색: 연차']</td></tr>
+</tbody></table></div></details>
+<div class="mlabel st">STEP 3 · 결과 확인</div>
+<details class="ans"><summary>실제 출력</summary><pre class="out">{'logs': ['질문 접수', '질문 접수', '검색: 연차', '답변 완료'], 'query': '연차'}</pre><p>retrieve 문서처럼 add로 모으는 키를 공유하면 RAG에서도 문서가 중복됩니다. <code>add_messages</code>는 id로 합쳐서 이 문제가 없습니다.</p></details>
+<div class="mlabel st">STEP 4 · 두 가지로 고치기</div>
+<p>방법 A: 래퍼 노드에서 서브그래프를 <b>빈 로그</b>로 시작시키고 새로 생긴 로그만 부모에 돌려준다. 방법 B: 서브그래프가 부모와 공유하지 않는 키(예: <code>search_log</code>)로 기록한다.</p>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py"># 방법 A
+def call_search(s: ParentLog):
+    r = sub_log_graph.invoke({"logs": [], "query": s["query"]})
+    return {"logs": r["logs"]}                  # 이번 몫만
+b.add_node("search", call_search)</pre>
+<pre class="out">{'logs': ['질문 접수', '검색: 연차', '답변 완료'], 'query': '연차'}</pre>
+<pre class="py"># 방법 B : 서브그래프 상태를 query, search_log 로만 구성 → 공유 키는 query 하나</pre>
+<pre class="out">{'logs': ['질문 접수', '답변 완료'], 'query': '연차'}     # 검색 로그는 서브그래프 안에만</pre></details>
+<div class="mlabel st">STEP 5 · 확인</div>
+<ul class="checks">
+<li><input type="checkbox" id="sub-m4-c1" data-chk="sub-m4-c1"><label for="sub-m4-c1">중복이 생기는 이유를 "서브그래프는 전체 값을 돌려준다"로 설명했다</label></li>
+<li><input type="checkbox" id="sub-m4-c2" data-chk="sub-m4-c2"><label for="sub-m4-c2">두 방법의 결과 차이(검색 로그가 부모에 남는가)를 비교했다</label></li>
+<li><input type="checkbox" id="sub-m4-c3" data-chk="sub-m4-c3"><label for="sub-m4-c3">logs를 add_messages로 바꾸면 어떻게 될지 예측하고 실행했다</label></li>
+</ul>
+</div>
+</section></div>
+
+<!-- ============ M5 ============ -->
+<div class="pane" role="tabpanel" id="pane-m5" aria-labelledby="tab-m5" hidden><section>
+<div class="mission" id="sub-m5" data-mid="sub-m5">
+<div class="mhead"><span class="lv lv2">★★ 응용</span><span class="tgs"><span class="tg lg1">LangGraph 필수</span></span><h3>M5. 끝나지 않는 재처리 (위키독스 1-5-2 패턴)</h3><label class="mdone"><input type="checkbox" id="sub-m5-done" data-done="sub-m5"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>로그 검증 서브그래프가 error를 돌려주면 부모가 전처리부터 다시 합니다. 위키독스 1-5-2와 같은 구조입니다. 입력에 "ERR"가 들어 있으면 멈추지 않습니다.</p>
+<pre class="py">class CheckSub(TypedDict):
+    text: str
+    status: str
+def check(s): return {"status": "error" if "ERR" in s["text"] else "ok"}
+csb = StateGraph(CheckSub); csb.add_node("check", check); csb.add_edge(START, "check")
+check_graph = csb.compile()
+
+class Pipeline(TypedDict):
+    text: str
+    status: str
+    result: str
+def prepare(s): return {"text": s["text"].strip()}
+def finish(s):  return {"result": f"완료: {s['text']}"}
+def route(s) -&gt; Literal["finish", "prepare"]:
+    return "prepare" if s["status"] == "error" else "finish"
+
+b = StateGraph(Pipeline)
+b.add_node("prepare", prepare); b.add_node("check", check_graph); b.add_node("finish", finish)
+b.add_edge(START, "prepare"); b.add_edge("prepare", "check")
+b.add_conditional_edges("check", route); b.add_edge("finish", END)
+b.compile().invoke({"text": " ERR 로그 "}, {"recursion_limit": 25})</pre>
+<div class="mlabel st">STEP 2 · 설계 점검 (Q4)</div>
+<p>재처리해도 결과가 바뀔 수 있나요? 탈출 조건은 부모와 서브그래프 중 어디에 둬야 하나요?</p>
+<details class="ans"><summary>확인</summary><p>prepare는 공백만 지우므로 몇 번을 돌아도 ERR는 그대로입니다. 루프는 부모 그래프에 있으므로 횟수와 포기 경로도 <b>부모 상태</b>에 둡니다. 서브그래프는 매번 새로 실행되어 이전 횟수를 기억하지 못합니다.</p></details>
+<div class="mlabel st">STEP 3 · 결과 예측</div>
+<details class="ans"><summary>실제 출력</summary><pre class="err">GraphRecursionError: Recursion limit of 25 reached without hitting a stop condition.</pre></details>
+<div class="mlabel st">STEP 4 · 고치기: 3번 재시도 후 give_up</div>
+<details class="hint"><summary>힌트 보기</summary><p>Pipeline에 <code>retry: Annotated[int, add]</code>, prepare가 <code>"retry": 1</code>을 돌려주고, 라우터는 retry를 읽기만 합니다(02 M3).</p></details>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">class Pipeline(TypedDict):
+    text: str
+    status: str
+    retry: Annotated[int, add]
+    result: str
+
+def prepare(s): return {"text": s["text"].strip(), "retry": 1}
+def give_up(s): return {"result": "검증 실패 → 담당자 확인 필요"}
+
+def route(s) -&gt; Literal["finish", "prepare", "give_up"]:
+    if s["status"] == "ok":
+        return "finish"
+    return "prepare" if s["retry"] &lt; 3 else "give_up"
+
+b.add_node("give_up", give_up); b.add_edge("give_up", END)</pre>
+<pre class="out">{'prepare': {'text': 'ERR 로그', 'retry': 1}}
+{'check': {'text': 'ERR 로그', 'status': 'error'}}
+{'prepare': {'text': 'ERR 로그', 'retry': 1}}
+{'check': {'text': 'ERR 로그', 'status': 'error'}}
+{'prepare': {'text': 'ERR 로그', 'retry': 1}}
+{'check': {'text': 'ERR 로그', 'status': 'error'}}
+{'give_up': {'result': '검증 실패 → 담당자 확인 필요'}}</pre>
+<p class="cap">updates 출력의 <code>'retry': 1</code>은 이번 몫입니다. 누적값은 1 → 2 → 3이 되어 세 번째에 give_up으로 갑니다.</p></details>
+<div class="mlabel st">STEP 5 · 확인</div>
+<ul class="checks">
+<li><input type="checkbox" id="sub-m5-c1" data-chk="sub-m5-c1"><label for="sub-m5-c1">"ERR"가 있으면 give_up, 없으면 finish로 끝난다</label></li>
+<li><input type="checkbox" id="sub-m5-c2" data-chk="sub-m5-c2"><label for="sub-m5-c2">retry를 서브그래프 상태에 두면 왜 안 되는지 설명했다</label></li>
+</ul>
+</div>
+</section></div>
+
+<!-- ============ M6 ============ -->
+<div class="pane" role="tabpanel" id="pane-m6" aria-labelledby="tab-m6" hidden><section>
+<div class="mission" id="sub-m6" data-mid="sub-m6">
+<div class="mhead"><span class="lv lv2">★★ 응용</span><span class="tgs"><span class="tg rag">RAG</span><span class="tg ag">MCP·에이전트</span></span><h3>M6. 질문 유형별로 다른 서브그래프에 보내기</h3><label class="mdone"><input type="checkbox" id="sub-m6-done" data-done="sub-m6"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>사내 비서를 만듭니다. 계산식이 있으면 <b>계산 서브그래프</b>, FAQ 키워드가 있으면 <b>FAQ 서브그래프</b>, 둘 다 아니면 담당자 연결입니다. 두 서브그래프는 각자 전용 키(expr, hits)를 가집니다.</p>
+<div class="flow"><span class="n">START</span><i>→</i><span>route_ask</span><i>→</i><span class="n">calc 서브그래프</span><i>/</i><span class="n">faq 서브그래프</span><i>/</i><span class="n">fallback</span><i>→</i><span class="n">END</span></div>
+<div class="mlabel st">STEP 2 · 설계표 채우기</div>
+<pre class="py"># | 부분            | 공유 키           | 전용 키 | 연결 방법 | 분기 위치 |
+# | 부모 Ask        | question, answer |   -     |    -     | START 에서 route_ask |
+# | FAQ 서브그래프   |                  |         |          |           |
+# | 계산 서브그래프  |                  |         |          |           |</pre>
+<details class="ans"><summary>확인</summary><p>두 서브그래프 모두 공유 키 question(입력) · answer(출력), 전용 키 hits / expr, 연결은 방법 1, 분기는 부모(START)에서.</p></details>
+<div class="mlabel st">STEP 3 · 서브그래프 2개 만들고 단독 테스트</div>
+<pre class="py">import re
+FAQ = {"연차": "연차는 15일", "주차": "주차는 B2 층"}
+
+class FaqSub(TypedDict):
+    question: str; answer: str; hits: list[str]
+# find: hits 채우기 → compose: answer 만들기 (없으면 "FAQ에 없음")
+
+class CalcSub(TypedDict):
+    question: str; answer: str; expr: str
+# parse: 질문에서 숫자·연산자만 뽑아 expr → calc: answer = "식 = 결과"</pre>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">fb = StateGraph(FaqSub)
+fb.add_node("find", lambda s: {"hits": [v for k, v in FAQ.items() if k in s["question"]]})
+fb.add_node("compose", lambda s: {"answer": s["hits"][0] if s["hits"] else "FAQ에 없음"})
+fb.add_edge(START, "find"); fb.add_edge("find", "compose")
+faq_graph = fb.compile()
+
+cb = StateGraph(CalcSub)
+cb.add_node("parse", lambda s: {"expr": "".join(re.findall(r"[\d+\-*/(). ]", s["question"])).strip()})
+cb.add_node("calc", lambda s: {"answer": f"{s['expr']} = {eval(s['expr'])}"})   # 교육용. 실무에선 eval 금지
+cb.add_edge(START, "parse"); cb.add_edge("parse", "calc")
+calc_graph = cb.compile()</pre></details>
+<div class="mlabel st">STEP 4 · 부모 그래프: 분기 + 서브그래프</div>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">class Ask(TypedDict):
+    question: str
+    answer: str
+
+def route_ask(s) -&gt; Literal["calc", "faq", "fallback"]:
+    if re.search(r"\d+\s*[+\-*/]\s*\d+", s["question"]): return "calc"
+    if any(k in s["question"] for k in FAQ): return "faq"
+    return "fallback"
+
+ab = StateGraph(Ask)
+ab.add_node("calc", calc_graph); ab.add_node("faq", faq_graph)
+ab.add_node("fallback", lambda s: {"answer": "담당자에게 연결합니다"})
+ab.add_conditional_edges(START, route_ask)
+for n in ["calc", "faq", "fallback"]:
+    ab.add_edge(n, END)
+ask = ab.compile()
+
+for q in ["출장비 3 * 50000 + 20000 계산해줘", "연차 며칠이야?", "회식 언제야?"]:
+    print(q, "→", ask.invoke({"question": q})["answer"])</pre>
+<pre class="out">출장비 3 * 50000 + 20000 계산해줘 → 3 * 50000 + 20000 = 170000
+연차 며칠이야? → 연차는 15일
+회식 언제야? → 담당자에게 연결합니다</pre></details>
+<div class="mlabel st">STEP 5 · 확인과 확장</div>
+<ul class="checks">
+<li><input type="checkbox" id="sub-m6-c1" data-chk="sub-m6-c1"><label for="sub-m6-c1">각 서브그래프를 부모 없이 단독 invoke로 먼저 테스트했다</label></li>
+<li><input type="checkbox" id="sub-m6-c2" data-chk="sub-m6-c2"><label for="sub-m6-c2">최종 결과에 hits, expr가 없는 것을 확인했다</label></li>
+<li><input type="checkbox" id="sub-m6-c3" data-chk="sub-m6-c3"><label for="sub-m6-c3">확장: 실제예 ①의 search_graph를 세 번째 갈래("규정" 질문)로 붙였다</label></li>
+</ul>
+<div class="note"><b>연결</b> route_ask 자리에 LLM 분류기를, 각 서브그래프 자리에 RAG·도구 에이전트를 넣으면 "라우터 + 전문 에이전트" 구조의 멀티 에이전트가 됩니다.</div>
+</div>
+</section></div>
+
+<!-- ============ M7 ============ -->
+<div class="pane" role="tabpanel" id="pane-m7" aria-labelledby="tab-m7" hidden><section>
+<div class="mission" id="sub-m7" data-mid="sub-m7">
+<div class="mhead"><span class="lv lv3">★★★ 도전</span><span class="tgs"><span class="tg lg1">LangGraph 필수</span><span class="tg ag">MCP·에이전트</span></span><h3>M7. 결재 서브그래프를 휴가·구매 두 곳에서 재사용 (HITL)</h3><label class="mdone"><input type="checkbox" id="sub-m7-done" data-done="sub-m7"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>팀장 결재(사람이 승인/반려를 입력)를 서브그래프 하나로 만들어 휴가 신청과 구매 요청 두 워크플로우에서 씁니다. 구매는 10만원 미만이면 결재 없이 자동 승인합니다.</p>
+<div class="mlabel st">STEP 2 · 설계 (Q1, Q2, Q5)</div>
+<p>결재 서브그래프의 상태 키, 각 부모와의 공유 키, 체크포인터를 어디에 넣을지 정하세요.</p>
+<details class="ans"><summary>확인</summary><ul><li>결재 서브그래프: <code>request</code>(입력), <code>approved</code>(출력) — 두 부모 모두 같은 이름을 쓰게 해 방법 1로 붙임</li><li>휴가: 결재 → 상태 기록 / 구매: 금액으로 분기 → 결재 또는 자동 승인 → 상태 기록</li><li>interrupt로 멈추고 재개해야 하므로 체크포인터 필요 → <b>부모에만</b> <code>InMemorySaver()</code>. 서브그래프는 그냥 <code>compile()</code></li></ul></details>
+<div class="mlabel st">STEP 3 · 결재 서브그래프</div>
+<pre class="py">from langgraph.types import interrupt, Command
+from langgraph.checkpoint.memory import InMemorySaver
+
+class Approval(TypedDict):
+    request: str
+    approved: bool
+
+def ask_manager(s):
+    decision = interrupt({"승인 요청": s["request"]})     # 여기서 멈춤
+    return {"approved": decision == "승인"}
+
+apb = StateGraph(Approval)
+apb.add_node("ask_manager", ask_manager); apb.add_edge(START, "ask_manager")
+approval_graph = apb.compile()                           # 체크포인터 없이</pre>
+<div class="mlabel st">STEP 4 · 부모 두 개 만들기</div>
+<p>① Leave: approval → status("휴가 등록"/"휴가 반려") ② Purchase: START에서 금액 분기(≥ 100000이면 approval, 아니면 auto) → status. 둘 다 <code>compile(checkpointer=InMemorySaver())</code>.</p>
+<details class="hint"><summary>힌트 보기</summary><p>먼저 부모에 <code>compile(checkpointer=True)</code>를 넣어 실행해 보고 에러 메시지를 확인하세요. 위키독스 설명과 무엇이 다른가요?</p></details>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">class Leave(TypedDict):
+    request: str; approved: bool; status: str
+class Purchase(TypedDict):
+    request: str; amount: int; approved: bool; status: str
+
+def leave_status(s):    return {"status": "휴가 등록" if s["approved"] else "휴가 반려"}
+def purchase_route(s) -&gt; Literal["approval", "auto"]:
+    return "approval" if s["amount"] &gt;= 100000 else "auto"
+def purchase_auto(s):   return {"approved": True, "status": "자동 승인(10만원 미만)"}
+def purchase_status(s): return {"status": "구매 진행" if s["approved"] else "구매 반려"}
+
+lb = StateGraph(Leave)
+lb.add_node("approval", approval_graph); lb.add_node("status", leave_status)
+lb.add_edge(START, "approval"); lb.add_edge("approval", "status"); lb.add_edge("status", END)
+leave_app = lb.compile(checkpointer=InMemorySaver())
+
+pub = StateGraph(Purchase)
+pub.add_node("approval", approval_graph); pub.add_node("auto", purchase_auto)
+pub.add_node("status", purchase_status)
+pub.add_conditional_edges(START, purchase_route)
+pub.add_edge("approval", "status"); pub.add_edge("auto", END); pub.add_edge("status", END)
+purchase_app = pub.compile(checkpointer=InMemorySaver())</pre>
+<pre class="err">RuntimeError: checkpointer=True cannot be used for root graphs.   ← 부모에 True 를 넣었을 때</pre></details>
+<div class="mlabel st">STEP 5 · 멈추고, 들여다보고, 재개하기</div>
+<pre class="py">cfg = {"configurable": {"thread_id": "leave-1"}}
+r = leave_app.invoke({"request": "11/20 연차 1일", "approved": False, "status": ""}, cfg)
+print("멈춤:", r["__interrupt__"][0].value)
+st = leave_app.get_state(cfg, subgraphs=True)
+print("다음 노드:", st.next, "| 서브그래프 상태:", st.tasks[0].state.values)
+print("재개:", leave_app.invoke(Command(resume="승인"), cfg)["status"])
+# 구매: 350000원 → 반려 / 30000원 → 자동 승인</pre>
+<details class="ans"><summary>실제 출력</summary><pre class="out">멈춤: {'승인 요청': '11/20 연차 1일'}
+다음 노드: ('approval',) | 서브그래프 상태: {'request': '11/20 연차 1일', 'approved': False}
+재개: 휴가 등록
+멈춤: {'승인 요청': '모니터'}
+재개: 구매 반려
+소액: 자동 승인(10만원 미만)</pre></details>
+<ul class="checks">
+<li><input type="checkbox" id="sub-m7-c1" data-chk="sub-m7-c1"><label for="sub-m7-c1">같은 approval_graph 하나를 두 부모가 쓴다</label></li>
+<li><input type="checkbox" id="sub-m7-c2" data-chk="sub-m7-c2"><label for="sub-m7-c2">부모에 checkpointer=True를 넣었을 때의 에러를 직접 확인했다</label></li>
+<li><input type="checkbox" id="sub-m7-c3" data-chk="sub-m7-c3"><label for="sub-m7-c3"><code>get_state(cfg, subgraphs=True)</code>로 멈춘 서브그래프 안의 상태를 꺼냈다</label></li>
+<li><input type="checkbox" id="sub-m7-c4" data-chk="sub-m7-c4"><label for="sub-m7-c4">thread_id가 다르면 결재가 서로 섞이지 않는 것을 확인했다</label></li>
+</ul>
+<div class="note"><b>다음 단원 연결</b> interrupt · Command(resume) · 체크포인터는 Part 1-4 메모리와 Part 2-4 Human-in-the-Loop에서 자세히 다룹니다. 이 미션의 결재 서브그래프를 그대로 가져가 쓸 수 있습니다.</div>
+</div>
+</section></div>
+
+<footer>LangGraph 교안 · 교재: 위키독스 「LangGraph 가이드북 - 에이전트 RAG with 랭그래프 [ver 1.0+]」 1-5 · 코드 검증: LangGraph 1.2.20 (2026-11-11)</footer>
+</main>
+</div>
+<script>
+(function(){
+  function sync(){ document.querySelectorAll('input[data-done]').forEach(i => {
+    const t = document.getElementById('tab-' + i.dataset.done.replace('sub-', ''));
+    if (t) t.classList.toggle('done', i.checked); }); }
+  document.addEventListener('change', e => { if (e.target.matches('input[data-done]')) sync(); });
+  window.addEventListener('load', sync);
+})();
+</script>
+
+
+<script>
+(function(){
+  const UNITS = {"sub": ["sub-m1", "sub-m2", "sub-m3", "sub-m4", "sub-m5", "sub-m6", "sub-m7"]};
+  const KEY = 'lg-missions-v1';
+  let st = {};
+  try { st = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch(e) { st = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch(e) {} };
+
+  // 코드 하이라이트 + 복사
+  const KW = /^(from|import|def|return|for|in|if|elif|else|not|and|or|with|as|class|lambda|True|False|None|try|except|finally|await|yield|is|raise|continue|print)$/;
+  const RE = /("""[\s\S]*?"""|f?"(?:[^"\\\n]|\\.)*"|f?'(?:[^'\\\n]|\\.)*'|#[^\n]*|\b[A-Za-z_]+\b)/g;
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  function selectText(el){ const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+  document.querySelectorAll('pre.py').forEach(pre => {
+    const src = pre.textContent; let out = '', last = 0, m; RE.lastIndex = 0;
+    while ((m = RE.exec(src))) {
+      out += esc(src.slice(last, m.index)); const t = m[0];
+      if (t[0] === '#') out += '<span class="c">' + esc(t) + '</span>';
+      else if (t[0] === '"' || t[0] === "'" || (t[0] === 'f' && (t[1] === '"' || t[1] === "'"))) out += '<span class="s">' + esc(t) + '</span>';
+      else if (KW.test(t)) out += '<span class="k">' + t + '</span>';
+      else out += esc(t);
+      last = m.index + t.length;
+    }
+    pre.innerHTML = out + esc(src.slice(last));
+    const wrap = document.createElement('div'); wrap.style.position = 'relative';
+    pre.parentNode.insertBefore(wrap, pre); wrap.appendChild(pre);
+    const b = document.createElement('button'); b.className = 'copy'; b.type = 'button'; b.textContent = '복사';
+    b.style.cssText = 'position:absolute;top:8px;right:8px';
+    b.addEventListener('click', () => {
+      const ok = () => { b.textContent = '복사됨'; setTimeout(() => b.textContent = '복사', 1400); };
+      const fail = () => { selectText(pre); b.textContent = '선택됨'; };
+      try { navigator.clipboard.writeText(src).then(ok, fail); } catch(e) { fail(); }
+    });
+    wrap.appendChild(b);
+  });
+
+  // 미션 체크 상태
+  document.querySelectorAll('input[data-done],input[data-chk]').forEach(inp => {
+    const k = inp.dataset.done || inp.dataset.chk;
+    inp.checked = !!st[k];
+    inp.addEventListener('change', () => { st[k] = inp.checked; save(); paint(); });
+  });
+  function paint(){
+    document.querySelectorAll('.mission').forEach(m => m.classList.toggle('is-done', !!st[m.dataset.mid]));
+    let total = 0, done = 0;
+    Object.keys(UNITS).forEach(u => {
+      const ids = UNITS[u]; const d = ids.filter(id => st[id]).length;
+      total += ids.length; done += d;
+      document.querySelectorAll('[data-mc="' + u + '"]').forEach(el => el.textContent = d + '/' + ids.length);
+      document.querySelectorAll('[data-u="' + u + '"]').forEach(el => el.classList.toggle('full', d === ids.length));
+      document.querySelectorAll('[data-bar="' + u + '"]').forEach(el => el.style.width = (d / ids.length * 100) + '%');
+    });
+    const pb = document.getElementById('progbar'); if (pb) pb.style.width = (done / total * 100) + '%';
+    const pt = document.getElementById('progtext'); if (pt) pt.textContent = '미션 ' + done + ' / ' + total + ' 완료';
+    const mp = document.getElementById('mprog'); const cur = document.body.dataset.unit;
+    if (mp && cur) { const ids = UNITS[cur]; mp.textContent = '· 완료 ' + ids.filter(id => st[id]).length + ' / ' + ids.length; }
+    const mc = document.getElementById('mcount'); if (mc && cur) { const ids = UNITS[cur]; mc.textContent = ids.filter(id => st[id]).length + '/' + ids.length; }
+  }
+  paint();
+})();
+</script>
+
+<script>
+(function(){
+  const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+  if (!tabs.length) return;
+  const ids = tabs.map(t => t.dataset.t);
+  function show(id, push){
+    tabs.forEach(t => { const on = t.dataset.t === id; t.setAttribute('aria-selected', on ? 'true' : 'false'); t.tabIndex = on ? 0 : -1;
+      if (on) t.scrollIntoView({block:'nearest', inline:'nearest'}); });
+    document.querySelectorAll('[role="tabpanel"]').forEach(p => p.hidden = p.id !== 'pane-' + id);
+    if (push) { try { history.replaceState(null, '', '#' + id); } catch(e){} window.scrollTo({top: 0}); }
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => show(t.dataset.t, true));
+    t.addEventListener('keydown', e => {
+      const f = e.key === 'ArrowDown' || e.key === 'ArrowRight', b = e.key === 'ArrowUp' || e.key === 'ArrowLeft';
+      if (!f && !b) return; e.preventDefault();
+      const n = tabs[(i + (f ? 1 : tabs.length - 1)) % tabs.length]; n.focus(); show(n.dataset.t, true);
+    });
+  });
+  const h = location.hash.slice(1);
+  show(ids.includes(h) ? h : 'intro', false);
+  window.addEventListener('hashchange', () => { const x = location.hash.slice(1); if (ids.includes(x)) show(x, false); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,929 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>06-4 실습 · 진짜 에이전트 · 여러 시스템을 엮는 상담 · LangGraph 교안</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{word-break:keep-all;overflow-wrap:break-word;font-family:var(--body)}
+
+/* Layout: 왼쪽 고정 사이드바(단원 목차) + 오른쪽 본문 패널. 휴대폰 폭에서는 사이드바가 상단 가로 스크롤 바로 바뀜 */
+:root{
+  --bg:#f6f7fb; --paper:#ffffff; --ink:#1b2236; --muted:#5a6380; --line:#d9deeb;
+  --node:#24305e; --nodeText:#ffffff; --edge:#9aa4c2;
+  --teal:#0f8f83; --amber:#d98a1f; --coral:#d4553f; --violet:#6b5bd2;
+  --soft:#eef1f9; --tealSoft:#e2f4f1; --amberSoft:#fbf0dd; --coralSoft:#fbe7e3;
+  --code:#ffffff; --codeLine:#c9d0e2; --codeCmt:#6a7697; --outBg:#f4fbfa; --shadow:rgba(27,34,54,.08);
+  --kw:#6b5bd2; --str:#0f7d73; --fn:#b4561f;
+  --display:"Do Hyeon","IBM Plex Sans KR","Malgun Gothic",sans-serif;
+  --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12151f; --paper:#1a1e2b; --ink:#e7eaf4; --muted:#a2aac2; --line:#2e3447;
+  --node:#8f9cf0; --nodeText:#10131c; --edge:#5b6584;
+  --teal:#3cc4b5; --amber:#f0b04f; --coral:#f07a63; --violet:#a597ff;
+  --soft:#222839; --tealSoft:#163331; --amberSoft:#3a2e17; --coralSoft:#3d211c; --code:#0d1017; --codeLine:#3a4157; --codeCmt:#8d97b5; --outBg:#10201f; --shadow:rgba(0,0,0,.3);
+  --kw:#b3a8ff; --str:#5fd3c4; --fn:#f0a36a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12151f; --paper:#1a1e2b; --ink:#e7eaf4; --muted:#a2aac2; --line:#2e3447;
+  --node:#8f9cf0; --nodeText:#10131c; --edge:#5b6584;
+  --teal:#3cc4b5; --amber:#f0b04f; --coral:#f07a63; --violet:#a597ff;
+  --soft:#222839; --tealSoft:#163331; --amberSoft:#3a2e17; --coralSoft:#3d211c; --code:#0d1017; --codeLine:#3a4157; --codeCmt:#8d97b5; --outBg:#10201f; --shadow:rgba(0,0,0,.3);
+  --kw:#b3a8ff; --str:#5fd3c4; --fn:#f0a36a; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:16px/1.75 var(--body);margin:0;word-break:keep-all;overflow-wrap:break-word}
+.panel{margin-top:30px;padding-top:24px;border-top:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+.layout{max-width:1220px;margin:0 auto;display:grid;grid-template-columns:252px minmax(0,1fr);gap:40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{min-width:0;padding-block:28px 64px;max-width:900px}
+h1,h2,h3{text-wrap:balance}
+h1{font:400 clamp(30px,5vw,44px)/1.2 var(--display);margin:6px 0 10px;letter-spacing:.5px}
+h2{font:400 28px/1.3 var(--display);margin:0 0 6px;display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+h2 .no{font:inherit;color:var(--teal)}
+h3{font-size:18px;margin:26px 0 6px}
+h4{font-size:16px;margin:18px 0 4px}
+p{margin:8px 0;max-width:72ch}
+ol,ul{padding-left:22px;margin:8px 0}
+li{margin:4px 0}
+.lead{color:var(--muted);font-size:17px}
+.kicker{font:600 12px var(--mono);letter-spacing:2px;color:var(--teal);text-transform:uppercase}
+.byline{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.6}
+section{margin-top:40px}
+.panel > section:first-child{margin-top:8px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.card h4{margin-top:0}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+code,.mono{font-family:var(--mono);font-size:.9em}
+code{background:var(--soft);padding:1px 6px;border-radius:5px;word-break:break-word}
+pre{background:var(--code);border:1px solid var(--codeLine);box-shadow:0 1px 3px var(--shadow);border-radius:10px;padding:14px 16px;overflow-x:auto;font:13.5px/1.6 var(--mono);margin:8px 0;color:var(--ink);tab-size:4}
+pre .c{color:var(--codeCmt);font-style:italic}
+pre .s{color:var(--str)}
+pre .k{color:var(--kw);font-weight:600}
+pre.out{background:var(--outBg);border-style:dashed;box-shadow:none;white-space:pre-wrap;word-break:break-word;font-size:13px}
+pre.out::before{content:"출력";display:block;font:600 11px var(--mono);letter-spacing:1.5px;color:var(--teal);margin-bottom:4px}
+pre.out.ex::before{content:"출력 예시 · 모델 답변은 실행마다 달라짐"}
+pre.err{background:var(--coralSoft);border-color:var(--coral);box-shadow:none;white-space:pre-wrap;word-break:break-word;font-size:13px}
+pre.err::before{content:"에러";display:block;font:600 11px var(--mono);letter-spacing:1.5px;color:var(--coral);margin-bottom:4px}
+.codehead{display:flex;justify-content:space-between;align-items:center;gap:8px;font:600 12px var(--mono);color:var(--muted);margin:16px 0 -4px;flex-wrap:wrap}
+.copy{font:500 12px var(--body);border:1px solid var(--line);background:var(--paper);color:var(--muted);border-radius:6px;padding:2px 10px;cursor:pointer}
+.copy:hover{color:var(--ink)}
+.tw{overflow-x:auto;margin:10px 0}
+table{border-collapse:collapse;font-size:14px;min-width:100%}
+th,td{border-bottom:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+th{background:var(--soft);font-weight:600;white-space:nowrap}
+td code{white-space:nowrap}
+.note{background:var(--amberSoft);border-radius:10px;padding:12px 14px;font-size:15px;margin-top:12px}
+.note b{color:var(--amber)}
+.ragbox{background:var(--tealSoft);border-left:4px solid var(--teal);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:15px}
+.ragbox b{color:var(--teal)}
+.warn{background:var(--coralSoft);border-left:4px solid var(--coral);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:15px}
+.warn b{color:var(--coral)}
+.fix{background:var(--soft);border-left:4px solid var(--violet);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:15px}
+.fix b{color:var(--violet)}
+.note p,.ragbox p,.warn p,.fix p{margin:4px 0}
+.note ul,.ragbox ul,.warn ul,.fix ul{margin:4px 0}
+.fig{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px;overflow-x:auto;margin-top:12px}
+.fig svg{display:block;width:100%;height:auto;min-width:560px}
+svg text{font-family:var(--body)}
+.cap{font-size:13px;color:var(--muted);margin:6px 4px 0}
+.chip{display:inline-block;font:500 12px var(--body);padding:1px 10px;border-radius:999px;background:var(--soft);color:var(--muted);vertical-align:middle}
+.chip.ok{background:var(--tealSoft);color:var(--teal)}
+.chip.draft{background:var(--amberSoft);color:var(--amber)}
+.chip.ai{background:var(--coralSoft);color:var(--coral)}
+a{color:var(--teal)}
+.example{background:var(--soft);border-radius:10px;padding:12px 16px;margin:10px 0;font-size:15.5px}
+.example b{color:var(--node)}
+.steps{list-style:none;padding:0;margin:10px 0 0;counter-reset:st}
+.steps>li{counter-increment:st;padding:10px 0;border-top:1px dashed var(--line);margin:0}
+.steps>li::before{content:counter(st) ". ";font:600 14px var(--mono);color:var(--teal)}
+.steps>li:first-child{border-top:0}
+.steps .lbl{font-weight:700;color:var(--node)}
+.think{margin-top:8px;font-size:14.5px;color:var(--muted)}
+.think-h{display:inline-block;font:600 12px var(--body);color:var(--muted);margin-right:6px}
+mark{background:var(--amberSoft);color:inherit;border-bottom:2px solid var(--amber);padding:0 1px}
+details{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-top:8px}
+details summary{cursor:pointer;font-weight:600}
+details[open] summary{margin-bottom:6px}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:500 13.5px var(--mono);margin:10px 0}
+.flow span{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:4px 10px}
+.flow span.n{background:var(--node);color:var(--nodeText);border-color:var(--node)}
+.flow i{font-style:normal;color:var(--edge)}
+
+/* sidebar */
+.side{position:sticky;top:env(safe-area-inset-top,0px);align-self:start;max-height:100vh;overflow-y:auto;padding-block:28px 28px;scrollbar-width:thin}
+.side .brand{font:400 22px/1.2 var(--display);margin-bottom:2px}
+.side .brand-sub{font-size:12.5px;color:var(--muted);margin-bottom:14px}
+.prog{height:6px;background:var(--soft);border-radius:999px;overflow:hidden;margin:0 0 4px}
+.prog i{display:block;height:100%;width:0;background:var(--teal);transition:width .3s}
+.prog-t{font:500 12px var(--mono);color:var(--muted);margin-bottom:14px}
+.grp{font:600 11px var(--mono);letter-spacing:1.6px;color:var(--teal);text-transform:uppercase;margin:16px 0 6px}
+.navlist{display:flex;flex-direction:column;gap:2px}
+.navlist button{display:grid;grid-template-columns:28px minmax(0,1fr) 16px;align-items:center;gap:4px;width:100%;text-align:left;font:500 14px/1.35 var(--body);border:0;background:transparent;color:var(--ink);border-radius:8px;padding:7px 8px;cursor:pointer}
+.navlist button .n{font:600 12px var(--mono);color:var(--muted)}
+.navlist button .d{font-size:12px;color:var(--teal);visibility:hidden}
+.navlist button.done .d{visibility:visible}
+.navlist button:hover{background:var(--soft)}
+.navlist button[aria-selected="true"]{background:var(--node);color:var(--nodeText)}
+.navlist button[aria-selected="true"] .n,.navlist button[aria-selected="true"] .d{color:var(--nodeText)}
+.navlist button:focus-visible,.pager button:focus-visible,.copy:focus-visible,.donebtn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+
+/* panel footer */
+.pfoot{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center}
+.donebtn{font:600 14px var(--body);border:2px solid var(--teal);background:var(--paper);color:var(--teal);border-radius:999px;padding:6px 16px;cursor:pointer}
+.donebtn[aria-pressed="true"]{background:var(--teal);color:var(--paper)}
+.pager{display:flex;gap:8px;flex-wrap:wrap}
+.pager button{font:500 14px var(--body);border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:6px 14px;cursor:pointer;max-width:100%}
+.pager button[disabled]{opacity:.4;cursor:default}
+footer{margin-top:50px;font-size:13px;color:var(--muted)}
+
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr);gap:0}
+  .side{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);max-height:none;overflow:visible;padding-block:10px;border-bottom:1px solid var(--line);margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .side .brand,.side .brand-sub,.grp,.prog,.prog-t{display:none}
+  .navwrap{display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin;padding-bottom:2px}
+  .navlist{flex-direction:row;gap:6px}
+  .navlist button{display:flex;flex:0 0 auto;width:auto;white-space:nowrap;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13.5px}
+  .navlist button .d{display:none}
+  .navlist button.done .n{color:var(--teal)}
+  main{padding-top:18px}
+}
+@media (max-width:600px){h2{font-size:24px} pre{font-size:12.5px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+.tg{display:inline-block;font:600 11.5px/1.5 var(--body);border-radius:5px;padding:1px 7px;margin-left:6px;vertical-align:middle;white-space:nowrap;letter-spacing:.2px}
+.tg.rag{background:var(--tealSoft);color:var(--teal);border:1px solid var(--teal)}
+.tg.lg1{background:var(--violet);color:var(--paper);border:1px solid var(--violet)}
+.tg.ag{background:var(--amberSoft);color:var(--amber);border:1px solid var(--amber)}
+.sm.ag{background:var(--amber);border-radius:2px}
+.tg.lg2{background:transparent;color:var(--violet);border:1px dashed var(--violet)}
+h2 .tg{font-size:12px;position:relative;top:-3px}
+.mhead .tgs{display:inline-flex;gap:0}
+.mhead .tgs .tg:first-child{margin-left:0}
+.sm{display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:6px;vertical-align:middle}
+.sm.rag{background:var(--teal)}
+.sm.lg1{background:var(--violet)}
+.sm.lg2{border:1.5px solid var(--violet)}
+.mhead .tgs:empty{display:none}
+.navlist a[aria-current="page"] .sm{box-shadow:0 0 0 1.5px var(--nodeText)}
+.bridge{display:grid;gap:6px;margin-top:14px}
+.bridge div{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:baseline;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14.5px;line-height:1.6}
+.bridge .tg{margin-left:0}
+.legend2{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:13px;color:var(--muted);margin-top:8px}
+.legend2 .tg{margin-left:0}
+.path{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin-top:10px}
+.path .card h4{margin:0 0 6px}
+.path ol{margin:4px 0 0}
+.ucard .tgrow{display:flex;flex-wrap:wrap;gap:4px}
+.ucard .tgrow .tg{margin-left:0}
+
+.copyright{font-size:14px;color:var(--muted);line-height:1.6;margin-top:8px}
+/* 탭: 모든 화면 폭에서 왼쪽 세로 배치 */
+@media (max-width:900px){
+  .layout{grid-template-columns:200px minmax(0,1fr) !important;gap:22px !important}
+  .side{position:sticky !important;top:env(safe-area-inset-top,0px) !important;max-height:100vh !important;overflow-y:auto !important;border-bottom:0 !important;margin:0 !important;padding:22px 0 !important;background:transparent !important}
+  .side .brand,.side .brand-sub{display:block !important}
+  .navwrap{display:block !important;overflow:visible !important}
+  .navlist{flex-direction:column !important;gap:2px !important}
+  .navlist button{display:grid !important;grid-template-columns:26px minmax(0,1fr) auto !important;width:100% !important;white-space:normal !important;border:0 !important;background:transparent !important;border-radius:8px !important;padding:7px 6px !important;font-size:14px !important}
+  .navlist button[aria-selected="true"]{background:var(--node) !important}
+  .navlist button .sm{display:inline-block !important}
+  main{padding-top:24px !important}
+}
+@media (max-width:600px){
+  .layout{grid-template-columns:112px minmax(0,1fr) !important;gap:12px !important}
+  .navlist button{grid-template-columns:minmax(0,1fr) auto !important;font-size:13px !important;padding:6px 5px !important}
+  .navlist button .n,.navlist button .sm,.side .brand-sub{display:none !important}
+  .side .brand{font-size:15px !important}
+}
+.view{margin-top:26px;background:var(--paper);border:1px solid var(--line);border-left:5px solid var(--violet);border-radius:12px;padding:14px 18px 10px}
+.view-h{font:700 15px var(--body);color:var(--violet);letter-spacing:.3px;margin-bottom:4px}
+.view ul{margin:4px 0 0;padding-left:20px}
+.view li{margin:10px 0;line-height:1.8}
+.view li b{color:var(--ink)}
+/* 가독성: 글꼴 크기 */
+body{font-size:17.5px;line-height:1.85}
+p{max-width:78ch}
+h1{font-size:clamp(32px,5vw,46px)}
+h2{font-size:31px}
+h3{font-size:20.5px;margin-top:30px}
+h4{font-size:17.5px}
+pre{font-size:15px;line-height:1.7}
+pre.out,pre.err{font-size:14.5px}
+table{font-size:15.5px}
+th,td{padding:9px 12px}
+.cap{font-size:14.5px}
+.note,.warn,.ragbox,.fix{font-size:16px}
+.goal{font-size:16.5px}
+.navlist button{font-size:15.5px !important}
+.side .brand-sub{font-size:13.5px}
+.checks li{font-size:16px}
+.mhead h3{font-size:19.5px}
+.lv{font-size:13px}
+.tg{font-size:12.5px}
+.bridge div{font-size:15.5px}
+.legend2{font-size:14px}
+@media (max-width:600px){body{font-size:17px} pre{font-size:13.5px} h2{font-size:26px} table{font-size:14.5px}}
+
+.solo{max-width:1100px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.solo main{max-width:none}
+.navlist button{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:start;gap:4px;width:100%;text-align:left;font:500 14px/1.4 var(--body);border:0;background:transparent;color:var(--ink);border-radius:8px;padding:8px 8px;cursor:pointer}
+.navlist button .n{font:600 12px/1.6 var(--mono);color:var(--muted)}
+.navlist button .mc{font:500 11px var(--mono);color:var(--muted)}
+.navlist button:hover{background:var(--soft)}
+.navlist button[aria-selected="true"]{background:var(--node);color:var(--nodeText)}
+.navlist button[aria-selected="true"] .n,.navlist button[aria-selected="true"] .mc{color:var(--nodeText)}
+.navlist button[aria-selected="true"] .sm{box-shadow:0 0 0 1.5px var(--nodeText)}
+.navlist button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.side .brand{font:400 24px/1.25 var(--display);margin-bottom:4px}
+.uhead{padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:22px}
+.uhead h1{margin-bottom:0}
+.pane > section{margin-top:0}
+.pane #missions{margin-top:0;padding-top:0;border-top:0}
+.pane > section > h2{margin-bottom:12px}
+@media (max-width:900px){
+  .navlist button{display:flex;flex:0 0 auto;width:auto;white-space:nowrap;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13.5px;gap:6px}
+  .navlist button .sm{display:none}
+  .side .brand{font-size:18px}
+}
+
+.time{font:600 14px var(--body);color:var(--ink);margin-top:2px}
+.time span{font-weight:400;color:var(--muted)}
+.goal{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--node);border-radius:10px;padding:10px 14px;margin-top:12px;font-size:15px}
+.goal b{color:var(--node)}
+.goal ul{margin:4px 0 0}
+.sumlist{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 18px 14px 36px;margin-top:10px}
+.sumlist li{margin:6px 0}
+.ucard .tm{font:500 12px var(--mono);color:var(--muted)}
+
+.navlist a{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:4px;width:100%;font:500 14px/1.35 var(--body);color:var(--ink);text-decoration:none;border-radius:8px;padding:7px 8px}
+.navlist a .n{font:600 12px var(--mono);color:var(--muted)}
+.navlist a .mc{font:500 11px var(--mono);color:var(--muted)}
+.navlist a.full .mc{color:var(--teal);font-weight:600}
+.navlist a:hover{background:var(--soft)}
+.navlist a[aria-current="page"]{background:var(--node);color:var(--nodeText)}
+.navlist a[aria-current="page"] .n,.navlist a[aria-current="page"] .mc{color:var(--nodeText)}
+.navlist a:focus-visible,.pager a:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.side .brand a{color:inherit;text-decoration:none}
+.unit-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+.unit-meta a.go{font:600 13px var(--body);background:var(--teal);color:var(--paper);text-decoration:none;border-radius:999px;padding:4px 14px}
+.unit-panel{margin-top:30px;padding-top:24px;border-top:1px solid var(--line)}
+.unit-panel > section:first-child{margin-top:0}
+/* missions */
+#missions{scroll-margin-top:72px;margin-top:56px;padding-top:28px;border-top:3px double var(--line)}
+.mlegend{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 6px}
+.mprog{font:500 13px var(--mono);color:var(--muted)}
+.mission{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-top:16px;scroll-margin-top:70px}
+.mission.is-done{border-color:var(--teal);background:linear-gradient(var(--outBg),var(--outBg))}
+.mhead{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.mhead h3{margin:0;font-size:18px;flex:1 1 220px;min-width:0}
+.lv{font:600 12px var(--body);border-radius:6px;padding:2px 9px;white-space:nowrap}
+.lv1{background:var(--tealSoft);color:var(--teal)}
+.lv2{background:var(--amberSoft);color:var(--amber)}
+.lv3{background:var(--coralSoft);color:var(--coral)}
+.mdone{display:inline-flex;align-items:center;gap:6px;font:600 13px var(--body);color:var(--muted);cursor:pointer;border:1px solid var(--line);border-radius:999px;padding:3px 12px;background:var(--bg)}
+.mdone input{accent-color:var(--teal);width:16px;height:16px;margin:0}
+.mission.is-done .mdone{color:var(--teal);border-color:var(--teal)}
+.mlabel{font:600 11px var(--mono);letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin:14px 0 2px}
+.checks{list-style:none;padding:0;margin:4px 0 0}
+.checks li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:6px;align-items:start;margin:3px 0;font-size:15px}
+.checks input{accent-color:var(--teal);width:16px;height:16px;margin:5px 0 0}
+.checks label{cursor:pointer}
+.mission details{margin-top:10px}
+.mission details.ans summary{color:var(--violet)}
+.mission details.hint summary{color:var(--amber)}
+.mission .note{margin-top:10px}
+.pager{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;width:100%}
+.pager a{font:500 14px var(--body);border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:8px 14px;text-decoration:none;max-width:100%}
+.pager a:hover{border-color:var(--teal)}
+.pager .sp{flex:1}
+@media (max-width:900px){
+  .navlist a{display:flex;flex:0 0 auto;width:auto;white-space:nowrap;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13.5px;gap:6px}
+  .navlist a .mc{display:none}
+  .navlist a.full .n{color:var(--teal)}
+}
+/* index */
+.ucards{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));margin-top:10px}
+.ucard{display:flex;flex-direction:column;gap:6px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-decoration:none;color:var(--ink);min-width:0}
+.ucard:hover{border-color:var(--teal)}
+.ucard .n{font:600 12px var(--mono);color:var(--teal)}
+.ucard b{font-size:16px}
+.ucard .d{font-size:13.5px;color:var(--muted);line-height:1.55}
+.ucard .bar{height:5px;background:var(--soft);border-radius:999px;overflow:hidden;margin-top:auto}
+.ucard .bar i{display:block;height:100%;width:0;background:var(--teal)}
+.ucard .mc{font:500 12px var(--mono);color:var(--muted)}
+</style>
+</head>
+<body data-unit="ag4">
+<style>
+.mission .mlabel.st{font:700 13px var(--body);letter-spacing:.5px;color:var(--teal);text-transform:none;margin-top:22px;padding-top:12px;border-top:1px dashed var(--line)}
+.mission .mlabel.st:first-of-type{border-top:0;padding-top:0}
+.qcard{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:10px;padding:10px 14px;margin-top:10px}
+.qcard b{color:var(--teal)}
+.navlist .grp{margin:14px 8px 4px;display:flex;justify-content:space-between}
+</style>
+<div class="layout">
+<aside class="side" aria-label="소단원">
+<div class="brand">06-4 실습 · 진짜 에이전트</div>
+<div class="brand-sub">LangGraph 교안 · 예약 · 운항 · 규정 · 환불을 엮는 에이전트</div>
+<nav class="navwrap" role="tablist" aria-label="소단원" aria-orientation="vertical"><div class="navlist">
+<button type="button" role="tab" id="tab-intro" aria-controls="pane-intro" data-t="intro"><span class="n">0</span><span>개요 · 06-3과 차이</span></button>
+<button type="button" role="tab" id="tab-systems" aria-controls="pane-systems" data-t="systems"><span class="n">1</span><span>가짜 시스템 · 도구 6개<i class="sm ag" title="에이전트"></i><i class="sm rag" title="RAG"></i></span></button>
+<button type="button" role="tab" id="tab-build" aria-controls="pane-build" data-t="build"><span class="n">2</span><span>에이전트 만들기<i class="sm ag" title="에이전트"></i><i class="sm lg1" title="LangGraph 필수"></i></span></button>
+<button type="button" role="tab" id="tab-paths" aria-controls="pane-paths" data-t="paths"><span class="n">3</span><span>질문 4개, 경로 4개<i class="sm ag" title="에이전트"></i></span></button>
+<button type="button" role="tab" id="tab-cancel" aria-controls="pane-cancel" data-t="cancel"><span class="n">4</span><span>이어서 "취소해줘"<i class="sm ag" title="에이전트"></i><i class="sm lg1" title="LangGraph 필수"></i></span></button>
+<button type="button" role="tab" id="tab-why" aria-controls="pane-why" data-t="why"><span class="n">5</span><span>고정 그래프와 비교 · 정리</span></button>
+<div class="grp"><span>복습 · 감기환자</span><span class="mc" id="mcount">0/5</span></div>
+<button type="button" role="tab" id="tab-m1" aria-controls="pane-m1" data-t="m1"><span class="n">M1</span><span>환자 조회 · 체온 판정 도구</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m2" aria-controls="pane-m2" data-t="m2"><span class="n">M2</span><span>검색 · 재진 예약 도구와 에이전트</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m3" aria-controls="pane-m3" data-t="m3"><span class="n">M3</span><span>질문 3개, 경로 3개</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m4" aria-controls="pane-m4" data-t="m4"><span class="n">M4</span><span>이어서 "재진 잡아줘" · 승인과 거부</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m5" aria-controls="pane-m5" data-t="m5"><span class="n">M5</span><span>설계 판단: 고정 그래프 vs 에이전트</span><span class="d">✓</span></button>
+</div></nav></aside>
+<main>
+<header class="uhead"><div class="kicker">LangGraph 교안 · 06 실습</div><h1>질문마다 다른 길로 가는 에이전트</h1><div class="copyright">© 2026 부성순 · AI·클라우드 실무 과정<br>부성순 (bakpak@empas.com)</div></header>
+
+<!-- ============ 0. 개요 · 06-3과 차이 ============ -->
+<div class="pane" role="tabpanel" id="pane-intro" aria-labelledby="tab-intro"><section><h2><span class="no">0</span>개요 · RAG 에이전트와 진짜 에이전트</h2>
+<div class="note"><b>전제</b> 06-3에서 RAG를 도구로 쥔 에이전트를 만들었습니다. 그런데 질문 대부분이 <b>검색 → 계산 → 발송</b> 같은 순서로 흘러, 고정 그래프로도 거의 똑같이 만들 수 있었습니다.</div>
+<h3>에이전트가 필요한 순간</h3>
+<p>에이전트의 가치는 <b>성격이 다른 시스템 여러 개를 질문마다 다르게 엮을 때</b> 드러납니다. 이번 실습의 상담 에이전트는 문서 검색만 하지 않고 예약 시스템 · 날짜 계산 · 운항 시스템 · 환불 계산 · 예약 취소까지 다룹니다.</p>
+<div class="tw"><table><thead><tr><th>시스템</th><th>도구</th><th>06-3에 있었나</th></tr></thead><tbody><tr><td>예약 DB</td><td><code>get_booking(customer)</code> 고객 예약 조회</td><td>없음</td></tr><tr><td>달력</td><td><code>days_until(date_str)</code> 오늘부터 며칠 남았나</td><td>없음 (고객이 "3일 전"이라고 직접 말해야 했음)</td></tr><tr><td>규정 문서 (RAG)</td><td><code>search_policy(query)</code> travel_docs.csv 검색</td><td>있음 (search_docs)</td></tr><tr><td>환불 계산</td><td><code>calc_refund(price, days_before, rule)</code> 상품(T15) · 숙소(T16) 규정 따로</td><td>상품 규정만</td></tr><tr><td>운항 시스템</td><td><code>check_ferry(date_str)</code> 솔바람페리 운항 여부</td><td>없음</td></tr><tr><td>예약 처리</td><td><code>cancel_booking(booking_id)</code> 실제 취소 (승인 필요)</td><td>없음 (발송만)</td></tr></tbody></table></div>
+<h3>같은 에이전트, 질문마다 다른 길</h3>
+<div class="tw"><table><thead><tr><th>고객 질문</th><th>에이전트가 고를 경로 (예)</th></tr></thead><tbody><tr><td>"내 예약 지금 취소하면 얼마 돌려받아?"</td><td>get_booking → days_until → search_policy → calc_refund(상품) + calc_refund(숙소)</td></tr><tr><td>"내일 페리 결항이라던데 내 여행은?"</td><td>get_booking → check_ferry → search_policy(결항 규정)</td></tr><tr><td>"별빛전망대는 언제 쉬어요?"</td><td>search_policy 하나</td></tr><tr><td>"출발까지 며칠 남았어?"</td><td>get_booking → days_until</td></tr><tr><td>(앞 대화에 이어) "그럼 취소해줘"</td><td>기억에서 예약번호 → cancel_booking (승인 대기)</td></tr></tbody></table></div>
+<div class="ragbox"><b>이번 실습에서 볼 것</b> 코드에는 어떤 경로도 적혀 있지 않습니다. 도구 6개, 프롬프트 규칙, 체크포인터만 있습니다. 경로는 매 질문마다 LLM이 만듭니다. 탭 5에서 "이걸 고정 그래프로 짜면?"을 비교합니다.</div>
+<div class="warn"><b>예약 · 운항 시스템은 가짜</b> 실제 DB · API 대신 파이썬 dict로 흉내 냅니다. 오늘 날짜도 2026-11-11로 고정합니다. 실습마다 같은 결과가 나오게 하기 위해서입니다. 실무에서는 이 함수 안만 실제 API 호출로 바꾸면 됩니다.</div></section></div>
+
+<!-- ============ 1. 가짜 시스템 · 도구 6개 ============ -->
+<div class="pane" role="tabpanel" id="pane-systems" aria-labelledby="tab-systems" hidden><section><h2><span class="no">1</span>가짜 시스템과 도구 6개<span class="tg ag">MCP·에이전트</span><span class="tg rag">RAG</span></h2>
+<pre class="py">!pip install -q langgraph langchain langchain-openai langchain-community faiss-cpu pandas</pre>
+<pre class="py">import os
+os.environ["OPENAI_API_KEY"] = "sk-..."   # 본인 키</pre>
+<h3>규정 문서 (RAG) 준비</h3>
+<pre class="py">import pandas as pd
+from langchain_core.documents import Document
+from langchain_community.vectorstores import FAISS
+from langchain_openai import OpenAIEmbeddings
+from langchain.chat_models import init_chat_model
+
+df = pd.read_csv("travel_docs.csv")
+docs = [Document(page_content=f"{r['title']}\n{r['body']}", metadata={"doc_id": r["doc_id"]})
+        for _, r in df.iterrows()]
+db = FAISS.from_documents(docs, OpenAIEmbeddings())
+llm = init_chat_model("openai:gpt-4o-mini", temperature=0)</pre>
+<h3>가짜 예약 · 운항 시스템</h3>
+<pre class="py">from datetime import date
+
+TODAY = date(2026, 11, 11)          # 실습용으로 오늘 날짜 고정
+
+BOOKINGS = {                        # 예약 DB 흉내
+    "kim":  {"id": "B-1001", "product": "솔바람섬 별빛 2박3일", "depart": "2026-11-14",
+             "tour": 250000, "hotel": 140000, "hotel_name": "파도소리 리조트"},
+    "lee":  {"id": "B-1002", "product": "솔바람섬 별빛 2박3일", "depart": "2026-11-12",
+             "tour": 250000, "hotel": 140000, "hotel_name": "파도소리 리조트"},
+    "choi": {"id": "B-1003", "product": "노을항 미식 투어", "depart": "2026-11-25",
+             "tour": 170000, "hotel": 80000, "hotel_name": "노을스테이 호텔"},
+}
+FERRY = {"2026-11-12": "결항 (기상 악화)"}   # 운항 시스템 흉내: 없는 날은 정상 운항
+CANCELLED = []                              # 취소 처리 기록</pre>
+<div class="tw"><table><thead><tr><th>고객</th><th>출발</th><th>오늘 기준</th><th>포인트</th></tr></thead><tbody><tr><td>kim</td><td>2026-11-14</td><td>3일 전</td><td>상품(T15 30%)과 숙소(T16 50%) 환불률이 다름</td></tr><tr><td>lee</td><td>2026-11-12</td><td>내일</td><td>그날 페리 결항</td></tr><tr><td>choi</td><td>2026-11-25</td><td>14일 전</td><td>노을항 상품이라 페리와 무관</td></tr></tbody></table></div>
+<h3>도구 6개</h3>
+<pre class="py">from langchain.tools import tool
+
+
+@tool(parse_docstring=True)
+def get_booking(customer: str) -&gt; str:
+    """고객의 예약 내역(예약번호, 상품, 출발일, 상품 · 숙소 금액)을 조회한다. 고객 본인 예약에 대한 질문이면 먼저 사용한다.
+
+    Args:
+        customer: 고객 이름 (예: kim)
+    """
+    b = BOOKINGS.get(customer)
+    if not b:
+        return f"{customer} 고객의 예약이 없습니다."
+    return (f"{b['id']} | {b['product']} | 출발 {b['depart']} | "
+            f"상품 {b['tour']:,}원 + 숙소({b['hotel_name']}) {b['hotel']:,}원")
+
+
+@tool(parse_docstring=True)
+def days_until(date_str: str) -&gt; str:
+    """오늘부터 주어진 날짜까지 며칠 남았는지 계산한다. 출발 며칠 전인지 알아야 할 때 사용한다.
+
+    Args:
+        date_str: 날짜 (YYYY-MM-DD)
+    """
+    n = (date.fromisoformat(date_str) - TODAY).days
+    return f"{date_str}까지 {n}일 남음 (오늘 {TODAY})"
+
+
+@tool(parse_docstring=True)
+def search_policy(query: str) -&gt; str:
+    """바람길여행 · 숙소 · 페리 규정과 여행지 정보를 검색한다. 규정이나 장소 정보가 필요하면 사용한다.
+
+    Args:
+        query: 검색할 내용 (예: 페리 결항 환불)
+    """
+    found = db.similarity_search(query, k=3)
+    return "\n\n".join(f"[{d.metadata['doc_id']}] {d.page_content}" for d in found)
+
+
+@tool(parse_docstring=True)
+def calc_refund(price: int, days_before: int, rule: str) -&gt; str:
+    """환불액을 규정대로 계산한다. 상품 비용과 숙소 비용은 규정이 달라 따로 계산한다.
+
+    Args:
+        price: 금액 (원)
+        days_before: 출발(체크인) 며칠 전인지
+        rule: "tour"(상품, T15) 또는 "hotel"(숙소, T16)
+    """
+    if rule == "tour":
+        rate = 1.0 if days_before &gt;= 10 else 0.8 if days_before &gt;= 5 else 0.3 if days_before &gt;= 2 else 0.0
+        name = "상품(T15)"
+    else:
+        rate = 1.0 if days_before &gt;= 7 else 0.5 if days_before &gt;= 3 else 0.0
+        name = "숙소(T16)"
+    return f"{name} {days_before}일 전 → {rate:.0%} 환불 = {int(price * rate):,}원"
+
+
+@tool(parse_docstring=True)
+def check_ferry(date_str: str) -&gt; str:
+    """해당 날짜의 솔바람페리(노을항 ↔ 솔바람섬) 운항 여부를 확인한다. 페리 · 결항 · 날씨로 인한 운항 질문이면 사용한다.
+
+    Args:
+        date_str: 날짜 (YYYY-MM-DD)
+    """
+    return f"{date_str} 솔바람페리: {FERRY.get(date_str, '정상 운항 (하루 4회)')}"
+
+
+@tool(parse_docstring=True)
+def cancel_booking(booking_id: str) -&gt; str:
+    """예약을 실제로 취소한다. 되돌릴 수 없으므로 고객이 취소해 달라고 분명히 말할 때만 사용한다.
+
+    Args:
+        booking_id: 예약번호 (예: B-1001)
+    """
+    CANCELLED.append(booking_id)
+    return f"{booking_id} 취소 완료"
+
+
+TOOLS = [get_booking, days_until, search_policy, calc_refund, check_ferry, cancel_booking]</pre>
+<h3>도구만 먼저 테스트</h3>
+<pre class="py">print(get_booking.invoke({"customer": "kim"}))
+print(days_until.invoke({"date_str": "2026-11-14"}))
+print(calc_refund.invoke({"price": 250000, "days_before": 3, "rule": "tour"}))
+print(calc_refund.invoke({"price": 140000, "days_before": 3, "rule": "hotel"}))
+print(check_ferry.invoke({"date_str": "2026-11-12"}))
+print(check_ferry.invoke({"date_str": "2026-11-14"}))</pre>
+<pre class="out">B-1001 | 솔바람섬 별빛 2박3일 | 출발 2026-11-14 | 상품 250,000원 + 숙소(파도소리 리조트) 140,000원
+2026-11-14까지 3일 남음 (오늘 2026-11-11)
+상품(T15) 3일 전 → 30% 환불 = 75,000원
+숙소(T16) 3일 전 → 50% 환불 = 70,000원
+2026-11-12 솔바람페리: 결항 (기상 악화)
+2026-11-14 솔바람페리: 정상 운항 (하루 4회)</pre>
+<div class="fix"><b>kim의 정답은 145,000원</b> 상품 75,000원 + 숙소 70,000원. 같은 "3일 전"이어도 상품은 30%, 숙소는 50%입니다. LLM이 문서를 읽고 한 번에 계산하면 놓치기 쉬운 부분이라 rule을 나눠 두 번 계산하게 했습니다.</div>
+<div class="tw"><table><thead><tr><th>도구 설계 포인트</th><th>이유</th></tr></thead><tbody><tr><td>get_booking 결과에 예약번호 · 출발일 · 금액을 한 줄로</td><td>다음 도구(days_until, calc_refund, cancel_booking)의 인자를 LLM이 그대로 옮겨 쓸 수 있게</td></tr><tr><td>days_until을 따로</td><td>LLM은 날짜 뺄셈도 틀립니다. 06-1의 "계산은 도구로"</td></tr><tr><td>cancel_booking docstring에 "분명히 말할 때만"</td><td>환불액만 물었는데 취소해 버리는 사고를 설명서 단계에서 막음 (최종 안전망은 승인)</td></tr></tbody></table></div></section></div>
+
+<!-- ============ 2. 에이전트 만들기 ============ -->
+<div class="pane" role="tabpanel" id="pane-build" aria-labelledby="tab-build" hidden><section><h2><span class="no">2</span>에이전트 만들기 · 규칙과 안전장치<span class="tg ag">MCP·에이전트</span><span class="tg lg1">LangGraph 필수</span></h2>
+<pre class="py">from langchain.agents import create_agent
+from langchain.agents.middleware import (HumanInTheLoopMiddleware, ModelCallLimitMiddleware,
+                                         ToolCallLimitMiddleware)
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.types import Command
+
+PROMPT = """너는 바람길여행 상담 에이전트다. 오늘은 2026-11-11이다.
+1. 고객 본인 예약에 대한 질문이면 get_booking으로 예약부터 확인한다.
+2. 출발 며칠 전인지는 days_until로 계산한다. 직접 계산하지 않는다.
+3. 규정은 search_policy로 찾고 근거 문서 번호를 [T15]처럼 적는다. 바람결여행(T22)은 다른 회사다.
+4. 환불액은 calc_refund로 상품(tour)과 숙소(hotel)를 따로 계산해 합친다.
+5. 페리 운항 질문은 check_ferry로 확인한다.
+6. 고객이 취소해 달라고 분명히 말할 때만 cancel_booking을 쓴다.
+7. 도구 결과와 문서에 없는 내용은 '확인 후 안내드리겠습니다'라고 한다."""
+
+agent = create_agent(
+    model=llm,
+    tools=TOOLS,
+    system_prompt=PROMPT,
+    checkpointer=InMemorySaver(),
+    middleware=[
+        HumanInTheLoopMiddleware(interrupt_on={"cancel_booking": {"allowed_decisions": ["approve", "reject"]}}),
+        ToolCallLimitMiddleware(tool_name="cancel_booking", run_limit=1, exit_behavior="end"),
+        ModelCallLimitMiddleware(run_limit=10),
+    ],
+)</pre>
+<div class="tw"><table><thead><tr><th>설정</th><th>막는 것</th></tr></thead><tbody><tr><td>규칙 1 · 5 · 6</td><td>질문에 맞는 시스템을 고르게 하는 <b>판단 기준</b>. 경로를 정하는 게 아니라 "이럴 땐 이걸"만 알려 줌</td></tr><tr><td>규칙 2 · 4</td><td>날짜 · 금액 계산을 LLM이 직접 하지 못하게</td></tr><tr><td>규칙 7</td><td>모르는 걸 지어내지 않게 (결항 시 상품 환불 규정은 문서에 없음 → 탭 3)</td></tr><tr><td>HumanInTheLoop (cancel_booking)</td><td>실제 취소는 상담원 승인 뒤에만</td></tr><tr><td>ToolCallLimit (cancel_booking 1회)</td><td>한 번 실행에 두 건 이상 취소하는 사고</td></tr><tr><td>ModelCallLimit (10회)</td><td>도구를 6개나 주면 헤매며 반복할 수 있음 → 비용 상한</td></tr><tr><td>checkpointer</td><td>"그럼 취소해줘"처럼 앞 대화를 이어받기 + 승인 대기 저장</td></tr></tbody></table></div>
+<h3>실행 과정 보기 도우미</h3>
+<pre class="py"># 이번 질문에서 부른 도구(→)와 결과(←), 최종 답 또는 멈춤을 보여 준다
+def ask(thread, question):
+    cfg = {"configurable": {"thread_id": thread}}
+    before = len(agent.get_state(cfg).values.get("messages", [])) if agent.get_state(cfg).values else 0
+    r = agent.invoke({"messages": [("user", question)]}, cfg)
+    print(f"Q. {question}")
+    for m in r["messages"][before + 1:]:
+        for tc in getattr(m, "tool_calls", []) or []:
+            print("  →", tc["name"], tc["args"])
+        if m.type == "tool":
+            print("     ←", m.content.splitlines()[0][:70])
+    if "__interrupt__" in r:
+        req = r["__interrupt__"][0].value["action_requests"][0]
+        print("  [멈춤] 승인 대기:", req["name"], req["args"])
+    else:
+        print("  A.", r["messages"][-1].content)
+    print()
+    return cfg, r</pre>
+<p><code>before</code>로 이번 질문 전까지의 메시지 수를 세어 두고, 그 뒤에 생긴 메시지만 보여 줍니다. 같은 thread에서 이어 물을 때 앞 대화의 도구 호출이 다시 찍히지 않게 하기 위해서입니다.</p></section></div>
+
+<!-- ============ 3. 질문 4개, 경로 4개 ============ -->
+<div class="pane" role="tabpanel" id="pane-paths" aria-labelledby="tab-paths" hidden><section><h2><span class="no">3</span>질문 4개, 경로 4개<span class="tg ag">MCP·에이전트</span><span class="tg rag">RAG</span></h2>
+<p>같은 에이전트에 성격이 다른 질문 네 개를 보냅니다. 출력의 <b>→ 줄(도구 호출)이 질문마다 어떻게 달라지는지</b>를 봅니다.</p>
+<h3>① 환불액: 예약 → 날짜 → 규정 → 계산 두 번</h3>
+<pre class="py">cfg_kim, r = ask("상담-kim", "고객 kim: 내 예약 지금 취소하면 얼마 돌려받아?")</pre>
+<pre class="out ex">Q. 고객 kim: 내 예약 지금 취소하면 얼마 돌려받아?
+  → get_booking {'customer': 'kim'}
+     ← B-1001 | 솔바람섬 별빛 2박3일 | 출발 2026-11-14 | 상품 250,000원 + 숙소(파도소리 리조트) 140,000원
+  → days_until {'date_str': '2026-11-14'}
+     ← 2026-11-14까지 3일 남음 (오늘 2026-11-11)
+  → search_policy {'query': '바람길여행 취소 환불 규정 숙소'}
+     ← [T15] 바람길여행 예약 취소·환불 규정
+  → calc_refund {'price': 250000, 'days_before': 3, 'rule': 'tour'}
+  → calc_refund {'price': 140000, 'days_before': 3, 'rule': 'hotel'}
+     ← 상품(T15) 3일 전 → 30% 환불 = 75,000원
+     ← 숙소(T16) 3일 전 → 50% 환불 = 70,000원
+  A. 지금 취소하시면 상품 비용 75,000원(30%)과 숙소 비용 70,000원(50%), 합계 145,000원이 환불됩니다. [T15][T16]</pre>
+<ol class="steps"><li><span class="lbl">고객은 날짜도 금액도 말하지 않았다.</span> 06-3에서는 "39만 원, 3일 전"을 고객이 말해야 했습니다. 이제 에이전트가 예약 시스템과 달력에서 직접 알아냅니다.</li><li><span class="lbl">앞 도구의 결과가 다음 도구의 인자가 됐다.</span> get_booking의 출발일 → days_until, 금액 → calc_refund. 이 연결을 LLM이 했습니다.</li><li><span class="lbl">calc_refund를 한 번에 두 개.</span> 상품과 숙소를 동시에 요청했습니다(병렬 도구 호출, 06-1 탭 2).</li></ol>
+<h3>② 페리 결항: 예약 → 운항 → 규정</h3>
+<pre class="py">cfg_lee, r = ask("상담-lee", "고객 lee: 내일 페리 결항이라던데 내 여행은 어떻게 돼?")</pre>
+<pre class="out ex">Q. 고객 lee: 내일 페리 결항이라던데 내 여행은 어떻게 돼?
+  → get_booking {'customer': 'lee'}
+     ← B-1002 | 솔바람섬 별빛 2박3일 | 출발 2026-11-12 | 상품 250,000원 + 숙소(파도소리 리조트) 140,000원
+  → check_ferry {'date_str': '2026-11-12'}
+     ← 2026-11-12 솔바람페리: 결항 (기상 악화)
+  → search_policy {'query': '솔바람페리 결항 환불 날짜 변경'}
+     ← [T17] 은하해운 결항·환불 규정
+  A. 내일(11/12) 솔바람페리가 기상 악화로 결항입니다. 은하해운 규정상 승선권은 전액 환불 또는 무료 날짜 변경이 됩니다[T17]. 다만 결항 시 여행 상품 자체의 처리 방법은 규정에서 확인되지 않아, 확인 후 안내드리겠습니다.</pre>
+<p>calc_refund를 부르지 않았습니다. 이 질문에는 계산이 필요 없기 때문입니다. 그리고 문서에 없는 "결항 시 상품 처리"는 규칙 7대로 지어내지 않고 확인하겠다고 했습니다.</p>
+<h3>③ 장소 정보: 검색 하나</h3>
+<pre class="py">ask("상담-guest", "별빛전망대는 언제 쉬어요?")</pre>
+<pre class="out ex">Q. 별빛전망대는 언제 쉬어요?
+  → search_policy {'query': '별빛전망대 휴관일'}
+     ← [T02] 별빛전망대
+  A. 별빛전망대는 매주 월요일에 휴관합니다. [T02]</pre>
+<h3>④ 남은 날짜: 예약 → 날짜</h3>
+<pre class="py">ask("상담-choi", "고객 choi: 내 여행 출발까지 며칠 남았어?")</pre>
+<pre class="out ex">Q. 고객 choi: 내 여행 출발까지 며칠 남았어?
+  → get_booking {'customer': 'choi'}
+     ← B-1003 | 노을항 미식 투어 | 출발 2026-11-25 | 상품 170,000원 + 숙소(노을스테이 호텔) 80,000원
+  → days_until {'date_str': '2026-11-25'}
+     ← 2026-11-25까지 14일 남음 (오늘 2026-11-11)
+  A. 노을항 미식 투어 출발(11/25)까지 14일 남았습니다.</pre>
+<h3>네 경로 비교</h3>
+<div class="tw"><table><thead><tr><th>질문</th><th>get_booking</th><th>days_until</th><th>search_policy</th><th>calc_refund</th><th>check_ferry</th></tr></thead><tbody><tr><td>① 환불액</td><td>✓</td><td>✓</td><td>✓</td><td>✓✓</td><td></td></tr><tr><td>② 페리 결항</td><td>✓</td><td></td><td>✓</td><td></td><td>✓</td></tr><tr><td>③ 장소 정보</td><td></td><td></td><td>✓</td><td></td><td></td></tr><tr><td>④ 남은 날짜</td><td>✓</td><td>✓</td><td></td><td></td><td></td></tr></tbody></table></div>
+<div class="ragbox"><b>이것이 에이전트다움</b> 네 질문이 모두 다른 도구 조합 · 다른 순서였습니다. 06-3은 표의 search_policy 열만 거의 항상 채워졌습니다. RAG는 여섯 도구 중 하나일 뿐입니다.</div></section></div>
+
+<!-- ============ 4. 이어서 "취소해줘" ============ -->
+<div class="pane" role="tabpanel" id="pane-cancel" aria-labelledby="tab-cancel" hidden><section><h2><span class="no">4</span>대화를 이어받아 실제로 취소하기<span class="tg ag">MCP·에이전트</span><span class="tg lg1">LangGraph 필수</span></h2>
+<p>①의 kim이 같은 thread에서 이어 말합니다. 예약번호를 다시 말하지 않습니다.</p>
+<pre class="py">cfg_kim, r = ask("상담-kim", "그럼 취소해줘")</pre>
+<pre class="out ex">Q. 그럼 취소해줘
+  → cancel_booking {'booking_id': 'B-1001'}
+  [멈춤] 승인 대기: cancel_booking {'booking_id': 'B-1001'}</pre>
+<ol class="steps"><li><span class="lbl">get_booking을 다시 부르지 않았다.</span> 체크포인터가 앞 대화(예약 조회 결과)를 함께 넘겨서, LLM이 B-1001을 기억에서 꺼냈습니다.</li><li><span class="lbl">"그럼"을 알아들었다.</span> 앞에서 145,000원 환불 안내를 들은 뒤의 취소라는 맥락을 이해한 것입니다.</li><li><span class="lbl">취소 직전에 멈췄다.</span> 되돌릴 수 없는 일이라 상담원 승인을 기다립니다. CANCELLED는 아직 비어 있습니다.</li></ol>
+<pre class="py">print("승인 전 취소 기록:", CANCELLED)
+r = agent.invoke(Command(resume={"decisions": [{"type": "approve"}]}), cfg_kim)
+print(r["messages"][-1].content)
+print("승인 후 취소 기록:", CANCELLED)</pre>
+<pre class="out ex">승인 전 취소 기록: []
+B-1001 예약이 취소되었습니다. 환불 예정 금액은 145,000원이며 영업일 기준 5일 안에 처리됩니다. [T15]
+승인 후 취소 기록: ['B-1001']</pre>
+<h3>거부: 결항 고객에게는 다른 길을 먼저</h3>
+<p>lee는 페리 결항 때문에 취소하려 합니다. 하지만 결항이면 승선권 무료 변경이 가능하니, 상담원이 취소를 막고 대안을 안내하게 합니다.</p>
+<pre class="py">cfg_lee, r = ask("상담-lee", "그냥 취소해줘")
+if "__interrupt__" in r:
+    r = agent.invoke(Command(resume={"decisions": [{
+        "type": "reject",
+        "message": "결항이면 날짜 변경이 무료입니다. 취소 전에 날짜 변경 가능성부터 안내하세요.",
+    }]}), cfg_lee)
+print(r["messages"][-1].content)
+print("취소 기록:", CANCELLED)</pre>
+<pre class="out ex">Q. 그냥 취소해줘
+  → cancel_booking {'booking_id': 'B-1002'}
+  [멈춤] 승인 대기: cancel_booking {'booking_id': 'B-1002'}
+
+취소 전에 안내드립니다. 내일 페리가 결항이라 승선권은 무료로 다른 날짜로 바꿀 수 있습니다[T17]. 일정을 옮기시면 취소 수수료 없이 여행하실 수 있는데, 그래도 취소를 원하시면 다시 말씀해 주세요.
+취소 기록: ['B-1001']</pre>
+<div class="fix"><b>거부 사유가 다음 행동을 바꾼다</b> 06-3에서는 거부 사유를 읽고 "다시 검색"했다면, 여기서는 <b>취소 대신 대안 안내</b>로 행동 자체를 바꿨습니다. 상담원은 지시만 하고, 어떤 도구로 어떻게 할지는 에이전트가 정합니다.</div></section></div>
+
+<!-- ============ 5. 고정 그래프와 비교 · 정리 ============ -->
+<div class="pane" role="tabpanel" id="pane-why" aria-labelledby="tab-why" hidden><section><h2><span class="no">5</span>이걸 고정 그래프로 짜면?<span class="tg lg1">LangGraph 필수</span></h2>
+<p>탭 3 · 4의 다섯 상황을 05처럼 고정 그래프로 만든다고 해 봅시다. 질문 유형마다 분기를 미리 그려야 합니다.</p>
+<div class="flow"><span class="n">classify</span><i>→</i><span>환불?</span><i>/</i><span>페리?</span><i>/</i><span>장소?</span><i>/</i><span>날짜?</span><i>/</i><span>취소?</span><i>/</i><span>환불+취소?</span><i>/</i><span>페리+환불?</span><i>/</i><span>…</span></div>
+<div class="tw"><table><thead><tr><th></th><th>고정 그래프</th><th>에이전트</th></tr></thead><tbody><tr><td>새 질문 유형 ("숙소만 취소하면?")</td><td>분기 · 노드 추가, 엣지 수정</td><td>도구 그대로, 필요하면 프롬프트 한 줄</td></tr><tr><td>질문 하나에 여러 의도 ("결항이면 환불은 얼마?")</td><td>조합마다 경로를 따로 그려야 함</td><td>필요한 도구를 이어 부름</td></tr><tr><td>새 시스템 연결 ("렌터카 조회")</td><td>그 시스템을 쓰는 모든 경로 수정</td><td>도구 하나 추가</td></tr><tr><td>결과 예측 · 테스트</td><td><b>쉬움</b> (경로가 코드에 있음)</td><td>어려움 (매번 다를 수 있음)</td></tr><tr><td>비용</td><td><b>적음</b></td><td>도구가 많을수록 LLM 호출 증가</td></tr></tbody></table></div>
+<div class="ragbox"><b>그래서 06-3의 라우터와 함께 쓴다</b> 단순하고 자주 오는 질문(장소 정보)은 고정 RAG로, 여러 시스템을 엮어야 하는 질문은 이 에이전트로. 06-3 탭 4의 <code>agent</code> 노드 자리에 이번 에이전트를 넣으면 됩니다.</div>
+<h3>06-3과 06-4 정리</h3>
+<div class="tw"><table><thead><tr><th></th><th>06-3 RAG 에이전트</th><th>06-4 멀티 도구 에이전트</th></tr></thead><tbody><tr><td>도구 성격</td><td>검색 중심 + 계산 · 발송</td><td>예약 · 달력 · 문서 · 계산 · 운항 · 처리, 서로 다른 시스템</td></tr><tr><td>고객이 줘야 하는 정보</td><td>가격, 며칠 전</td><td>이름만 (나머지는 시스템에서)</td></tr><tr><td>경로</td><td>거의 항상 검색 → 계산 → 발송</td><td>질문마다 다름</td></tr><tr><td>대화 이어받기</td><td>필수 아님</td><td>"그럼 취소해줘"처럼 핵심</td></tr><tr><td>거부 후 행동</td><td>다시 검색</td><td><b>다른 행동으로 전환</b> (취소 → 대안 안내)</td></tr></tbody></table></div>
+<div class="view"><div class="view-h">가져갈 한 문장</div><ul><li><b>에이전트의 가치는 "검색을 잘하는 것"이 아니라 "여러 시스템을 질문에 맞게 엮는 것"이다.</b> 경로를 그릴 수 있으면 고정 그래프, 경로가 질문마다 달라지면 에이전트.</li></ul></div></section></div>
+
+<!-- ============ M1. 환자 조회 · 체온 판정 도구 ============ -->
+<div class="pane" role="tabpanel" id="pane-m1" aria-labelledby="tab-m1" hidden><section><div class="mission" id="ag4-m1" data-mid="ag4-m1"><div class="mhead"><span class="lv lv1">★ 기본</span><span class="tgs"><span class="tg ag">MCP·에이전트</span></span><h3>M1. 환자 조회 · 체온 판정 도구</h3><label class="mdone"><input type="checkbox" id="ag4-m1-done" data-done="ag4-m1"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>의원의 진료 보조 에이전트를 만듭니다. 이번에는 문서 검색 외에 <b>환자 기록 시스템</b>(환자ID로 조회)과 <b>재진 예약 시스템</b>을 다룹니다. 먼저 조회 · 판정 도구 두 개를 만듭니다.</p>
+<div class="tw"><table><thead><tr><th>도구</th><th>시스템</th><th>하는 일</th></tr></thead><tbody><tr><td><code>get_patient(patient_id)</code></td><td>환자 기록</td><td>환자ID로 나이 · 증상 · 체온 · 진단 · 처방 조회</td></tr><tr><td><code>check_fever(temp)</code></td><td>계산</td><td>38.5도 이상 고열, 37.5도 이상 미열</td></tr><tr><td><code>search_records(query)</code></td><td>RAG</td><td>비슷한 과거 진료 검색 (M2)</td></tr><tr><td><code>book_followup(patient_id, days_later)</code></td><td>예약</td><td>재진 예약 (승인 필요, M2)</td></tr></tbody></table></div>
+<div class="mlabel st">STEP 2 · 작성</div>
+<pre class="py">from datetime import timedelta
+
+df2 = pd.read_csv("감기환자 진료 데이터.csv")
+records = [Document(page_content=r["진료내용"], metadata={"환자ID": r["환자ID"]}) for _, r in df2.iterrows()]
+db2 = FAISS.from_documents(records, OpenAIEmbeddings())
+BOOKED = []   # 재진 예약 기록
+
+# TODO: get_patient(patient_id) - df2에서 한 줄 찾아 "P004 | 38세 남 | 증상 ... | 체온 39.1도 | 7일째 | 진단 ... | 처방 ..." 형태로
+# TODO: check_fever(temp)
+# TODO: get_patient.invoke({"patient_id": "P004"}), 없는 환자 "P999"도 테스트</pre>
+<details class="hint"><summary>힌트 보기</summary><p><code>row = df2[df2["환자ID"] == patient_id]</code>가 비어 있으면(<code>row.empty</code>) "없는 환자"를 문장으로 돌려줍니다. 있으면 <code>r = row.iloc[0]</code>.</p></details>
+<details class="ans"><summary>예시 답안 보기</summary>
+<pre class="py">@tool(parse_docstring=True)
+def get_patient(patient_id: str) -&gt; str:
+    """환자ID로 최근 진료 기록(나이, 증상, 체온, 진단, 처방)을 조회한다. 특정 환자에 대한 질문이면 먼저 사용한다.
+
+    Args:
+        patient_id: 환자ID (예: P004)
+    """
+    row = df2[df2["환자ID"] == patient_id]
+    if row.empty:
+        return f"{patient_id} 환자 기록이 없습니다."
+    r = row.iloc[0]
+    return (f"{patient_id} | {r['나이']}세 {r['성별']} | 증상 {r['증상']} | 체온 {r['체온']}도 | "
+            f"{r['증상지속일']}일째 | 진단 {r['진단명']} | 처방 {r['처방']}")
+
+
+@tool(parse_docstring=True)
+def check_fever(temp: float) -&gt; str:
+    """체온으로 열 상태를 판정한다. 체온이 있으면 반드시 사용한다.
+
+    Args:
+        temp: 체온 (섭씨, 예: 38.2)
+    """
+    if temp &gt;= 38.5:
+        return f"{temp}도: 고열 (38.5도 이상)"
+    if temp &gt;= 37.5:
+        return f"{temp}도: 미열 (37.5~38.4도)"
+    return f"{temp}도: 정상 체온"
+
+
+print(get_patient.invoke({"patient_id": "P004"}))
+print(get_patient.invoke({"patient_id": "P999"}))
+print(check_fever.invoke({"temp": 39.1}))</pre>
+<pre class="out">P004 | 38세 남 | 증상 오한/피로감/기침 | 체온 39.1도 | 7일째 | 진단 독감 의심 | 처방 해열제
+P999 환자 기록이 없습니다.
+39.1도: 고열 (38.5도 이상)</pre>
+</details>
+<div class="mlabel st">STEP 3 · 확인</div>
+<ul class="checks"><li><input type="checkbox" id="ag4-m1-c1" data-chk="ag4-m1-c1"><label for="ag4-m1-c1">P004 조회 결과가 위와 같다</label></li><li><input type="checkbox" id="ag4-m1-c2" data-chk="ag4-m1-c2"><label for="ag4-m1-c2">없는 환자도 에러 없이 문장으로 돌아온다</label></li><li><input type="checkbox" id="ag4-m1-c3" data-chk="ag4-m1-c3"><label for="ag4-m1-c3">get_patient 결과에 다음 도구(check_fever)가 쓸 체온이 들어 있다</label></li></ul>
+</div></section></div>
+
+<!-- ============ M2. 검색 · 재진 예약 도구와 에이전트 ============ -->
+<div class="pane" role="tabpanel" id="pane-m2" aria-labelledby="tab-m2" hidden><section><div class="mission" id="ag4-m2" data-mid="ag4-m2"><div class="mhead"><span class="lv lv2">★★ 응용</span><span class="tgs"><span class="tg ag">MCP·에이전트</span><span class="tg lg1">LangGraph 필수</span></span><h3>M2. 검색 · 재진 예약 도구와 에이전트</h3><label class="mdone"><input type="checkbox" id="ag4-m2-done" data-done="ag4-m2"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>비슷한 과거 진료 검색(RAG)과 재진 예약 도구를 더해, 도구 4개를 쥔 에이전트를 만듭니다. 재진 예약은 의사 승인 뒤에만, 한 번 실행에 1건만 허용합니다.</p>
+<div class="mlabel st">STEP 2 · 작성</div>
+<pre class="py"># TODO: search_records(query), book_followup(patient_id, days_later) - 예약일 = TODAY + days_later
+# TODO: PROMPT2 규칙 (환자 질문이면 get_patient 먼저, 체온은 check_fever, 비슷한 사례는 search_records, 재진은 요청 시에만)
+# TODO: clinic = create_agent(... HITL(book_followup), ToolCallLimit(book_followup 1, "end"), ModelCallLimit(10), checkpointer)</pre>
+<details class="hint"><summary>힌트 보기</summary><p>탭 1 · 2의 도구와 agent 코드에서 이름만 바꿉니다. 예약일은 <code>TODAY + timedelta(days=days_later)</code>.</p></details>
+<details class="ans"><summary>예시 답안 보기</summary>
+<pre class="py">@tool(parse_docstring=True)
+def search_records(query: str) -&gt; str:
+    """증상이 비슷한 과거 진료 기록을 검색한다. 비슷한 사례의 진단 · 처방을 참고할 때 사용한다.
+
+    Args:
+        query: 나이 · 증상 · 체온 등 (예: 6세 재채기 가래 미열)
+    """
+    found = db2.similarity_search(query, k=3)
+    return "\n".join(f"[{d.metadata['환자ID']}] {d.page_content}" for d in found)
+
+
+@tool(parse_docstring=True)
+def book_followup(patient_id: str, days_later: int) -&gt; str:
+    """재진을 예약한다. 의사가 재진을 잡아 달라고 할 때만 사용한다.
+
+    Args:
+        patient_id: 환자ID (예: P004)
+        days_later: 오늘부터 며칠 뒤 (예: 3)
+    """
+    when = TODAY + timedelta(days=days_later)
+    BOOKED.append((patient_id, str(when)))
+    return f"{patient_id} 재진 예약 완료: {when}"
+
+
+PROMPT2 = """너는 감기 진료 보조 에이전트다. 오늘은 2026-11-11이다.
+1. 특정 환자 질문이면 get_patient로 기록부터 확인한다.
+2. 체온 판정은 check_fever로 한다.
+3. 비슷한 사례가 필요하면 search_records로 찾고 근거 환자ID를 [P004]처럼 적는다.
+4. 재진 예약은 의사가 잡아 달라고 할 때만 book_followup을 쓴다.
+5. 최종 판단은 의사가 한다는 점을 잊지 않는다."""
+
+clinic = create_agent(
+    model=llm, tools=[get_patient, check_fever, search_records, book_followup], system_prompt=PROMPT2,
+    checkpointer=InMemorySaver(),
+    middleware=[
+        HumanInTheLoopMiddleware(interrupt_on={"book_followup": {"allowed_decisions": ["approve", "reject"]}}),
+        ToolCallLimitMiddleware(tool_name="book_followup", run_limit=1, exit_behavior="end"),
+        ModelCallLimitMiddleware(run_limit=10),
+    ],
+)
+agent = clinic        # 탭 2의 ask() 도우미를 그대로 쓰기 위해</pre>
+</details>
+<div class="mlabel st">STEP 3 · 확인</div>
+<ul class="checks"><li><input type="checkbox" id="ag4-m2-c1" data-chk="ag4-m2-c1"><label for="ag4-m2-c1">도구 4개 중 book_followup만 승인 대상이다</label></li><li><input type="checkbox" id="ag4-m2-c2" data-chk="ag4-m2-c2"><label for="ag4-m2-c2">book_followup docstring에 "요청할 때만"을 적었다</label></li><li><input type="checkbox" id="ag4-m2-c3" data-chk="ag4-m2-c3"><label for="ag4-m2-c3"><code>agent = clinic</code>으로 ask()를 재사용했다</label></li></ul>
+</div></section></div>
+
+<!-- ============ M3. 질문 3개, 경로 3개 ============ -->
+<div class="pane" role="tabpanel" id="pane-m3" aria-labelledby="tab-m3" hidden><section><div class="mission" id="ag4-m3" data-mid="ag4-m3"><div class="mhead"><span class="lv lv2">★★ 응용</span><span class="tgs"><span class="tg ag">MCP·에이전트</span></span><h3>M3. 질문 3개, 경로 3개</h3><label class="mdone"><input type="checkbox" id="ag4-m3-done" data-done="ag4-m3"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>의사가 성격이 다른 질문 세 개를 합니다. 각각 어떤 도구를 어떤 순서로 부를지 <b>먼저 예측</b>하고 실행해 비교합니다.</p>
+<div class="tw"><table><thead><tr><th>질문</th><th>내 예측 (실행 전에 적기)</th></tr></thead><tbody><tr><td>"P004 환자 상태 요약해줘"</td><td></td></tr><tr><td>"P027이랑 비슷한 환자들은 무슨 처방 받았어?"</td><td></td></tr><tr><td>"급성 인두염은 보통 어떤 처방이야?"</td><td></td></tr></tbody></table></div>
+<div class="mlabel st">STEP 2 · 실행</div>
+<pre class="py"># TODO: ask("의사-1", ...), ask("의사-2", ...), ask("의사-3", ...)</pre>
+<details class="ans"><summary>예시 답안 · 실행 결과 예</summary>
+<pre class="py">ask("의사-1", "P004 환자 상태 요약해줘")
+ask("의사-2", "P027이랑 비슷한 환자들은 무슨 처방 받았어?")
+ask("의사-3", "급성 인두염은 보통 어떤 처방이야?")</pre>
+<pre class="out ex">Q. P004 환자 상태 요약해줘
+  → get_patient {'patient_id': 'P004'}
+     ← P004 | 38세 남 | 증상 오한/피로감/기침 | 체온 39.1도 | 7일째 | 진단 독감 의심 | 처방 해열제
+  → check_fever {'temp': 39.1}
+     ← 39.1도: 고열 (38.5도 이상)
+  A. P004는 38세 남성으로 7일째 오한 · 피로감 · 기침, 39.1도 고열입니다. 독감 의심으로 해열제를 처방받았습니다.
+
+Q. P027이랑 비슷한 환자들은 무슨 처방 받았어?
+  → get_patient {'patient_id': 'P027'}
+     ← P027 | 6세 여 | 증상 재채기/기침/가래 | 체온 37.9도 | 3일째 | 진단 급성 기관지염 | 처방 항히스타민제
+  → search_records {'query': '6세 재채기 기침 가래 37.9도'}
+     ← [P027] 3일 전부터 시작된 재채기, 기침, 가래(으)로 내원. 내원 시 체온 37.9도로 측정됨. 진찰 결과 급성 기관지염 소견...
+  A. 비슷한 사례[P011][P003]는 해열제, P027 본인은 항히스타민제를 처방받았습니다.
+
+Q. 급성 인두염은 보통 어떤 처방이야?
+  → search_records {'query': '급성 인두염 처방'}
+     ← [P020] 2일 전부터 시작된 근육통, 기침(으)로 내원. 체온 37.0도로 미열은 없음. 진찰 결과 급성 인두염 소견...
+  A. 기록상 급성 인두염은 종합감기약[P020], 수액[P029], 소염제[P022] 처방이 있었습니다.</pre>
+</details>
+<div class="mlabel st">STEP 3 · 확인</div>
+<ul class="checks"><li><input type="checkbox" id="ag4-m3-c1" data-chk="ag4-m3-c1"><label for="ag4-m3-c1">세 질문의 도구 조합이 모두 달랐다</label></li><li><input type="checkbox" id="ag4-m3-c2" data-chk="ag4-m3-c2"><label for="ag4-m3-c2">내 예측과 실제 경로가 다른 곳이 있으면 이유를 적었다</label></li><li><input type="checkbox" id="ag4-m3-c3" data-chk="ag4-m3-c3"><label for="ag4-m3-c3">get_patient 결과의 체온이 check_fever 인자로 옮겨진 것을 확인했다</label></li></ul>
+</div></section></div>
+
+<!-- ============ M4. 이어서 "재진 잡아줘" · 승인과 거부 ============ -->
+<div class="pane" role="tabpanel" id="pane-m4" aria-labelledby="tab-m4" hidden><section><div class="mission" id="ag4-m4" data-mid="ag4-m4"><div class="mhead"><span class="lv lv3">★★★ 도전</span><span class="tgs"><span class="tg ag">MCP·에이전트</span><span class="tg lg1">LangGraph 필수</span></span><h3>M4. 이어서 "재진 잡아줘" · 승인과 거부</h3><label class="mdone"><input type="checkbox" id="ag4-m4-done" data-done="ag4-m4"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>M3의 의사-1이 같은 thread에서 "그 환자 3일 뒤로 재진 잡아줘"라고 이어 말합니다. 환자ID를 다시 말하지 않습니다. 승인해 예약하고, 다른 thread에서는 거부해 행동이 바뀌는지 봅니다.</p>
+<div class="mlabel st">STEP 2 · 작성</div>
+<pre class="py"># TODO: ask("의사-1", "그 환자 3일 뒤로 재진 잡아줘") → 멈춤 확인 → approve → BOOKED 확인
+# TODO: ask("의사-2", "그 환자 내일 재진 잡아줘") → reject(message="미열이고 3일째라 재진 대신 경과 관찰 안내로") → 최종 답 확인</pre>
+<details class="ans"><summary>예시 답안 보기</summary>
+<pre class="py">cfg1, r = ask("의사-1", "그 환자 3일 뒤로 재진 잡아줘")
+if "__interrupt__" in r:
+    r = clinic.invoke(Command(resume={"decisions": [{"type": "approve"}]}), cfg1)
+print("예약 기록:", BOOKED)
+
+cfg2, r = ask("의사-2", "그 환자 내일 재진 잡아줘")
+if "__interrupt__" in r:
+    r = clinic.invoke(Command(resume={"decisions": [{
+        "type": "reject", "message": "미열이고 3일째라 재진 대신 경과 관찰 안내로 바꿔 주세요"}]}), cfg2)
+print(r["messages"][-1].content)
+print("예약 기록:", BOOKED)</pre>
+<pre class="out ex">Q. 그 환자 3일 뒤로 재진 잡아줘
+  → book_followup {'patient_id': 'P004', 'days_later': 3}
+  [멈춤] 승인 대기: book_followup {'patient_id': 'P004', 'days_later': 3}
+
+예약 기록: [('P004', '2026-11-14')]
+Q. 그 환자 내일 재진 잡아줘
+  → book_followup {'patient_id': 'P027', 'days_later': 1}
+  [멈춤] 승인 대기: book_followup {'patient_id': 'P027', 'days_later': 1}
+
+재진은 잡지 않았습니다. P027은 미열(37.9도) 3일째로, 충분한 휴식과 수분 섭취 후 경과를 관찰하고 증상이 심해지면 내원하도록 안내하겠습니다.
+예약 기록: [('P004', '2026-11-14')]</pre>
+</details>
+<div class="mlabel st">STEP 3 · 확인</div>
+<ul class="checks"><li><input type="checkbox" id="ag4-m4-c1" data-chk="ag4-m4-c1"><label for="ag4-m4-c1">"그 환자"를 thread별로 다르게(P004 / P027) 알아들었다</label></li><li><input type="checkbox" id="ag4-m4-c2" data-chk="ag4-m4-c2"><label for="ag4-m4-c2">승인한 예약만 BOOKED에 들어갔다</label></li><li><input type="checkbox" id="ag4-m4-c3" data-chk="ag4-m4-c3"><label for="ag4-m4-c3">거부 사유에 따라 에이전트의 행동이 "예약" → "안내"로 바뀌었다</label></li></ul>
+</div></section></div>
+
+<!-- ============ M5. 설계 판단: 고정 그래프 vs 에이전트 ============ -->
+<div class="pane" role="tabpanel" id="pane-m5" aria-labelledby="tab-m5" hidden><section><div class="mission" id="ag4-m5" data-mid="ag4-m5"><div class="mhead"><span class="lv lv3">★★★ 도전</span><span class="tgs"><span class="tg lg1">LangGraph 필수</span><span class="tg ag">MCP·에이전트</span></span><h3>M5. 설계 판단: 고정 그래프 vs 에이전트</h3><label class="mdone"><input type="checkbox" id="ag4-m5-done" data-done="ag4-m5"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>원장님이 "에이전트는 예측이 안 돼서 불안하다. 고정 그래프로 바꾸자"고 합니다. M3 · M4의 질문을 근거로 판단을 정리합니다.</p>
+<div class="mlabel st">STEP 2 · 표 채우기</div>
+<div class="tw"><table><thead><tr><th>질문 유형</th><th>필요한 도구 조합</th><th>고정 그래프로 만들 수 있나</th><th>추천</th></tr></thead><tbody><tr><td>특정 환자 상태 요약</td><td></td><td></td><td></td></tr><tr><td>비슷한 환자 처방</td><td></td><td></td><td></td></tr><tr><td>진단명별 일반 처방</td><td></td><td></td><td></td></tr><tr><td>재진 예약</td><td></td><td></td><td></td></tr><tr><td>"P004랑 비슷한 환자 중 고열인 사람 재진 잡아줘"</td><td></td><td></td><td></td></tr></tbody></table></div>
+<details class="ans"><summary>예시</summary>
+<div class="tw"><table><thead><tr><th>질문 유형</th><th>필요한 도구 조합</th><th>고정 그래프로</th><th>추천</th></tr></thead><tbody><tr><td>특정 환자 상태 요약</td><td>get_patient → check_fever</td><td>쉬움</td><td>고정 (자주 오고 경로 일정)</td></tr><tr><td>비슷한 환자 처방</td><td>get_patient → search_records</td><td>쉬움</td><td>고정</td></tr><tr><td>진단명별 일반 처방</td><td>search_records</td><td>쉬움</td><td>고정 RAG</td></tr><tr><td>재진 예약</td><td>(get_patient) → book_followup + 승인</td><td>가능</td><td>고정 + interrupt</td></tr><tr><td>복합 요청</td><td>get_patient → search_records → 각 환자 get_patient · check_fever → book_followup 여러 번</td><td><b>경로가 결과에 따라 달라져 어려움</b></td><td>에이전트 (+ 예약 횟수 제한 조정)</td></tr></tbody></table></div>
+<p>결론 예: 자주 오는 단순 유형은 06-3의 라우터로 고정 경로에 보내 예측 가능하게, 복합 · 처음 보는 요청만 에이전트로. 에이전트 쪽은 승인 · 호출 제한 · 대화 기록(감사)으로 불안을 줄인다.</p>
+</details>
+<div class="mlabel st">STEP 3 · 확인</div>
+<ul class="checks"><li><input type="checkbox" id="ag4-m5-c1" data-chk="ag4-m5-c1"><label for="ag4-m5-c1">5개 유형의 도구 조합을 모두 적었다</label></li><li><input type="checkbox" id="ag4-m5-c2" data-chk="ag4-m5-c2"><label for="ag4-m5-c2">에이전트가 꼭 필요한 유형을 하나 이상 찾았다</label></li><li><input type="checkbox" id="ag4-m5-c3" data-chk="ag4-m5-c3"><label for="ag4-m5-c3">"불안하다"는 우려에 답할 안전장치를 세 가지 이상 들었다</label></li></ul>
+</div></section></div>
+
+<footer>LangGraph 교안 · 실습 파일: 06-4_실습_멀티도구에이전트.ipynb · 자료: travel_docs.csv + 가짜 예약 · 운항 시스템(실습), 감기환자 진료 데이터.csv(복습) · 코드 검증: LangGraph 1.2.20 · langchain 1.4.10 (2026-11-11)</footer>
+</main>
+</div>
+<script>
+(function(){
+  function sync(){ document.querySelectorAll('input[data-done]').forEach(i => {
+    const t = document.getElementById('tab-' + i.dataset.done.replace('ag4-', ''));
+    if (t) t.classList.toggle('done', i.checked); }); }
+  document.addEventListener('change', e => { if (e.target.matches('input[data-done]')) sync(); });
+  window.addEventListener('load', sync);
+})();
+</script>
+
+
+<script>
+(function(){
+  const UNITS = {"ag4": ["ag4-m1", "ag4-m2", "ag4-m3", "ag4-m4", "ag4-m5"]};
+  const KEY = 'lg-missions-v1';
+  let st = {};
+  try { st = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch(e) { st = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch(e) {} };
+
+  // 코드 하이라이트 + 복사
+  const KW = /^(from|import|def|return|for|in|if|elif|else|not|and|or|with|as|class|lambda|True|False|None|try|except|finally|await|yield|is|raise|continue|print)$/;
+  const RE = /("""[\s\S]*?"""|f?"(?:[^"\\\n]|\\.)*"|f?'(?:[^'\\\n]|\\.)*'|#[^\n]*|\b[A-Za-z_]+\b)/g;
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  function selectText(el){ const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+  document.querySelectorAll('pre.py').forEach(pre => {
+    const src = pre.textContent; let out = '', last = 0, m; RE.lastIndex = 0;
+    while ((m = RE.exec(src))) {
+      out += esc(src.slice(last, m.index)); const t = m[0];
+      if (t[0] === '#') out += '<span class="c">' + esc(t) + '</span>';
+      else if (t[0] === '"' || t[0] === "'" || (t[0] === 'f' && (t[1] === '"' || t[1] === "'"))) out += '<span class="s">' + esc(t) + '</span>';
+      else if (KW.test(t)) out += '<span class="k">' + t + '</span>';
+      else out += esc(t);
+      last = m.index + t.length;
+    }
+    pre.innerHTML = out + esc(src.slice(last));
+    const wrap = document.createElement('div'); wrap.style.position = 'relative';
+    pre.parentNode.insertBefore(wrap, pre); wrap.appendChild(pre);
+    const b = document.createElement('button'); b.className = 'copy'; b.type = 'button'; b.textContent = '복사';
+    b.style.cssText = 'position:absolute;top:8px;right:8px';
+    b.addEventListener('click', () => {
+      const ok = () => { b.textContent = '복사됨'; setTimeout(() => b.textContent = '복사', 1400); };
+      const fail = () => { selectText(pre); b.textContent = '선택됨'; };
+      try { navigator.clipboard.writeText(src).then(ok, fail); } catch(e) { fail(); }
+    });
+    wrap.appendChild(b);
+  });
+
+  // 미션 체크 상태
+  document.querySelectorAll('input[data-done],input[data-chk]').forEach(inp => {
+    const k = inp.dataset.done || inp.dataset.chk;
+    inp.checked = !!st[k];
+    inp.addEventListener('change', () => { st[k] = inp.checked; save(); paint(); });
+  });
+  function paint(){
+    document.querySelectorAll('.mission').forEach(m => m.classList.toggle('is-done', !!st[m.dataset.mid]));
+    let total = 0, done = 0;
+    Object.keys(UNITS).forEach(u => {
+      const ids = UNITS[u]; const d = ids.filter(id => st[id]).length;
+      total += ids.length; done += d;
+      document.querySelectorAll('[data-mc="' + u + '"]').forEach(el => el.textContent = d + '/' + ids.length);
+      document.querySelectorAll('[data-u="' + u + '"]').forEach(el => el.classList.toggle('full', d === ids.length));
+      document.querySelectorAll('[data-bar="' + u + '"]').forEach(el => el.style.width = (d / ids.length * 100) + '%');
+    });
+    const pb = document.getElementById('progbar'); if (pb) pb.style.width = (done / total * 100) + '%';
+    const pt = document.getElementById('progtext'); if (pt) pt.textContent = '미션 ' + done + ' / ' + total + ' 완료';
+    const mp = document.getElementById('mprog'); const cur = document.body.dataset.unit;
+    if (mp && cur) { const ids = UNITS[cur]; mp.textContent = '· 완료 ' + ids.filter(id => st[id]).length + ' / ' + ids.length; }
+    const mc = document.getElementById('mcount'); if (mc && cur) { const ids = UNITS[cur]; mc.textContent = ids.filter(id => st[id]).length + '/' + ids.length; }
+  }
+  paint();
+})();
+</script>
+
+<script>
+(function(){
+  const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+  if (!tabs.length) return;
+  const ids = tabs.map(t => t.dataset.t);
+  function show(id, push){
+    tabs.forEach(t => { const on = t.dataset.t === id; t.setAttribute('aria-selected', on ? 'true' : 'false'); t.tabIndex = on ? 0 : -1;
+      if (on) t.scrollIntoView({block:'nearest', inline:'nearest'}); });
+    document.querySelectorAll('[role="tabpanel"]').forEach(p => p.hidden = p.id !== 'pane-' + id);
+    if (push) { try { history.replaceState(null, '', '#' + id); } catch(e){} window.scrollTo({top: 0}); }
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => show(t.dataset.t, true));
+    t.addEventListener('keydown', e => {
+      const f = e.key === 'ArrowDown' || e.key === 'ArrowRight', b = e.key === 'ArrowUp' || e.key === 'ArrowLeft';
+      if (!f && !b) return; e.preventDefault();
+      const n = tabs[(i + (f ? 1 : tabs.length - 1)) % tabs.length]; n.focus(); show(n.dataset.t, true);
+    });
+  });
+  const h = location.hash.slice(1);
+  show(ids.includes(h) ? h : 'intro', false);
+  window.addEventListener('hashchange', () => { const x = location.hash.slice(1); if (ids.includes(x)) show(x, false); });
+})();
+</script>
+</body>
+</html>

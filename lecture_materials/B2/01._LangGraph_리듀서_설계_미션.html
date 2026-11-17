@@ -1,0 +1,872 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>리듀서 설계 · LangGraph 교안</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{word-break:keep-all;overflow-wrap:break-word;font-family:var(--body)}
+
+/* Layout: 왼쪽 고정 사이드바(단원 목차) + 오른쪽 본문 패널. 휴대폰 폭에서는 사이드바가 상단 가로 스크롤 바로 바뀜 */
+:root{
+  --bg:#f6f7fb; --paper:#ffffff; --ink:#1b2236; --muted:#5a6380; --line:#d9deeb;
+  --node:#24305e; --nodeText:#ffffff; --edge:#9aa4c2;
+  --teal:#0f8f83; --amber:#d98a1f; --coral:#d4553f; --violet:#6b5bd2;
+  --soft:#eef1f9; --tealSoft:#e2f4f1; --amberSoft:#fbf0dd; --coralSoft:#fbe7e3;
+  --code:#ffffff; --codeLine:#c9d0e2; --codeCmt:#6a7697; --outBg:#f4fbfa; --shadow:rgba(27,34,54,.08);
+  --kw:#6b5bd2; --str:#0f7d73; --fn:#b4561f;
+  --display:"Do Hyeon","IBM Plex Sans KR","Malgun Gothic",sans-serif;
+  --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12151f; --paper:#1a1e2b; --ink:#e7eaf4; --muted:#a2aac2; --line:#2e3447;
+  --node:#8f9cf0; --nodeText:#10131c; --edge:#5b6584;
+  --teal:#3cc4b5; --amber:#f0b04f; --coral:#f07a63; --violet:#a597ff;
+  --soft:#222839; --tealSoft:#163331; --amberSoft:#3a2e17; --coralSoft:#3d211c; --code:#0d1017; --codeLine:#3a4157; --codeCmt:#8d97b5; --outBg:#10201f; --shadow:rgba(0,0,0,.3);
+  --kw:#b3a8ff; --str:#5fd3c4; --fn:#f0a36a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12151f; --paper:#1a1e2b; --ink:#e7eaf4; --muted:#a2aac2; --line:#2e3447;
+  --node:#8f9cf0; --nodeText:#10131c; --edge:#5b6584;
+  --teal:#3cc4b5; --amber:#f0b04f; --coral:#f07a63; --violet:#a597ff;
+  --soft:#222839; --tealSoft:#163331; --amberSoft:#3a2e17; --coralSoft:#3d211c; --code:#0d1017; --codeLine:#3a4157; --codeCmt:#8d97b5; --outBg:#10201f; --shadow:rgba(0,0,0,.3);
+  --kw:#b3a8ff; --str:#5fd3c4; --fn:#f0a36a; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:16px/1.75 var(--body);margin:0;word-break:keep-all;overflow-wrap:break-word}
+.panel{margin-top:30px;padding-top:24px;border-top:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+.layout{max-width:1220px;margin:0 auto;display:grid;grid-template-columns:252px minmax(0,1fr);gap:40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{min-width:0;padding-block:28px 64px;max-width:900px}
+h1,h2,h3{text-wrap:balance}
+h1{font:400 clamp(30px,5vw,44px)/1.2 var(--display);margin:6px 0 10px;letter-spacing:.5px}
+h2{font:400 28px/1.3 var(--display);margin:0 0 6px;display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+h2 .no{font:inherit;color:var(--teal)}
+h3{font-size:18px;margin:26px 0 6px}
+h4{font-size:16px;margin:18px 0 4px}
+p{margin:8px 0;max-width:72ch}
+ol,ul{padding-left:22px;margin:8px 0}
+li{margin:4px 0}
+.lead{color:var(--muted);font-size:17px}
+.kicker{font:600 12px var(--mono);letter-spacing:2px;color:var(--teal);text-transform:uppercase}
+.byline{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.6}
+section{margin-top:40px}
+.panel > section:first-child{margin-top:8px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.card h4{margin-top:0}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+code,.mono{font-family:var(--mono);font-size:.9em}
+code{background:var(--soft);padding:1px 6px;border-radius:5px;word-break:break-word}
+pre{background:var(--code);border:1px solid var(--codeLine);box-shadow:0 1px 3px var(--shadow);border-radius:10px;padding:14px 16px;overflow-x:auto;font:13.5px/1.6 var(--mono);margin:8px 0;color:var(--ink);tab-size:4}
+pre .c{color:var(--codeCmt);font-style:italic}
+pre .s{color:var(--str)}
+pre .k{color:var(--kw);font-weight:600}
+pre.out{background:var(--outBg);border-style:dashed;box-shadow:none;white-space:pre-wrap;word-break:break-word;font-size:13px}
+pre.out::before{content:"출력";display:block;font:600 11px var(--mono);letter-spacing:1.5px;color:var(--teal);margin-bottom:4px}
+pre.out.ex::before{content:"출력 예시 · 모델 답변은 실행마다 달라짐"}
+pre.err{background:var(--coralSoft);border-color:var(--coral);box-shadow:none;white-space:pre-wrap;word-break:break-word;font-size:13px}
+pre.err::before{content:"에러";display:block;font:600 11px var(--mono);letter-spacing:1.5px;color:var(--coral);margin-bottom:4px}
+.codehead{display:flex;justify-content:space-between;align-items:center;gap:8px;font:600 12px var(--mono);color:var(--muted);margin:16px 0 -4px;flex-wrap:wrap}
+.copy{font:500 12px var(--body);border:1px solid var(--line);background:var(--paper);color:var(--muted);border-radius:6px;padding:2px 10px;cursor:pointer}
+.copy:hover{color:var(--ink)}
+.tw{overflow-x:auto;margin:10px 0}
+table{border-collapse:collapse;font-size:14px;min-width:100%}
+th,td{border-bottom:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+th{background:var(--soft);font-weight:600;white-space:nowrap}
+td code{white-space:nowrap}
+.note{background:var(--amberSoft);border-radius:10px;padding:12px 14px;font-size:15px;margin-top:12px}
+.note b{color:var(--amber)}
+.ragbox{background:var(--tealSoft);border-left:4px solid var(--teal);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:15px}
+.ragbox b{color:var(--teal)}
+.warn{background:var(--coralSoft);border-left:4px solid var(--coral);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:15px}
+.warn b{color:var(--coral)}
+.fix{background:var(--soft);border-left:4px solid var(--violet);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:15px}
+.fix b{color:var(--violet)}
+.note p,.ragbox p,.warn p,.fix p{margin:4px 0}
+.note ul,.ragbox ul,.warn ul,.fix ul{margin:4px 0}
+.fig{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px;overflow-x:auto;margin-top:12px}
+.fig svg{display:block;width:100%;height:auto;min-width:560px}
+svg text{font-family:var(--body)}
+.cap{font-size:13px;color:var(--muted);margin:6px 4px 0}
+.chip{display:inline-block;font:500 12px var(--body);padding:1px 10px;border-radius:999px;background:var(--soft);color:var(--muted);vertical-align:middle}
+.chip.ok{background:var(--tealSoft);color:var(--teal)}
+.chip.draft{background:var(--amberSoft);color:var(--amber)}
+.chip.ai{background:var(--coralSoft);color:var(--coral)}
+a{color:var(--teal)}
+.example{background:var(--soft);border-radius:10px;padding:12px 16px;margin:10px 0;font-size:15.5px}
+.example b{color:var(--node)}
+.steps{list-style:none;padding:0;margin:10px 0 0;counter-reset:st}
+.steps>li{counter-increment:st;padding:10px 0;border-top:1px dashed var(--line);margin:0}
+.steps>li::before{content:counter(st) ". ";font:600 14px var(--mono);color:var(--teal)}
+.steps>li:first-child{border-top:0}
+.steps .lbl{font-weight:700;color:var(--node)}
+.think{margin-top:8px;font-size:14.5px;color:var(--muted)}
+.think-h{display:inline-block;font:600 12px var(--body);color:var(--muted);margin-right:6px}
+mark{background:var(--amberSoft);color:inherit;border-bottom:2px solid var(--amber);padding:0 1px}
+details{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-top:8px}
+details summary{cursor:pointer;font-weight:600}
+details[open] summary{margin-bottom:6px}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:500 13.5px var(--mono);margin:10px 0}
+.flow span{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:4px 10px}
+.flow span.n{background:var(--node);color:var(--nodeText);border-color:var(--node)}
+.flow i{font-style:normal;color:var(--edge)}
+
+/* sidebar */
+.side{position:sticky;top:env(safe-area-inset-top,0px);align-self:start;max-height:100vh;overflow-y:auto;padding-block:28px 28px;scrollbar-width:thin}
+.side .brand{font:400 22px/1.2 var(--display);margin-bottom:2px}
+.side .brand-sub{font-size:12.5px;color:var(--muted);margin-bottom:14px}
+.prog{height:6px;background:var(--soft);border-radius:999px;overflow:hidden;margin:0 0 4px}
+.prog i{display:block;height:100%;width:0;background:var(--teal);transition:width .3s}
+.prog-t{font:500 12px var(--mono);color:var(--muted);margin-bottom:14px}
+.grp{font:600 11px var(--mono);letter-spacing:1.6px;color:var(--teal);text-transform:uppercase;margin:16px 0 6px}
+.navlist{display:flex;flex-direction:column;gap:2px}
+.navlist button{display:grid;grid-template-columns:28px minmax(0,1fr) 16px;align-items:center;gap:4px;width:100%;text-align:left;font:500 14px/1.35 var(--body);border:0;background:transparent;color:var(--ink);border-radius:8px;padding:7px 8px;cursor:pointer}
+.navlist button .n{font:600 12px var(--mono);color:var(--muted)}
+.navlist button .d{font-size:12px;color:var(--teal);visibility:hidden}
+.navlist button.done .d{visibility:visible}
+.navlist button:hover{background:var(--soft)}
+.navlist button[aria-selected="true"]{background:var(--node);color:var(--nodeText)}
+.navlist button[aria-selected="true"] .n,.navlist button[aria-selected="true"] .d{color:var(--nodeText)}
+.navlist button:focus-visible,.pager button:focus-visible,.copy:focus-visible,.donebtn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+
+/* panel footer */
+.pfoot{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center}
+.donebtn{font:600 14px var(--body);border:2px solid var(--teal);background:var(--paper);color:var(--teal);border-radius:999px;padding:6px 16px;cursor:pointer}
+.donebtn[aria-pressed="true"]{background:var(--teal);color:var(--paper)}
+.pager{display:flex;gap:8px;flex-wrap:wrap}
+.pager button{font:500 14px var(--body);border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:6px 14px;cursor:pointer;max-width:100%}
+.pager button[disabled]{opacity:.4;cursor:default}
+footer{margin-top:50px;font-size:13px;color:var(--muted)}
+
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr);gap:0}
+  .side{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);max-height:none;overflow:visible;padding-block:10px;border-bottom:1px solid var(--line);margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .side .brand,.side .brand-sub,.grp,.prog,.prog-t{display:none}
+  .navwrap{display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin;padding-bottom:2px}
+  .navlist{flex-direction:row;gap:6px}
+  .navlist button{display:flex;flex:0 0 auto;width:auto;white-space:nowrap;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13.5px}
+  .navlist button .d{display:none}
+  .navlist button.done .n{color:var(--teal)}
+  main{padding-top:18px}
+}
+@media (max-width:600px){h2{font-size:24px} pre{font-size:12.5px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+.tg{display:inline-block;font:600 11.5px/1.5 var(--body);border-radius:5px;padding:1px 7px;margin-left:6px;vertical-align:middle;white-space:nowrap;letter-spacing:.2px}
+.tg.rag{background:var(--tealSoft);color:var(--teal);border:1px solid var(--teal)}
+.tg.lg1{background:var(--violet);color:var(--paper);border:1px solid var(--violet)}
+.tg.ag{background:var(--amberSoft);color:var(--amber);border:1px solid var(--amber)}
+.sm.ag{background:var(--amber);border-radius:2px}
+.tg.lg2{background:transparent;color:var(--violet);border:1px dashed var(--violet)}
+h2 .tg{font-size:12px;position:relative;top:-3px}
+.mhead .tgs{display:inline-flex;gap:0}
+.mhead .tgs .tg:first-child{margin-left:0}
+.sm{display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:6px;vertical-align:middle}
+.sm.rag{background:var(--teal)}
+.sm.lg1{background:var(--violet)}
+.sm.lg2{border:1.5px solid var(--violet)}
+.mhead .tgs:empty{display:none}
+.navlist a[aria-current="page"] .sm{box-shadow:0 0 0 1.5px var(--nodeText)}
+.bridge{display:grid;gap:6px;margin-top:14px}
+.bridge div{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:baseline;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14.5px;line-height:1.6}
+.bridge .tg{margin-left:0}
+.legend2{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:13px;color:var(--muted);margin-top:8px}
+.legend2 .tg{margin-left:0}
+.path{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin-top:10px}
+.path .card h4{margin:0 0 6px}
+.path ol{margin:4px 0 0}
+.ucard .tgrow{display:flex;flex-wrap:wrap;gap:4px}
+.ucard .tgrow .tg{margin-left:0}
+
+.copyright{font-size:14px;color:var(--muted);line-height:1.6;margin-top:8px}
+/* 탭: 모든 화면 폭에서 왼쪽 세로 배치 */
+@media (max-width:900px){
+  .layout{grid-template-columns:200px minmax(0,1fr) !important;gap:22px !important}
+  .side{position:sticky !important;top:env(safe-area-inset-top,0px) !important;max-height:100vh !important;overflow-y:auto !important;border-bottom:0 !important;margin:0 !important;padding:22px 0 !important;background:transparent !important}
+  .side .brand,.side .brand-sub{display:block !important}
+  .navwrap{display:block !important;overflow:visible !important}
+  .navlist{flex-direction:column !important;gap:2px !important}
+  .navlist button{display:grid !important;grid-template-columns:26px minmax(0,1fr) auto !important;width:100% !important;white-space:normal !important;border:0 !important;background:transparent !important;border-radius:8px !important;padding:7px 6px !important;font-size:14px !important}
+  .navlist button[aria-selected="true"]{background:var(--node) !important}
+  .navlist button .sm{display:inline-block !important}
+  main{padding-top:24px !important}
+}
+@media (max-width:600px){
+  .layout{grid-template-columns:112px minmax(0,1fr) !important;gap:12px !important}
+  .navlist button{grid-template-columns:minmax(0,1fr) auto !important;font-size:13px !important;padding:6px 5px !important}
+  .navlist button .n,.navlist button .sm,.side .brand-sub{display:none !important}
+  .side .brand{font-size:15px !important}
+}
+.view{margin-top:26px;background:var(--paper);border:1px solid var(--line);border-left:5px solid var(--violet);border-radius:12px;padding:14px 18px 10px}
+.view-h{font:700 15px var(--body);color:var(--violet);letter-spacing:.3px;margin-bottom:4px}
+.view ul{margin:4px 0 0;padding-left:20px}
+.view li{margin:10px 0;line-height:1.8}
+.view li b{color:var(--ink)}
+/* 가독성: 글꼴 크기 */
+body{font-size:17.5px;line-height:1.85}
+p{max-width:78ch}
+h1{font-size:clamp(32px,5vw,46px)}
+h2{font-size:31px}
+h3{font-size:20.5px;margin-top:30px}
+h4{font-size:17.5px}
+pre{font-size:15px;line-height:1.7}
+pre.out,pre.err{font-size:14.5px}
+table{font-size:15.5px}
+th,td{padding:9px 12px}
+.cap{font-size:14.5px}
+.note,.warn,.ragbox,.fix{font-size:16px}
+.goal{font-size:16.5px}
+.navlist button{font-size:15.5px !important}
+.side .brand-sub{font-size:13.5px}
+.checks li{font-size:16px}
+.mhead h3{font-size:19.5px}
+.lv{font-size:13px}
+.tg{font-size:12.5px}
+.bridge div{font-size:15.5px}
+.legend2{font-size:14px}
+@media (max-width:600px){body{font-size:17px} pre{font-size:13.5px} h2{font-size:26px} table{font-size:14.5px}}
+
+.solo{max-width:1100px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.solo main{max-width:none}
+.navlist button{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:start;gap:4px;width:100%;text-align:left;font:500 14px/1.4 var(--body);border:0;background:transparent;color:var(--ink);border-radius:8px;padding:8px 8px;cursor:pointer}
+.navlist button .n{font:600 12px/1.6 var(--mono);color:var(--muted)}
+.navlist button .mc{font:500 11px var(--mono);color:var(--muted)}
+.navlist button:hover{background:var(--soft)}
+.navlist button[aria-selected="true"]{background:var(--node);color:var(--nodeText)}
+.navlist button[aria-selected="true"] .n,.navlist button[aria-selected="true"] .mc{color:var(--nodeText)}
+.navlist button[aria-selected="true"] .sm{box-shadow:0 0 0 1.5px var(--nodeText)}
+.navlist button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.side .brand{font:400 24px/1.25 var(--display);margin-bottom:4px}
+.uhead{padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:22px}
+.uhead h1{margin-bottom:0}
+.pane > section{margin-top:0}
+.pane #missions{margin-top:0;padding-top:0;border-top:0}
+.pane > section > h2{margin-bottom:12px}
+@media (max-width:900px){
+  .navlist button{display:flex;flex:0 0 auto;width:auto;white-space:nowrap;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13.5px;gap:6px}
+  .navlist button .sm{display:none}
+  .side .brand{font-size:18px}
+}
+
+.time{font:600 14px var(--body);color:var(--ink);margin-top:2px}
+.time span{font-weight:400;color:var(--muted)}
+.goal{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--node);border-radius:10px;padding:10px 14px;margin-top:12px;font-size:15px}
+.goal b{color:var(--node)}
+.goal ul{margin:4px 0 0}
+.sumlist{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 18px 14px 36px;margin-top:10px}
+.sumlist li{margin:6px 0}
+.ucard .tm{font:500 12px var(--mono);color:var(--muted)}
+
+.navlist a{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:4px;width:100%;font:500 14px/1.35 var(--body);color:var(--ink);text-decoration:none;border-radius:8px;padding:7px 8px}
+.navlist a .n{font:600 12px var(--mono);color:var(--muted)}
+.navlist a .mc{font:500 11px var(--mono);color:var(--muted)}
+.navlist a.full .mc{color:var(--teal);font-weight:600}
+.navlist a:hover{background:var(--soft)}
+.navlist a[aria-current="page"]{background:var(--node);color:var(--nodeText)}
+.navlist a[aria-current="page"] .n,.navlist a[aria-current="page"] .mc{color:var(--nodeText)}
+.navlist a:focus-visible,.pager a:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.side .brand a{color:inherit;text-decoration:none}
+.unit-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+.unit-meta a.go{font:600 13px var(--body);background:var(--teal);color:var(--paper);text-decoration:none;border-radius:999px;padding:4px 14px}
+.unit-panel{margin-top:30px;padding-top:24px;border-top:1px solid var(--line)}
+.unit-panel > section:first-child{margin-top:0}
+/* missions */
+#missions{scroll-margin-top:72px;margin-top:56px;padding-top:28px;border-top:3px double var(--line)}
+.mlegend{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 6px}
+.mprog{font:500 13px var(--mono);color:var(--muted)}
+.mission{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-top:16px;scroll-margin-top:70px}
+.mission.is-done{border-color:var(--teal);background:linear-gradient(var(--outBg),var(--outBg))}
+.mhead{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.mhead h3{margin:0;font-size:18px;flex:1 1 220px;min-width:0}
+.lv{font:600 12px var(--body);border-radius:6px;padding:2px 9px;white-space:nowrap}
+.lv1{background:var(--tealSoft);color:var(--teal)}
+.lv2{background:var(--amberSoft);color:var(--amber)}
+.lv3{background:var(--coralSoft);color:var(--coral)}
+.mdone{display:inline-flex;align-items:center;gap:6px;font:600 13px var(--body);color:var(--muted);cursor:pointer;border:1px solid var(--line);border-radius:999px;padding:3px 12px;background:var(--bg)}
+.mdone input{accent-color:var(--teal);width:16px;height:16px;margin:0}
+.mission.is-done .mdone{color:var(--teal);border-color:var(--teal)}
+.mlabel{font:600 11px var(--mono);letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin:14px 0 2px}
+.checks{list-style:none;padding:0;margin:4px 0 0}
+.checks li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:6px;align-items:start;margin:3px 0;font-size:15px}
+.checks input{accent-color:var(--teal);width:16px;height:16px;margin:5px 0 0}
+.checks label{cursor:pointer}
+.mission details{margin-top:10px}
+.mission details.ans summary{color:var(--violet)}
+.mission details.hint summary{color:var(--amber)}
+.mission .note{margin-top:10px}
+.pager{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;width:100%}
+.pager a{font:500 14px var(--body);border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:8px 14px;text-decoration:none;max-width:100%}
+.pager a:hover{border-color:var(--teal)}
+.pager .sp{flex:1}
+@media (max-width:900px){
+  .navlist a{display:flex;flex:0 0 auto;width:auto;white-space:nowrap;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13.5px;gap:6px}
+  .navlist a .mc{display:none}
+  .navlist a.full .n{color:var(--teal)}
+}
+/* index */
+.ucards{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));margin-top:10px}
+.ucard{display:flex;flex-direction:column;gap:6px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-decoration:none;color:var(--ink);min-width:0}
+.ucard:hover{border-color:var(--teal)}
+.ucard .n{font:600 12px var(--mono);color:var(--teal)}
+.ucard b{font-size:16px}
+.ucard .d{font-size:13.5px;color:var(--muted);line-height:1.55}
+.ucard .bar{height:5px;background:var(--soft);border-radius:999px;overflow:hidden;margin-top:auto}
+.ucard .bar i{display:block;height:100%;width:0;background:var(--teal)}
+.ucard .mc{font:500 12px var(--mono);color:var(--muted)}
+</style>
+</head>
+<body data-unit="reducer">
+<style>
+.mission .mlabel.st{font:700 13px var(--body);letter-spacing:.5px;color:var(--teal);text-transform:none;margin-top:22px;padding-top:12px;border-top:1px dashed var(--line)}
+.mission .mlabel.st:first-of-type{border-top:0;padding-top:0}
+.qcard{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:10px;padding:10px 14px;margin-top:10px}
+.qcard b{color:var(--teal)}
+.navlist .grp{margin:14px 8px 4px;display:flex;justify-content:space-between}
+</style>
+<div class="layout">
+<aside class="side" aria-label="소단원">
+<div class="brand">리듀서 Reducer</div>
+<div class="brand-sub">LangGraph 교안 · 상태 설계</div>
+<nav class="navwrap" role="tablist" aria-label="소단원" aria-orientation="vertical"><div class="navlist">
+<button type="button" role="tab" id="tab-intro" aria-controls="pane-intro" data-t="intro"><span class="n">0</span><span>리듀서란</span></button>
+<button type="button" role="tab" id="tab-design" aria-controls="pane-design" data-t="design"><span class="n">1</span><span>리듀서 설계 이슈<i class="sm rag" title="RAG"></i><i class="sm lg1" title="LangGraph 필수"></i></span></button>
+<button type="button" role="tab" id="tab-ex1" aria-controls="pane-ex1" data-t="ex1"><span class="n">2</span><span>실제예 ① 하이브리드 검색<i class="sm rag" title="RAG"></i></span></button>
+<button type="button" role="tab" id="tab-ex2" aria-controls="pane-ex2" data-t="ex2"><span class="n">3</span><span>실제예 ② 상담원 답변 검토<i class="sm ag" title="에이전트"></i></span></button>
+<div class="grp"><span>미션</span><span class="mc" id="mcount">0/5</span></div>
+<button type="button" role="tab" id="tab-m1" aria-controls="pane-m1" data-t="m1"><span class="n">M1</span><span>답변이 사라지는 챗봇</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m2" aria-controls="pane-m2" data-t="m2"><span class="n">M2</span><span>재검색 RAG 상태 예측</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m3" aria-controls="pane-m3" data-t="m3"><span class="n">M3</span><span>재시도 3번인데 7?</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m4" aria-controls="pane-m4" data-t="m4"><span class="n">M4</span><span>중복 문서 합치기</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m5" aria-controls="pane-m5" data-t="m5"><span class="n">M5</span><span>긴 상담 대화 정리</span><span class="d">✓</span></button>
+</div></nav></aside>
+<main>
+<header class="uhead"><div class="kicker">LangGraph 교안 · 상태</div><h1>리듀서 Reducer</h1><div class="copyright">© 2026 부성순 · AI·클라우드 실무 과정<br>부성순 (bakpak@empas.com)</div></header>
+
+<!-- ============ 0. 리듀서란 ============ -->
+<div class="pane" role="tabpanel" id="pane-intro" aria-labelledby="tab-intro"><section><h2><span class="no">0</span>리듀서란</h2>
+<div class="note"><b>전제</b> TypedDict로 상태를 정의하고, 노드·엣지로 START → 노드 → END 그래프를 그려 본 상태입니다.</div>
+<h3>한 문장 정의</h3>
+<p>노드는 상태 전체가 아니라 <b>바꿀 키만</b> 돌려줍니다. 리듀서는 그 새 값을 기존 값과 <b>어떻게 합칠지</b> 정하는 함수입니다.</p>
+<div class="flow"><span>기존 값</span><i>+</i><span>노드가 돌려준 새 값</span><i>→</i><span class="n">리듀서 함수</span><i>→</i><span>저장될 값</span></div>
+<h3>모양: Annotated[타입, 함수]</h3>
+<pre class="py">from typing import Annotated
+from typing_extensions import TypedDict
+from operator import add
+
+class RagState(TypedDict):
+    question: str                      # 함수 없음 → 새 값으로 덮어쓰기
+    docs: Annotated[list[str], add]    # add 함수 → 기존 docs + 새 docs</pre>
+<div class="fix"><b>add는 함수입니다</b> 파이썬 기본 함수로 <code>+</code>와 같습니다. <code>add([1], [2])</code> → <code>[1, 2]</code>. 직접 만든 함수를 넣어도 똑같이 동작합니다.</div>
+<pre class="py">def 이어붙이기(old, new):          # 리듀서 = (기존값, 새값)을 받아 합친 값을 돌려주는 함수
+    return old + new
+
+docs: Annotated[list[str], 이어붙이기]   # Annotated[list[str], add] 와 같음</pre>
+<div class="note"><b>이름 주의</b> <code>add</code>(파이썬 함수) · <code>add_messages</code>(LangGraph의 메시지용 리듀서) · <code>add_node</code>/<code>add_edge</code>(그래프 메서드, 리듀서와 무관)는 서로 다른 것입니다.</div>
+<h3>더 읽을거리 (위키독스)</h3>
+<ul>
+<li><a href="https://wikidocs.net/293355" target="_blank" rel="noopener">1-3-2-3. 리듀서(Reducer) - 상태 업데이트</a></li>
+<li><a href="https://wikidocs.net/319006" target="_blank" rel="noopener">1-3-2-4. MessagesState - 대화형 앱의 상태 관리</a></li>
+</ul>
+<p class="cap">위키독스 1-3-2-4의 operator.add 비교 예시는 <code>role</code> 없는 dict를 쓰는데, 실제 add_messages에서는 ValueError가 납니다. 메시지 객체를 쓰거나 <code>"role"</code>을 넣으세요.</p>
+</section></div>
+
+<!-- ============ 1. 설계 이슈 ============ -->
+<div class="pane" role="tabpanel" id="pane-design" aria-labelledby="tab-design" hidden><section><h2><span class="no">1</span>리듀서 설계 이슈<span class="tg rag">RAG</span><span class="tg lg1">LangGraph 필수</span></h2>
+<h3>왜 설계가 먼저인가</h3>
+<p>리듀서를 잘못 고르면 대부분 <b>에러 없이 결과만 틀립니다</b>. 대화가 사라지거나, 횟수를 두 번 세거나, 같은 문서가 두 번 들어갑니다. 그래서 코드를 쓰기 전에 <b>상태의 필드마다</b> 아래 4가지 질문에 답해 두는 것이 리듀서 설계입니다.</p>
+<h3>필드마다 던질 4가지 질문</h3>
+<div class="qcard"><b>Q1. 이 키에 쓰는 노드는 몇 개인가?</b><br>하나뿐이면 대개 덮어쓰기로 충분합니다. 여러 노드가 쓰면 Q2, Q3를 꼭 따져 봅니다.</div>
+<div class="qcard"><b>Q2. 같은 단계에서 동시에 쓰는가? (병렬)</b><br>그렇다면 리듀서가 <b>반드시</b> 필요합니다. 없으면 <code>InvalidUpdateError</code>로 멈춥니다.</div>
+<div class="qcard"><b>Q3. 새 값이 오면 기존 값은 어떻게 하나?</b><br>버린다(최신만 의미) · 쌓는다 · 골라 남긴다(최고값, 중복 제거) · 같은 것만 고친다(id) 중 하나입니다.</div>
+<div class="qcard"><b>Q4. 노드는 무엇을 돌려주나?</b><br>"전체 값"인가 "이번에 생긴 몫"인가. 쌓는 리듀서에는 <b>이번 몫만</b> 돌려줘야 합니다. Q3과 한 쌍입니다.</div>
+<h3>Q3의 답 → 리듀서</h3>
+<div class="tw"><table><thead><tr><th>새 값이 오면</th><th>리듀서</th><th>선언</th><th>예</th></tr></thead><tbody>
+<tr><td>버린다 (최신만)</td><td>없음</td><td><code>step: str</code></td><td>현재 단계, 재작성한 질문</td></tr>
+<tr><td>쌓는다</td><td>add</td><td><code>Annotated[list, add]</code></td><td>검색 문서, 로그, 토큰 수 합계</td></tr>
+<tr><td>골라 남긴다</td><td>직접 만든 함수</td><td><code>Annotated[float, keep_max]</code></td><td>최고 점수, 중복 없는 문서, 최근 N개</td></tr>
+<tr><td>같은 것만 고친다</td><td>add_messages</td><td><code>MessagesState</code> 상속</td><td>대화·도구 호출 기록 (id 기준)</td></tr>
+</tbody></table></div>
+<h3>설계를 안 하면 생기는 5가지 문제</h3>
+<div class="tw"><table><thead><tr><th>증상</th><th>원인 (놓친 질문)</th><th>해결</th><th>어디서</th></tr></thead><tbody>
+<tr><td>이전 대화·문서가 사라짐</td><td>쌓아야 하는데 리듀서 없음 (Q3)</td><td>add</td><td>M1</td></tr>
+<tr><td>InvalidUpdateError</td><td>병렬로 같은 키에 씀 (Q2)</td><td>add 또는 직접 함수</td><td>실제예 ①</td></tr>
+<tr><td>횟수가 두 배 이상</td><td>add인데 노드가 누적값을 돌려줌 (Q4)</td><td>노드는 이번 몫만</td><td>M3</td></tr>
+<tr><td>같은 문서·메시지가 두 번</td><td>"쌓기"와 "골라 남기기"를 구분 안 함 (Q3)</td><td>직접 함수 · add_messages</td><td>실제예 ② · M4</td></tr>
+<tr><td>대화가 끝없이 길어져 토큰 폭증</td><td>쌓기만 하고 줄이는 규칙 없음 (Q3)</td><td>최근 N개 · 요약 후 삭제</td><td>M5</td></tr>
+</tbody></table></div>
+<h3>설계표 예: 사내 규정 RAG</h3>
+<p>코드 전에 이 표를 먼저 채웁니다. 미션에서도 매번 이 표를 채우는 것이 STEP 2입니다.</p>
+<div class="tw"><table><thead><tr><th>필드</th><th>Q1 쓰는 노드</th><th>Q2 동시?</th><th>Q3 새 값이 오면</th><th>Q4 노드가 돌려주는 것</th><th>리듀서</th></tr></thead><tbody>
+<tr><td>question</td><td>없음(입력)</td><td>-</td><td>-</td><td>-</td><td>없음</td></tr>
+<tr><td>rewritten</td><td>rewrite</td><td>아니오</td><td>버림</td><td>새 질문</td><td>없음</td></tr>
+<tr><td>docs</td><td>vector, bm25</td><td><b>예</b></td><td>골라 남김(중복 제거)</td><td>이번 검색 결과</td><td>merge_docs (M4)</td></tr>
+<tr><td>retry</td><td>rewrite</td><td>아니오</td><td>쌓음</td><td><b>1</b> (이번 몫)</td><td>add</td></tr>
+<tr><td>best_score</td><td>grade</td><td>아니오</td><td>골라 남김(최고)</td><td>이번 점수</td><td>keep_max</td></tr>
+<tr><td>messages</td><td>user, llm, tool</td><td>아니오</td><td>같은 id는 고침</td><td>새 메시지</td><td>add_messages</td></tr>
+</tbody></table></div>
+<div class="ragbox"><b>설계 습관</b> 리듀서는 "상태를 선언할 때" 정해지고, 노드는 그 규칙을 믿고 "자기 몫만" 돌려줍니다. 합치는 책임은 상태 선언에, 계산 책임은 노드에 둡니다.</div>
+</section></div>
+
+<!-- ============ 실제예 1 ============ -->
+<div class="pane" role="tabpanel" id="pane-ex1" aria-labelledby="tab-ex1" hidden><section><h2><span class="no">2</span>실제예 ① 사내 규정 하이브리드 검색<span class="tg rag">RAG</span><span class="tg lg1">LangGraph 필수</span></h2>
+<div class="mission">
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>사내 규정 챗봇의 검색 품질을 올리려고 벡터 검색과 키워드 검색을 <b>동시에</b> 돌리기로 했습니다. 두 검색기가 찾은 문서를 모아 답변 노드에 넘겨야 합니다.</p>
+<div class="flow"><span class="n">START</span><i>→</i><span class="n">vector_search</span><i>+</i><span class="n">keyword_search</span><i>→</i><span class="n">answer</span><i>→</i><span class="n">END</span></div>
+<div class="mlabel st">STEP 2 · 설계표 채우기</div>
+<div class="tw"><table><thead><tr><th>필드</th><th>Q1</th><th>Q2 동시?</th><th>Q3</th><th>Q4</th><th>리듀서</th></tr></thead><tbody>
+<tr><td>question</td><td>입력</td><td>-</td><td>-</td><td>-</td><td>없음</td></tr>
+<tr><td>docs</td><td>vector, keyword</td><td><b>예</b></td><td>쌓음</td><td>이번 검색 결과</td><td><b>add</b></td></tr>
+</tbody></table></div>
+<div class="mlabel st">STEP 3 · 설계를 무시하면? (리듀서 없이 실행)</div>
+<pre class="py">from typing import Annotated
+from typing_extensions import TypedDict
+from operator import add
+from langgraph.graph import StateGraph, START, END
+
+class SearchState(TypedDict):
+    question: str
+    docs: list                       # 리듀서 없음
+
+def vector_search(s):  return {"docs": ["v:연차규정", "v:휴가신청"]}
+def keyword_search(s): return {"docs": ["k:연차규정"]}
+def answer(s):
+    print("답변 노드가 받은 문서:", s["docs"])
+    return {}
+
+g = StateGraph(SearchState)
+g.add_node("vector_search", vector_search)
+g.add_node("keyword_search", keyword_search)
+g.add_node("answer", answer)
+g.add_edge(START, "vector_search")
+g.add_edge(START, "keyword_search")                         # 팬아웃: 동시에 실행
+g.add_edge(["vector_search", "keyword_search"], "answer")    # 둘 다 끝나면 answer
+g.add_edge("answer", END)
+g.compile().invoke({"question": "연차 규정"})</pre>
+<pre class="err">InvalidUpdateError: At key 'docs': Can receive only one value per step. Use an Annotated key to handle multiple values.</pre>
+<p>두 검색 노드는 같은 단계(super-step)에서 실행됩니다. <code>docs</code>에 값이 두 개 들어왔는데 합치는 함수가 없으니 LangGraph가 멈춥니다. Q2에 "예"인데 리듀서를 안 붙인 결과입니다.</p>
+<div class="mlabel st">STEP 4 · 설계대로 고치기</div>
+<pre class="py">class SearchState(TypedDict):
+    question: str
+    docs: Annotated[list, add]       # add 함수를 넣음 → 기존 docs + 새 docs</pre>
+<div class="mlabel st">STEP 5 · 결과 확인</div>
+<pre class="out">답변 노드가 받은 문서: ['k:연차규정', 'v:연차규정', 'v:휴가신청']</pre>
+<ol class="steps">
+<li><span class="lbl">병렬이면 리듀서.</span> Send API, 멀티에이전트도 똑같습니다.</li>
+<li><span class="lbl">노드 코드는 그대로.</span> 검색 노드는 "내가 찾은 것"만 돌려주고, 합치기는 상태 선언이 맡습니다.</li>
+<li><span class="lbl">순서는 보장되지 않는다.</span> 정렬이 필요하면 리듀서에서 합니다.</li>
+</ol>
+<div class="warn"><b>설계 다시 보기</b> '연차규정'이 두 번 들어갔습니다. Q3의 답이 사실은 "쌓음"이 아니라 "골라 남김(중복 제거)"이었던 것입니다. 이것을 고치는 것이 미션 M4입니다.</div>
+</div>
+</section></div>
+
+<!-- ============ 실제예 2 ============ -->
+<div class="pane" role="tabpanel" id="pane-ex2" aria-labelledby="tab-ex2" hidden><section><h2><span class="no">3</span>실제예 ② 쇼핑몰 챗봇 · 상담원 답변 검토<span class="tg lg1">LangGraph 필수</span><span class="tg ag">MCP·에이전트</span></h2>
+<div class="mission">
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>쇼핑몰 챗봇이 "환불은 7일"이라고 잘못 답했습니다. 상담원이 검토 단계에서 "14일"로 고쳐 같은 메시지를 다시 넣습니다(Human-in-the-Loop). 대화 기록에는 <b>고친 답만</b> 남아야 합니다.</p>
+<div class="mlabel st">STEP 2 · 설계표 채우기</div>
+<div class="tw"><table><thead><tr><th>필드</th><th>Q1</th><th>Q2</th><th>Q3 새 값이 오면</th><th>Q4</th><th>리듀서</th></tr></thead><tbody>
+<tr><td>messages</td><td>사용자, LLM, 상담원</td><td>아니오</td><td>새 메시지는 쌓고, <b>같은 메시지는 고침</b></td><td>새 메시지 또는 같은 id의 수정본</td><td><b>add_messages</b></td></tr>
+</tbody></table></div>
+<p>"쌓기"와 "고치기"가 섞여 있습니다. add는 쌓기만 할 줄 알기 때문에 맞지 않습니다.</p>
+<div class="mlabel st">STEP 3 · add와 add_messages 비교</div>
+<pre class="py">from operator import add
+from langgraph.graph.message import add_messages
+from langchain_core.messages import HumanMessage, AIMessage, RemoveMessage
+
+q      = HumanMessage(content="환불 기간이 어떻게 되나요?", id="h-1")
+draft  = AIMessage(content="환불은 7일 이내 가능합니다.", id="ai-1")
+edited = AIMessage(content="환불은 구매 후 14일 이내 가능합니다. (검토 완료)", id="ai-1")   # 같은 id
+
+r1 = add([q, draft], [edited])
+r2 = add_messages([q, draft], [edited])
+print("add          :", len(r1), [m.content for m in r1])
+print("add_messages :", len(r2), [m.content for m in r2])</pre>
+<pre class="out">add          : 3 ['환불 기간이 어떻게 되나요?', '환불은 7일 이내 가능합니다.', '환불은 구매 후 14일 이내 가능합니다. (검토 완료)']
+add_messages : 2 ['환불 기간이 어떻게 되나요?', '환불은 구매 후 14일 이내 가능합니다. (검토 완료)']</pre>
+<p>add로 쌓으면 다음 LLM 호출 때 모델이 "7일"과 "14일"을 둘 다 봅니다. add_messages는 <b>id가 같으면 그 자리에서 교체</b>합니다.</p>
+<div class="mlabel st">STEP 4 · 삭제도 리듀서가 처리 (RemoveMessage)</div>
+<pre class="py">r3 = add_messages(r2, [RemoveMessage(id="h-1")])
+print(len(r3), [m.content for m in r3])</pre>
+<pre class="out">1 ['환불은 구매 후 14일 이내 가능합니다. (검토 완료)']</pre>
+<div class="mlabel st">STEP 5 · 그래프에 넣기 (MessagesState)</div>
+<pre class="py">from langgraph.graph import MessagesState
+
+class ShopState(MessagesState):      # messages: Annotated[list, add_messages] 내장
+    order_id: str
+
+def review(state: ShopState):        # 상담원 검토 노드
+    last = state["messages"][-1]
+    fixed = last.content.replace("7일", "구매 후 14일") + " (검토 완료)"
+    return {"messages": [AIMessage(content=fixed, id=last.id)]}   # id 유지 = 교체</pre>
+<ol class="steps">
+<li><span class="lbl">대화는 add가 아니라 add_messages.</span> 수정·삭제가 되어야 HITL과 메모리 정리를 할 수 있습니다.</li>
+<li><span class="lbl">수정의 열쇠는 id.</span> id를 유지하면 교체, 새 id면 추가입니다.</li>
+<li><span class="lbl">dict로 보내려면 role 필수.</span> <code>{"role": "assistant", "id": "ai-1", "content": "..."}</code></li>
+</ol>
+</div>
+</section></div>
+
+<!-- ============ M1 ============ -->
+<div class="pane" role="tabpanel" id="pane-m1" aria-labelledby="tab-m1" hidden><section>
+<div class="mission" id="reducer-m1" data-mid="reducer-m1">
+<div class="mhead"><span class="lv lv1">★ 기본</span><span class="tgs"><span class="tg lg1">LangGraph 필수</span></span><h3>M1. 답변이 사라지는 HR 상담 챗봇</h3><label class="mdone"><input type="checkbox" id="reducer-m1-done" data-done="reducer-m1"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>신입 개발자가 만든 HR 상담 챗봇입니다. 에러는 안 나는데 ① 답변이 결과에 없고 ② 이전 대화가 사라진다는 신고가 들어왔습니다.</p>
+<pre class="py">class ChatState(TypedDict):
+    user_message: str
+    chat_history: list
+
+def counsel(state: ChatState):
+    answer = f"'{state['user_message']}' 접수했습니다."
+    return {"ai_response": answer,
+            "chat_history": [f"user: {state['user_message']}", f"ai: {answer}"]}
+
+g = StateGraph(ChatState)
+g.add_node("counsel", counsel)
+g.add_edge(START, "counsel"); g.add_edge("counsel", END)
+print(g.compile().invoke({"user_message": "연차 며칠 남았나요?",
+      "chat_history": ["user: 안녕하세요", "ai: 무엇을 도와드릴까요?"]}))</pre>
+<div class="mlabel st">STEP 2 · 설계표 채우기</div>
+<p><code>chat_history</code>와 <code>ai_response</code>에 대해 Q1~Q4에 답하고 리듀서를 정하세요. 지금 코드와 무엇이 다른가요?</p>
+<details class="ans"><summary>설계표 확인</summary><div class="tw"><table><thead><tr><th>필드</th><th>Q3 새 값이 오면</th><th>Q4 노드가 돌려주는 것</th><th>리듀서</th><th>지금 코드</th></tr></thead><tbody>
+<tr><td>chat_history</td><td>쌓음</td><td>이번 대화 2줄</td><td>add</td><td>없음 → <b>덮어씀</b></td></tr>
+<tr><td>ai_response</td><td>버림(최신만)</td><td>이번 답변</td><td>없음</td><td><b>스키마에 없음</b></td></tr>
+</tbody></table></div></details>
+<div class="mlabel st">STEP 3 · 결과 예측 (실행하지 말고 적기)</div>
+<p>출력 dict에 어떤 키가 있고, chat_history에는 몇 줄이 들어 있을까요?</p>
+<details class="ans"><summary>실제 출력</summary><pre class="out">{'user_message': '연차 며칠 남았나요?', 'chat_history': ['user: 연차 며칠 남았나요?', "ai: '연차 며칠 남았나요?' 접수했습니다."]}</pre>
+<p>ai_response는 스키마에 없어 <b>에러 없이 버려졌고</b>, chat_history는 덮어써져 2줄만 남았습니다.</p></details>
+<div class="mlabel st">STEP 4 · 설계대로 고치기</div>
+<p>상태 선언만 고쳐서 두 문제를 모두 해결하세요. 노드 코드는 건드리지 않습니다.</p>
+<details class="hint"><summary>힌트 보기</summary><p>"0. 리듀서란"의 모양 <code>Annotated[타입, 함수]</code>를 쓰고, 빠진 키를 스키마에 추가합니다.</p></details>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">class ChatState(TypedDict):
+    user_message: str
+    ai_response: str                       # 스키마에 추가
+    chat_history: Annotated[list, add]     # 쌓기</pre></details>
+<div class="mlabel st">STEP 5 · 확인</div>
+<ul class="checks">
+<li><input type="checkbox" id="reducer-m1-c1" data-chk="reducer-m1-c1"><label for="reducer-m1-c1">출력에 ai_response가 있다</label></li>
+<li><input type="checkbox" id="reducer-m1-c2" data-chk="reducer-m1-c2"><label for="reducer-m1-c2">chat_history가 4줄이다</label></li>
+<li><input type="checkbox" id="reducer-m1-c3" data-chk="reducer-m1-c3"><label for="reducer-m1-c3">"에러가 안 나서 더 위험하다"는 이유를 한 줄로 적었다</label></li>
+</ul>
+<details class="ans"><summary>고친 뒤 출력</summary><pre class="out">{'user_message': '연차 며칠 남았나요?', 'ai_response': "'연차 며칠 남았나요?' 접수했습니다.", 'chat_history': ['user: 안녕하세요', 'ai: 무엇을 도와드릴까요?', 'user: 연차 며칠 남았나요?', "ai: '연차 며칠 남았나요?' 접수했습니다."]}</pre></details>
+</div>
+</section></div>
+
+<!-- ============ M2 ============ -->
+<div class="pane" role="tabpanel" id="pane-m2" aria-labelledby="tab-m2" hidden><section>
+<div class="mission" id="reducer-m2" data-mid="reducer-m2">
+<div class="mhead"><span class="lv lv1">★ 기본</span><span class="tgs"><span class="tg rag">RAG</span></span><h3>M2. 재검색 RAG의 최종 상태 예측</h3><label class="mdone"><input type="checkbox" id="reducer-m2-done" data-done="reducer-m2"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>검색 → 질문 재작성 → 재검색 순서로 도는 RAG입니다. 네 필드에 서로 다른 리듀서가 붙어 있습니다.</p>
+<pre class="py">def keep_max(old: float, new: float) -&gt; float:     # 직접 만든 리듀서: 더 큰 값만 남김
+    return max(old, new)
+
+class RagState(TypedDict):
+    step: str
+    logs: Annotated[list[str], add]
+    best_score: Annotated[float, keep_max]
+    retry: int
+
+def retrieve(s):  return {"step": "retrieve",  "logs": ["검색 5건"],   "best_score": 0.62, "retry": 1}
+def rewrite(s):   return {"step": "rewrite",   "logs": ["질문 재작성"], "best_score": 0.48}
+def retrieve2(s): return {"step": "retrieve2", "logs": ["재검색 5건"], "best_score": 0.81, "retry": s["retry"] + 1}
+
+# START → retrieve → rewrite → retrieve2 → END
+# invoke({"step": "start", "logs": ["시작"], "best_score": 0.0, "retry": 0})</pre>
+<div class="mlabel st">STEP 2 · 설계 거꾸로 읽기</div>
+<p>코드에서 각 필드의 Q3 답(버림 / 쌓음 / 골라 남김)을 읽어 내세요.</p>
+<details class="ans"><summary>확인</summary><p>step = 버림 · logs = 쌓음 · best_score = 골라 남김(최고) · retry = 버림(노드가 직접 계산한 값으로 덮어씀)</p></details>
+<div class="mlabel st">STEP 3 · 노드별로 상태 따라가기</div>
+<p>표를 노트에 그려 노드가 하나 끝날 때마다 네 값을 채우세요.</p>
+<pre class="py"># |           | step | logs | best_score | retry |
+# | 시작       |      |      |            |       |
+# | retrieve  |      |      |            |       |
+# | rewrite   |      |      |            |       |
+# | retrieve2 |      |      |            |       |</pre>
+<details class="ans"><summary>표 확인</summary><div class="tw"><table><thead><tr><th></th><th>step</th><th>logs</th><th>best_score</th><th>retry</th></tr></thead><tbody>
+<tr><td>시작</td><td>start</td><td>[시작]</td><td>0.0</td><td>0</td></tr>
+<tr><td>retrieve</td><td>retrieve</td><td>+ 검색 5건</td><td>0.62</td><td>1</td></tr>
+<tr><td>rewrite</td><td>rewrite</td><td>+ 질문 재작성</td><td><b>0.62</b> (0.48 무시)</td><td><b>1</b> (반환 안 함 → 유지)</td></tr>
+<tr><td>retrieve2</td><td>retrieve2</td><td>+ 재검색 5건</td><td>0.81</td><td>2</td></tr>
+</tbody></table></div></details>
+<div class="mlabel st">STEP 4 · 실행해서 맞춰 보기</div>
+<details class="ans"><summary>실제 출력</summary><pre class="out">{'step': 'retrieve2', 'logs': ['시작', '검색 5건', '질문 재작성', '재검색 5건'], 'best_score': 0.81, 'retry': 2}</pre></details>
+<div class="mlabel st">STEP 5 · 확인</div>
+<ul class="checks">
+<li><input type="checkbox" id="reducer-m2-c1" data-chk="reducer-m2-c1"><label for="reducer-m2-c1">4개 값을 모두 맞혔다</label></li>
+<li><input type="checkbox" id="reducer-m2-c2" data-chk="reducer-m2-c2"><label for="reducer-m2-c2">rewrite가 retry를 돌려주지 않아도 값이 유지되는 이유를 설명했다</label></li>
+<li><input type="checkbox" id="reducer-m2-c3" data-chk="reducer-m2-c3"><label for="reducer-m2-c3">best_score를 덮어쓰기로 바꾸면 생기는 문제를 적었다</label></li>
+</ul>
+<details class="ans"><summary>설명 예시</summary><p>반환하지 않은 키는 건드리지 않으므로 retry는 1로 유지됩니다. best_score가 덮어쓰기였다면 재작성 단계의 0.48이 이전 최고 0.62를 지워, "0.6 이상이면 답변" 같은 조건을 잘못 판단합니다.</p></details>
+</div>
+</section></div>
+
+<!-- ============ M3 ============ -->
+<div class="pane" role="tabpanel" id="pane-m3" aria-labelledby="tab-m3" hidden><section>
+<div class="mission" id="reducer-m3" data-mid="reducer-m3">
+<div class="mhead"><span class="lv lv2">★★ 응용</span><span class="tgs"><span class="tg rag">RAG</span><span class="tg lg1">LangGraph 필수</span></span><h3>M3. 재시도 3번인데 횟수가 7?</h3><label class="mdone"><input type="checkbox" id="reducer-m3-done" data-done="reducer-m3"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>"재시도 3번 넘으면 중단" 규칙을 넣었는데, 질문 재작성을 3번 했을 뿐인데 retry가 7로 찍혀 너무 일찍 중단됩니다.</p>
+<pre class="py">class S(TypedDict):
+    question: str
+    retry: Annotated[int, add]
+
+def rewrite(s):
+    return {"retry": s["retry"] + 1}
+
+# START → rewrite1 → rewrite2 → rewrite3 → END  (세 노드 모두 rewrite 함수)
+# invoke({"question": "연차", "retry": 0})</pre>
+<div class="mlabel st">STEP 2 · 설계표의 Q3과 Q4 비교</div>
+<p>retry에 대해 "리듀서가 기대하는 것(Q3)"과 "노드가 실제로 돌려주는 것(Q4)"을 각각 적으세요.</p>
+<details class="ans"><summary>확인</summary><p>Q3: add = 쌓음 → 노드는 <b>이번 몫(1)</b>을 돌려줘야 함. Q4: 노드는 <b>누적값(기존+1)</b>을 돌려줌. 짝이 안 맞습니다.</p></details>
+<div class="mlabel st">STEP 3 · 한 단계씩 계산</div>
+<p><code>저장값 = add(기존값, 노드 반환값)</code>을 세 번 계산해 보세요.</p>
+<details class="ans"><summary>계산 확인</summary><pre class="py"># rewrite1: 반환 0+1=1 → add(0, 1) = 1
+# rewrite2: 반환 1+1=2 → add(1, 2) = 3
+# rewrite3: 반환 3+1=4 → add(3, 4) = 7</pre><pre class="out">{'question': '연차', 'retry': 7}</pre></details>
+<div class="mlabel st">STEP 4 · 두 가지 방법으로 고치기</div>
+<p>방법 ① 리듀서는 그대로 두고 노드를 고친다. 방법 ② 노드는 그대로 두고 리듀서를 고친다.</p>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py"># 방법 ① 리듀서 유지, 노드는 '이번 몫'만
+def rewrite(s): return {"retry": 1}
+
+# 방법 ② 노드 유지, 리듀서 제거(덮어쓰기)
+class S(TypedDict):
+    question: str
+    retry: int</pre><pre class="out">{'question': '연차', 'retry': 3}</pre></details>
+<div class="mlabel st">STEP 5 · 설계 판단</div>
+<p>나중에 재작성 노드 두 개가 <b>동시에</b> retry를 올리게 바뀐다면, 어느 방법만 쓸 수 있을까요?</p>
+<ul class="checks">
+<li><input type="checkbox" id="reducer-m3-c1" data-chk="reducer-m3-c1"><label for="reducer-m3-c1">0 → 1 → 3 → 7 과정을 설명했다</label></li>
+<li><input type="checkbox" id="reducer-m3-c2" data-chk="reducer-m3-c2"><label for="reducer-m3-c2">두 방법 모두 retry 3을 얻었다</label></li>
+<li><input type="checkbox" id="reducer-m3-c3" data-chk="reducer-m3-c3"><label for="reducer-m3-c3">병렬일 때 쓸 수 있는 방법을 이유와 함께 골랐다</label></li>
+</ul>
+<details class="ans"><summary>확인</summary><p>방법 ①만 됩니다. 방법 ②는 리듀서가 없어 같은 단계에 두 값이 들어오면 InvalidUpdateError(실제예 ①)입니다. <b>리듀서와 노드 반환값은 한 쌍으로 설계</b>해야 합니다.</p></details>
+</div>
+</section></div>
+
+<!-- ============ M4 ============ -->
+<div class="pane" role="tabpanel" id="pane-m4" aria-labelledby="tab-m4" hidden><section>
+<div class="mission" id="reducer-m4" data-mid="reducer-m4">
+<div class="mhead"><span class="lv lv2">★★ 응용</span><span class="tgs"><span class="tg rag">RAG</span></span><h3>M4. 중복 문서를 합치는 리듀서 만들기</h3><label class="mdone"><input type="checkbox" id="reducer-m4-done" data-done="reducer-m4"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>실제예 ①에서 남은 문제입니다. 벡터 검색과 BM25 검색이 같은 문서(HR-01)를 서로 다른 점수로 가져옵니다. add로 쌓으면 같은 문서가 두 번 LLM에 들어갑니다.</p>
+<pre class="py">def vec(s):  return {"docs": [{"doc_id": "HR-01", "score": 0.82, "by": "vector"},
+                              {"doc_id": "HR-07", "score": 0.55, "by": "vector"},
+                              {"doc_id": "IT-03", "score": 0.40, "by": "vector"}]}
+def bm25(s): return {"docs": [{"doc_id": "HR-01", "score": 0.91, "by": "bm25"},
+                              {"doc_id": "HR-12", "score": 0.60, "by": "bm25"},
+                              {"doc_id": "FIN-2", "score": 0.30, "by": "bm25"},
+                              {"doc_id": "IT-09", "score": 0.20, "by": "bm25"}]}
+# START → vec, START → bm25 (병렬) → END</pre>
+<div class="mlabel st">STEP 2 · 설계: 합치는 규칙을 말로 적기</div>
+<p>코드 전에 "새 문서가 오면 기존 문서와 어떻게 합칠지"를 규칙 3줄로 적으세요. (중복일 때 · 순서 · 개수)</p>
+<details class="ans"><summary>규칙 확인</summary><p>① doc_id가 같으면 score가 높은 쪽만 남김 ② score 내림차순 ③ 상위 5개만 (LLM 컨텍스트 제한)</p></details>
+<div class="mlabel st">STEP 3 · 리듀서 함수만 먼저 만들고 단독 테스트</div>
+<pre class="py">def merge_docs(old: list[dict], new: list[dict]) -&gt; list[dict]:
+    ...   # 여기를 채우기
+
+print(merge_docs([], vec(None)["docs"]))                        # 첫 호출: old가 비어 있음
+print(merge_docs(vec(None)["docs"], bm25(None)["docs"]))        # 두 번째 호출</pre>
+<details class="hint"><summary>힌트 보기</summary><p>doc_id를 키로 하는 dict에 담으면 중복이 저절로 정리됩니다. 마지막에 <code>sorted(..., key=lambda d: d["score"], reverse=True)[:5]</code>.</p></details>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">def merge_docs(old: list[dict], new: list[dict]) -&gt; list[dict]:
+    best = {d["doc_id"]: d for d in (old or [])}
+    for d in (new or []):
+        cur = best.get(d["doc_id"])
+        if cur is None or d["score"] &gt; cur["score"]:
+            best[d["doc_id"]] = d
+    return sorted(best.values(), key=lambda d: d["score"], reverse=True)[:5]</pre></details>
+<div class="mlabel st">STEP 4 · 상태에 연결하고 그래프 실행</div>
+<pre class="py">class DocState(TypedDict):
+    question: str
+    docs: Annotated[list[dict], merge_docs]     # 직접 만든 함수를 넣음
+
+g = StateGraph(DocState)
+g.add_node("vec", vec); g.add_node("bm25", bm25)
+g.add_edge(START, "vec"); g.add_edge(START, "bm25")
+g.add_edge("vec", END);   g.add_edge("bm25", END)
+for d in g.compile().invoke({"question": "연차"})["docs"]:
+    print(d)</pre>
+<details class="ans"><summary>실제 출력</summary><pre class="out">{'doc_id': 'HR-01', 'score': 0.91, 'by': 'bm25'}
+{'doc_id': 'HR-12', 'score': 0.6, 'by': 'bm25'}
+{'doc_id': 'HR-07', 'score': 0.55, 'by': 'vector'}
+{'doc_id': 'IT-03', 'score': 0.4, 'by': 'vector'}
+{'doc_id': 'FIN-2', 'score': 0.3, 'by': 'bm25'}</pre></details>
+<div class="mlabel st">STEP 5 · 확인</div>
+<ul class="checks">
+<li><input type="checkbox" id="reducer-m4-c1" data-chk="reducer-m4-c1"><label for="reducer-m4-c1">old가 비어 있는 첫 호출에서도 에러가 없다</label></li>
+<li><input type="checkbox" id="reducer-m4-c2" data-chk="reducer-m4-c2"><label for="reducer-m4-c2">결과가 5개이고 HR-01은 bm25(0.91) 하나만 남았다</label></li>
+<li><input type="checkbox" id="reducer-m4-c3" data-chk="reducer-m4-c3"><label for="reducer-m4-c3">검색 노드 코드는 하나도 바꾸지 않았다</label></li>
+</ul>
+<div class="note"><b>메모</b> 실무에서는 벡터 점수와 BM25 점수의 척도가 달라 그대로 비교하면 안 됩니다. 순위 기반 합산(RRF)은 RAG 검색 최적화에서 다룹니다.</div>
+</div>
+</section></div>
+
+<!-- ============ M5 ============ -->
+<div class="pane" role="tabpanel" id="pane-m5" aria-labelledby="tab-m5" hidden><section>
+<div class="mission" id="reducer-m5" data-mid="reducer-m5">
+<div class="mhead"><span class="lv lv3">★★★ 도전</span><span class="tgs"><span class="tg lg1">LangGraph 필수</span><span class="tg ag">MCP·에이전트</span></span><h3>M5. 길어진 IT 상담 대화 정리하기</h3><label class="mdone"><input type="checkbox" id="reducer-m5-done" data-done="reducer-m5"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>IT 헬프데스크 에이전트의 대화가 길어져 토큰 비용이 커졌습니다. 오래된 메시지는 요약해 두고 지워야 합니다. 대화에는 도구 호출도 섞여 있습니다.</p>
+<pre class="py">from langchain_core.messages import (HumanMessage, AIMessage, SystemMessage,
+                                     ToolMessage, RemoveMessage)
+class SupportState(MessagesState):
+    summary: NotRequired[str]
+
+seed = [SystemMessage(content="너는 사내 IT 상담원이다", id="sys")]
+for i in range(4):
+    seed += [HumanMessage(content=f"질문{i}", id=f"h{i}"), AIMessage(content=f"답변{i}", id=f"a{i}")]
+seed += [HumanMessage(content="VPN 안돼요", id="h9"),
+         AIMessage(content="", id="a9", tool_calls=[{"name": "check_vpn", "args": {}, "id": "call1"}]),
+         ToolMessage(content="VPN 서버 정상", tool_call_id="call1", id="t9"),
+         AIMessage(content="서버는 정상입니다. 재접속해 보세요.", id="a10")]</pre>
+<div class="mlabel st">STEP 2 · 설계: 누가 무엇을 책임지나</div>
+<p>messages(add_messages)와 summary 각각에 대해 Q3을 답하고, "무엇을 지울지"는 리듀서와 노드 중 누가 정해야 하는지 적으세요.</p>
+<details class="ans"><summary>확인</summary><p>messages: 같은 id 고침 + <code>RemoveMessage</code>면 삭제 → add_messages. summary: 노드가 기존 요약에 이어 붙여 돌려줌 → 덮어쓰기. 리듀서는 시키는 대로 지울 뿐이므로 <b>무엇을 지울지는 노드가 책임</b>집니다.</p></details>
+<div class="mlabel st">STEP 3 · 단순 버전 만들기</div>
+<p>규칙: ① SystemMessage는 지우지 않는다 ② 시스템 메시지를 뺀 대화가 10개 이하면 아무것도 안 한다 ③ 넘으면 최근 <code>KEEP_LAST = 2</code>개만 남기고 나머지는 summary에 붙인 뒤 RemoveMessage로 삭제 (요약은 LLM 대신 각 메시지 앞 15글자를 " / "로 이어 붙여도 됨)</p>
+<details class="hint"><summary>힌트 보기</summary><p><code>convo = [m for m in msgs if not isinstance(m, SystemMessage)]</code>, <code>cut = len(convo) - KEEP_LAST</code>, 지울 것은 <code>convo[:cut]</code>.</p></details>
+<details class="ans"><summary>단순 버전 결과</summary><pre class="out">남은 메시지: [('SystemMessage', 'sys'), ('ToolMessage', 't9'), ('AIMessage', 'a10')]</pre>
+<p>도구를 부른 AIMessage(a9)는 지워지고 결과(t9)만 남았습니다.</p></details>
+<div class="mlabel st">STEP 4 · 문제 찾고 규칙 추가하기</div>
+<p>OpenAI·Anthropic API는 ToolMessage 앞에 그 <code>tool_call_id</code>를 가진 AIMessage가 있어야 합니다. 짝이 깨지면 다음 LLM 호출이 400 에러로 실패합니다. 규칙 ④를 추가하세요: <b>남길 구간이 ToolMessage로 시작하면, 그 도구를 부른 AIMessage도 함께 남긴다.</b></p>
+<details class="hint"><summary>힌트 보기</summary><p><code>convo[cut]</code>이 ToolMessage인 동안 cut을 한 칸씩 앞으로 옮깁니다.</p></details>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">KEEP_LAST = 2
+
+def summarize_old(state: SupportState):
+    convo = [m for m in state["messages"] if not isinstance(m, SystemMessage)]   # ①
+    if len(convo) &lt;= 10:                                                        # ②
+        return {}
+    cut = len(convo) - KEEP_LAST
+    while cut &gt; 0 and isinstance(convo[cut], ToolMessage):                     # ④
+        cut -= 1
+    old = convo[:cut]
+    text = " / ".join(str(m.content)[:15] for m in old)        # 실제로는 LLM 요약
+    prev = state.get("summary", "")
+    return {"summary": (prev + " | " if prev else "") + text,  # ③
+            "messages": [RemoveMessage(id=m.id) for m in old]}
+
+g = StateGraph(SupportState)
+g.add_node("summarize", summarize_old)
+g.add_edge(START, "summarize"); g.add_edge("summarize", END)
+out = g.compile().invoke({"messages": seed})
+print("남은 메시지:", [(type(m).__name__, m.id) for m in out["messages"]])</pre>
+<pre class="out">남은 메시지: [('SystemMessage', 'sys'), ('AIMessage', 'a9'), ('ToolMessage', 't9'), ('AIMessage', 'a10')]</pre></details>
+<div class="mlabel st">STEP 5 · 확인</div>
+<ul class="checks">
+<li><input type="checkbox" id="reducer-m5-c1" data-chk="reducer-m5-c1"><label for="reducer-m5-c1">단순 버전에서 짝 잃은 ToolMessage를 직접 확인했다</label></li>
+<li><input type="checkbox" id="reducer-m5-c2" data-chk="reducer-m5-c2"><label for="reducer-m5-c2">최종 메시지가 sys, a9, t9, a10 순서다</label></li>
+<li><input type="checkbox" id="reducer-m5-c3" data-chk="reducer-m5-c3"><label for="reducer-m5-c3">두 번째 정리 때 기존 summary를 이어 붙이도록 했다</label></li>
+<li><input type="checkbox" id="reducer-m5-c4" data-chk="reducer-m5-c4"><label for="reducer-m5-c4">"리듀서는 규칙, 판단은 노드"를 이 예로 설명했다</label></li>
+</ul>
+</div>
+</section></div>
+
+<footer>LangGraph 교안 · 참고: 위키독스 「LangGraph 가이드북 - 에이전트 RAG with 랭그래프 [ver 1.0+]」 · 코드 검증: LangGraph 1.2.20 (2026-11-11)</footer>
+</main>
+</div>
+<script>
+(function(){
+  function sync(){ document.querySelectorAll('input[data-done]').forEach(i => {
+    const t = document.getElementById('tab-' + i.dataset.done.replace('reducer-', ''));
+    if (t) t.classList.toggle('done', i.checked); }); }
+  document.addEventListener('change', e => { if (e.target.matches('input[data-done]')) sync(); });
+  window.addEventListener('load', sync);
+})();
+</script>
+
+
+<script>
+(function(){
+  const UNITS = {"reducer": ["reducer-m1", "reducer-m2", "reducer-m3", "reducer-m4", "reducer-m5"]};
+  const KEY = 'lg-missions-v1';
+  let st = {};
+  try { st = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch(e) { st = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch(e) {} };
+
+  // 코드 하이라이트 + 복사
+  const KW = /^(from|import|def|return|for|in|if|elif|else|not|and|or|with|as|class|lambda|True|False|None|try|except|finally|await|yield|is|raise|continue|print)$/;
+  const RE = /("""[\s\S]*?"""|f?"(?:[^"\\\n]|\\.)*"|f?'(?:[^'\\\n]|\\.)*'|#[^\n]*|\b[A-Za-z_]+\b)/g;
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  function selectText(el){ const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+  document.querySelectorAll('pre.py').forEach(pre => {
+    const src = pre.textContent; let out = '', last = 0, m; RE.lastIndex = 0;
+    while ((m = RE.exec(src))) {
+      out += esc(src.slice(last, m.index)); const t = m[0];
+      if (t[0] === '#') out += '<span class="c">' + esc(t) + '</span>';
+      else if (t[0] === '"' || t[0] === "'" || (t[0] === 'f' && (t[1] === '"' || t[1] === "'"))) out += '<span class="s">' + esc(t) + '</span>';
+      else if (KW.test(t)) out += '<span class="k">' + t + '</span>';
+      else out += esc(t);
+      last = m.index + t.length;
+    }
+    pre.innerHTML = out + esc(src.slice(last));
+    const wrap = document.createElement('div'); wrap.style.position = 'relative';
+    pre.parentNode.insertBefore(wrap, pre); wrap.appendChild(pre);
+    const b = document.createElement('button'); b.className = 'copy'; b.type = 'button'; b.textContent = '복사';
+    b.style.cssText = 'position:absolute;top:8px;right:8px';
+    b.addEventListener('click', () => {
+      const ok = () => { b.textContent = '복사됨'; setTimeout(() => b.textContent = '복사', 1400); };
+      const fail = () => { selectText(pre); b.textContent = '선택됨'; };
+      try { navigator.clipboard.writeText(src).then(ok, fail); } catch(e) { fail(); }
+    });
+    wrap.appendChild(b);
+  });
+
+  // 미션 체크 상태
+  document.querySelectorAll('input[data-done],input[data-chk]').forEach(inp => {
+    const k = inp.dataset.done || inp.dataset.chk;
+    inp.checked = !!st[k];
+    inp.addEventListener('change', () => { st[k] = inp.checked; save(); paint(); });
+  });
+  function paint(){
+    document.querySelectorAll('.mission').forEach(m => m.classList.toggle('is-done', !!st[m.dataset.mid]));
+    let total = 0, done = 0;
+    Object.keys(UNITS).forEach(u => {
+      const ids = UNITS[u]; const d = ids.filter(id => st[id]).length;
+      total += ids.length; done += d;
+      document.querySelectorAll('[data-mc="' + u + '"]').forEach(el => el.textContent = d + '/' + ids.length);
+      document.querySelectorAll('[data-u="' + u + '"]').forEach(el => el.classList.toggle('full', d === ids.length));
+      document.querySelectorAll('[data-bar="' + u + '"]').forEach(el => el.style.width = (d / ids.length * 100) + '%');
+    });
+    const pb = document.getElementById('progbar'); if (pb) pb.style.width = (done / total * 100) + '%';
+    const pt = document.getElementById('progtext'); if (pt) pt.textContent = '미션 ' + done + ' / ' + total + ' 완료';
+    const mp = document.getElementById('mprog'); const cur = document.body.dataset.unit;
+    if (mp && cur) { const ids = UNITS[cur]; mp.textContent = '· 완료 ' + ids.filter(id => st[id]).length + ' / ' + ids.length; }
+    const mc = document.getElementById('mcount'); if (mc && cur) { const ids = UNITS[cur]; mc.textContent = ids.filter(id => st[id]).length + '/' + ids.length; }
+  }
+  paint();
+})();
+</script>
+
+<script>
+(function(){
+  const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+  if (!tabs.length) return;
+  const ids = tabs.map(t => t.dataset.t);
+  function show(id, push){
+    tabs.forEach(t => { const on = t.dataset.t === id; t.setAttribute('aria-selected', on ? 'true' : 'false'); t.tabIndex = on ? 0 : -1;
+      if (on) t.scrollIntoView({block:'nearest', inline:'nearest'}); });
+    document.querySelectorAll('[role="tabpanel"]').forEach(p => p.hidden = p.id !== 'pane-' + id);
+    if (push) { try { history.replaceState(null, '', '#' + id); } catch(e){} window.scrollTo({top: 0}); }
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => show(t.dataset.t, true));
+    t.addEventListener('keydown', e => {
+      const f = e.key === 'ArrowDown' || e.key === 'ArrowRight', b = e.key === 'ArrowUp' || e.key === 'ArrowLeft';
+      if (!f && !b) return; e.preventDefault();
+      const n = tabs[(i + (f ? 1 : tabs.length - 1)) % tabs.length]; n.focus(); show(n.dataset.t, true);
+    });
+  });
+  const h = location.hash.slice(1);
+  show(ids.includes(h) ? h : 'intro', false);
+  window.addEventListener('hashchange', () => { const x = location.hash.slice(1); if (ids.includes(x)) show(x, false); });
+})();
+</script>
+</body>
+</html>

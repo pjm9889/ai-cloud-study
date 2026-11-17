@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>06-1 에이전트 기초 · 도구와 ReAct · LangGraph 교안</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{word-break:keep-all;overflow-wrap:break-word;font-family:var(--body)}
+
+/* Layout: 왼쪽 고정 사이드바(단원 목차) + 오른쪽 본문 패널. 휴대폰 폭에서는 사이드바가 상단 가로 스크롤 바로 바뀜 */
+:root{
+  --bg:#f6f7fb; --paper:#ffffff; --ink:#1b2236; --muted:#5a6380; --line:#d9deeb;
+  --node:#24305e; --nodeText:#ffffff; --edge:#9aa4c2;
+  --teal:#0f8f83; --amber:#d98a1f; --coral:#d4553f; --violet:#6b5bd2;
+  --soft:#eef1f9; --tealSoft:#e2f4f1; --amberSoft:#fbf0dd; --coralSoft:#fbe7e3;
+  --code:#ffffff; --codeLine:#c9d0e2; --codeCmt:#6a7697; --outBg:#f4fbfa; --shadow:rgba(27,34,54,.08);
+  --kw:#6b5bd2; --str:#0f7d73; --fn:#b4561f;
+  --display:"Do Hyeon","IBM Plex Sans KR","Malgun Gothic",sans-serif;
+  --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12151f; --paper:#1a1e2b; --ink:#e7eaf4; --muted:#a2aac2; --line:#2e3447;
+  --node:#8f9cf0; --nodeText:#10131c; --edge:#5b6584;
+  --teal:#3cc4b5; --amber:#f0b04f; --coral:#f07a63; --violet:#a597ff;
+  --soft:#222839; --tealSoft:#163331; --amberSoft:#3a2e17; --coralSoft:#3d211c; --code:#0d1017; --codeLine:#3a4157; --codeCmt:#8d97b5; --outBg:#10201f; --shadow:rgba(0,0,0,.3);
+  --kw:#b3a8ff; --str:#5fd3c4; --fn:#f0a36a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12151f; --paper:#1a1e2b; --ink:#e7eaf4; --muted:#a2aac2; --line:#2e3447;
+  --node:#8f9cf0; --nodeText:#10131c; --edge:#5b6584;
+  --teal:#3cc4b5; --amber:#f0b04f; --coral:#f07a63; --violet:#a597ff;
+  --soft:#222839; --tealSoft:#163331; --amberSoft:#3a2e17; --coralSoft:#3d211c; --code:#0d1017; --codeLine:#3a4157; --codeCmt:#8d97b5; --outBg:#10201f; --shadow:rgba(0,0,0,.3);
+  --kw:#b3a8ff; --str:#5fd3c4; --fn:#f0a36a; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:16px/1.75 var(--body);margin:0;word-break:keep-all;overflow-wrap:break-word}
+.panel{margin-top:30px;padding-top:24px;border-top:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+.layout{max-width:1220px;margin:0 auto;display:grid;grid-template-columns:252px minmax(0,1fr);gap:40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{min-width:0;padding-block:28px 64px;max-width:900px}
+h1,h2,h3{text-wrap:balance}
+h1{font:400 clamp(30px,5vw,44px)/1.2 var(--display);margin:6px 0 10px;letter-spacing:.5px}
+h2{font:400 28px/1.3 var(--display);margin:0 0 6px;display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+h2 .no{font:inherit;color:var(--teal)}
+h3{font-size:18px;margin:26px 0 6px}
+h4{font-size:16px;margin:18px 0 4px}
+p{margin:8px 0;max-width:72ch}
+ol,ul{padding-left:22px;margin:8px 0}
+li{margin:4px 0}
+.lead{color:var(--muted);font-size:17px}
+.kicker{font:600 12px var(--mono);letter-spacing:2px;color:var(--teal);text-transform:uppercase}
+.byline{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.6}
+section{margin-top:40px}
+.panel > section:first-child{margin-top:8px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.card h4{margin-top:0}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+code,.mono{font-family:var(--mono);font-size:.9em}
+code{background:var(--soft);padding:1px 6px;border-radius:5px;word-break:break-word}
+pre{background:var(--code);border:1px solid var(--codeLine);box-shadow:0 1px 3px var(--shadow);border-radius:10px;padding:14px 16px;overflow-x:auto;font:13.5px/1.6 var(--mono);margin:8px 0;color:var(--ink);tab-size:4}
+pre .c{color:var(--codeCmt);font-style:italic}
+pre .s{color:var(--str)}
+pre .k{color:var(--kw);font-weight:600}
+pre.out{background:var(--outBg);border-style:dashed;box-shadow:none;white-space:pre-wrap;word-break:break-word;font-size:13px}
+pre.out::before{content:"출력";display:block;font:600 11px var(--mono);letter-spacing:1.5px;color:var(--teal);margin-bottom:4px}
+pre.out.ex::before{content:"출력 예시 · 모델 답변은 실행마다 달라짐"}
+pre.err{background:var(--coralSoft);border-color:var(--coral);box-shadow:none;white-space:pre-wrap;word-break:break-word;font-size:13px}
+pre.err::before{content:"에러";display:block;font:600 11px var(--mono);letter-spacing:1.5px;color:var(--coral);margin-bottom:4px}
+.codehead{display:flex;justify-content:space-between;align-items:center;gap:8px;font:600 12px var(--mono);color:var(--muted);margin:16px 0 -4px;flex-wrap:wrap}
+.copy{font:500 12px var(--body);border:1px solid var(--line);background:var(--paper);color:var(--muted);border-radius:6px;padding:2px 10px;cursor:pointer}
+.copy:hover{color:var(--ink)}
+.tw{overflow-x:auto;margin:10px 0}
+table{border-collapse:collapse;font-size:14px;min-width:100%}
+th,td{border-bottom:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+th{background:var(--soft);font-weight:600;white-space:nowrap}
+td code{white-space:nowrap}
+.note{background:var(--amberSoft);border-radius:10px;padding:12px 14px;font-size:15px;margin-top:12px}
+.note b{color:var(--amber)}
+.ragbox{background:var(--tealSoft);border-left:4px solid var(--teal);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:15px}
+.ragbox b{color:var(--teal)}
+.warn{background:var(--coralSoft);border-left:4px solid var(--coral);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:15px}
+.warn b{color:var(--coral)}
+.fix{background:var(--soft);border-left:4px solid var(--violet);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:15px}
+.fix b{color:var(--violet)}
+.note p,.ragbox p,.warn p,.fix p{margin:4px 0}
+.note ul,.ragbox ul,.warn ul,.fix ul{margin:4px 0}
+.fig{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px;overflow-x:auto;margin-top:12px}
+.fig svg{display:block;width:100%;height:auto;min-width:560px}
+svg text{font-family:var(--body)}
+.cap{font-size:13px;color:var(--muted);margin:6px 4px 0}
+.chip{display:inline-block;font:500 12px var(--body);padding:1px 10px;border-radius:999px;background:var(--soft);color:var(--muted);vertical-align:middle}
+.chip.ok{background:var(--tealSoft);color:var(--teal)}
+.chip.draft{background:var(--amberSoft);color:var(--amber)}
+.chip.ai{background:var(--coralSoft);color:var(--coral)}
+a{color:var(--teal)}
+.example{background:var(--soft);border-radius:10px;padding:12px 16px;margin:10px 0;font-size:15.5px}
+.example b{color:var(--node)}
+.steps{list-style:none;padding:0;margin:10px 0 0;counter-reset:st}
+.steps>li{counter-increment:st;padding:10px 0;border-top:1px dashed var(--line);margin:0}
+.steps>li::before{content:counter(st) ". ";font:600 14px var(--mono);color:var(--teal)}
+.steps>li:first-child{border-top:0}
+.steps .lbl{font-weight:700;color:var(--node)}
+.think{margin-top:8px;font-size:14.5px;color:var(--muted)}
+.think-h{display:inline-block;font:600 12px var(--body);color:var(--muted);margin-right:6px}
+mark{background:var(--amberSoft);color:inherit;border-bottom:2px solid var(--amber);padding:0 1px}
+details{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-top:8px}
+details summary{cursor:pointer;font-weight:600}
+details[open] summary{margin-bottom:6px}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:500 13.5px var(--mono);margin:10px 0}
+.flow span{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:4px 10px}
+.flow span.n{background:var(--node);color:var(--nodeText);border-color:var(--node)}
+.flow i{font-style:normal;color:var(--edge)}
+
+/* sidebar */
+.side{position:sticky;top:env(safe-area-inset-top,0px);align-self:start;max-height:100vh;overflow-y:auto;padding-block:28px 28px;scrollbar-width:thin}
+.side .brand{font:400 22px/1.2 var(--display);margin-bottom:2px}
+.side .brand-sub{font-size:12.5px;color:var(--muted);margin-bottom:14px}
+.prog{height:6px;background:var(--soft);border-radius:999px;overflow:hidden;margin:0 0 4px}
+.prog i{display:block;height:100%;width:0;background:var(--teal);transition:width .3s}
+.prog-t{font:500 12px var(--mono);color:var(--muted);margin-bottom:14px}
+.grp{font:600 11px var(--mono);letter-spacing:1.6px;color:var(--teal);text-transform:uppercase;margin:16px 0 6px}
+.navlist{display:flex;flex-direction:column;gap:2px}
+.navlist button{display:grid;grid-template-columns:28px minmax(0,1fr) 16px;align-items:center;gap:4px;width:100%;text-align:left;font:500 14px/1.35 var(--body);border:0;background:transparent;color:var(--ink);border-radius:8px;padding:7px 8px;cursor:pointer}
+.navlist button .n{font:600 12px var(--mono);color:var(--muted)}
+.navlist button .d{font-size:12px;color:var(--teal);visibility:hidden}
+.navlist button.done .d{visibility:visible}
+.navlist button:hover{background:var(--soft)}
+.navlist button[aria-selected="true"]{background:var(--node);color:var(--nodeText)}
+.navlist button[aria-selected="true"] .n,.navlist button[aria-selected="true"] .d{color:var(--nodeText)}
+.navlist button:focus-visible,.pager button:focus-visible,.copy:focus-visible,.donebtn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+
+/* panel footer */
+.pfoot{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center}
+.donebtn{font:600 14px var(--body);border:2px solid var(--teal);background:var(--paper);color:var(--teal);border-radius:999px;padding:6px 16px;cursor:pointer}
+.donebtn[aria-pressed="true"]{background:var(--teal);color:var(--paper)}
+.pager{display:flex;gap:8px;flex-wrap:wrap}
+.pager button{font:500 14px var(--body);border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:6px 14px;cursor:pointer;max-width:100%}
+.pager button[disabled]{opacity:.4;cursor:default}
+footer{margin-top:50px;font-size:13px;color:var(--muted)}
+
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr);gap:0}
+  .side{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);max-height:none;overflow:visible;padding-block:10px;border-bottom:1px solid var(--line);margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .side .brand,.side .brand-sub,.grp,.prog,.prog-t{display:none}
+  .navwrap{display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin;padding-bottom:2px}
+  .navlist{flex-direction:row;gap:6px}
+  .navlist button{display:flex;flex:0 0 auto;width:auto;white-space:nowrap;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13.5px}
+  .navlist button .d{display:none}
+  .navlist button.done .n{color:var(--teal)}
+  main{padding-top:18px}
+}
+@media (max-width:600px){h2{font-size:24px} pre{font-size:12.5px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+.tg{display:inline-block;font:600 11.5px/1.5 var(--body);border-radius:5px;padding:1px 7px;margin-left:6px;vertical-align:middle;white-space:nowrap;letter-spacing:.2px}
+.tg.rag{background:var(--tealSoft);color:var(--teal);border:1px solid var(--teal)}
+.tg.lg1{background:var(--violet);color:var(--paper);border:1px solid var(--violet)}
+.tg.ag{background:var(--amberSoft);color:var(--amber);border:1px solid var(--amber)}
+.sm.ag{background:var(--amber);border-radius:2px}
+.tg.lg2{background:transparent;color:var(--violet);border:1px dashed var(--violet)}
+h2 .tg{font-size:12px;position:relative;top:-3px}
+.mhead .tgs{display:inline-flex;gap:0}
+.mhead .tgs .tg:first-child{margin-left:0}
+.sm{display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:6px;vertical-align:middle}
+.sm.rag{background:var(--teal)}
+.sm.lg1{background:var(--violet)}
+.sm.lg2{border:1.5px solid var(--violet)}
+.mhead .tgs:empty{display:none}
+.navlist a[aria-current="page"] .sm{box-shadow:0 0 0 1.5px var(--nodeText)}
+.bridge{display:grid;gap:6px;margin-top:14px}
+.bridge div{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:baseline;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14.5px;line-height:1.6}
+.bridge .tg{margin-left:0}
+.legend2{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:13px;color:var(--muted);margin-top:8px}
+.legend2 .tg{margin-left:0}
+.path{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin-top:10px}
+.path .card h4{margin:0 0 6px}
+.path ol{margin:4px 0 0}
+.ucard .tgrow{display:flex;flex-wrap:wrap;gap:4px}
+.ucard .tgrow .tg{margin-left:0}
+
+.copyright{font-size:14px;color:var(--muted);line-height:1.6;margin-top:8px}
+/* 탭: 모든 화면 폭에서 왼쪽 세로 배치 */
+@media (max-width:900px){
+  .layout{grid-template-columns:200px minmax(0,1fr) !important;gap:22px !important}
+  .side{position:sticky !important;top:env(safe-area-inset-top,0px) !important;max-height:100vh !important;overflow-y:auto !important;border-bottom:0 !important;margin:0 !important;padding:22px 0 !important;background:transparent !important}
+  .side .brand,.side .brand-sub{display:block !important}
+  .navwrap{display:block !important;overflow:visible !important}
+  .navlist{flex-direction:column !important;gap:2px !important}
+  .navlist button{display:grid !important;grid-template-columns:26px minmax(0,1fr) auto !important;width:100% !important;white-space:normal !important;border:0 !important;background:transparent !important;border-radius:8px !important;padding:7px 6px !important;font-size:14px !important}
+  .navlist button[aria-selected="true"]{background:var(--node) !important}
+  .navlist button .sm{display:inline-block !important}
+  main{padding-top:24px !important}
+}
+@media (max-width:600px){
+  .layout{grid-template-columns:112px minmax(0,1fr) !important;gap:12px !important}
+  .navlist button{grid-template-columns:minmax(0,1fr) auto !important;font-size:13px !important;padding:6px 5px !important}
+  .navlist button .n,.navlist button .sm,.side .brand-sub{display:none !important}
+  .side .brand{font-size:15px !important}
+}
+.view{margin-top:26px;background:var(--paper);border:1px solid var(--line);border-left:5px solid var(--violet);border-radius:12px;padding:14px 18px 10px}
+.view-h{font:700 15px var(--body);color:var(--violet);letter-spacing:.3px;margin-bottom:4px}
+.view ul{margin:4px 0 0;padding-left:20px}
+.view li{margin:10px 0;line-height:1.8}
+.view li b{color:var(--ink)}
+/* 가독성: 글꼴 크기 */
+body{font-size:17.5px;line-height:1.85}
+p{max-width:78ch}
+h1{font-size:clamp(32px,5vw,46px)}
+h2{font-size:31px}
+h3{font-size:20.5px;margin-top:30px}
+h4{font-size:17.5px}
+pre{font-size:15px;line-height:1.7}
+pre.out,pre.err{font-size:14.5px}
+table{font-size:15.5px}
+th,td{padding:9px 12px}
+.cap{font-size:14.5px}
+.note,.warn,.ragbox,.fix{font-size:16px}
+.goal{font-size:16.5px}
+.navlist button{font-size:15.5px !important}
+.side .brand-sub{font-size:13.5px}
+.checks li{font-size:16px}
+.mhead h3{font-size:19.5px}
+.lv{font-size:13px}
+.tg{font-size:12.5px}
+.bridge div{font-size:15.5px}
+.legend2{font-size:14px}
+@media (max-width:600px){body{font-size:17px} pre{font-size:13.5px} h2{font-size:26px} table{font-size:14.5px}}
+
+.solo{max-width:1100px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.solo main{max-width:none}
+.navlist button{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:start;gap:4px;width:100%;text-align:left;font:500 14px/1.4 var(--body);border:0;background:transparent;color:var(--ink);border-radius:8px;padding:8px 8px;cursor:pointer}
+.navlist button .n{font:600 12px/1.6 var(--mono);color:var(--muted)}
+.navlist button .mc{font:500 11px var(--mono);color:var(--muted)}
+.navlist button:hover{background:var(--soft)}
+.navlist button[aria-selected="true"]{background:var(--node);color:var(--nodeText)}
+.navlist button[aria-selected="true"] .n,.navlist button[aria-selected="true"] .mc{color:var(--nodeText)}
+.navlist button[aria-selected="true"] .sm{box-shadow:0 0 0 1.5px var(--nodeText)}
+.navlist button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.side .brand{font:400 24px/1.25 var(--display);margin-bottom:4px}
+.uhead{padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:22px}
+.uhead h1{margin-bottom:0}
+.pane > section{margin-top:0}
+.pane #missions{margin-top:0;padding-top:0;border-top:0}
+.pane > section > h2{margin-bottom:12px}
+@media (max-width:900px){
+  .navlist button{display:flex;flex:0 0 auto;width:auto;white-space:nowrap;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13.5px;gap:6px}
+  .navlist button .sm{display:none}
+  .side .brand{font-size:18px}
+}
+
+.time{font:600 14px var(--body);color:var(--ink);margin-top:2px}
+.time span{font-weight:400;color:var(--muted)}
+.goal{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--node);border-radius:10px;padding:10px 14px;margin-top:12px;font-size:15px}
+.goal b{color:var(--node)}
+.goal ul{margin:4px 0 0}
+.sumlist{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 18px 14px 36px;margin-top:10px}
+.sumlist li{margin:6px 0}
+.ucard .tm{font:500 12px var(--mono);color:var(--muted)}
+
+.navlist a{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:4px;width:100%;font:500 14px/1.35 var(--body);color:var(--ink);text-decoration:none;border-radius:8px;padding:7px 8px}
+.navlist a .n{font:600 12px var(--mono);color:var(--muted)}
+.navlist a .mc{font:500 11px var(--mono);color:var(--muted)}
+.navlist a.full .mc{color:var(--teal);font-weight:600}
+.navlist a:hover{background:var(--soft)}
+.navlist a[aria-current="page"]{background:var(--node);color:var(--nodeText)}
+.navlist a[aria-current="page"] .n,.navlist a[aria-current="page"] .mc{color:var(--nodeText)}
+.navlist a:focus-visible,.pager a:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.side .brand a{color:inherit;text-decoration:none}
+.unit-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+.unit-meta a.go{font:600 13px var(--body);background:var(--teal);color:var(--paper);text-decoration:none;border-radius:999px;padding:4px 14px}
+.unit-panel{margin-top:30px;padding-top:24px;border-top:1px solid var(--line)}
+.unit-panel > section:first-child{margin-top:0}
+/* missions */
+#missions{scroll-margin-top:72px;margin-top:56px;padding-top:28px;border-top:3px double var(--line)}
+.mlegend{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 6px}
+.mprog{font:500 13px var(--mono);color:var(--muted)}
+.mission{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-top:16px;scroll-margin-top:70px}
+.mission.is-done{border-color:var(--teal);background:linear-gradient(var(--outBg),var(--outBg))}
+.mhead{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.mhead h3{margin:0;font-size:18px;flex:1 1 220px;min-width:0}
+.lv{font:600 12px var(--body);border-radius:6px;padding:2px 9px;white-space:nowrap}
+.lv1{background:var(--tealSoft);color:var(--teal)}
+.lv2{background:var(--amberSoft);color:var(--amber)}
+.lv3{background:var(--coralSoft);color:var(--coral)}
+.mdone{display:inline-flex;align-items:center;gap:6px;font:600 13px var(--body);color:var(--muted);cursor:pointer;border:1px solid var(--line);border-radius:999px;padding:3px 12px;background:var(--bg)}
+.mdone input{accent-color:var(--teal);width:16px;height:16px;margin:0}
+.mission.is-done .mdone{color:var(--teal);border-color:var(--teal)}
+.mlabel{font:600 11px var(--mono);letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin:14px 0 2px}
+.checks{list-style:none;padding:0;margin:4px 0 0}
+.checks li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:6px;align-items:start;margin:3px 0;font-size:15px}
+.checks input{accent-color:var(--teal);width:16px;height:16px;margin:5px 0 0}
+.checks label{cursor:pointer}
+.mission details{margin-top:10px}
+.mission details.ans summary{color:var(--violet)}
+.mission details.hint summary{color:var(--amber)}
+.mission .note{margin-top:10px}
+.pager{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;width:100%}
+.pager a{font:500 14px var(--body);border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:8px 14px;text-decoration:none;max-width:100%}
+.pager a:hover{border-color:var(--teal)}
+.pager .sp{flex:1}
+@media (max-width:900px){
+  .navlist a{display:flex;flex:0 0 auto;width:auto;white-space:nowrap;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13.5px;gap:6px}
+  .navlist a .mc{display:none}
+  .navlist a.full .n{color:var(--teal)}
+}
+/* index */
+.ucards{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));margin-top:10px}
+.ucard{display:flex;flex-direction:column;gap:6px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-decoration:none;color:var(--ink);min-width:0}
+.ucard:hover{border-color:var(--teal)}
+.ucard .n{font:600 12px var(--mono);color:var(--teal)}
+.ucard b{font-size:16px}
+.ucard .d{font-size:13.5px;color:var(--muted);line-height:1.55}
+.ucard .bar{height:5px;background:var(--soft);border-radius:999px;overflow:hidden;margin-top:auto}
+.ucard .bar i{display:block;height:100%;width:0;background:var(--teal)}
+.ucard .mc{font:500 12px var(--mono);color:var(--muted)}
+</style>
+</head>
+<body data-unit="ag1">
+<style>
+.mission .mlabel.st{font:700 13px var(--body);letter-spacing:.5px;color:var(--teal);text-transform:none;margin-top:22px;padding-top:12px;border-top:1px dashed var(--line)}
+.mission .mlabel.st:first-of-type{border-top:0;padding-top:0}
+.qcard{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:10px;padding:10px 14px;margin-top:10px}
+.qcard b{color:var(--teal)}
+.navlist .grp{margin:14px 8px 4px;display:flex;justify-content:space-between}
+</style>
+<div class="layout">
+<aside class="side" aria-label="소단원">
+<div class="brand">06-1 에이전트 기초</div>
+<div class="brand-sub">LangGraph 교안 · 도구 · ReAct · create_agent</div>
+<nav class="navwrap" role="tablist" aria-label="소단원" aria-orientation="vertical"><div class="navlist">
+<button type="button" role="tab" id="tab-intro" aria-controls="pane-intro" data-t="intro"><span class="n">0</span><span>에이전트란</span></button>
+<button type="button" role="tab" id="tab-tool" aria-controls="pane-tool" data-t="tool"><span class="n">1</span><span>도구 만들기<i class="sm ag" title="에이전트"></i></span></button>
+<button type="button" role="tab" id="tab-bind" aria-controls="pane-bind" data-t="bind"><span class="n">2</span><span>bind_tools · tool_calls<i class="sm ag" title="에이전트"></i><i class="sm lg1" title="LangGraph 필수"></i></span></button>
+<button type="button" role="tab" id="tab-react" aria-controls="pane-react" data-t="react"><span class="n">3</span><span>직접 만드는 ReAct<i class="sm lg1" title="LangGraph 필수"></i></span></button>
+<button type="button" role="tab" id="tab-create" aria-controls="pane-create" data-t="create"><span class="n">4</span><span>create_agent로 한 줄<i class="sm ag" title="에이전트"></i></span></button>
+<button type="button" role="tab" id="tab-summary" aria-controls="pane-summary" data-t="summary"><span class="n">5</span><span>정리</span></button>
+</div></nav></aside>
+<main>
+<header class="uhead"><div class="kicker">LangGraph 교안 · 06 에이전트</div><h1>에이전트 기초 · 도구와 ReAct 루프</h1><div class="copyright">© 2026 부성순 · AI·클라우드 실무 과정<br>부성순 (bakpak@empas.com)</div></header>
+
+<!-- ============ 0. 에이전트란 ============ -->
+<div class="pane" role="tabpanel" id="pane-intro" aria-labelledby="tab-intro"><section><h2><span class="no">0</span>에이전트란 무엇인가</h2>
+<div class="note"><b>전제</b> 05까지 StateGraph · 조건 분기 · 체크포인터 · interrupt · 병렬 실행을 배웠습니다. 이번 단원은 그 위에 <b>LLM이 스스로 다음 행동을 고르는 그래프</b>를 올립니다.</div>
+<h3>05 RAG 그래프와 무엇이 다른가</h3>
+<div class="tw"><table><thead><tr><th></th><th>05 실습 (고정 그래프)</th><th>06 에이전트</th></tr></thead><tbody><tr><td>다음에 무엇을 할지</td><td><b>사람(코드)</b>이 엣지로 정해 둠</td><td><b>LLM</b>이 매번 고름</td></tr><tr><td>검색 횟수</td><td>항상 1번 (또는 병렬 3개)</td><td>필요한 만큼. 0번일 수도, 3번일 수도</td></tr><tr><td>도구 순서</td><td>retrieve → draft 고정</td><td>질문에 따라 달라짐 (날씨만, 환율만, 둘 다)</td></tr><tr><td>장점</td><td>예측 가능, 디버깅 쉬움</td><td>처음 보는 질문에도 대응</td></tr><tr><td>단점</td><td>질문 유형이 늘면 분기가 폭발</td><td>돌발 행동 · 무한 반복 · 비용 증가 → 06-2에서 막는다</td></tr></tbody></table></div>
+<div class="ragbox"><b>선택 기준</b> 절차가 정해진 업무(승인 · 정산 · 정형 RAG)는 고정 그래프, 질문이 다양하고 필요한 도구 조합이 매번 다르면 에이전트. 실무에서는 둘을 섞습니다(고정 그래프 안의 한 노드가 에이전트).</div>
+<h3>ReAct = Reasoning + Acting 반복</h3>
+<p>에이전트의 기본 형태는 ReAct입니다. LLM이 <b>생각하고(Reason)</b> → <b>도구를 고르고(Act)</b> → <b>결과를 보고(Observe)</b> → 다시 생각합니다. 도구가 더 필요 없다고 판단하면 최종 답을 냅니다.</p>
+<div class="fig"><svg viewBox="0 0 720 230" role="img" aria-label="START에서 agent로, agent가 도구를 부르면 tools로 갔다가 다시 agent로, 도구가 필요 없으면 END">
+<defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="var(--edge)"/></marker></defs>
+<g font-size="15" text-anchor="middle">
+<rect x="20" y="90" width="90" height="44" rx="22" fill="var(--soft)" stroke="var(--line)"/><text x="65" y="117" fill="var(--muted)">START</text>
+<rect x="180" y="84" width="170" height="56" rx="12" fill="var(--node)"/><text x="265" y="108" fill="var(--nodeText)" font-weight="700">agent (LLM)</text><text x="265" y="128" fill="var(--nodeText)" font-size="12.5">생각 · 도구 선택</text>
+<rect x="450" y="10" width="170" height="56" rx="12" fill="var(--tealSoft)" stroke="var(--teal)" stroke-width="2"/><text x="535" y="34" fill="var(--teal)" font-weight="700">tools</text><text x="535" y="54" fill="var(--teal)" font-size="12.5">도구 실행 · 결과 관찰</text>
+<rect x="450" y="160" width="100" height="44" rx="22" fill="var(--soft)" stroke="var(--line)"/><text x="500" y="187" fill="var(--muted)">END</text>
+</g>
+<g stroke="var(--edge)" stroke-width="2" fill="none" marker-end="url(#a1)">
+<path d="M110,112H178"/>
+<path d="M350,100 C400,100 400,38 448,38"/>
+<path d="M450,52 C410,70 390,104 352,112" stroke="var(--teal)"/>
+<path d="M350,126 C400,126 410,182 448,182"/>
+</g>
+<g font-size="12.5" text-anchor="middle">
+<text x="395" y="58" fill="var(--violet)">tool_calls 있음</text>
+<text x="415" y="96" fill="var(--teal)">ToolMessage</text>
+<text x="398" y="200" fill="var(--muted)">tool_calls 없음 = 최종 답</text>
+</g></svg></div><p class="cap">agent ⇄ tools 루프. LangGraph에서는 노드 두 개와 조건 엣지 하나로 만든다.</p>
+<h3>대화 기록에 남는 메시지 4종</h3>
+<p>에이전트가 한 바퀴 돌면 <code>messages</code>에 아래 순서로 쌓입니다. 이 흐름을 읽을 줄 알면 에이전트의 모든 동작을 따라갈 수 있습니다.</p>
+<div class="tw"><table><thead><tr><th>순서</th><th>메시지</th><th>누가 만드나</th><th>내용</th></tr></thead><tbody><tr><td>1</td><td><code>HumanMessage</code></td><td>사용자</td><td>"부산 날씨 알려주고, 100달러는 원화로 얼마야?"</td></tr><tr><td>2</td><td><code>AIMessage</code> + <code>tool_calls</code></td><td>LLM</td><td>content는 비어 있고, "get_weather(city=부산), to_krw(amount=100, currency=USD)를 불러 줘"라는 <b>요청</b></td></tr><tr><td>3</td><td><code>ToolMessage</code> × 2</td><td>도구 실행 노드</td><td>"흐림 20도", "100 USD = 138,000원". <code>tool_call_id</code>로 2번의 요청과 짝지어짐</td></tr><tr><td>4</td><td><code>AIMessage</code></td><td>LLM</td><td>도구 결과를 보고 쓴 최종 답. <code>tool_calls</code> 없음 → 끝</td></tr></tbody></table></div>
+<div class="warn"><b>가장 중요한 한 줄</b> LLM은 도구를 <b>실행하지 않습니다</b>. "이 도구를 이 인자로 불러 달라"고 <b>요청(tool_calls)</b>만 합니다. 실행은 우리 코드(ToolNode)가 합니다. 그래서 위험한 도구는 실행 전에 막을 수 있습니다(06-2).</div>
+<h3>이 단원의 순서</h3>
+<ol class="steps"><li><span class="lbl">도구 만들기.</span> <code>@tool</code>로 함수를 도구로 바꾸고, LLM이 읽는 설명서(이름 · 설명 · 인자)를 확인한다.</li><li><span class="lbl">bind_tools와 tool_calls.</span> LLM에 도구 목록을 알려 주고, LLM이 돌려준 요청을 손으로 실행해 본다.</li><li><span class="lbl">직접 만드는 ReAct.</span> 2번을 StateGraph 루프로 자동화한다. <code>ToolNode</code>, <code>tools_condition</code>.</li><li><span class="lbl">create_agent.</span> 3번을 한 줄로. 실무 기본값.</li></ol>
+<h3>더 읽을거리 (위키독스)</h3><ul><li><a href="https://wikidocs.net/261613" target="_blank" rel="noopener">2-1-2. LangGraph에서의 ReAct 구현 방법</a></li><li><a href="https://wikidocs.net/261614" target="_blank" rel="noopener">2-2-1. 도구 정의와 에이전트 생성</a></li><li><a href="https://wikidocs.net/261616" target="_blank" rel="noopener">2-3-1. State 설계와 그래프 구조</a></li></ul></section></div>
+
+<!-- ============ 1. 도구 만들기 ============ -->
+<div class="pane" role="tabpanel" id="pane-tool" aria-labelledby="tab-tool" hidden><section><h2><span class="no">1</span>도구 만들기 · @tool<span class="tg ag">MCP·에이전트</span></h2>
+<h3>준비</h3>
+<pre class="py">!pip install -q langgraph langchain langchain-openai</pre>
+<pre class="py">import os
+os.environ["OPENAI_API_KEY"] = "sk-..."   # 본인 키</pre>
+<h3>함수에 @tool을 붙이면 도구가 된다</h3>
+<pre class="py">from langchain.tools import tool
+
+WEATHER = {"서울": "맑음 18도", "부산": "흐림 20도", "제주": "비 17도"}   # 가짜 날씨 데이터
+
+
+@tool
+def get_weather(city: str) -&gt; str:
+    """도시의 오늘 날씨를 알려준다. 날씨나 기온을 물으면 사용한다.
+
+    Args:
+        city: 도시 이름 (예: 서울, 부산, 제주)
+    """
+    return WEATHER.get(city, f"{city} 날씨 정보 없음")
+
+
+print("name :", get_weather.name)
+print("desc :", get_weather.description)
+print("args :", get_weather.args)</pre>
+<pre class="out">name : get_weather
+desc : 도시의 오늘 날씨를 알려준다. 날씨나 기온을 물으면 사용한다.
+
+Args:
+    city: 도시 이름 (예: 서울, 부산, 제주)
+args : {'city': {'title': 'City', 'type': 'string'}}</pre>
+<p><code>@tool</code>은 함수를 LLM이 읽을 수 있는 <b>설명서</b>로 바꿉니다. LLM은 함수 코드를 보지 못하고 이 세 가지만 봅니다.</p>
+<div class="tw"><table><thead><tr><th>설명서 항목</th><th>어디서 오나</th><th>LLM이 쓰는 용도</th></tr></thead><tbody><tr><td><code>name</code></td><td>함수 이름</td><td>어떤 도구를 부를지 지목</td></tr><tr><td><code>description</code></td><td>docstring</td><td><b>언제</b> 이 도구를 써야 하는지 판단</td></tr><tr><td><code>args</code></td><td>타입 힌트 (<code>city: str</code>)</td><td>인자를 어떤 형태로 채울지</td></tr></tbody></table></div>
+<h3>parse_docstring=True: 인자 설명까지 따로 넣기</h3>
+<p>위 출력을 보면 Args 설명이 description에 통째로 붙고, <code>args</code>에는 인자 설명이 없습니다. <code>parse_docstring=True</code>를 주면 Args 부분을 인자마다 나눠 넣습니다.</p>
+<pre class="py">@tool(parse_docstring=True)
+def get_weather(city: str) -&gt; str:
+    """도시의 오늘 날씨를 알려준다. 날씨나 기온을 물으면 사용한다.
+
+    Args:
+        city: 도시 이름 (예: 서울, 부산, 제주)
+    """
+    return WEATHER.get(city, f"{city} 날씨 정보 없음")
+
+
+print("desc :", get_weather.description)
+print("args :", get_weather.args)</pre>
+<pre class="out">desc : 도시의 오늘 날씨를 알려준다. 날씨나 기온을 물으면 사용한다.
+args : {'city': {'description': '도시 이름 (예: 서울, 부산, 제주)', 'title': 'City', 'type': 'string'}}</pre>
+<div class="fix"><b>왜 이게 중요한가</b> LLM은 <code>args</code>의 description을 보고 인자 값을 채웁니다. "도시 이름 (예: 서울, 부산, 제주)"가 있으면 "부산광역시"나 "Busan" 대신 "부산"을 넣을 확률이 올라갑니다. Args 형식(Google 스타일)을 지켜야 하며, 형식이 틀리면 에러가 납니다.</div>
+<h3>두 번째 도구: 계산은 LLM 말고 도구로</h3>
+<pre class="py">RATES = {"USD": 1380, "JPY": 9.2, "EUR": 1500}   # 고정 환율 (예시)
+
+
+@tool(parse_docstring=True)
+def to_krw(amount: float, currency: str) -&gt; str:
+    """외화 금액을 원화로 환산한다. 환율 계산이 필요하면 사용한다.
+
+    Args:
+        amount: 외화 금액 (예: 100)
+        currency: 통화 코드. USD, JPY, EUR 중 하나
+    """
+    if currency not in RATES:
+        return f"{currency}는 지원하지 않는 통화입니다. USD, JPY, EUR만 가능합니다."
+    return f"{amount:g} {currency} = {amount * RATES[currency]:,.0f}원"</pre>
+<div class="ragbox"><b>LLM에게 계산을 맡기지 않는 이유</b> LLM은 다음 단어를 예측할 뿐이라 큰 수 곱셈 · 날짜 계산 · 규정 조건 판단에서 그럴듯하게 틀립니다. 정답이 정해진 일은 코드(도구)로, LLM은 <b>무엇을 부를지 고르는 일</b>만 맡깁니다.</div>
+<h3>도구는 그냥 함수처럼 먼저 테스트한다</h3>
+<pre class="py">print(get_weather.invoke({"city": "부산"}))
+print(to_krw.invoke({"amount": 100, "currency": "USD"}))
+print(to_krw.invoke({"amount": 100, "currency": "CNY"}))</pre>
+<pre class="out">흐림 20도
+100 USD = 138,000원
+CNY는 지원하지 않는 통화입니다. USD, JPY, EUR만 가능합니다.</pre>
+<p>도구는 LLM 없이 <code>.invoke({인자: 값})</code>로 바로 실행됩니다. 에이전트에 넣기 전에 이렇게 따로 확인해 두면, 나중에 문제가 생겼을 때 "도구 문제인지 LLM 문제인지"를 나눌 수 있습니다.</p>
+<h3>좋은 도구의 4가지 조건</h3>
+<div class="tw"><table><thead><tr><th>조건</th><th>나쁜 예</th><th>좋은 예</th><th>이유</th></tr></thead><tbody><tr><td>설명에 <b>언제</b> 쓰는지</td><td><code>"""날씨"""</code></td><td>"날씨나 기온을 물으면 사용한다"</td><td>LLM이 도구를 고르는 유일한 근거</td></tr><tr><td>인자는 적고 단순하게</td><td><code>query: dict</code></td><td><code>city: str</code></td><td>복잡할수록 LLM이 틀리게 채움</td></tr><tr><td>실패도 문장으로 반환</td><td><code>raise KeyError</code></td><td>"CNY는 지원하지 않는 통화입니다"</td><td>LLM이 읽고 다르게 시도할 수 있음 (06-2)</td></tr><tr><td>한 도구는 한 가지 일</td><td><code>do_everything()</code></td><td><code>get_weather</code>, <code>to_krw</code></td><td>선택이 명확해지고 테스트가 쉬움</td></tr></tbody></table></div></section></div>
+
+<!-- ============ 2. bind_tools · tool_calls ============ -->
+<div class="pane" role="tabpanel" id="pane-bind" aria-labelledby="tab-bind" hidden><section><h2><span class="no">2</span>bind_tools와 tool_calls · 손으로 한 바퀴<span class="tg lg1">LangGraph 필수</span><span class="tg ag">MCP·에이전트</span></h2>
+<p>에이전트 루프를 만들기 전에, 한 바퀴를 <b>손으로</b> 돌려 봅니다. 이 과정이 곧 ToolNode와 create_agent가 자동으로 해 주는 일입니다.</p>
+<h3>① LLM에 도구 목록 알려 주기</h3>
+<pre class="py">from langchain.chat_models import init_chat_model
+from langchain_core.messages import HumanMessage
+
+llm = init_chat_model("openai:gpt-4o-mini", temperature=0)
+llm_tools = llm.bind_tools([get_weather, to_krw])   # 도구 설명서를 LLM 요청에 함께 보냄</pre>
+<p><code>bind_tools</code>는 LLM을 바꾸지 않습니다. 매 요청에 "너는 이런 도구들을 쓸 수 있어"라는 설명서(JSON 스키마)를 붙여 보내는 <b>새 LLM 객체</b>를 돌려줍니다.</p>
+<h3>② 질문하면 LLM은 답 대신 요청을 돌려준다</h3>
+<pre class="py">question = HumanMessage("부산 날씨 알려주고, 100달러는 원화로 얼마야?")
+ai = llm_tools.invoke([question])
+
+print("content   :", repr(ai.content))
+for tc in ai.tool_calls:
+    print("tool_call :", tc)</pre>
+<pre class="out ex">content   : ''
+tool_call : {'name': 'get_weather', 'args': {'city': '부산'}, 'id': 'call_aB3...', 'type': 'tool_call'}
+tool_call : {'name': 'to_krw', 'args': {'amount': 100, 'currency': 'USD'}, 'id': 'call_Xy9...', 'type': 'tool_call'}</pre>
+<ol class="steps"><li><span class="lbl">content가 비어 있다.</span> 아직 답할 정보가 없으니 말 대신 요청만 했습니다.</li><li><span class="lbl">tool_calls가 두 개.</span> 질문에 필요한 일이 둘이라 <b>한 번에 두 도구</b>를 요청했습니다(병렬 도구 호출).</li><li><span class="lbl">id가 붙어 있다.</span> 나중에 결과를 돌려줄 때 "어느 요청의 결과인지" 짝짓는 번호입니다.</li></ol>
+<h3>③ 요청을 우리가 실행하고 ToolMessage로 돌려준다</h3>
+<pre class="py">tools_by_name = {t.name: t for t in [get_weather, to_krw]}
+messages = [question, ai]
+
+for tc in ai.tool_calls:
+    tool_msg = tools_by_name[tc["name"]].invoke(tc)    # tool_call을 통째로 넣으면 ToolMessage가 나온다
+    print(type(tool_msg).__name__, tool_msg.tool_call_id[:8], "→", tool_msg.content)
+    messages.append(tool_msg)</pre>
+<pre class="out ex">ToolMessage call_aB3 → 흐림 20도
+ToolMessage call_Xy9 → 100 USD = 138,000원</pre>
+<div class="fix"><b>tool.invoke(tc)의 비밀</b> 인자 dict(<code>{"city": "부산"}</code>) 대신 tool_call 전체(<code>tc</code>)를 넣으면, 결과를 <code>ToolMessage</code>로 감싸고 <code>tool_call_id</code>까지 채워 줍니다. ToolNode가 내부에서 하는 일이 바로 이것입니다.</div>
+<h3>④ 결과를 붙여 다시 물으면 최종 답</h3>
+<pre class="py">final = llm_tools.invoke(messages)
+print("tool_calls:", final.tool_calls)
+print(final.content)</pre>
+<pre class="out ex">tool_calls: []
+부산은 오늘 흐리고 기온은 20도입니다. 100달러는 약 138,000원입니다.</pre>
+<p>이번에는 <code>tool_calls</code>가 비어 있습니다. LLM이 "더 부를 도구가 없다"고 판단했다는 뜻이고, 이것이 루프를 끝내는 신호가 됩니다.</p>
+<h3>도구가 필요 없는 질문</h3>
+<pre class="py">ai2 = llm_tools.invoke([HumanMessage("안녕? 너는 뭘 할 수 있어?")])
+print("tool_calls:", ai2.tool_calls)
+print(ai2.content)</pre>
+<pre class="out ex">tool_calls: []
+안녕하세요! 저는 도시의 날씨를 알려 드리고, 외화를 원화로 환산해 드릴 수 있어요.</pre>
+<p>도구를 쥐여 줬다고 항상 쓰는 것이 아닙니다. 쓸지 말지도 LLM이 고릅니다.</p>
+<div class="warn"><b>짝 규칙</b> <code>tool_calls</code>가 있는 AIMessage 뒤에는 <b>id마다</b> ToolMessage가 있어야 합니다. 하나라도 빠진 채 LLM을 다시 부르면 OpenAI · Anthropic API가 400 에러를 냅니다. 05의 "거부할 때도 ToolMessage를 넣는다"가 이 규칙 때문이었습니다.</div></section></div>
+
+<!-- ============ 3. 직접 만드는 ReAct ============ -->
+<div class="pane" role="tabpanel" id="pane-react" aria-labelledby="tab-react" hidden><section><h2><span class="no">3</span>직접 만드는 ReAct 그래프<span class="tg lg1">LangGraph 필수</span><span class="tg ag">MCP·에이전트</span></h2>
+<p>탭 2에서 손으로 한 "LLM 호출 → 도구 실행 → 다시 LLM"을 그래프 루프로 바꿉니다. 노드 두 개, 조건 엣지 하나면 됩니다.</p>
+<div class="tw"><table><thead><tr><th>손으로 한 일 (탭 2)</th><th>그래프에서</th><th>누가</th></tr></thead><tbody><tr><td><code>llm_tools.invoke(messages)</code></td><td>agent 노드</td><td>직접 작성</td></tr><tr><td><code>for tc in ai.tool_calls: tool.invoke(tc)</code></td><td>tools 노드</td><td><code>ToolNode</code> (내장)</td></tr><tr><td>"tool_calls가 있으면 실행, 없으면 끝"</td><td>조건 엣지</td><td><code>tools_condition</code> (내장)</td></tr><tr><td><code>messages.append(...)</code></td><td>State 갱신</td><td><code>MessagesState</code>의 add_messages 리듀서</td></tr></tbody></table></div>
+<h3>agent 노드</h3>
+<pre class="py">from langgraph.graph import StateGraph, MessagesState, START, END
+from langgraph.prebuilt import ToolNode, tools_condition
+from langchain_core.messages import SystemMessage
+
+tools = [get_weather, to_krw]
+llm_tools = llm.bind_tools(tools)
+
+SYSTEM = SystemMessage("너는 여행 비서다. 날씨와 환율은 반드시 도구로 확인하고, 한국어로 짧게 답한다.")
+
+
+# agent: 지금까지의 대화를 보고 "도구 요청" 또는 "최종 답"을 만든다
+def agent(state: MessagesState):
+    response = llm_tools.invoke([SYSTEM] + state["messages"])
+    return {"messages": [response]}</pre>
+<div class="fix"><b>SYSTEM을 State에 넣지 않는 이유</b> 매 호출 앞에만 붙이고 return하지 않습니다. State에 넣으면 대화 기록에 시스템 지시가 계속 쌓이고, 체크포인터를 쓰면 저장까지 됩니다. 04의 "실행 설정은 State 밖에"와 같은 원리입니다.</div>
+<h3>조립: agent ⇄ tools 루프</h3>
+<pre class="py">g = StateGraph(MessagesState)
+g.add_node("agent", agent)
+g.add_node("tools", ToolNode(tools))            # tool_calls를 실행해 ToolMessage를 돌려주는 내장 노드
+
+g.add_edge(START, "agent")
+g.add_conditional_edges("agent", tools_condition)   # tool_calls 있으면 "tools", 없으면 END
+g.add_edge("tools", "agent")                    # 도구 결과를 들고 다시 agent로 → 루프
+
+react = g.compile()
+print(list(react.get_graph().nodes))</pre>
+<pre class="out">['__start__', 'agent', 'tools', '__end__']</pre>
+<p><code>tools_condition</code>은 아래 함수와 같습니다. 직접 써도 되고, 조건을 더 넣고 싶으면(06-2 승인 단계 등) 직접 씁니다.</p>
+<pre class="py">def route(state: MessagesState):
+    last = state["messages"][-1]
+    return "tools" if last.tool_calls else END</pre>
+<div class="warn"><b>노드 이름은 "tools"로</b> <code>tools_condition</code>은 문자열 <code>"tools"</code>를 돌려줍니다. 도구 노드 이름을 다르게 지으면(예: <code>"action"</code>) 연결할 곳을 못 찾습니다. 다른 이름을 쓰려면 위의 <code>route</code>처럼 직접 작성합니다.</div>
+<h3>실행하고 메시지 흐름 읽기</h3>
+<pre class="py">r = react.invoke({"messages": [("user", "제주 날씨랑 50000엔은 원화로 얼마인지 알려줘")]})
+
+for m in r["messages"]:
+    내용 = m.content or [f"{tc['name']}({tc['args']})" for tc in m.tool_calls]
+    print(f"{type(m).__name__:&gt;13} | {내용}")</pre>
+<pre class="out ex"> HumanMessage | 제주 날씨랑 50000엔은 원화로 얼마인지 알려줘
+    AIMessage | ["get_weather({'city': '제주'})", "to_krw({'amount': 50000, 'currency': 'JPY'})"]
+  ToolMessage | 비 17도
+  ToolMessage | 50000 JPY = 460,000원
+    AIMessage | 제주는 오늘 비가 오고 17도입니다. 50,000엔은 약 460,000원입니다.</pre>
+<h3>stream으로 루프가 도는 모습 보기</h3>
+<pre class="py">for chunk in react.stream({"messages": [("user", "서울 날씨 알려줘")]}, stream_mode="updates"):
+    for node, update in chunk.items():
+        m = update["messages"][-1]
+        print(f"[{node}]", m.content or f"도구 요청 → {m.tool_calls[0]['name']}")</pre>
+<pre class="out ex">[agent] 도구 요청 → get_weather
+[tools] 맑음 18도
+[agent] 서울은 오늘 맑고 18도입니다.</pre>
+<ol class="steps"><li><span class="lbl">agent가 두 번 실행됐다.</span> 한 번은 요청, 한 번은 최종 답. 도구가 필요한 질문은 최소 두 번 LLM을 부릅니다(비용 2배).</li><li><span class="lbl">tools는 한 번.</span> LLM이 한 번에 요청한 도구들은 tools 노드 한 번에 모두 실행됩니다.</li><li><span class="lbl">끝나는 조건은 LLM이 정한다.</span> 그래서 LLM이 계속 도구를 부르면 끝나지 않을 수 있습니다 → 06-2 안전장치.</li></ol></section></div>
+
+<!-- ============ 4. create_agent로 한 줄 ============ -->
+<div class="pane" role="tabpanel" id="pane-create" aria-labelledby="tab-create" hidden><section><h2><span class="no">4</span>create_agent로 한 줄<span class="tg ag">MCP·에이전트</span></h2>
+<p>탭 3에서 직접 조립한 ReAct 그래프를 LangChain이 미리 만들어 둔 것이 <code>create_agent</code>입니다.</p>
+<pre class="py">from langchain.agents import create_agent
+
+agent = create_agent(
+    model=llm,                    # 또는 "openai:gpt-4o-mini" 문자열
+    tools=tools,
+    system_prompt="너는 여행 비서다. 날씨와 환율은 반드시 도구로 확인하고, 한국어로 짧게 답한다.",
+)
+print(list(agent.get_graph().nodes))</pre>
+<pre class="out">['__start__', 'model', 'tools', '__end__']</pre>
+<p>노드 이름만 <code>agent</code> → <code>model</code>로 다를 뿐 구조는 같습니다. <code>bind_tools</code>, 시스템 프롬프트, 조건 엣지, 루프를 모두 안에서 해 줍니다.</p>
+<pre class="py">for chunk in agent.stream({"messages": [("user", "부산 날씨랑 30유로는 얼마야?")]}, stream_mode="updates"):
+    for node, update in chunk.items():
+        m = update["messages"][-1]
+        print(f"[{node}]", m.content or [tc["name"] for tc in m.tool_calls])</pre>
+<pre class="out ex">[model] ['get_weather', 'to_krw']
+[tools] 30 EUR = 45,000원
+[tools] 흐림 20도
+[model] 부산은 오늘 흐리고 20도입니다. 30유로는 약 45,000원입니다.</pre>
+<p>탭 3과 달리 <code>[tools]</code>가 <b>두 줄</b>입니다. create_agent는 도구 요청마다 따로 실행 작업을 만들어(05의 Send처럼) <b>동시에</b> 돌립니다. 그래서 결과 순서는 실행마다 바뀔 수 있습니다.</p>
+<h3>직접 만들기 vs create_agent</h3>
+<div class="tw"><table><thead><tr><th></th><th>StateGraph 직접 (탭 3)</th><th>create_agent</th></tr></thead><tbody><tr><td>코드 양</td><td>15줄 안팎</td><td>5줄</td></tr><tr><td>노드 이름</td><td>마음대로 (<code>agent</code>, <code>tools</code>)</td><td><code>model</code>, <code>tools</code> 고정</td></tr><tr><td>중간에 노드 끼우기</td><td>자유 (검사 · 승인 · 요약 노드)</td><td>미들웨어로 (06-2)</td></tr><tr><td>State 확장</td><td><code>class S(MessagesState)</code>에 키 추가</td><td><code>state_schema</code> 또는 미들웨어</td></tr><tr><td>언제</td><td>흐름을 세밀하게 바꿔야 할 때, 학습용</td><td><b>대부분의 실무</b>. 먼저 이걸로 시작</td></tr></tbody></table></div>
+<div class="ragbox"><b>배우는 순서와 쓰는 순서는 반대</b> 원리를 알려고 직접 만들어 봤고, 실무에서는 create_agent로 시작해 부족할 때만 StateGraph로 내려갑니다. 06-2의 메모리 · 에러 · 승인 · 가드레일도 둘 다 보여 줍니다.</div>
+<h3>create_agent가 돌려주는 것도 그래프다</h3>
+<pre class="py">r = agent.invoke({"messages": [("user", "도쿄 날씨 알려줘")]})
+print(r["messages"][-1].content)</pre>
+<pre class="out ex">죄송하지만 도쿄의 날씨 정보는 없습니다. 서울, 부산, 제주의 날씨는 알려 드릴 수 있어요.</pre>
+<p><code>invoke</code> · <code>stream</code> · <code>get_state</code> · 체크포인터 · <code>interrupt</code>가 모두 그대로 동작합니다. 지금까지 배운 LangGraph 지식이 그대로 쓰입니다. 도구가 "도쿄 날씨 정보 없음"을 <b>문장으로</b> 돌려준 덕분에 LLM이 사용자에게 자연스럽게 안내했습니다(탭 1의 "실패도 문장으로").</p></section></div>
+
+<!-- ============ 5. 정리 ============ -->
+<div class="pane" role="tabpanel" id="pane-summary" aria-labelledby="tab-summary" hidden><section><h2><span class="no">5</span>정리</h2>
+<div class="tw"><table><thead><tr><th>개념</th><th>한 줄</th><th>코드</th></tr></thead><tbody><tr><td>도구</td><td>LLM이 읽는 설명서가 붙은 함수</td><td><code>@tool(parse_docstring=True)</code></td></tr><tr><td>bind_tools</td><td>요청마다 도구 설명서를 붙여 보냄</td><td><code>llm.bind_tools(tools)</code></td></tr><tr><td>tool_calls</td><td>LLM의 실행 <b>요청</b>. 실행은 우리 코드가</td><td><code>ai.tool_calls</code></td></tr><tr><td>ToolMessage</td><td>도구 결과. <code>tool_call_id</code>로 요청과 짝</td><td><code>tool.invoke(tc)</code></td></tr><tr><td>ToolNode</td><td>tool_calls를 모두 실행하는 내장 노드</td><td><code>ToolNode(tools)</code></td></tr><tr><td>tools_condition</td><td>tool_calls 있으면 tools, 없으면 END</td><td><code>add_conditional_edges("agent", tools_condition)</code></td></tr><tr><td>create_agent</td><td>위 전부를 한 줄로</td><td><code>create_agent(model, tools, system_prompt)</code></td></tr></tbody></table></div>
+<div class="view"><div class="view-h">가져갈 한 문장</div><ul><li><b>LLM은 고르고, 코드는 실행한다.</b> 에이전트는 "LLM이 다음 행동을 고르는 루프"이고, 실행 · 계산 · 검증은 도구와 그래프가 맡는다.</li></ul></div>
+<h3>실행으로 확인한 주의점</h3>
+<div class="tw"><table><thead><tr><th>주의점</th><th>확인 결과</th></tr></thead><tbody><tr><td>Args 설명이 args에 안 들어감</td><td><code>@tool</code> 기본값은 docstring 전체를 description에 넣음. 인자별 설명은 <code>parse_docstring=True</code></td></tr><tr><td>도구 노드 이름</td><td><code>tools_condition</code>은 "tools"로만 보냄</td></tr><tr><td>도구 안에서 예외가 나면</td><td>ToolNode · create_agent 모두 <b>기본값으로는 그래프가 멈춤</b> (인자 타입 오류만 자동으로 ToolMessage). → 06-2 탭 1</td></tr></tbody></table></div>
+<div class="note"><b>다음</b> 06-2에서 메모리 · 에러 처리 · 무한 반복 방지 · 사람 승인 · 가드레일을 붙여 "운영 가능한" 에이전트로 만듭니다.</div></section></div>
+
+<footer>LangGraph 교안 · 참고: 위키독스 「LangGraph 가이드북」 Part 2 (2-1 ~ 2-3) · 실습 파일: 06-1_에이전트_기초.ipynb · 코드 검증: LangGraph 1.2.20 · langchain 1.4.10 (2026-11-11)</footer>
+</main>
+</div>
+<script>
+(function(){
+  function sync(){ document.querySelectorAll('input[data-done]').forEach(i => {
+    const t = document.getElementById('tab-' + i.dataset.done.replace('ag1-', ''));
+    if (t) t.classList.toggle('done', i.checked); }); }
+  document.addEventListener('change', e => { if (e.target.matches('input[data-done]')) sync(); });
+  window.addEventListener('load', sync);
+})();
+</script>
+
+
+<script>
+(function(){
+  const UNITS = {"ag1": []};
+  const KEY = 'lg-missions-v1';
+  let st = {};
+  try { st = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch(e) { st = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch(e) {} };
+
+  // 코드 하이라이트 + 복사
+  const KW = /^(from|import|def|return|for|in|if|elif|else|not|and|or|with|as|class|lambda|True|False|None|try|except|finally|await|yield|is|raise|continue|print)$/;
+  const RE = /("""[\s\S]*?"""|f?"(?:[^"\\\n]|\\.)*"|f?'(?:[^'\\\n]|\\.)*'|#[^\n]*|\b[A-Za-z_]+\b)/g;
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  function selectText(el){ const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+  document.querySelectorAll('pre.py').forEach(pre => {
+    const src = pre.textContent; let out = '', last = 0, m; RE.lastIndex = 0;
+    while ((m = RE.exec(src))) {
+      out += esc(src.slice(last, m.index)); const t = m[0];
+      if (t[0] === '#') out += '<span class="c">' + esc(t) + '</span>';
+      else if (t[0] === '"' || t[0] === "'" || (t[0] === 'f' && (t[1] === '"' || t[1] === "'"))) out += '<span class="s">' + esc(t) + '</span>';
+      else if (KW.test(t)) out += '<span class="k">' + t + '</span>';
+      else out += esc(t);
+      last = m.index + t.length;
+    }
+    pre.innerHTML = out + esc(src.slice(last));
+    const wrap = document.createElement('div'); wrap.style.position = 'relative';
+    pre.parentNode.insertBefore(wrap, pre); wrap.appendChild(pre);
+    const b = document.createElement('button'); b.className = 'copy'; b.type = 'button'; b.textContent = '복사';
+    b.style.cssText = 'position:absolute;top:8px;right:8px';
+    b.addEventListener('click', () => {
+      const ok = () => { b.textContent = '복사됨'; setTimeout(() => b.textContent = '복사', 1400); };
+      const fail = () => { selectText(pre); b.textContent = '선택됨'; };
+      try { navigator.clipboard.writeText(src).then(ok, fail); } catch(e) { fail(); }
+    });
+    wrap.appendChild(b);
+  });
+
+  // 미션 체크 상태
+  document.querySelectorAll('input[data-done],input[data-chk]').forEach(inp => {
+    const k = inp.dataset.done || inp.dataset.chk;
+    inp.checked = !!st[k];
+    inp.addEventListener('change', () => { st[k] = inp.checked; save(); paint(); });
+  });
+  function paint(){
+    document.querySelectorAll('.mission').forEach(m => m.classList.toggle('is-done', !!st[m.dataset.mid]));
+    let total = 0, done = 0;
+    Object.keys(UNITS).forEach(u => {
+      const ids = UNITS[u]; const d = ids.filter(id => st[id]).length;
+      total += ids.length; done += d;
+      document.querySelectorAll('[data-mc="' + u + '"]').forEach(el => el.textContent = d + '/' + ids.length);
+      document.querySelectorAll('[data-u="' + u + '"]').forEach(el => el.classList.toggle('full', d === ids.length));
+      document.querySelectorAll('[data-bar="' + u + '"]').forEach(el => el.style.width = (d / ids.length * 100) + '%');
+    });
+    const pb = document.getElementById('progbar'); if (pb) pb.style.width = (done / total * 100) + '%';
+    const pt = document.getElementById('progtext'); if (pt) pt.textContent = '미션 ' + done + ' / ' + total + ' 완료';
+    const mp = document.getElementById('mprog'); const cur = document.body.dataset.unit;
+    if (mp && cur) { const ids = UNITS[cur]; mp.textContent = '· 완료 ' + ids.filter(id => st[id]).length + ' / ' + ids.length; }
+    const mc = document.getElementById('mcount'); if (mc && cur) { const ids = UNITS[cur]; mc.textContent = ids.filter(id => st[id]).length + '/' + ids.length; }
+  }
+  paint();
+})();
+</script>
+
+<script>
+(function(){
+  const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+  if (!tabs.length) return;
+  const ids = tabs.map(t => t.dataset.t);
+  function show(id, push){
+    tabs.forEach(t => { const on = t.dataset.t === id; t.setAttribute('aria-selected', on ? 'true' : 'false'); t.tabIndex = on ? 0 : -1;
+      if (on) t.scrollIntoView({block:'nearest', inline:'nearest'}); });
+    document.querySelectorAll('[role="tabpanel"]').forEach(p => p.hidden = p.id !== 'pane-' + id);
+    if (push) { try { history.replaceState(null, '', '#' + id); } catch(e){} window.scrollTo({top: 0}); }
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => show(t.dataset.t, true));
+    t.addEventListener('keydown', e => {
+      const f = e.key === 'ArrowDown' || e.key === 'ArrowRight', b = e.key === 'ArrowUp' || e.key === 'ArrowLeft';
+      if (!f && !b) return; e.preventDefault();
+      const n = tabs[(i + (f ? 1 : tabs.length - 1)) % tabs.length]; n.focus(); show(n.dataset.t, true);
+    });
+  });
+  const h = location.hash.slice(1);
+  show(ids.includes(h) ? h : 'intro', false);
+  window.addEventListener('hashchange', () => { const x = location.hash.slice(1); if (ids.includes(x)) show(x, false); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1103 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>04 State · RunnableConfig · 체크포인터 · LangGraph 교안</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{word-break:keep-all;overflow-wrap:break-word;font-family:var(--body)}
+
+/* Layout: 왼쪽 고정 사이드바(단원 목차) + 오른쪽 본문 패널. 휴대폰 폭에서는 사이드바가 상단 가로 스크롤 바로 바뀜 */
+:root{
+  --bg:#f6f7fb; --paper:#ffffff; --ink:#1b2236; --muted:#5a6380; --line:#d9deeb;
+  --node:#24305e; --nodeText:#ffffff; --edge:#9aa4c2;
+  --teal:#0f8f83; --amber:#d98a1f; --coral:#d4553f; --violet:#6b5bd2;
+  --soft:#eef1f9; --tealSoft:#e2f4f1; --amberSoft:#fbf0dd; --coralSoft:#fbe7e3;
+  --code:#ffffff; --codeLine:#c9d0e2; --codeCmt:#6a7697; --outBg:#f4fbfa; --shadow:rgba(27,34,54,.08);
+  --kw:#6b5bd2; --str:#0f7d73; --fn:#b4561f;
+  --display:"Do Hyeon","IBM Plex Sans KR","Malgun Gothic",sans-serif;
+  --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12151f; --paper:#1a1e2b; --ink:#e7eaf4; --muted:#a2aac2; --line:#2e3447;
+  --node:#8f9cf0; --nodeText:#10131c; --edge:#5b6584;
+  --teal:#3cc4b5; --amber:#f0b04f; --coral:#f07a63; --violet:#a597ff;
+  --soft:#222839; --tealSoft:#163331; --amberSoft:#3a2e17; --coralSoft:#3d211c; --code:#0d1017; --codeLine:#3a4157; --codeCmt:#8d97b5; --outBg:#10201f; --shadow:rgba(0,0,0,.3);
+  --kw:#b3a8ff; --str:#5fd3c4; --fn:#f0a36a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12151f; --paper:#1a1e2b; --ink:#e7eaf4; --muted:#a2aac2; --line:#2e3447;
+  --node:#8f9cf0; --nodeText:#10131c; --edge:#5b6584;
+  --teal:#3cc4b5; --amber:#f0b04f; --coral:#f07a63; --violet:#a597ff;
+  --soft:#222839; --tealSoft:#163331; --amberSoft:#3a2e17; --coralSoft:#3d211c; --code:#0d1017; --codeLine:#3a4157; --codeCmt:#8d97b5; --outBg:#10201f; --shadow:rgba(0,0,0,.3);
+  --kw:#b3a8ff; --str:#5fd3c4; --fn:#f0a36a; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:16px/1.75 var(--body);margin:0;word-break:keep-all;overflow-wrap:break-word}
+.panel{margin-top:30px;padding-top:24px;border-top:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+.layout{max-width:1220px;margin:0 auto;display:grid;grid-template-columns:252px minmax(0,1fr);gap:40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{min-width:0;padding-block:28px 64px;max-width:900px}
+h1,h2,h3{text-wrap:balance}
+h1{font:400 clamp(30px,5vw,44px)/1.2 var(--display);margin:6px 0 10px;letter-spacing:.5px}
+h2{font:400 28px/1.3 var(--display);margin:0 0 6px;display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+h2 .no{font:inherit;color:var(--teal)}
+h3{font-size:18px;margin:26px 0 6px}
+h4{font-size:16px;margin:18px 0 4px}
+p{margin:8px 0;max-width:72ch}
+ol,ul{padding-left:22px;margin:8px 0}
+li{margin:4px 0}
+.lead{color:var(--muted);font-size:17px}
+.kicker{font:600 12px var(--mono);letter-spacing:2px;color:var(--teal);text-transform:uppercase}
+.byline{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.6}
+section{margin-top:40px}
+.panel > section:first-child{margin-top:8px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.card h4{margin-top:0}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+code,.mono{font-family:var(--mono);font-size:.9em}
+code{background:var(--soft);padding:1px 6px;border-radius:5px;word-break:break-word}
+pre{background:var(--code);border:1px solid var(--codeLine);box-shadow:0 1px 3px var(--shadow);border-radius:10px;padding:14px 16px;overflow-x:auto;font:13.5px/1.6 var(--mono);margin:8px 0;color:var(--ink);tab-size:4}
+pre .c{color:var(--codeCmt);font-style:italic}
+pre .s{color:var(--str)}
+pre .k{color:var(--kw);font-weight:600}
+pre.out{background:var(--outBg);border-style:dashed;box-shadow:none;white-space:pre-wrap;word-break:break-word;font-size:13px}
+pre.out::before{content:"출력";display:block;font:600 11px var(--mono);letter-spacing:1.5px;color:var(--teal);margin-bottom:4px}
+pre.out.ex::before{content:"출력 예시 · 모델 답변은 실행마다 달라짐"}
+pre.err{background:var(--coralSoft);border-color:var(--coral);box-shadow:none;white-space:pre-wrap;word-break:break-word;font-size:13px}
+pre.err::before{content:"에러";display:block;font:600 11px var(--mono);letter-spacing:1.5px;color:var(--coral);margin-bottom:4px}
+.codehead{display:flex;justify-content:space-between;align-items:center;gap:8px;font:600 12px var(--mono);color:var(--muted);margin:16px 0 -4px;flex-wrap:wrap}
+.copy{font:500 12px var(--body);border:1px solid var(--line);background:var(--paper);color:var(--muted);border-radius:6px;padding:2px 10px;cursor:pointer}
+.copy:hover{color:var(--ink)}
+.tw{overflow-x:auto;margin:10px 0}
+table{border-collapse:collapse;font-size:14px;min-width:100%}
+th,td{border-bottom:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+th{background:var(--soft);font-weight:600;white-space:nowrap}
+td code{white-space:nowrap}
+.note{background:var(--amberSoft);border-radius:10px;padding:12px 14px;font-size:15px;margin-top:12px}
+.note b{color:var(--amber)}
+.ragbox{background:var(--tealSoft);border-left:4px solid var(--teal);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:15px}
+.ragbox b{color:var(--teal)}
+.warn{background:var(--coralSoft);border-left:4px solid var(--coral);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:15px}
+.warn b{color:var(--coral)}
+.fix{background:var(--soft);border-left:4px solid var(--violet);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:15px}
+.fix b{color:var(--violet)}
+.note p,.ragbox p,.warn p,.fix p{margin:4px 0}
+.note ul,.ragbox ul,.warn ul,.fix ul{margin:4px 0}
+.fig{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px;overflow-x:auto;margin-top:12px}
+.fig svg{display:block;width:100%;height:auto;min-width:560px}
+svg text{font-family:var(--body)}
+.cap{font-size:13px;color:var(--muted);margin:6px 4px 0}
+.chip{display:inline-block;font:500 12px var(--body);padding:1px 10px;border-radius:999px;background:var(--soft);color:var(--muted);vertical-align:middle}
+.chip.ok{background:var(--tealSoft);color:var(--teal)}
+.chip.draft{background:var(--amberSoft);color:var(--amber)}
+.chip.ai{background:var(--coralSoft);color:var(--coral)}
+a{color:var(--teal)}
+.example{background:var(--soft);border-radius:10px;padding:12px 16px;margin:10px 0;font-size:15.5px}
+.example b{color:var(--node)}
+.steps{list-style:none;padding:0;margin:10px 0 0;counter-reset:st}
+.steps>li{counter-increment:st;padding:10px 0;border-top:1px dashed var(--line);margin:0}
+.steps>li::before{content:counter(st) ". ";font:600 14px var(--mono);color:var(--teal)}
+.steps>li:first-child{border-top:0}
+.steps .lbl{font-weight:700;color:var(--node)}
+.think{margin-top:8px;font-size:14.5px;color:var(--muted)}
+.think-h{display:inline-block;font:600 12px var(--body);color:var(--muted);margin-right:6px}
+mark{background:var(--amberSoft);color:inherit;border-bottom:2px solid var(--amber);padding:0 1px}
+details{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-top:8px}
+details summary{cursor:pointer;font-weight:600}
+details[open] summary{margin-bottom:6px}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:500 13.5px var(--mono);margin:10px 0}
+.flow span{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:4px 10px}
+.flow span.n{background:var(--node);color:var(--nodeText);border-color:var(--node)}
+.flow i{font-style:normal;color:var(--edge)}
+
+/* sidebar */
+.side{position:sticky;top:env(safe-area-inset-top,0px);align-self:start;max-height:100vh;overflow-y:auto;padding-block:28px 28px;scrollbar-width:thin}
+.side .brand{font:400 22px/1.2 var(--display);margin-bottom:2px}
+.side .brand-sub{font-size:12.5px;color:var(--muted);margin-bottom:14px}
+.prog{height:6px;background:var(--soft);border-radius:999px;overflow:hidden;margin:0 0 4px}
+.prog i{display:block;height:100%;width:0;background:var(--teal);transition:width .3s}
+.prog-t{font:500 12px var(--mono);color:var(--muted);margin-bottom:14px}
+.grp{font:600 11px var(--mono);letter-spacing:1.6px;color:var(--teal);text-transform:uppercase;margin:16px 0 6px}
+.navlist{display:flex;flex-direction:column;gap:2px}
+.navlist button{display:grid;grid-template-columns:28px minmax(0,1fr) 16px;align-items:center;gap:4px;width:100%;text-align:left;font:500 14px/1.35 var(--body);border:0;background:transparent;color:var(--ink);border-radius:8px;padding:7px 8px;cursor:pointer}
+.navlist button .n{font:600 12px var(--mono);color:var(--muted)}
+.navlist button .d{font-size:12px;color:var(--teal);visibility:hidden}
+.navlist button.done .d{visibility:visible}
+.navlist button:hover{background:var(--soft)}
+.navlist button[aria-selected="true"]{background:var(--node);color:var(--nodeText)}
+.navlist button[aria-selected="true"] .n,.navlist button[aria-selected="true"] .d{color:var(--nodeText)}
+.navlist button:focus-visible,.pager button:focus-visible,.copy:focus-visible,.donebtn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+
+/* panel footer */
+.pfoot{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center}
+.donebtn{font:600 14px var(--body);border:2px solid var(--teal);background:var(--paper);color:var(--teal);border-radius:999px;padding:6px 16px;cursor:pointer}
+.donebtn[aria-pressed="true"]{background:var(--teal);color:var(--paper)}
+.pager{display:flex;gap:8px;flex-wrap:wrap}
+.pager button{font:500 14px var(--body);border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:6px 14px;cursor:pointer;max-width:100%}
+.pager button[disabled]{opacity:.4;cursor:default}
+footer{margin-top:50px;font-size:13px;color:var(--muted)}
+
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr);gap:0}
+  .side{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);max-height:none;overflow:visible;padding-block:10px;border-bottom:1px solid var(--line);margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .side .brand,.side .brand-sub,.grp,.prog,.prog-t{display:none}
+  .navwrap{display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin;padding-bottom:2px}
+  .navlist{flex-direction:row;gap:6px}
+  .navlist button{display:flex;flex:0 0 auto;width:auto;white-space:nowrap;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13.5px}
+  .navlist button .d{display:none}
+  .navlist button.done .n{color:var(--teal)}
+  main{padding-top:18px}
+}
+@media (max-width:600px){h2{font-size:24px} pre{font-size:12.5px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+.tg{display:inline-block;font:600 11.5px/1.5 var(--body);border-radius:5px;padding:1px 7px;margin-left:6px;vertical-align:middle;white-space:nowrap;letter-spacing:.2px}
+.tg.rag{background:var(--tealSoft);color:var(--teal);border:1px solid var(--teal)}
+.tg.lg1{background:var(--violet);color:var(--paper);border:1px solid var(--violet)}
+.tg.ag{background:var(--amberSoft);color:var(--amber);border:1px solid var(--amber)}
+.sm.ag{background:var(--amber);border-radius:2px}
+.tg.lg2{background:transparent;color:var(--violet);border:1px dashed var(--violet)}
+h2 .tg{font-size:12px;position:relative;top:-3px}
+.mhead .tgs{display:inline-flex;gap:0}
+.mhead .tgs .tg:first-child{margin-left:0}
+.sm{display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:6px;vertical-align:middle}
+.sm.rag{background:var(--teal)}
+.sm.lg1{background:var(--violet)}
+.sm.lg2{border:1.5px solid var(--violet)}
+.mhead .tgs:empty{display:none}
+.navlist a[aria-current="page"] .sm{box-shadow:0 0 0 1.5px var(--nodeText)}
+.bridge{display:grid;gap:6px;margin-top:14px}
+.bridge div{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:baseline;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14.5px;line-height:1.6}
+.bridge .tg{margin-left:0}
+.legend2{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:13px;color:var(--muted);margin-top:8px}
+.legend2 .tg{margin-left:0}
+.path{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin-top:10px}
+.path .card h4{margin:0 0 6px}
+.path ol{margin:4px 0 0}
+.ucard .tgrow{display:flex;flex-wrap:wrap;gap:4px}
+.ucard .tgrow .tg{margin-left:0}
+
+.copyright{font-size:14px;color:var(--muted);line-height:1.6;margin-top:8px}
+/* 탭: 모든 화면 폭에서 왼쪽 세로 배치 */
+@media (max-width:900px){
+  .layout{grid-template-columns:200px minmax(0,1fr) !important;gap:22px !important}
+  .side{position:sticky !important;top:env(safe-area-inset-top,0px) !important;max-height:100vh !important;overflow-y:auto !important;border-bottom:0 !important;margin:0 !important;padding:22px 0 !important;background:transparent !important}
+  .side .brand,.side .brand-sub{display:block !important}
+  .navwrap{display:block !important;overflow:visible !important}
+  .navlist{flex-direction:column !important;gap:2px !important}
+  .navlist button{display:grid !important;grid-template-columns:26px minmax(0,1fr) auto !important;width:100% !important;white-space:normal !important;border:0 !important;background:transparent !important;border-radius:8px !important;padding:7px 6px !important;font-size:14px !important}
+  .navlist button[aria-selected="true"]{background:var(--node) !important}
+  .navlist button .sm{display:inline-block !important}
+  main{padding-top:24px !important}
+}
+@media (max-width:600px){
+  .layout{grid-template-columns:112px minmax(0,1fr) !important;gap:12px !important}
+  .navlist button{grid-template-columns:minmax(0,1fr) auto !important;font-size:13px !important;padding:6px 5px !important}
+  .navlist button .n,.navlist button .sm,.side .brand-sub{display:none !important}
+  .side .brand{font-size:15px !important}
+}
+.view{margin-top:26px;background:var(--paper);border:1px solid var(--line);border-left:5px solid var(--violet);border-radius:12px;padding:14px 18px 10px}
+.view-h{font:700 15px var(--body);color:var(--violet);letter-spacing:.3px;margin-bottom:4px}
+.view ul{margin:4px 0 0;padding-left:20px}
+.view li{margin:10px 0;line-height:1.8}
+.view li b{color:var(--ink)}
+/* 가독성: 글꼴 크기 */
+body{font-size:17.5px;line-height:1.85}
+p{max-width:78ch}
+h1{font-size:clamp(32px,5vw,46px)}
+h2{font-size:31px}
+h3{font-size:20.5px;margin-top:30px}
+h4{font-size:17.5px}
+pre{font-size:15px;line-height:1.7}
+pre.out,pre.err{font-size:14.5px}
+table{font-size:15.5px}
+th,td{padding:9px 12px}
+.cap{font-size:14.5px}
+.note,.warn,.ragbox,.fix{font-size:16px}
+.goal{font-size:16.5px}
+.navlist button{font-size:15.5px !important}
+.side .brand-sub{font-size:13.5px}
+.checks li{font-size:16px}
+.mhead h3{font-size:19.5px}
+.lv{font-size:13px}
+.tg{font-size:12.5px}
+.bridge div{font-size:15.5px}
+.legend2{font-size:14px}
+@media (max-width:600px){body{font-size:17px} pre{font-size:13.5px} h2{font-size:26px} table{font-size:14.5px}}
+
+.solo{max-width:1100px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.solo main{max-width:none}
+.navlist button{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:start;gap:4px;width:100%;text-align:left;font:500 14px/1.4 var(--body);border:0;background:transparent;color:var(--ink);border-radius:8px;padding:8px 8px;cursor:pointer}
+.navlist button .n{font:600 12px/1.6 var(--mono);color:var(--muted)}
+.navlist button .mc{font:500 11px var(--mono);color:var(--muted)}
+.navlist button:hover{background:var(--soft)}
+.navlist button[aria-selected="true"]{background:var(--node);color:var(--nodeText)}
+.navlist button[aria-selected="true"] .n,.navlist button[aria-selected="true"] .mc{color:var(--nodeText)}
+.navlist button[aria-selected="true"] .sm{box-shadow:0 0 0 1.5px var(--nodeText)}
+.navlist button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.side .brand{font:400 24px/1.25 var(--display);margin-bottom:4px}
+.uhead{padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:22px}
+.uhead h1{margin-bottom:0}
+.pane > section{margin-top:0}
+.pane #missions{margin-top:0;padding-top:0;border-top:0}
+.pane > section > h2{margin-bottom:12px}
+@media (max-width:900px){
+  .navlist button{display:flex;flex:0 0 auto;width:auto;white-space:nowrap;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13.5px;gap:6px}
+  .navlist button .sm{display:none}
+  .side .brand{font-size:18px}
+}
+
+.time{font:600 14px var(--body);color:var(--ink);margin-top:2px}
+.time span{font-weight:400;color:var(--muted)}
+.goal{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--node);border-radius:10px;padding:10px 14px;margin-top:12px;font-size:15px}
+.goal b{color:var(--node)}
+.goal ul{margin:4px 0 0}
+.sumlist{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 18px 14px 36px;margin-top:10px}
+.sumlist li{margin:6px 0}
+.ucard .tm{font:500 12px var(--mono);color:var(--muted)}
+
+.navlist a{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:4px;width:100%;font:500 14px/1.35 var(--body);color:var(--ink);text-decoration:none;border-radius:8px;padding:7px 8px}
+.navlist a .n{font:600 12px var(--mono);color:var(--muted)}
+.navlist a .mc{font:500 11px var(--mono);color:var(--muted)}
+.navlist a.full .mc{color:var(--teal);font-weight:600}
+.navlist a:hover{background:var(--soft)}
+.navlist a[aria-current="page"]{background:var(--node);color:var(--nodeText)}
+.navlist a[aria-current="page"] .n,.navlist a[aria-current="page"] .mc{color:var(--nodeText)}
+.navlist a:focus-visible,.pager a:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.side .brand a{color:inherit;text-decoration:none}
+.unit-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+.unit-meta a.go{font:600 13px var(--body);background:var(--teal);color:var(--paper);text-decoration:none;border-radius:999px;padding:4px 14px}
+.unit-panel{margin-top:30px;padding-top:24px;border-top:1px solid var(--line)}
+.unit-panel > section:first-child{margin-top:0}
+/* missions */
+#missions{scroll-margin-top:72px;margin-top:56px;padding-top:28px;border-top:3px double var(--line)}
+.mlegend{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 6px}
+.mprog{font:500 13px var(--mono);color:var(--muted)}
+.mission{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-top:16px;scroll-margin-top:70px}
+.mission.is-done{border-color:var(--teal);background:linear-gradient(var(--outBg),var(--outBg))}
+.mhead{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.mhead h3{margin:0;font-size:18px;flex:1 1 220px;min-width:0}
+.lv{font:600 12px var(--body);border-radius:6px;padding:2px 9px;white-space:nowrap}
+.lv1{background:var(--tealSoft);color:var(--teal)}
+.lv2{background:var(--amberSoft);color:var(--amber)}
+.lv3{background:var(--coralSoft);color:var(--coral)}
+.mdone{display:inline-flex;align-items:center;gap:6px;font:600 13px var(--body);color:var(--muted);cursor:pointer;border:1px solid var(--line);border-radius:999px;padding:3px 12px;background:var(--bg)}
+.mdone input{accent-color:var(--teal);width:16px;height:16px;margin:0}
+.mission.is-done .mdone{color:var(--teal);border-color:var(--teal)}
+.mlabel{font:600 11px var(--mono);letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin:14px 0 2px}
+.checks{list-style:none;padding:0;margin:4px 0 0}
+.checks li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:6px;align-items:start;margin:3px 0;font-size:15px}
+.checks input{accent-color:var(--teal);width:16px;height:16px;margin:5px 0 0}
+.checks label{cursor:pointer}
+.mission details{margin-top:10px}
+.mission details.ans summary{color:var(--violet)}
+.mission details.hint summary{color:var(--amber)}
+.mission .note{margin-top:10px}
+.pager{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;width:100%}
+.pager a{font:500 14px var(--body);border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:8px 14px;text-decoration:none;max-width:100%}
+.pager a:hover{border-color:var(--teal)}
+.pager .sp{flex:1}
+@media (max-width:900px){
+  .navlist a{display:flex;flex:0 0 auto;width:auto;white-space:nowrap;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13.5px;gap:6px}
+  .navlist a .mc{display:none}
+  .navlist a.full .n{color:var(--teal)}
+}
+/* index */
+.ucards{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));margin-top:10px}
+.ucard{display:flex;flex-direction:column;gap:6px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-decoration:none;color:var(--ink);min-width:0}
+.ucard:hover{border-color:var(--teal)}
+.ucard .n{font:600 12px var(--mono);color:var(--teal)}
+.ucard b{font-size:16px}
+.ucard .d{font-size:13.5px;color:var(--muted);line-height:1.55}
+.ucard .bar{height:5px;background:var(--soft);border-radius:999px;overflow:hidden;margin-top:auto}
+.ucard .bar i{display:block;height:100%;width:0;background:var(--teal)}
+.ucard .mc{font:500 12px var(--mono);color:var(--muted)}
+</style>
+</head>
+<body data-unit="mem">
+<style>
+.mission .mlabel.st{font:700 13px var(--body);letter-spacing:.5px;color:var(--teal);text-transform:none;margin-top:22px;padding-top:12px;border-top:1px dashed var(--line)}
+.mission .mlabel.st:first-of-type{border-top:0;padding-top:0}
+.qcard{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:10px;padding:10px 14px;margin-top:10px}
+.qcard b{color:var(--teal)}
+.navlist .grp{margin:14px 8px 4px;display:flex;justify-content:space-between}
+.chip.must{background:var(--coralSoft);color:var(--coral);font-weight:700}
+.chip.rec{background:var(--amberSoft);color:var(--amber)}
+.chip.ref{background:var(--soft);color:var(--muted)}
+.newbadge{display:inline-block;font:700 11px var(--body);background:var(--violet);color:var(--paper);border-radius:5px;padding:1px 7px;margin-left:6px;vertical-align:middle}
+</style>
+<div class="layout">
+<aside class="side" aria-label="소단원">
+<div class="brand">04 State · Config · 체크포인터</div>
+<div class="brand-sub">LangGraph 교안 · 메모리</div>
+<nav class="navwrap" role="tablist" aria-label="소단원" aria-orientation="vertical"><div class="navlist">
+<button type="button" role="tab" id="tab-intro" aria-controls="pane-intro" data-t="intro"><span class="n">0</span><span>개요 · 읽을 페이지</span></button>
+<button type="button" role="tab" id="tab-vs" aria-controls="pane-vs" data-t="vs"><span class="n">1</span><span>State vs RunnableConfig<i class="sm lg1" title="LangGraph 필수"></i></span></button>
+<button type="button" role="tab" id="tab-design" aria-controls="pane-design" data-t="design"><span class="n">2</span><span>체크포인터 설계 이슈<i class="sm rag" title="RAG"></i><i class="sm ag" title="에이전트"></i></span></button>
+<button type="button" role="tab" id="tab-syntax" aria-controls="pane-syntax" data-t="syntax"><span class="n">3</span><span>체크포인터 문법 한 장<i class="sm lg1" title="LangGraph 필수"></i></span></button>
+<button type="button" role="tab" id="tab-ex1" aria-controls="pane-ex1" data-t="ex1"><span class="n">4</span><span>실제예 ① 세션 기억 상담봇<i class="sm ag" title="에이전트"></i></span></button>
+<button type="button" role="tab" id="tab-ex2" aria-controls="pane-ex2" data-t="ex2"><span class="n">5</span><span>실제예 ② RAG Time Travel<i class="sm rag" title="RAG"></i></span></button>
+<div class="grp"><span>미션</span><span class="mc" id="mcount">0/7</span></div>
+<button type="button" role="tab" id="tab-m1" aria-controls="pane-m1" data-t="m1"><span class="n">M1</span><span>어디에 둘까: State·config·context</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m2" aria-controls="pane-m2" data-t="m2"><span class="n">M2</span><span>매번 처음 보는 손님</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m3" aria-controls="pane-m3" data-t="m3"><span class="n">M3</span><span>남의 방문 기록이 섞인다</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m4" aria-controls="pane-m4" data-t="m4"><span class="n">M4</span><span>서버를 껐다 켜면 사라진다</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m5" aria-controls="pane-m5" data-t="m5"><span class="n">M5</span><span>State에 넣으면 안 되는 것</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m6" aria-controls="pane-m6" data-t="m6"><span class="n">M6</span><span>고쳤는데 결과가 그대로 (Time Travel)</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m7" aria-controls="pane-m7" data-t="m7"><span class="n">M7</span><span>결재 후 주문번호가 바뀐다</span><span class="d">✓</span></button>
+</div></nav></aside>
+<main>
+<header class="uhead"><div class="kicker">LangGraph 교안 · 04</div><h1>State · RunnableConfig · 체크포인터</h1><div class="copyright">© 2026 부성순 · AI·클라우드 실무 과정<br>부성순 (bakpak@empas.com)</div></header>
+
+<!-- ============ 0. 개요 ============ -->
+<div class="pane" role="tabpanel" id="pane-intro" aria-labelledby="tab-intro"><section><h2><span class="no">0</span>개요 · 읽을 페이지</h2>
+<div class="goal"><b>학습 목표</b><ul>
+<li>어떤 값을 State, RunnableConfig, context 중 어디에 둘지 이유를 들어 고른다. <span class="newbadge">교재에 없음</span></li>
+<li>체크포인터와 thread_id로 사용자·세션별 대화 기억을 설계한다.</li>
+<li>개발용(InMemorySaver)과 영구 저장(SqliteSaver)을 바꿔 끼우고, 프로세스를 다시 시작해도 기억이 남는 것을 확인한다.</li>
+<li>Time Travel로 과거 지점에서 상태를 고쳐 다시 실행하고, interrupt 재개 때 값이 바뀌지 않게 만든다.</li>
+</ul></div>
+<div class="note"><b>전제</b> 01 리듀서(add_messages), 02 흐름 제어, 03 서브그래프(interrupt 맛보기)를 마쳤습니다.</div>
+<h3>위키독스 7페이지 분류</h3>
+<div class="tw"><table><thead><tr><th>구분</th><th>페이지</th><th>여기서 가져갈 것</th></tr></thead><tbody>
+<tr><td><span class="chip must">필수 1</span></td><td><a href="https://wikidocs.net/261582" target="_blank" rel="noopener">1-4. 메모리 (Memory)</a></td><td>단기 기억(체크포인터) vs 장기 기억(Store), Runtime[Context]</td></tr>
+<tr><td><span class="chip must">필수 2</span></td><td><a href="https://wikidocs.net/261599" target="_blank" rel="noopener">1-4-1. 메모리 기능과 기본 예제</a></td><td>체크포인터 3단계, thread_id, get_state</td></tr>
+<tr><td><span class="chip must">필수 3</span></td><td><a href="https://wikidocs.net/321315" target="_blank" rel="noopener">1-4-2-1. InMemorySaver</a></td><td>다중 사용자 세션, 상태 검사, InMemoryStore</td></tr>
+<tr><td><span class="chip must">필수 4</span></td><td><a href="https://wikidocs.net/319029" target="_blank" rel="noopener">1-4-3. Time Travel</a></td><td>get_state_history · update_state · invoke(None) — <b>아래 정정 꼭 확인</b></td></tr>
+<tr><td><span class="chip rec">권장</span></td><td><a href="https://wikidocs.net/321316" target="_blank" rel="noopener">1-4-2-2. SqliteSaver</a></td><td>파일에 영구 저장, <code>with</code>로 쓰기, 비동기 버전</td></tr>
+<tr><td><span class="chip rec">권장</span></td><td><a href="https://wikidocs.net/319030" target="_blank" rel="noopener">1-4-4. Durable Execution</a></td><td>@task로 재개 시 값 고정, 멱등성, durability 모드</td></tr>
+<tr><td><span class="chip ref">참고</span></td><td><a href="https://wikidocs.net/261600" target="_blank" rel="noopener">1-4-2. 체크포인터 종류별 활용법</a></td><td>환경별 선택 표 (InMemory → Sqlite → Postgres)</td></tr>
+</tbody></table></div>
+<p class="cap">State와 RunnableConfig의 차이는 위키독스에 따로 정리되어 있지 않아 1번 탭에서 새로 설명합니다. 코드는 1-3-3-4(config)와 1-4(Runtime[Context])에 흩어져 있습니다.</p>
+<h3>교재에서 바로잡을 곳 (LangGraph 1.2.20 · checkpoint-sqlite 3.1.3으로 실행 확인)</h3>
+<div class="tw"><table><thead><tr><th>페이지</th><th>문제</th><th>바르게</th></tr></thead><tbody>
+<tr><td>1-4-3 Time Travel</td><td><code>update_state(target.config, ...)</code> 후 <code>invoke(None, config=target.config)</code></td><td><b>수정이 반영되지 않습니다.</b> target.config는 수정 <b>전</b> 체크포인트를 가리키므로 원래 값으로 다시 실행됩니다. <code>new_cfg = update_state(...)</code>의 <b>반환값</b>으로 <code>invoke(None, new_cfg)</code> 해야 합니다. "동일 시점에서 다른 경로" 예제도 같습니다. → M6</td></tr>
+<tr><td>1-4-4 Durable</td><td><code>checkpointer = PostgresSaver.from_conn_string(...)</code>를 바로 대입</td><td><code>from_conn_string</code>은 <code>with</code>로 여는 컨텍스트 매니저입니다. 바로 넣으면 <code>TypeError: Invalid checkpointer provided ... _GeneratorContextManager</code>(SqliteSaver로 확인). Postgres는 처음 한 번 <code>checkpointer.setup()</code>도 필요합니다. → M4</td></tr>
+<tr><td>1-4-1</td><td>예제 3이 메시지 dict에 <code>"time"</code> 키를 넣음</td><td>에러는 없지만 <code>additional_kwargs</code>로 숨어 들어갑니다. 시간을 쓰려면 별도 State 필드로.</td></tr>
+</tbody></table></div>
+<div class="bridge">
+<div><span class="tg rag">RAG</span><span>대화형 RAG는 이전 질문을 기억해야 "그거 이월도 돼?" 같은 후속 질문을 처리합니다. Time Travel로 검색어만 고쳐 다시 돌려 볼 수 있습니다.</span></div>
+<div><span class="tg lg1">LangGraph 필수</span><span>체크포인터가 있어야 interrupt(HITL), Time Travel, 장애 후 재개가 가능합니다.</span></div>
+<div><span class="tg ag">MCP·에이전트</span><span>사용자 정보·DB 연결·API 키를 State에 넣으면 체크포인터 저장소에 그대로 기록됩니다. 어디에 둘지가 보안 문제입니다.</span></div>
+</div>
+</section></div>
+
+<!-- ============ 1. State vs Config ============ -->
+<div class="pane" role="tabpanel" id="pane-vs" aria-labelledby="tab-vs" hidden><section><h2><span class="no">1</span>State vs RunnableConfig<span class="tg lg1">LangGraph 필수</span><span class="newbadge">교재에 없음</span></h2>
+<h3>한 문장 정리</h3>
+<p><b>State</b>는 그래프가 일하면서 <b>만들고 바꾸고 기억하는 데이터</b>, <b>RunnableConfig</b>는 이번 실행을 <b>어떻게 돌릴지 알려 주는 설정</b>입니다. State는 체크포인터에 저장되고, config는 저장되지 않습니다.</p>
+<h3>비유: 병원 진료</h3>
+<div class="tw"><table><thead><tr><th></th><th>병원에서</th><th>LangGraph에서</th></tr></thead><tbody>
+<tr><td><b>State</b></td><td>진료 차트. 의사들이 돌아가며 적고, 다음 진료 때 다시 꺼내 본다.</td><td>노드가 읽고 쓰는 dict. 체크포인터가 보관하고, 같은 thread_id로 오면 이어서 쓴다.</td></tr>
+<tr><td><b>RunnableConfig</b></td><td>접수증. "누구 차트인지(환자번호)", "오늘은 어떤 진료 방식으로". 진료가 끝나면 버린다.</td><td><code>thread_id</code>, <code>recursion_limit</code>, 이번만 쓸 옵션(<code>model</code> 등). 이번 invoke에만 쓰이고 저장되지 않는다.</td></tr>
+<tr><td><b>context</b> (런타임 컨텍스트)</td><td>신분증·보험 정보. 진료 내내 같고, 차트에 옮겨 적지 않는다.</td><td><code>context=UserCtx(...)</code>로 전달. 실행 내내 고정, 노드는 읽기만, 저장되지 않는다. (LangGraph 0.6+ 권장 방식)</td></tr>
+</tbody></table></div>
+<h3>세 가지 비교</h3>
+<div class="tw"><table><thead><tr><th></th><th>State</th><th>RunnableConfig</th><th>context</th></tr></thead><tbody>
+<tr><td>정의</td><td><code>StateGraph(MyState)</code></td><td>정의 없음 (dict)</td><td><code>context_schema=Ctx</code></td></tr>
+<tr><td>전달</td><td>invoke 1번째 인자</td><td>invoke 2번째 인자</td><td><code>context=Ctx(...)</code></td></tr>
+<tr><td>노드에서 읽기</td><td><code>state["key"]</code></td><td><code>config["configurable"]["key"]</code></td><td><code>runtime.context.key</code></td></tr>
+<tr><td>노드가 바꿀 수 있나</td><td>예 (반환값)</td><td>아니오</td><td>아니오</td></tr>
+<tr><td>체크포인터에 저장</td><td><b>예</b></td><td>아니오 (thread_id는 "어디에 저장할지" 열쇠로만 쓰임)</td><td>아니오</td></tr>
+<tr><td>다음 invoke에 남나</td><td>예 (같은 thread_id면)</td><td>아니오, 매번 다시 전달</td><td>아니오, 매번 다시 전달</td></tr>
+<tr><td>대표 예</td><td>messages, 검색 문서, 재시도 횟수, 요약</td><td>thread_id, recursion_limit, 이번 요청의 모델·말투 옵션</td><td>user_id, 부서, 권한, DB 연결, API 클라이언트</td></tr>
+</tbody></table></div>
+<h3>어디에 둘지 고르는 4가지 질문</h3>
+<div class="qcard"><b>Q1. 노드가 이 값을 바꾸나?</b> → 바꾸면 <b>State</b>. config와 context는 읽기 전용입니다.</div>
+<div class="qcard"><b>Q2. 다음 턴(다음 invoke)에도 기억해야 하나?</b> → 그렇다면 <b>State</b>. config에 넣으면 다음 호출 때 사라집니다.</div>
+<div class="qcard"><b>Q3. "이번 실행을 어떻게"에 관한 것인가?</b> → 어느 대화인지(thread_id), 실행 한도, 이번만 바꿀 옵션이면 <b>config</b>.</div>
+<div class="qcard"><b>Q4. 실행 내내 고정이고, 저장되면 안 되는가?</b> → 사용자 신원, DB 연결, API 클라이언트·키는 <b>context</b>(또는 config). State에 넣으면 저장소에 기록되거나 직렬화 에러가 납니다.</div>
+<h3>세 가지를 한 노드에서 쓰기</h3>
+<pre class="py">from dataclasses import dataclass
+from langchain_core.runnables import RunnableConfig
+from langgraph.runtime import Runtime
+
+@dataclass
+class UserCtx:
+    user_id: str
+    dept: str
+
+def bot(state: ChatState, config: RunnableConfig, runtime: Runtime[UserCtx]):
+    history = state["messages"]                            # State: 기억할 데이터
+    tone = config["configurable"].get("tone", "기본")      # config: 이번 실행 옵션
+    dept = runtime.context.dept                            # context: 고정 사용자 정보
+    ...
+
+g = StateGraph(ChatState, context_schema=UserCtx)
+app.invoke({"messages": [...]},
+           {"configurable": {"thread_id": "u-77:s1", "tone": "공손"}},
+           context=UserCtx(user_id="u-77", dept="재무팀"))</pre>
+<h3>실제로 확인한 결과</h3>
+<div class="codehead">config 값은 다음 호출에 남지 않는다 (State 값은 남는다)</div>
+<pre class="out">1번째 호출 (config에 model=gpt-4o 전달):  config=gpt-4o   / state=gpt-4o
+2번째 호출 (config에 model 없음):         config=기본모델 / state=gpt-4o</pre>
+<div class="codehead">thread_id를 State에 넣고 config에는 안 넣으면</div>
+<pre class="err">ValueError: Checkpointer requires one or more of the following 'configurable' keys: thread_id, checkpoint_ns, checkpoint_id</pre>
+<div class="codehead">DB 연결 객체를 State에 넣으면 / API 키를 State에 넣으면</div>
+<pre class="err">TypeError: Type is not msgpack serializable: sqlite3.Connection</pre>
+<pre class="out">SqliteSaver 파일 안에 "sk-SECRET-1234" 문자열이 있는가? → True</pre>
+<div class="warn"><b>위키독스와의 연결</b> 1-3-3-4는 모델 이름 등을 <code>config["configurable"]</code>로, 1-4는 user_id를 <code>Runtime[Context]</code>로 넘깁니다. 둘 다 동작합니다. 새 코드는 "실행 옵션 = config, 고정 사용자 정보·자원 = context"로 나누면 깔끔합니다.</div>
+</section></div>
+
+<!-- ============ 2. 설계 이슈 ============ -->
+<div class="pane" role="tabpanel" id="pane-design" aria-labelledby="tab-design" hidden><section><h2><span class="no">2</span>체크포인터 설계 이슈<span class="tg rag">RAG</span><span class="tg ag">MCP·에이전트</span></h2>
+<h3>체크포인터가 하는 일</h3>
+<p>그래프의 <b>단계(super-step)가 끝날 때마다 State 전체를 저장</b>합니다. 저장 위치의 열쇠는 config의 <code>thread_id</code>입니다. 같은 thread_id로 다시 invoke하면 마지막 State에서 이어 갑니다.</p>
+<div class="flow"><span>invoke(입력, thread_id=A)</span><i>→</i><span class="n">마지막 State 불러오기</span><i>→</i><span class="n">입력과 합치기(리듀서)</span><i>→</i><span class="n">노드 실행</span><i>→</i><span>단계마다 저장</span></div>
+<h3>설계할 때 던질 5가지 질문</h3>
+<div class="qcard"><b>Q1. 무엇을 기억해야 하나?</b><br>State가 곧 저장 내용입니다. 기억할 필요 없는 큰 데이터, 비밀 값, 연결 객체는 State에서 빼세요(1번 탭).</div>
+<div class="qcard"><b>Q2. 누구 단위로 기억하나? (thread_id 설계)</b><br>"사용자 한 명 = 대화 하나"인지, "사용자 × 대화방"인지 정합니다. 예: <code>f"{user_id}:{session_id}"</code>. 매번 새로 만들면 기억이 없고, 모두 같으면 서로 섞입니다.</div>
+<div class="qcard"><b>Q3. 어디에 저장하나?</b><br>개발·테스트는 <code>InMemorySaver</code>(프로세스가 끝나면 사라짐), 서버 한 대는 <code>SqliteSaver</code>, 서버 여러 대는 <code>PostgresSaver</code>. 바꿔 끼워도 그래프 코드는 그대로입니다.</div>
+<div class="qcard"><b>Q4. 되돌리거나 다시 실행할 일이 있나?</b><br>Time Travel(과거 지점에서 고쳐 다시 실행), interrupt 재개, 장애 후 재시작. 재개되면 노드는 <b>처음부터 다시</b> 실행되므로 랜덤·시간·LLM 호출은 <code>@task</code>로 감싸고, 메일 발송 같은 외부 작업은 두 번 해도 안전하게(멱등) 만듭니다.</div>
+<div class="qcard"><b>Q5. 여러 대화에 걸쳐 기억해야 하나?</b><br>체크포인터는 대화(thread) 하나 안의 기억입니다. "이 사용자는 매운 음식을 좋아함"처럼 대화를 넘는 기억은 <b>Store</b>(장기 기억)에 둡니다.</div>
+<h3>설계를 안 하면 생기는 문제</h3>
+<div class="tw"><table><thead><tr><th>증상</th><th>원인 (놓친 질문)</th><th>해결</th><th>어디서</th></tr></thead><tbody>
+<tr><td>매번 처음 보는 것처럼 대답</td><td>호출마다 새 thread_id (Q2)</td><td>사용자·세션에서 만든 고정 thread_id</td><td>M2</td></tr>
+<tr><td>다른 사람의 기록이 보임</td><td>모두 같은 thread_id (Q2)</td><td>사용자별 thread_id</td><td>M3</td></tr>
+<tr><td>재시작하면 기억이 사라짐</td><td>InMemorySaver (Q3)</td><td>SqliteSaver / PostgresSaver</td><td>M4</td></tr>
+<tr><td>직렬화 에러, 비밀 값 유출</td><td>연결·키를 State에 넣음 (Q1)</td><td>context로 이동</td><td>M5</td></tr>
+<tr><td>고쳐서 다시 돌렸는데 결과 그대로</td><td>update_state 반환 config를 안 씀 (Q4)</td><td><code>invoke(None, new_cfg)</code></td><td>M6</td></tr>
+<tr><td>승인 화면과 저장된 값이 다름</td><td>재개 때 노드가 다시 실행됨 (Q4)</td><td><code>@task</code></td><td>M7</td></tr>
+</tbody></table></div>
+<h3>체크포인터 고르기</h3>
+<div class="tw"><table><thead><tr><th>체크포인터</th><th>저장 위치</th><th>재시작 후</th><th>설치</th><th>언제</th></tr></thead><tbody>
+<tr><td>InMemorySaver</td><td>메모리</td><td>사라짐</td><td>기본 포함</td><td>개발, 테스트, 수업</td></tr>
+<tr><td>SqliteSaver</td><td>파일</td><td>남음</td><td><code>pip install langgraph-checkpoint-sqlite</code></td><td>로컬, 서버 한 대</td></tr>
+<tr><td>PostgresSaver</td><td>DB 서버</td><td>남음</td><td><code>pip install langgraph-checkpoint-postgres</code></td><td>운영, 서버 여러 대</td></tr>
+</tbody></table></div>
+</section></div>
+
+<!-- ============ 3. 문법 ============ -->
+<div class="pane" role="tabpanel" id="pane-syntax" aria-labelledby="tab-syntax" hidden><section><h2><span class="no">3</span>체크포인터 문법 한 장<span class="tg lg1">LangGraph 필수</span></h2>
+<h3>붙이고, thread_id로 실행하고, 들여다보기</h3>
+<pre class="py">from langgraph.checkpoint.memory import InMemorySaver
+
+app = builder.compile(checkpointer=InMemorySaver())
+cfg = {"configurable": {"thread_id": "u-77:s1"}}
+
+app.invoke({"messages": [{"role": "user", "content": "안녕"}]}, cfg)
+app.invoke({}, cfg)                       # 새 입력 없이도 저장된 State에서 이어서 실행
+st = app.get_state(cfg)                   # 마지막 저장 상태
+st.values, st.next                        # 값, 다음에 실행될 노드 (끝났으면 ())</pre>
+<h3>파일에 영구 저장 (SqliteSaver)</h3>
+<pre class="py">from langgraph.checkpoint.sqlite import SqliteSaver
+
+with SqliteSaver.from_conn_string("checkpoints.db") as cp:    # 반드시 with
+    app = builder.compile(checkpointer=cp)
+    app.invoke(입력, cfg)
+# 경로만 쓴다. "sqlite:///checkpoints.db" 형식은 에러</pre>
+<h3>Time Travel</h3>
+<pre class="py">history = list(app.get_state_history(cfg))                  # 최신 → 과거 순
+target = next(s for s in history if s.next == ("retrieve",))  # retrieve 직전 시점
+
+new_cfg = app.update_state(target.config, {"query": "연차 이월"}, as_node="make_query")
+app.invoke(None, new_cfg)            # ← 반환된 new_cfg 로 실행 (target.config 아님!)</pre>
+<h3>재개해도 값이 바뀌지 않게 (@task) · 저장 시점 (durability)</h3>
+<pre class="py">from langgraph.func import task
+
+@task
+def new_order_no() -&gt; str:
+    return f"ORD-{random.randint(1000, 9999)}"
+
+def create_order(state):
+    order_no = new_order_no().result()        # 재개 때는 저장된 값을 돌려줌
+    ok = interrupt(f"주문번호 {order_no} 결제할까요?")
+    return {"order_no": order_no, "approved": ok}
+
+app.invoke(입력, cfg, durability="sync")     # "exit" | "async"(기본) | "sync"</pre>
+<h3>여러 대화에 걸친 기억 (Store) 맛보기</h3>
+<pre class="py">from langgraph.store.memory import InMemoryStore
+store = InMemoryStore()
+store.put(("users", "u-77"), "profile", {"dept": "재무팀"})
+
+app = builder.compile(checkpointer=InMemorySaver(), store=store)
+def node(state, runtime: Runtime[UserCtx]):
+    prof = runtime.store.get(("users", runtime.context.user_id), "profile")</pre>
+</section></div>
+
+<!-- ============ 실제예 1 ============ -->
+<div class="pane" role="tabpanel" id="pane-ex1" aria-labelledby="tab-ex1" hidden><section><h2><span class="no">4</span>실제예 ① 세션을 기억하는 사내 상담봇<span class="tg lg1">LangGraph 필수</span><span class="tg ag">MCP·에이전트</span></h2>
+<div class="mission">
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>사내 상담봇이 같은 대화방 안에서는 이름을 기억해야 하고, 새 대화방에서는 처음부터 시작해야 합니다. 말투(공손/기본)는 요청마다 바꿀 수 있고, 부서 정보는 로그인 정보에서 옵니다.</p>
+<div class="mlabel st">STEP 2 · 어디에 둘지 설계</div>
+<div class="tw"><table><thead><tr><th>값</th><th>판단</th><th>위치</th></tr></thead><tbody>
+<tr><td>대화 메시지</td><td>노드가 추가, 다음 턴에 기억 (Q1, Q2)</td><td>State (MessagesState)</td></tr>
+<tr><td>턴 수</td><td>노드가 증가, 기억</td><td>State (<code>Annotated[int, add]</code>)</td></tr>
+<tr><td>대화방 구분</td><td>"어느 대화인지" (Q3)</td><td>config thread_id = <code>"u-77:session-1"</code></td></tr>
+<tr><td>말투</td><td>이번 요청 옵션 (Q3)</td><td>config <code>tone</code></td></tr>
+<tr><td>user_id, 부서</td><td>실행 내내 고정, 저장 불필요 (Q4)</td><td>context</td></tr>
+</tbody></table></div>
+<div class="mlabel st">STEP 3 · 코드</div>
+<pre class="py">from dataclasses import dataclass
+from typing import Annotated
+from operator import add
+from langgraph.graph import StateGraph, MessagesState, START, END
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.runtime import Runtime
+from langchain_core.runnables import RunnableConfig
+from langchain_core.messages import HumanMessage, AIMessage
+
+@dataclass
+class UserCtx:
+    user_id: str
+    dept: str
+
+class ChatState(MessagesState):
+    turn: Annotated[int, add]
+
+def bot(state: ChatState, config: RunnableConfig, runtime: Runtime[UserCtx]):
+    polite = config["configurable"].get("tone") == "공손"
+    last = state["messages"][-1].content
+    names = [m.content.split("내 이름은 ")[1].rstrip("야") for m in state["messages"]
+             if isinstance(m, HumanMessage) and "내 이름은 " in m.content]
+    if "이름" in last and "뭐" in last:
+        if names:
+            reply = f"{names[-1]}님이라고 하셨" + ("습니다." if polite else "어요.")
+        else:
+            reply = "아직 이름을 듣지 못했" + ("습니다." if polite else "어요.")
+    else:
+        reply = "반갑습니다!" if polite else "반가워요!"
+    reply += f" ({runtime.context.dept} · {state['turn'] + 1}번째 턴)"
+    return {"messages": [AIMessage(content=reply)], "turn": 1}
+
+g = StateGraph(ChatState, context_schema=UserCtx)
+g.add_node("bot", bot); g.add_edge(START, "bot"); g.add_edge("bot", END)
+chat = g.compile(checkpointer=InMemorySaver())</pre>
+<div class="mlabel st">STEP 4 · 실행</div>
+<pre class="py">ctx = UserCtx(user_id="u-77", dept="재무팀")
+s1 = {"configurable": {"thread_id": "u-77:session-1"}}
+s1_polite = {"configurable": {"thread_id": "u-77:session-1", "tone": "공손"}}
+s2 = {"configurable": {"thread_id": "u-77:session-2"}}
+
+say = lambda text, cfg: chat.invoke({"messages": [HumanMessage(content=text)]}, cfg, context=ctx)["messages"][-1].content
+print(say("내 이름은 철수야", s1))
+print(say("내 이름이 뭐였지?", s1_polite))
+print(say("내 이름이 뭐였지?", s1))
+print(say("내 이름이 뭐였지?", s2))
+st = chat.get_state(s1)
+print("저장된 State 키:", list(st.values.keys()), "| turn:", st.values["turn"], "| 메시지 수:", len(st.values["messages"]))</pre>
+<div class="mlabel st">STEP 5 · 결과 확인</div>
+<pre class="out">반가워요! (재무팀 · 1번째 턴)
+철수님이라고 하셨습니다. (재무팀 · 2번째 턴)
+철수님이라고 하셨어요. (재무팀 · 3번째 턴)
+아직 이름을 듣지 못했어요. (재무팀 · 1번째 턴)
+저장된 State 키: ['messages', 'turn'] | turn: 3 | 메시지 수: 6</pre>
+<ol class="steps">
+<li><span class="lbl">말투는 그 호출에만.</span> 2번째 턴은 공손, 3번째 턴은 tone을 안 줬으니 다시 기본입니다. config는 남지 않습니다.</li>
+<li><span class="lbl">대화방이 다르면 처음부터.</span> session-2는 이름도 턴 수도 새로 시작합니다.</li>
+<li><span class="lbl">저장된 것은 State뿐.</span> 체크포인트에는 messages와 turn만 있고 tone, user_id, dept는 없습니다.</li>
+</ol>
+</div>
+</section></div>
+
+<!-- ============ 실제예 2 ============ -->
+<div class="pane" role="tabpanel" id="pane-ex2" aria-labelledby="tab-ex2" hidden><section><h2><span class="no">5</span>실제예 ② RAG 검색어를 고쳐 다시 돌리기 (Time Travel)<span class="tg rag">RAG</span><span class="tg lg1">LangGraph 필수</span></h2>
+<div class="mission">
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>"연차 이월 되나요?"라는 질문에 RAG가 엉뚱하게 "연차는 15일"이라고 답했습니다. 질문 전체를 다시 돌리지 않고, <b>검색어를 만든 지점</b>으로 돌아가 검색어만 고쳐 그 뒤만 다시 실행하려 합니다.</p>
+<div class="flow"><span class="n">make_query</span><i>→</i><span class="n">retrieve</span><i>→</i><span class="n">generate</span></div>
+<div class="mlabel st">STEP 2 · 그래프와 첫 실행</div>
+<pre class="py">class RagState(TypedDict):
+    question: str
+    query: str
+    docs: list[str]
+    answer: str
+
+INDEX = {"연차": "연차는 15일", "연차 이월": "연차는 최대 5일까지 다음 해로 이월"}
+def make_query(s): return {"query": s["question"].split()[0]}          # 첫 단어만 → 버그
+def retrieve(s):   return {"docs": [v for k, v in INDEX.items() if k == s["query"]]}
+def generate(s):   return {"answer": " / ".join(s["docs"]) or "근거 없음"}
+
+b = StateGraph(RagState)
+for n, f in [("make_query", make_query), ("retrieve", retrieve), ("generate", generate)]:
+    b.add_node(n, f)
+b.add_edge(START, "make_query"); b.add_edge("make_query", "retrieve")
+b.add_edge("retrieve", "generate"); b.add_edge("generate", END)
+rag = b.compile(checkpointer=InMemorySaver())
+
+cfg = {"configurable": {"thread_id": "rag-1"}}
+print("1차:", rag.invoke({"question": "연차 이월 되나요?"}, cfg)["answer"])</pre>
+<pre class="out">1차: 연차는 15일</pre>
+<div class="mlabel st">STEP 3 · 기록 보기: 어디서 틀렸나</div>
+<pre class="py">for s in rag.get_state_history(cfg):
+    print("step", s.metadata["step"], "next", s.next, "query=", s.values.get("query"))</pre>
+<pre class="out">step 3 next () query= 연차
+step 2 next ('generate',) query= 연차
+step 1 next ('retrieve',) query= 연차          ← make_query 직후. 여기서 고친다
+step 0 next ('make_query',) query= None
+step -1 next ('__start__',) query= None</pre>
+<div class="mlabel st">STEP 4 · 고쳐서 그 지점부터 다시 실행</div>
+<pre class="py">target = next(s for s in rag.get_state_history(cfg) if s.next == ("retrieve",))
+new_cfg = rag.update_state(target.config, {"query": "연차 이월"}, as_node="make_query")
+print("2차:", rag.invoke(None, new_cfg)["answer"])          # 반환된 new_cfg 사용</pre>
+<div class="mlabel st">STEP 5 · 결과 확인</div>
+<pre class="out">2차: 연차는 최대 5일까지 다음 해로 이월
+최신 상태: 연차는 최대 5일까지 다음 해로 이월
+history 수: 8          # 원래 5개 + 수정 1개 + retrieve·generate 2개 (원래 기록은 그대로)</pre>
+<ol class="steps">
+<li><span class="lbl">원인 찾기 = 기록 보기.</span> get_state_history로 단계마다 State를 볼 수 있어 "어느 노드가 틀렸는지"가 바로 보입니다.</li>
+<li><span class="lbl">고친 건 새 갈래(fork).</span> 원래 기록은 지워지지 않고, 수정 지점에서 새 갈래가 생깁니다.</li>
+<li><span class="lbl">반환된 config로 실행.</span> 위키독스처럼 target.config로 실행하면 수정 전 값으로 다시 돕니다 → M6</li>
+</ol>
+</div>
+</section></div>
+
+<!-- ============ M1 ============ -->
+<div class="pane" role="tabpanel" id="pane-m1" aria-labelledby="tab-m1" hidden><section>
+<div class="mission" id="mem-m1" data-mid="mem-m1">
+<div class="mhead"><span class="lv lv1">★ 기본</span><span class="tgs"><span class="tg lg1">LangGraph 필수</span><span class="tg ag">MCP·에이전트</span></span><h3>M1. 어디에 둘까: State · config · context</h3><label class="mdone"><input type="checkbox" id="mem-m1-done" data-done="mem-m1"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>사내 RAG 에이전트를 설계합니다. 아래 10개 값을 State, config, context 중 어디에 둘지 정하세요.</p>
+<pre class="py"># 1. 대화 메시지              6. 이번 요청만 쓸 LLM 모델 이름
+# 2. 로그인한 사용자 ID         7. 검색된 문서 목록
+# 3. 대화방 ID                 8. 재검색 횟수
+# 4. 벡터 DB 클라이언트 객체    9. 사용자 권한 등급 (열람 가능한 문서 범위)
+# 5. 무한 루프 방지 한도        10. 대화가 길어졌을 때 만든 요약문</pre>
+<div class="mlabel st">STEP 2 · 질문으로 판단</div>
+<p>각 값에 Q1(노드가 바꾸나) → Q2(다음 턴에 기억) → Q3(이번 실행 방식) → Q4(고정·저장 금지) 순서로 답하며 표를 채우세요.</p>
+<details class="ans"><summary>정답 확인</summary><div class="tw"><table><thead><tr><th>값</th><th>위치</th><th>이유</th></tr></thead><tbody>
+<tr><td>1 대화 메시지</td><td>State</td><td>노드가 추가하고 다음 턴에 기억</td></tr>
+<tr><td>2 사용자 ID</td><td>context</td><td>실행 내내 고정, 노드는 읽기만</td></tr>
+<tr><td>3 대화방 ID</td><td>config (thread_id)</td><td>어느 대화를 이어갈지 정하는 열쇠</td></tr>
+<tr><td>4 벡터 DB 클라이언트</td><td>context</td><td>State에 넣으면 직렬화 에러 (M5)</td></tr>
+<tr><td>5 루프 한도</td><td>config (recursion_limit)</td><td>이번 실행 방식</td></tr>
+<tr><td>6 이번 요청 모델</td><td>config</td><td>이번에만. 남으면 안 됨</td></tr>
+<tr><td>7 검색 문서</td><td>State</td><td>노드가 만들고 다음 노드가 씀</td></tr>
+<tr><td>8 재검색 횟수</td><td>State</td><td>노드가 바꿈. config에 두면 늘릴 수 없음</td></tr>
+<tr><td>9 권한 등급</td><td>context</td><td>고정 신원 정보. State에 두면 노드가 바꿀 수 있어 위험</td></tr>
+<tr><td>10 요약문</td><td>State</td><td>노드가 만들고 다음 턴에도 써야 함</td></tr>
+</tbody></table></div></details>
+<div class="mlabel st">STEP 3 · 코드로 확인 ①: config는 남지 않는다</div>
+<pre class="py">class S(TypedDict):
+    model_in_state: str
+    log: Annotated[list, add]
+
+def node(state: S, config: RunnableConfig):
+    m = config["configurable"].get("model", "기본모델")
+    return {"log": [f"config={m} / state={state.get('model_in_state')}"]}
+
+# 1번째: invoke({"model_in_state": "gpt-4o", "log": []}, {"configurable": {"thread_id": "m", "model": "gpt-4o"}})
+# 2번째: invoke({}, {"configurable": {"thread_id": "m"}})   → log 를 예측하세요</pre>
+<details class="ans"><summary>실제 출력</summary><pre class="out">['config=gpt-4o / state=gpt-4o', 'config=기본모델 / state=gpt-4o']</pre></details>
+<div class="mlabel st">STEP 4 · 코드로 확인 ②: 권한 등급을 State에 두면</div>
+<p>권한 등급(9번)을 State에 두고, 노드 하나가 실수로 <code>{"role": "admin"}</code>을 반환한다고 상상해 보세요. 다음 턴에 어떻게 될까요?</p>
+<details class="ans"><summary>확인</summary><p>State는 노드가 바꿀 수 있고, 바뀐 값은 체크포인터에 저장되어 다음 턴에도 유지됩니다. 그 대화는 계속 admin 권한으로 문서를 검색합니다. 신원·권한은 매 요청마다 인증 시스템에서 받아 context로 넘겨야 합니다.</p></details>
+<div class="mlabel st">STEP 5 · 확인</div>
+<ul class="checks">
+<li><input type="checkbox" id="mem-m1-c1" data-chk="mem-m1-c1"><label for="mem-m1-c1">10개 중 8개 이상 맞혔다</label></li>
+<li><input type="checkbox" id="mem-m1-c2" data-chk="mem-m1-c2"><label for="mem-m1-c2">config 값이 다음 호출에 남지 않는 것을 직접 실행해 확인했다</label></li>
+<li><input type="checkbox" id="mem-m1-c3" data-chk="mem-m1-c3"><label for="mem-m1-c3">권한을 State에 두면 왜 위험한지 설명했다</label></li>
+</ul>
+</div>
+</section></div>
+
+<!-- ============ M2 ============ -->
+<div class="pane" role="tabpanel" id="pane-m2" aria-labelledby="tab-m2" hidden><section>
+<div class="mission" id="mem-m2" data-mid="mem-m2">
+<div class="mhead"><span class="lv lv1">★ 기본</span><span class="tgs"><span class="tg lg1">LangGraph 필수</span></span><h3>M2. 매번 처음 보는 손님</h3><label class="mdone"><input type="checkbox" id="mem-m2-done" data-done="mem-m2"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>체크포인터를 붙였는데 방문 횟수가 늘 1입니다. API 서버의 요청 처리 함수가 이렇게 되어 있습니다.</p>
+<pre class="py">import uuid
+class Counter(TypedDict):
+    visits: Annotated[int, add]
+
+g = StateGraph(Counter)
+g.add_node("visit", lambda s: {"visits": 1}); g.add_edge(START, "visit")
+app = g.compile(checkpointer=InMemorySaver())
+
+def handle(user_id):                                   # 요청마다 호출됨
+    cfg = {"configurable": {"thread_id": str(uuid.uuid4())}}
+    return app.invoke({"visits": 0}, cfg)["visits"]
+
+print([handle("alice") for _ in range(3)])</pre>
+<div class="mlabel st">STEP 2 · 설계 점검 (Q2)</div>
+<p>세 번의 호출이 같은 대화로 이어지려면 무엇이 같아야 하나요? 지금은 어떤가요?</p>
+<details class="ans"><summary>확인</summary><p>thread_id가 같아야 합니다. <code>uuid4()</code>는 호출마다 새 값이라 매번 새 대화가 됩니다. 체크포인터는 저장은 하고 있지만 다시 찾을 열쇠가 매번 다릅니다.</p></details>
+<div class="mlabel st">STEP 3 · 결과 예측</div>
+<details class="ans"><summary>실제 출력</summary><pre class="out">[1, 1, 1]</pre></details>
+<div class="mlabel st">STEP 4 · 고치기</div>
+<p>사용자마다 고정된 thread_id를 만드세요. 입력으로 <code>{"visits": 0}</code>을 넘기는 것도 문제가 없는지 생각해 보세요(add 리듀서).</p>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">def handle(user_id):
+    cfg = {"configurable": {"thread_id": f"visit:{user_id}"}}
+    return app.invoke({}, cfg)["visits"]           # 저장된 State에서 이어서
+
+print([handle("alice") for _ in range(3)], handle("bob"))</pre>
+<pre class="out">[1, 2, 3] 1</pre>
+<p><code>{"visits": 0}</code>은 add 리듀서라 0을 더할 뿐이어서 이 경우엔 결과가 같지만, 덮어쓰기 필드였다면 매번 초기화됩니다. 이어서 실행할 때는 바꿀 값만 입력으로 넘깁니다.</p></details>
+<div class="mlabel st">STEP 5 · 확인</div>
+<ul class="checks">
+<li><input type="checkbox" id="mem-m2-c1" data-chk="mem-m2-c1"><label for="mem-m2-c1">alice는 1, 2, 3으로 늘고 bob은 1부터 시작한다</label></li>
+<li><input type="checkbox" id="mem-m2-c2" data-chk="mem-m2-c2"><label for="mem-m2-c2">config 없이 invoke하면 나는 에러(ValueError: Checkpointer requires ... thread_id)를 확인했다</label></li>
+</ul>
+</div>
+</section></div>
+
+<!-- ============ M3 ============ -->
+<div class="pane" role="tabpanel" id="pane-m3" aria-labelledby="tab-m3" hidden><section>
+<div class="mission" id="mem-m3" data-mid="mem-m3">
+<div class="mhead"><span class="lv lv1">★ 기본</span><span class="tgs"><span class="tg ag">MCP·에이전트</span></span><h3>M3. 남의 방문 기록이 섞인다</h3><label class="mdone"><input type="checkbox" id="mem-m3-done" data-done="mem-m3"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>이번엔 반대입니다. Bob이 처음 왔는데 "2번째 방문"이라고 인사합니다.</p>
+<pre class="py">class Visitor(TypedDict):
+    name: str
+    count: Annotated[int, add]
+    msg: str
+
+def welcome(s):
+    c = s.get("count", 0) + 1
+    return {"count": 1, "msg": f"{s['name']}님 {c}번째 방문"}
+
+g = StateGraph(Visitor); g.add_node("w", welcome); g.add_edge(START, "w")
+app = g.compile(checkpointer=InMemorySaver())
+
+shared = {"configurable": {"thread_id": "shared"}}
+print(app.invoke({"name": "Alice"}, shared)["msg"])
+print(app.invoke({"name": "Bob"}, shared)["msg"])</pre>
+<div class="mlabel st">STEP 2 · 결과 예측과 원인</div>
+<details class="ans"><summary>실제 출력</summary><pre class="out">Alice님 1번째 방문
+Bob님 2번째 방문</pre><p>모든 사용자가 같은 thread_id를 써서 하나의 State를 같이 씁니다. 실제 챗봇이었다면 Bob이 Alice의 대화 내용을 보게 됩니다.</p></details>
+<div class="mlabel st">STEP 3 · thread_id 설계</div>
+<p>요구사항: ① 사용자마다 따로 ② 같은 사용자도 "새 대화" 버튼을 누르면 새로 시작. thread_id를 어떤 모양으로 만들까요?</p>
+<details class="ans"><summary>확인</summary><p><code>f"{user_id}:{session_id}"</code>. user_id만 쓰면 ②를 못 하고, session_id만 쓰면 다른 사용자와 겹칠 위험이 있습니다. 방문 횟수처럼 대화를 넘어 쌓여야 하는 값은 thread가 아니라 Store(장기 기억)가 맞습니다.</p></details>
+<div class="mlabel st">STEP 4 · 고치기</div>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">for who in ["Alice", "Bob", "Alice"]:
+    print(app.invoke({"name": who}, {"configurable": {"thread_id": f"visit:{who}"}})["msg"])</pre>
+<pre class="out">Alice님 1번째 방문
+Bob님 1번째 방문
+Alice님 2번째 방문</pre></details>
+<div class="mlabel st">STEP 5 · 확인</div>
+<ul class="checks">
+<li><input type="checkbox" id="mem-m3-c1" data-chk="mem-m3-c1"><label for="mem-m3-c1">사용자별로 횟수가 따로 쌓인다</label></li>
+<li><input type="checkbox" id="mem-m3-c2" data-chk="mem-m3-c2"><label for="mem-m3-c2">"thread = 대화 하나, Store = 대화를 넘는 기억"을 이 예로 설명했다</label></li>
+</ul>
+</div>
+</section></div>
+
+<!-- ============ M4 ============ -->
+<div class="pane" role="tabpanel" id="pane-m4" aria-labelledby="tab-m4" hidden><section>
+<div class="mission" id="mem-m4" data-mid="mem-m4">
+<div class="mhead"><span class="lv lv2">★★ 응용</span><span class="tgs"><span class="tg lg1">LangGraph 필수</span></span><h3>M4. 서버를 껐다 켜면 기억이 사라진다</h3><label class="mdone"><input type="checkbox" id="mem-m4-done" data-done="mem-m4"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>배포할 때마다 서버가 재시작되고, 그때마다 사용자의 대화가 사라집니다. InMemorySaver를 쓰고 있습니다. 파일로 저장하는 SqliteSaver로 바꾸세요.</p>
+<pre class="py">pip install langgraph-checkpoint-sqlite</pre>
+<div class="mlabel st">STEP 2 · 재시작 흉내 내기</div>
+<p>아래 스크립트 <code>counter.py</code>를 <b>터미널에서 세 번 따로</b> 실행합니다. 매번 새 프로세스이므로 "서버 재시작"과 같습니다.</p>
+<pre class="py"># counter.py
+from typing_extensions import TypedDict
+from langgraph.graph import StateGraph, START, END
+from langgraph.checkpoint.memory import InMemorySaver
+
+class C(TypedDict):
+    total: int
+
+g = StateGraph(C)
+g.add_node("add", lambda s: {"total": s["total"] + 10})
+g.add_edge(START, "add"); g.add_edge("add", END)
+
+app = g.compile(checkpointer=InMemorySaver())
+cfg = {"configurable": {"thread_id": "u1"}}
+inp = {} if app.get_state(cfg).values else {"total": 0}     # 저장된 게 있으면 이어서
+print(app.invoke(inp, cfg)["total"])</pre>
+<details class="ans"><summary>InMemorySaver 결과</summary><pre class="out">10
+10
+10</pre></details>
+<div class="mlabel st">STEP 3 · SqliteSaver로 바꾸기</div>
+<details class="hint"><summary>힌트 보기</summary><p><code>SqliteSaver.from_conn_string("checkpoints.db")</code>는 <code>with</code> 블록으로 엽니다. compile과 invoke를 블록 안으로 넣으세요.</p></details>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">from langgraph.checkpoint.sqlite import SqliteSaver
+
+with SqliteSaver.from_conn_string("checkpoints.db") as cp:
+    app = g.compile(checkpointer=cp)
+    cfg = {"configurable": {"thread_id": "u1"}}
+    inp = {} if app.get_state(cfg).values else {"total": 0}
+    print(app.invoke(inp, cfg)["total"])</pre>
+<pre class="out">10      ← 1번째 실행
+20      ← 2번째 실행 (새 프로세스)
+30      ← 3번째 실행</pre></details>
+<div class="mlabel st">STEP 4 · 흔한 실수 두 가지 직접 내 보기</div>
+<pre class="py">cp = SqliteSaver.from_conn_string("checkpoints.db")      # with 없이 (위키독스 1-4-4 Postgres 예제와 같은 모양)
+app = g.compile(checkpointer=cp)
+
+with SqliteSaver.from_conn_string("sqlite:///checkpoints.db") as cp: ...   # URI 형식</pre>
+<details class="ans"><summary>실제 출력</summary><pre class="err">TypeError: Invalid checkpointer provided. Expected an instance of `BaseCheckpointSaver`, `True`, `False`, or `None`. Received _GeneratorContextManager.</pre>
+<pre class="err">sqlite3.OperationalError: unable to open database file</pre></details>
+<div class="mlabel st">STEP 5 · 확인</div>
+<ul class="checks">
+<li><input type="checkbox" id="mem-m4-c1" data-chk="mem-m4-c1"><label for="mem-m4-c1">세 번 실행해 10, 20, 30이 나왔다</label></li>
+<li><input type="checkbox" id="mem-m4-c2" data-chk="mem-m4-c2"><label for="mem-m4-c2">그래프 코드는 그대로이고 체크포인터 줄만 바뀐 것을 확인했다</label></li>
+<li><input type="checkbox" id="mem-m4-c3" data-chk="mem-m4-c3"><label for="mem-m4-c3">checkpoints.db 파일을 지우면 다시 10부터 시작하는 것을 확인했다</label></li>
+</ul>
+<div class="note"><b>운영으로 갈 때</b> PostgresSaver도 같은 모양입니다: <code>with PostgresSaver.from_conn_string(DB_URI) as cp: cp.setup()</code> (setup은 처음 한 번 테이블 생성). 웹 서버(FastAPI)에서는 AsyncSqliteSaver · AsyncPostgresSaver와 <code>ainvoke</code>를 씁니다.</div>
+</div>
+</section></div>
+
+<!-- ============ M5 ============ -->
+<div class="pane" role="tabpanel" id="pane-m5" aria-labelledby="tab-m5" hidden><section>
+<div class="mission" id="mem-m5" data-mid="mem-m5">
+<div class="mhead"><span class="lv lv2">★★ 응용</span><span class="tgs"><span class="tg rag">RAG</span><span class="tg ag">MCP·에이전트</span></span><h3>M5. State에 넣으면 안 되는 것</h3><label class="mdone"><input type="checkbox" id="mem-m5-done" data-done="mem-m5"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>"노드마다 DB 연결과 API 키가 필요하니 State에 넣어 두면 편하겠다"고 만든 코드입니다.</p>
+<pre class="py">import sqlite3
+class S(TypedDict):
+    db: object            # DB 연결
+    api_key: str          # 외부 API 키
+    question: str
+    answer: str
+
+def answer(s):
+    rows = s["db"].execute("select 1").fetchall()
+    return {"answer": f"{s['question']} → {rows}"}
+
+g = StateGraph(S); g.add_node("answer", answer); g.add_edge(START, "answer")
+app = g.compile(checkpointer=InMemorySaver())
+app.invoke({"db": sqlite3.connect(":memory:"), "api_key": "sk-SECRET-1234",
+            "question": "연차?", "answer": ""}, {"configurable": {"thread_id": "s"}})</pre>
+<div class="mlabel st">STEP 2 · 결과 예측 ①</div>
+<details class="ans"><summary>실제 출력</summary><pre class="err">TypeError: Type is not msgpack serializable: sqlite3.Connection</pre><p>체크포인터는 State를 저장하려고 직렬화(바이트로 변환)합니다. 연결 객체는 직렬화할 수 없습니다.</p></details>
+<div class="mlabel st">STEP 3 · 결과 예측 ②: db를 빼고 api_key만 남기면</div>
+<p>db 필드를 지우고 SqliteSaver(<code>keys.db</code>)로 실행한 뒤, 파일 안에 "sk-SECRET-1234"가 있는지 확인하세요.</p>
+<pre class="py">print(b"sk-SECRET-1234" in open("keys.db", "rb").read())</pre>
+<details class="ans"><summary>실제 출력</summary><pre class="out">True</pre><p>에러는 없지만 API 키가 체크포인트 DB에 평문으로 저장됩니다. 체크포인트 DB는 보통 운영자·개발자가 조회하고 백업되므로 유출 경로가 됩니다.</p></details>
+<div class="mlabel st">STEP 4 · 고치기: context로 옮기기</div>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">import os
+from dataclasses import dataclass
+from langgraph.runtime import Runtime
+
+@dataclass
+class Deps:
+    db: sqlite3.Connection
+    api_key: str
+
+class S(TypedDict):
+    question: str
+    answer: str
+
+def answer(s: S, runtime: Runtime[Deps]):
+    rows = runtime.context.db.execute("select 1").fetchall()
+    return {"answer": f"{s['question']} → {rows}"}
+
+g = StateGraph(S, context_schema=Deps)
+g.add_node("answer", answer); g.add_edge(START, "answer")
+app = g.compile(checkpointer=InMemorySaver())
+app.invoke({"question": "연차?", "answer": ""}, {"configurable": {"thread_id": "s"}},
+           context=Deps(db=sqlite3.connect(":memory:"), api_key=os.environ.get("API_KEY", "")))</pre></details>
+<div class="mlabel st">STEP 5 · 확인</div>
+<ul class="checks">
+<li><input type="checkbox" id="mem-m5-c1" data-chk="mem-m5-c1"><label for="mem-m5-c1">두 문제(직렬화 에러, 평문 저장)를 모두 직접 확인했다</label></li>
+<li><input type="checkbox" id="mem-m5-c2" data-chk="mem-m5-c2"><label for="mem-m5-c2">context로 옮긴 뒤 get_state에 db, api_key가 없는 것을 확인했다</label></li>
+<li><input type="checkbox" id="mem-m5-c3" data-chk="mem-m5-c3"><label for="mem-m5-c3">RAG의 벡터 DB 클라이언트, LLM 객체도 같은 이유로 context(또는 전역)에 두는 것을 설명했다</label></li>
+</ul>
+</div>
+</section></div>
+
+<!-- ============ M6 ============ -->
+<div class="pane" role="tabpanel" id="pane-m6" aria-labelledby="tab-m6" hidden><section>
+<div class="mission" id="mem-m6" data-mid="mem-m6">
+<div class="mhead"><span class="lv lv2">★★ 응용</span><span class="tgs"><span class="tg rag">RAG</span><span class="tg lg1">LangGraph 필수</span></span><h3>M6. 고쳤는데 결과가 그대로 (Time Travel)</h3><label class="mdone"><input type="checkbox" id="mem-m6-done" data-done="mem-m6"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>위키독스 1-4-3의 번역 검수 예제를 LLM 없이 옮겼습니다. 번역을 "부지런한 자가 성공한다."로 고쳐 다시 실행했는데 결과가 원래 번역 그대로입니다.</p>
+<pre class="py">class T(TypedDict):
+    original: str; translated: str; review: str; final_output: str
+
+def translate(s): return {"translated": "일찍 일어나는 새가 벌레를 잡는다."}
+def review(s):    return {"review": f"검수({s['translated']})"}
+def finalize(s):  return {"final_output": f"번역: {s['translated']} / {s['review']}"}
+
+b = StateGraph(T)
+for n, f in [("translate", translate), ("review", review), ("finalize", finalize)]:
+    b.add_node(n, f)
+b.add_edge(START, "translate"); b.add_edge("translate", "review")
+b.add_edge("review", "finalize"); b.add_edge("finalize", END)
+graph = b.compile(checkpointer=InMemorySaver())
+
+cfg = {"configurable": {"thread_id": "tt"}}
+graph.invoke({"original": "The early bird catches the worm.", "translated": "", "review": "", "final_output": ""}, cfg)
+
+target = next(s for s in graph.get_state_history(cfg) if s.next == ("review",))
+graph.update_state(target.config, {"translated": "부지런한 자가 성공한다."}, as_node="translate")
+print(graph.invoke(None, config=target.config)["final_output"])        # 위키독스 방식</pre>
+<div class="mlabel st">STEP 2 · 결과 예측</div>
+<details class="ans"><summary>실제 출력</summary><pre class="out">번역: 일찍 일어나는 새가 벌레를 잡는다. / 검수(일찍 일어나는 새가 벌레를 잡는다.)</pre></details>
+<div class="mlabel st">STEP 3 · 원인: config가 가리키는 곳</div>
+<p><code>target.config</code> 안의 <code>checkpoint_id</code>는 어느 체크포인트를 가리키나요? <code>update_state</code>는 기존 체크포인트를 고칠까요, 새로 만들까요?</p>
+<details class="ans"><summary>확인</summary><p>update_state는 기존 체크포인트를 고치지 않고 그 뒤에 <b>새 체크포인트</b>를 만들고, 그 config를 돌려줍니다. target.config는 여전히 수정 <b>전</b> 체크포인트를 가리키므로, 그것으로 실행하면 원래 값에서 다시 돕니다. Git으로 치면 "새 커밋을 만들고 옛 커밋을 체크아웃한" 셈입니다.</p></details>
+<div class="mlabel st">STEP 4 · 고치기</div>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">new_cfg = graph.update_state(target.config, {"translated": "부지런한 자가 성공한다."}, as_node="translate")
+print(graph.invoke(None, config=new_cfg)["final_output"])</pre>
+<pre class="out">번역: 부지런한 자가 성공한다. / 검수(부지런한 자가 성공한다.)</pre></details>
+<div class="mlabel st">STEP 5 · 확인과 확장</div>
+<ul class="checks">
+<li><input type="checkbox" id="mem-m6-c1" data-chk="mem-m6-c1"><label for="mem-m6-c1">두 방식의 결과 차이를 직접 확인했다</label></li>
+<li><input type="checkbox" id="mem-m6-c2" data-chk="mem-m6-c2"><label for="mem-m6-c2">같은 target에서 번역을 두 가지로 고쳐 두 갈래를 만들고, history에서 둘 다 찾았다</label></li>
+<li><input type="checkbox" id="mem-m6-c3" data-chk="mem-m6-c3"><label for="mem-m6-c3"><code>as_node</code>를 빼면 next가 무엇이 되는지 확인했다</label></li>
+</ul>
+<details class="ans"><summary>as_node 확인</summary><p>이 예제에서는 as_node를 빼도 next가 <code>('review',)</code>로 나옵니다(마지막으로 실행된 노드를 기준으로 추정). 하지만 병렬 노드가 있거나 애매하면 에러가 나거나 엉뚱한 곳에서 이어질 수 있으니 명시하는 습관을 들이세요.</p></details>
+</div>
+</section></div>
+
+<!-- ============ M7 ============ -->
+<div class="pane" role="tabpanel" id="pane-m7" aria-labelledby="tab-m7" hidden><section>
+<div class="mission" id="mem-m7" data-mid="mem-m7">
+<div class="mhead"><span class="lv lv3">★★★ 도전</span><span class="tgs"><span class="tg lg1">LangGraph 필수</span><span class="tg ag">MCP·에이전트</span></span><h3>M7. 결재 후 주문번호가 바뀐다 (Durable Execution)</h3><label class="mdone"><input type="checkbox" id="mem-m7-done" data-done="mem-m7"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>구매 에이전트가 주문번호를 만들고 결재자에게 "주문번호 ORD-xxxx 결제할까요?"를 묻습니다. 결재자가 승인한 뒤 저장된 주문번호가 화면에서 본 번호와 다릅니다.</p>
+<pre class="py">import random
+from langgraph.types import interrupt, Command
+
+class Order(TypedDict):
+    item: str
+    order_no: str
+    approved: str
+
+calls = {"n": 0}
+def create_order(s):
+    calls["n"] += 1
+    order_no = f"ORD-{random.randint(1000, 9999)}"
+    ok = interrupt(f"{s['item']} 주문번호 {order_no} 결제할까요?")
+    return {"order_no": order_no, "approved": ok}
+
+g = StateGraph(Order); g.add_node("create", create_order); g.add_edge(START, "create")
+app = g.compile(checkpointer=InMemorySaver())
+c = {"configurable": {"thread_id": "o1"}}
+print("화면:", app.invoke({"item": "노트북"}, c)["__interrupt__"][0].value)
+print("저장:", app.invoke(Command(resume="예"), c), "| 노드 실행 횟수:", calls["n"])</pre>
+<div class="mlabel st">STEP 2 · 결과 예측</div>
+<p>노드는 몇 번 실행될까요? 화면의 번호와 저장된 번호는 같을까요?</p>
+<details class="ans"><summary>실제 출력 (번호는 매번 다름)</summary><pre class="out">화면: 노트북 주문번호 ORD-7065 결제할까요?
+저장: {'item': '노트북', 'order_no': 'ORD-5113', 'approved': '예'} | 노드 실행 횟수: 2</pre></details>
+<div class="mlabel st">STEP 3 · 원인: 재개는 노드를 처음부터 다시 실행한다 (Q4)</div>
+<details class="ans"><summary>확인</summary><p>체크포인트는 <b>노드 단위</b>로 저장됩니다. interrupt로 멈춘 노드는 아직 끝나지 않았으므로, 재개하면 그 노드를 <b>맨 처음부터</b> 다시 실행합니다. interrupt는 두 번째에 resume 값을 돌려주지만, 그 앞의 random은 새로 실행되어 다른 번호가 나옵니다. LLM 호출, 현재 시각, uuid도 마찬가지입니다.</p></details>
+<div class="mlabel st">STEP 4 · 고치기 두 가지</div>
+<p>방법 A: 비결정적 작업을 <code>@task</code>로 감싼다. 방법 B: 번호 생성과 결재를 <b>다른 노드</b>로 나눈다(앞 노드가 끝나면 State에 저장되므로).</p>
+<details class="ans"><summary>예시 답안 보기 (방법 A)</summary><pre class="py">from langgraph.func import task
+
+@task
+def new_order_no() -&gt; str:
+    return f"ORD-{random.randint(1000, 9999)}"
+
+def create_order(s):
+    order_no = new_order_no().result()         # 재개 때는 저장된 결과를 돌려줌
+    ok = interrupt(f"{s['item']} 주문번호 {order_no} 결제할까요?")
+    return {"order_no": order_no, "approved": ok}</pre>
+<pre class="out">화면: 노트북 주문번호 ORD-8377 결제할까요?
+저장: {'item': '노트북', 'order_no': 'ORD-8377', 'approved': '예'} | 노드 실행: 2 | 번호 생성: 1</pre></details>
+<details class="ans"><summary>방법 B 힌트</summary><pre class="py"># make_no 노드: return {"order_no": f"ORD-{random...}"}     → 끝나면 저장됨
+# approve 노드: ok = interrupt(f"... {s['order_no']} ..."); return {"approved": ok}
+# START → make_no → approve</pre></details>
+<div class="mlabel st">STEP 5 · 확인과 토론</div>
+<ul class="checks">
+<li><input type="checkbox" id="mem-m7-c1" data-chk="mem-m7-c1"><label for="mem-m7-c1">화면 번호와 저장 번호가 같아졌다</label></li>
+<li><input type="checkbox" id="mem-m7-c2" data-chk="mem-m7-c2"><label for="mem-m7-c2">방법 A, B를 모두 구현해 비교했다</label></li>
+<li><input type="checkbox" id="mem-m7-c3" data-chk="mem-m7-c3"><label for="mem-m7-c3">interrupt <b>앞</b>에 "결재 요청 메일 발송"이 있다면 무슨 일이 생기는지, 어떻게 막을지 적었다</label></li>
+</ul>
+<details class="ans"><summary>토론 예시</summary><p>재개할 때 메일이 한 번 더 발송됩니다. 막는 방법: 메일 발송을 @task로 감싸 한 번만 실행되게 하거나, 별도 노드로 분리하거나, 주문번호를 키로 "이미 보냈으면 건너뛰기"(멱등)로 만듭니다. 위키독스 1-4-4의 upsert 예시와 같은 원리입니다.</p></details>
+</div>
+</section></div>
+
+<footer>LangGraph 교안 · 교재: 위키독스 「LangGraph 가이드북 - 에이전트 RAG with 랭그래프 [ver 1.0+]」 1-4 · 코드 검증: LangGraph 1.2.20 · langgraph-checkpoint-sqlite 3.1.3 (2026-11-11)</footer>
+</main>
+</div>
+<script>
+(function(){
+  function sync(){ document.querySelectorAll('input[data-done]').forEach(i => {
+    const t = document.getElementById('tab-' + i.dataset.done.replace('mem-', ''));
+    if (t) t.classList.toggle('done', i.checked); }); }
+  document.addEventListener('change', e => { if (e.target.matches('input[data-done]')) sync(); });
+  window.addEventListener('load', sync);
+})();
+</script>
+
+
+<script>
+(function(){
+  const UNITS = {"mem": ["mem-m1", "mem-m2", "mem-m3", "mem-m4", "mem-m5", "mem-m6", "mem-m7"]};
+  const KEY = 'lg-missions-v1';
+  let st = {};
+  try { st = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch(e) { st = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch(e) {} };
+
+  // 코드 하이라이트 + 복사
+  const KW = /^(from|import|def|return|for|in|if|elif|else|not|and|or|with|as|class|lambda|True|False|None|try|except|finally|await|yield|is|raise|continue|print)$/;
+  const RE = /("""[\s\S]*?"""|f?"(?:[^"\\\n]|\\.)*"|f?'(?:[^'\\\n]|\\.)*'|#[^\n]*|\b[A-Za-z_]+\b)/g;
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  function selectText(el){ const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+  document.querySelectorAll('pre.py').forEach(pre => {
+    const src = pre.textContent; let out = '', last = 0, m; RE.lastIndex = 0;
+    while ((m = RE.exec(src))) {
+      out += esc(src.slice(last, m.index)); const t = m[0];
+      if (t[0] === '#') out += '<span class="c">' + esc(t) + '</span>';
+      else if (t[0] === '"' || t[0] === "'" || (t[0] === 'f' && (t[1] === '"' || t[1] === "'"))) out += '<span class="s">' + esc(t) + '</span>';
+      else if (KW.test(t)) out += '<span class="k">' + t + '</span>';
+      else out += esc(t);
+      last = m.index + t.length;
+    }
+    pre.innerHTML = out + esc(src.slice(last));
+    const wrap = document.createElement('div'); wrap.style.position = 'relative';
+    pre.parentNode.insertBefore(wrap, pre); wrap.appendChild(pre);
+    const b = document.createElement('button'); b.className = 'copy'; b.type = 'button'; b.textContent = '복사';
+    b.style.cssText = 'position:absolute;top:8px;right:8px';
+    b.addEventListener('click', () => {
+      const ok = () => { b.textContent = '복사됨'; setTimeout(() => b.textContent = '복사', 1400); };
+      const fail = () => { selectText(pre); b.textContent = '선택됨'; };
+      try { navigator.clipboard.writeText(src).then(ok, fail); } catch(e) { fail(); }
+    });
+    wrap.appendChild(b);
+  });
+
+  // 미션 체크 상태
+  document.querySelectorAll('input[data-done],input[data-chk]').forEach(inp => {
+    const k = inp.dataset.done || inp.dataset.chk;
+    inp.checked = !!st[k];
+    inp.addEventListener('change', () => { st[k] = inp.checked; save(); paint(); });
+  });
+  function paint(){
+    document.querySelectorAll('.mission').forEach(m => m.classList.toggle('is-done', !!st[m.dataset.mid]));
+    let total = 0, done = 0;
+    Object.keys(UNITS).forEach(u => {
+      const ids = UNITS[u]; const d = ids.filter(id => st[id]).length;
+      total += ids.length; done += d;
+      document.querySelectorAll('[data-mc="' + u + '"]').forEach(el => el.textContent = d + '/' + ids.length);
+      document.querySelectorAll('[data-u="' + u + '"]').forEach(el => el.classList.toggle('full', d === ids.length));
+      document.querySelectorAll('[data-bar="' + u + '"]').forEach(el => el.style.width = (d / ids.length * 100) + '%');
+    });
+    const pb = document.getElementById('progbar'); if (pb) pb.style.width = (done / total * 100) + '%';
+    const pt = document.getElementById('progtext'); if (pt) pt.textContent = '미션 ' + done + ' / ' + total + ' 완료';
+    const mp = document.getElementById('mprog'); const cur = document.body.dataset.unit;
+    if (mp && cur) { const ids = UNITS[cur]; mp.textContent = '· 완료 ' + ids.filter(id => st[id]).length + ' / ' + ids.length; }
+    const mc = document.getElementById('mcount'); if (mc && cur) { const ids = UNITS[cur]; mc.textContent = ids.filter(id => st[id]).length + '/' + ids.length; }
+  }
+  paint();
+})();
+</script>
+
+<script>
+(function(){
+  const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+  if (!tabs.length) return;
+  const ids = tabs.map(t => t.dataset.t);
+  function show(id, push){
+    tabs.forEach(t => { const on = t.dataset.t === id; t.setAttribute('aria-selected', on ? 'true' : 'false'); t.tabIndex = on ? 0 : -1;
+      if (on) t.scrollIntoView({block:'nearest', inline:'nearest'}); });
+    document.querySelectorAll('[role="tabpanel"]').forEach(p => p.hidden = p.id !== 'pane-' + id);
+    if (push) { try { history.replaceState(null, '', '#' + id); } catch(e){} window.scrollTo({top: 0}); }
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => show(t.dataset.t, true));
+    t.addEventListener('keydown', e => {
+      const f = e.key === 'ArrowDown' || e.key === 'ArrowRight', b = e.key === 'ArrowUp' || e.key === 'ArrowLeft';
+      if (!f && !b) return; e.preventDefault();
+      const n = tabs[(i + (f ? 1 : tabs.length - 1)) % tabs.length]; n.focus(); show(n.dataset.t, true);
+    });
+  });
+  const h = location.hash.slice(1);
+  show(ids.includes(h) ? h : 'intro', false);
+  window.addEventListener('hashchange', () => { const x = location.hash.slice(1); if (ids.includes(x)) show(x, false); });
+})();
+</script>
+</body>
+</html>

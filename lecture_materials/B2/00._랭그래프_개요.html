@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<title>LangGraph 개요서 · 그래프 목업 및 RAG 실전</title>
+<style>
+:root{--bg:#f6f7fb;--paper:#fff;--ink:#1b2236;--muted:#5a6380;--line:#d9deeb;--node:#24305e;--teal:#0f8f83;--soft:#eef1f9;--tealSoft:#e2f4f1;--amberSoft:#fbf0dd;--body:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;--mono:ui-monospace,Consolas,monospace}
+@media(prefers-color-scheme:dark){:root{--bg:#12151f;--paper:#1a1e2b;--ink:#e7eaf4;--muted:#a2aac2;--line:#2e3447;--node:#8f9cf0;--soft:#222839;--tealSoft:#163331;--amberSoft:#3a2e17}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 var(--body);word-break:keep-all}.layout{max-width:1180px;margin:auto;display:grid;grid-template-columns:230px minmax(0,1fr);gap:36px;padding:24px 18px}.side{position:sticky;top:0;height:100vh;padding:8px 0}.brand{font-size:25px;font-weight:700}.sub,.muted{color:var(--muted);font-size:13px}.progress{height:6px;background:var(--soft);border-radius:99px;margin:18px 0 14px}.progress i{display:block;width:100%;height:100%;background:var(--teal);border-radius:99px}.nav{display:grid;gap:4px}.nav a{color:var(--ink);text-decoration:none;padding:7px 10px;border-radius:8px}.nav a:hover,.nav a.active{background:var(--node);color:#fff}main{min-width:0}.head{padding-bottom:22px;border-bottom:1px solid var(--line)}.kicker{color:var(--teal);font:600 12px var(--mono);letter-spacing:1.5px}h1{font-size:clamp(34px,5vw,50px);line-height:1.2;margin:5px 0}h2{font-size:30px;margin:0 0 12px;line-height:1.3}h3{font-size:19px;margin:20px 0 6px}section{padding:38px 0;border-bottom:1px solid var(--line)}.lead{font-size:18px;color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}.card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px}.card b{color:var(--teal)}.flow{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:16px 0;font-family:var(--mono);font-size:14px}.flow span{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:5px 10px}.flow .strong{background:var(--node);color:#fff;border-color:var(--node)}.flow i{color:var(--muted);font-style:normal}.note{background:var(--amberSoft);border-left:4px solid #d98a1f;border-radius:8px;padding:11px 14px;margin:14px 0}.case{background:var(--paper);border:1px solid var(--line);border-left:5px solid var(--teal);border-radius:12px;padding:16px 18px;margin:14px 0}.case h3{margin-top:0}.case .why{color:var(--teal);font-weight:700}.case .answer{background:var(--tealSoft);border-radius:8px;padding:9px 12px;margin-top:10px}.compare{width:100%;border-collapse:collapse;background:var(--paper);border:1px solid var(--line)}.compare th,.compare td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}.compare th{background:var(--soft)}code{font-family:var(--mono);background:var(--soft);padding:1px 5px;border-radius:4px}pre{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:14px;overflow:auto;font:13px/1.6 var(--mono)}details{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:9px 0}summary{cursor:pointer;font-weight:700}.check{display:grid;gap:8px}.check label{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:8px 10px}.footer{color:var(--muted);font-size:13px;padding:24px 0}@media(max-width:760px){.layout{display:block}.side{position:static;height:auto;padding-bottom:12px}.nav{display:flex;overflow:auto;gap:5px}.nav a{white-space:nowrap}.layout{padding:14px}.lead{font-size:16px}}
+
+/* --- 독립 탭 + 학습용 인터랙티브 목업 --- */
+[hidden]{display:none!important}
+body{background:var(--bg)}.layout{max-width:1260px;grid-template-columns:240px minmax(0,1fr);gap:32px}
+.side{top:18px;height:calc(100vh - 36px)}.brand{letter-spacing:-.5px}.progress i{width:14.2857%;transition:width .22s}
+.nav{display:grid;gap:7px}.tab-link{display:block;width:100%;text-align:left;border:0;cursor:pointer;font:600 14px var(--body);color:var(--ink);background:transparent;padding:11px 12px;border-radius:10px;transition:background .16s}
+.tab-link:hover{background:var(--soft)}.tab-link.active{background:var(--node);color:#fff}.tab-link:focus-visible,.choice:focus-visible,.demo-btn:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.tab-panel{border:0;padding:30px 0 42px;animation:slide-in .2s ease}.tab-panel h2{margin-bottom:14px}.head{padding:6px 0 18px}.head h1{font-size:clamp(30px,4vw,42px)}.head .lead{margin-bottom:0}
+@keyframes slide-in{from{opacity:.7;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.mock-label{font-size:12px;font-weight:800;letter-spacing:.3px;color:var(--teal);margin:25px 0 9px}
+.demo-shell{background:var(--paper);border:1px solid var(--line);border-radius:15px;overflow:hidden;box-shadow:0 8px 26px rgba(20,30,70,.055);margin-bottom:12px}
+.demo-top{background:var(--soft);display:flex;gap:12px;align-items:center;justify-content:space-between;padding:10px 15px;border-bottom:1px solid var(--line);font:700 11px var(--mono)}.lights{color:#dd9075;letter-spacing:2px}.demo-status{color:var(--teal);font-size:10px;white-space:nowrap}.demo-content{padding:20px}.demo-two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.demo-panel{background:var(--bg);border:1px solid var(--line);border-radius:11px;padding:15px;min-width:0}.mini-heading{font-size:12px;font-weight:800;letter-spacing:.4px;color:var(--muted);text-transform:uppercase;margin-bottom:10px}
+.scenario-switch,.demo-actions{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:13px}.choice,.demo-btn{font:600 13px var(--body);border:1px solid var(--line);border-radius:8px;padding:8px 11px;cursor:pointer;background:var(--paper);color:var(--ink)}.choice.active,.demo-btn{background:var(--node);color:#fff;border-color:var(--node)}.demo-btn.secondary{background:var(--paper);color:var(--ink);border-color:var(--line)}.demo-btn.subtle{background:transparent;color:var(--muted);border-color:transparent}
+.chat-bubble{max-width:90%;border-radius:13px 13px 3px 13px;padding:12px 14px;margin-left:auto;background:var(--node);color:#fff;font-size:14px}.chat-answer{margin-top:15px;border:1px solid var(--line);border-radius:13px 13px 13px 3px;padding:12px 14px;font-size:14px;background:var(--paper)}
+.route-stack{display:grid;gap:8px}.route-stack>div,.event-list>div{background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:8px 10px;font-size:13px}.route-stack em{font:700 11px var(--mono);color:var(--teal);float:right}.tiny-note{font-size:12px;color:var(--muted);margin-top:12px}.pipeline{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin:10px 0 18px}.step{padding:9px 12px;border-radius:9px;background:var(--soft);border:1px solid var(--line);font:700 12px var(--mono)}.step.current{background:var(--node);color:#fff}.step.done{background:var(--tealSoft);color:var(--teal);border-color:var(--teal)}.arrow{color:var(--muted)}
+.json-mock{margin:0;background:var(--paper);font-size:12px}.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}.before{background:#e7a743}.after{background:var(--teal)}.console{background:#1b2236;color:#baf7da;border-radius:8px;padding:12px 15px;font:13px/1.6 var(--mono);margin-bottom:13px}.status-wait{display:inline-block;color:#b57a1b;font-weight:700}.status-wait.approved{color:var(--teal)}.status-wait.rejected{color:#c24d56}.event-list{display:grid;gap:6px}
+.parallel-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.parallel-grid .merge{grid-column:1/-1;background:var(--tealSoft)}.parallel-grid p{font-size:14px;margin:5px 0}.parallel-grid small{color:var(--muted)}.tool-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.tool-card{min-width:0;padding:14px;background:var(--bg);border:1px solid var(--line);border-radius:10px;display:grid;gap:6px}.tool-card small{color:var(--muted)}.tool-card strong{font-size:16px}.tool-card span{font-size:12px;color:var(--muted)}.tool-card.focus{border:2px solid var(--teal)}.trace-list{margin-top:18px;display:grid;gap:7px}.trace-list>div{display:grid;grid-template-columns:115px minmax(0,1fr) 40px;align-items:center;gap:10px;font-size:12px}.trace-bar{height:10px;border-radius:4px;background:linear-gradient(to right,var(--teal) var(--w),var(--soft) var(--w))}.quiz-feedback{padding:12px;border-radius:8px;background:var(--soft);font-weight:600;font-size:14px}
+.footer{border-top:1px solid var(--line)}
+@media(max-width:760px){.layout{display:block;padding:12px}.side{position:static;height:auto;padding:4px 0}.nav{display:flex;gap:7px;overflow-x:auto;padding:0 0 8px}.tab-link{white-space:nowrap;width:auto;flex:none}.progress{margin:10px 0}.demo-two,.tool-grid{grid-template-columns:1fr}.demo-content{padding:12px}.demo-top{gap:5px;font-size:10px}.demo-status{font-size:9px}.head{padding-top:8px}}
+
+/* Concept graph mockups: illustrative, not a real runtime graph renderer */
+.graph-visual{margin:18px 0 24px;padding:16px;background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.graph-visual header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.graph-visual header strong{font-size:16px;color:var(--ink)}
+.graph-visual .graph-hint{font-size:12px;color:var(--muted)}
+.graph-visual svg{display:block;width:100%;height:auto;min-width:0;max-height:460px}
+.graph-visual .graph-caption{font-size:13px;color:var(--muted);margin:6px 0 0}
+.graph-visual svg .gnode{fill:var(--soft);stroke:var(--node);stroke-width:1.8}
+.graph-visual svg .gdecision{fill:var(--amberSoft);stroke:#c17b19;stroke-width:1.8}
+.graph-visual svg .gstart{fill:var(--tealSoft);stroke:var(--teal);stroke-width:1.8}
+.graph-visual svg .gtext{fill:var(--ink);font:600 15px 'Malgun Gothic',sans-serif;text-anchor:middle;dominant-baseline:middle}
+.graph-visual svg .gsmall{fill:var(--muted);font:12px 'Malgun Gothic',sans-serif;text-anchor:middle}
+.graph-visual svg .gline{fill:none;stroke:var(--node);stroke-width:2;marker-end:url(#lg-arrow)}
+.graph-visual svg .glabel{fill:var(--teal);font:600 12px 'Malgun Gothic',sans-serif;text-anchor:middle}
+@media(max-width:760px){.graph-visual{padding:10px}.graph-visual svg{overflow:visible}}
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="side">
+<div class="brand">LangGraph</div><div class="sub">실전 중심 개요서</div>
+<div class="progress"><i></i></div>
+<nav aria-label="LangGraph 학습 탭" class="nav" role="tablist"><button aria-controls="what" aria-selected="true" class="tab-link active" data-tab="what" role="tab" type="button">0. 왜 필요한가</button><button aria-controls="model" aria-selected="false" class="tab-link" data-tab="model" role="tab" type="button">1. 핵심 구조</button><button aria-controls="flow" aria-selected="false" class="tab-link" data-tab="flow" role="tab" type="button">2. 실행 흐름</button><button aria-controls="features" aria-selected="false" class="tab-link" data-tab="features" role="tab" type="button">3. 주요 기능</button><button aria-controls="tools" aria-selected="false" class="tab-link" data-tab="tools" role="tab" type="button">4. 도구 관계</button><button aria-controls="rag" aria-selected="false" class="tab-link" data-tab="rag" role="tab" type="button">5. RAG 실전 적용</button><button aria-controls="summary" aria-selected="false" class="tab-link" data-tab="summary" role="tab" type="button">6. 최종 정리</button></nav>
+</aside>
+<main>
+<header class="head"><div class="kicker">LANGGRAPH · PRACTICAL OVERVIEW</div><h1>LangGraph 개요</h1><p class="lead">AI Agent가 단순한 질문·응답을 넘어 분기, 반복, 승인, 복구, 병렬 작업을 수행해야 할 때 LangGraph가 왜 필요한지 이해합니다.</p></header>
+<section aria-hidden="false" class="tab-panel" id="what" role="tabpanel">
+<h2>0. LangGraph는 왜 필요한가?</h2><div class="case"><h3>LangGraph를 한 문장으로 설명하면</h3><p>LangGraph는 LLM을 기반으로 <b>상태를 유지하고(Stateful)</b>, 여러 단계에 걸쳐 작동하는 <b>멀티스텝(Multi-step) 에이전트</b>를 구축하기 위한 라이브러리입니다.</p><p>기존 LangChain이 LLM과 외부 도구를 순차적으로 연결하는 <b>체이닝(Chaining)</b>에 초점을 두었다면, LangGraph는 이러한 연결 구조를 <b>순환(Cycle)을 포함하는 그래프</b> 형태로 확장해 더 유연하고 정교한 실행 흐름을 구성할 수 있습니다.</p><p>단순한 체인으로는 복잡해지기 쉬운 <b>사용자 입력 재확인</b>, <b>특정 조건이 만족될 때까지 작업 반복</b> 등의 로직도 Node와 Edge로 표현할 수 있습니다.</p><p class="muted">※ 이 내용은 첨부 이미지의 설명 텍스트를 바탕으로 정리한 것이며, 이미지 자체는 삽입하지 않았습니다.</p></div><div class="mock-label">화면 목업 01 · 고객센터 Agent 라우팅 체험</div>
+<div class="demo-shell"><div class="demo-top"><span class="lights">● ● ●</span><strong>SHOP AI · SUPPORT DESK</strong><span class="demo-status">DEMO / API 호출 없음</span></div>
+<div class="demo-content demo-two"><div class="demo-panel"><div class="mini-heading">고객 질문</div><div aria-label="고객 요청 선택" class="scenario-switch" role="group"><button class="choice active" data-case="shipping">배송비 문의</button><button class="choice" data-case="order">주문 조회</button><button class="choice" data-case="cancel">주문 취소</button></div><div class="chat-bubble" id="customer-query">제주 배송비가 얼마예요?</div><div class="chat-answer" id="customer-answer">정책 문서를 검색하여 배송비 조건을 안내합니다.</div></div><div class="demo-panel"><div class="mini-heading">요청 처리 경로</div><div class="route-stack" id="route-stack"><div>① 요청 분류 <em>POLICY</em></div><div>② 정책 검색 <em>RAG</em></div><div>③ 답변 생성 <em>ANSWER</em></div></div><div class="tiny-note" id="route-note">정책을 근거로 답변하고 DB 변경은 수행하지 않습니다.</div></div></div></div>
+<p class="muted">※ 목업의 문구와 단계는 교육용 예시입니다. 실제 주문·결제 데이터와 연결되지 않습니다.</p>
+<p>간단한 챗봇은 LLM을 한 번 호출하면 끝납니다. 하지만 실제 서비스는 요청 종류에 따라 다른 작업을 수행하고, 실패하면 다시 시도하며, 위험한 작업은 사람의 승인을 받아야 합니다.</p>
+<div class="flow"><span>사용자 요청</span><i>→</i><span>분류</span><i>→</i><span>검색·도구·DB</span><i>→</i><span>검증</span><i>→</i><span class="strong">응답 또는 재처리</span></div>
+<div class="case"><h3>실전 상황: 쇼핑몰 고객센터 Agent</h3><p>“배송비가 얼마야?”는 정책 문서를 검색하고, “내 주문 보여줘”는 DB를 조회하며, “주문을 취소해줘”는 실제 API를 호출해야 합니다.</p><p class="why">문제: 요청마다 실행 경로가 다르고, 주문 취소 전에는 사용자 확인도 필요합니다.</p><div class="answer">LangGraph를 사용하면 요청 분류 → 적절한 작업 Graph 선택 → 승인 → 실행 → 결과 응답의 흐름을 명시적으로 관리할 수 있습니다.</div></div>
+<div class="note"><b>판단 기준</b> 단순한 1회성 호출이면 LangChain만으로 충분할 수 있습니다. 실행 흐름이 복잡해지면 LangGraph를 고려합니다.</div>
+</section>
+<section aria-hidden="true" class="tab-panel" hidden="" id="model" role="tabpanel">
+<h2>1. 핵심 구조: State·Node·Edge</h2><div class="mock-label">화면 목업 02 · State Inspector</div><div class="demo-shell"><div class="demo-top"><span class="lights">● ● ●</span><strong>GRAPH STATE INSPECTOR</strong><span class="demo-status">SIMULATED</span></div><div class="demo-content"><div class="pipeline"><div class="step current">① classify</div><div class="arrow">→</div><div class="step">② search_policy</div><div class="arrow">→</div><div class="step">③ answer</div></div><div class="demo-two"><div class="demo-panel"><div class="mini-heading">State 값</div><pre class="json-mock" id="state-preview">{
+  "message": "배송비가 얼마야?",
+  "intent": "POLICY",
+  "documents": [],
+  "retry_count": 0
+}</pre></div><div class="demo-panel"><div class="mini-heading">Node 실행 전후 비교</div><p><b>Node:</b> <code>search_policy</code></p><p><span class="dot before"></span> 실행 전: <code>documents = []</code></p><p><span class="dot after"></span> 실행 후: <code>documents = ["배송정책"]</code></p><button class="demo-btn" id="state-toggle">Node 실행 시뮬레이션</button><div class="tiny-note">Node는 State 일부를 갱신하고 Edge가 다음 단계를 결정합니다.</div></div></div></div></div>
+<div aria-label="① Node와 Edge — 요청에 따라 경로가 바뀌는 Graph" class="graph-visual" role="group"><header><strong>① Node와 Edge — 요청에 따라 경로가 바뀌는 Graph</strong><span class="graph-hint">노드 = 작업 · 화살표 = Edge · 다이아몬드 = 조건</span></header><svg aria-label="Edge는 항상 다음 Node를 지정하며, 조건부 Edge는 State에 따라 다른 경로를 선택합니다." role="img" viewbox="0 0 910 235" xmlns="http://www.w3.org/2000/svg"><defs><marker id="lg-arrow" markerheight="8" markerwidth="9" orient="auto" refx="8" refy="4"><path d="M0 0 L8 4 L0 8 Z" fill="var(--node)"></path></marker></defs><rect class="gstart" height="55" rx="12" width="96" x="12" y="74"></rect><text class="gtext" x="60.0" y="101.5">START</text><rect class="gnode" height="55" rx="12" width="142" x="164" y="74"></rect><text class="gtext" x="235.0" y="94.5">분류 Node</text><text class="gsmall" x="235.0" y="120.5">요청 유형 판정</text><rect class="gnode" height="56" rx="12" width="150" x="395" y="12"></rect><text class="gtext" x="470.0" y="40.0">정책 검색</text><rect class="gnode" height="56" rx="12" width="150" x="395" y="84"></rect><text class="gtext" x="470.0" y="112.0">주문 조회</text><rect class="gnode" height="56" rx="12" width="150" x="395" y="156"></rect><text class="gtext" x="470.0" y="184.0">취소 승인</text><rect class="gnode" height="56" rx="12" width="120" x="635" y="84"></rect><text class="gtext" x="695.0" y="112.0">응답 Node</text><rect class="gstart" height="56" rx="12" width="90" x="806" y="84"></rect><text class="gtext" x="851.0" y="112.0">END</text><path class="gline" d="M108 102 H164"></path><path class="gline" d="M306 102 H352 V40 H395"></path><text class="glabel" x="355" y="28">POLICY</text><path class="gline" d="M306 102 H395"></path><text class="glabel" x="354" y="91">QUERY</text><path class="gline" d="M306 102 H352 V184 H395"></path><text class="glabel" x="354" y="171">ACTION</text><path class="gline" d="M545 40 H589 V112 H635"></path><path class="gline" d="M545 112 H635"></path><path class="gline" d="M545 184 H589 V112 H635"></path><path class="gline" d="M755 112 H806"></path></svg><p class="graph-caption">Edge는 항상 다음 Node를 지정하며, 조건부 Edge는 State에 따라 다른 경로를 선택합니다.</p></div><div class="grid">
+<div class="card"><b>State</b><h3>작업 메모리</h3><p>질문, 사용자 ID, 분류 결과, 검색 문서, 재시도 횟수처럼 Graph가 공유하는 데이터입니다.</p><p class="muted">실전: “현재 주문 취소 승인 여부”를 다음 Node가 읽어야 한다면 State에 둡니다.</p></div>
+<div class="card"><b>Node</b><h3>작업 단위</h3><p>LLM 호출, DB 조회, 문서 검색, API 실행 등 하나의 책임을 가진 함수입니다.</p><p class="muted">실전: <code>classify_request</code>, <code>search_policy</code>, <code>cancel_order</code>.</p></div>
+<div class="card"><b>Edge</b><h3>실행 규칙</h3><p>다음에 어떤 Node를 실행할지 결정합니다. 고정 이동과 조건부 분기를 지원합니다.</p><p class="muted">실전: 분류 결과가 QUERY면 SQL Graph, ACTION이면 도구 실행 Graph로 이동.</p></div>
+<div class="card"><b>Graph</b><h3>전체 워크플로우</h3><p>State·Node·Edge를 묶은 실행 단위입니다. 복잡한 흐름은 서브그래프로 나눌 수 있습니다.</p></div>
+</div>
+<div class="case"><h3>실전 상황: 고객 요청 분기</h3><div class="flow"><span>message</span><i>→</i><span>분류 Node</span><i>→</i><span>QUERY</span><i>→</i><span>SQL Graph</span></div><div class="flow"><span>message</span><i>→</i><span>분류 Node</span><i>→</i><span>ACTION</span><i>→</i><span>API 실행 Graph</span></div></div>
+</section>
+<section aria-hidden="true" class="tab-panel" hidden="" id="flow" role="tabpanel">
+<h2>2. 그래프 생성과 실행</h2><div class="mock-label">화면 목업 03 · Graph 실행 순서 실습</div><div class="demo-shell"><div class="demo-top"><span class="lights">● ● ●</span><strong>GRAPH EXECUTION CONSOLE</strong><span class="demo-status">STEP BY STEP</span></div><div class="demo-content"><div class="pipeline" id="execution-pipeline"><div class="step current">START</div><div class="arrow">→</div><div class="step">classify</div><div class="arrow">→</div><div class="step">answer</div><div class="arrow">→</div><div class="step">END</div></div><div class="console"><span id="execution-log">준비됨 · START에서 실행을 시작하세요.</span></div><div class="demo-actions"><button class="demo-btn" id="step-run">다음 단계 실행</button><button class="demo-btn secondary" id="step-reset">초기화</button></div></div></div><div class="note"><b>실행 핵심</b> <code>compile()</code>은 그래프 실행 객체를 만들고, <code>invoke()</code>는 State를 입력해 그래프를 실행합니다. 위 콘솔은 단계별 개념을 보여주는 브라우저 시뮬레이션입니다.</div>
+<div aria-label="② 기본 그래프 — 실행 순서 한눈에 보기" class="graph-visual" role="group"><header><strong>② 기본 그래프 — 실행 순서 한눈에 보기</strong><span class="graph-hint">노드 = 작업 · 화살표 = Edge · 다이아몬드 = 조건</span></header><svg aria-label="START → classify → answer → END. Node 내부에서 State를 읽고 일부 필드를 갱신합니다." role="img" viewbox="0 0 700 165" xmlns="http://www.w3.org/2000/svg"><defs><marker id="lg-arrow" markerheight="8" markerwidth="9" orient="auto" refx="8" refy="4"><path d="M0 0 L8 4 L0 8 Z" fill="var(--node)"></path></marker></defs><rect class="gstart" height="56" rx="12" width="105" x="22" y="54"></rect><text class="gtext" x="74.5" y="82.0">START</text><rect class="gnode" height="56" rx="12" width="140" x="180" y="54"></rect><text class="gtext" x="250.0" y="82.0">classify</text><rect class="gnode" height="56" rx="12" width="140" x="374" y="54"></rect><text class="gtext" x="444.0" y="82.0">answer</text><rect class="gstart" height="56" rx="12" width="105" x="568" y="54"></rect><text class="gtext" x="620.5" y="82.0">END</text><path class="gline" d="M127 82 H180"></path><path class="gline" d="M320 82 H374"></path><path class="gline" d="M514 82 H568"></path></svg><p class="graph-caption">START → classify → answer → END. Node 내부에서 State를 읽고 일부 필드를 갱신합니다.</p></div><ol><li><b>State 정의</b> — Graph에서 사용할 데이터를 정합니다.</li><li><b>Node 작성</b> — 각 단계의 작업 함수를 만듭니다.</li><li><b>Edge 연결</b> — 실행 순서와 분기 규칙을 정합니다.</li><li><b>Compile</b> — 실행 가능한 Graph로 완성합니다.</li><li><b>Invoke</b> — 초기 State를 넣어 실행합니다.</li></ol>
+<pre># pip install -U langgraph
+from typing import TypedDict
+from langgraph.graph import StateGraph, START, END
+
+class AgentState(TypedDict):
+    message: str
+    intent: str
+    answer: str
+
+def classify_node(state: AgentState):
+    return {"intent": "POLICY" if "배송" in state["message"] else "OTHER"}
+
+def answer_node(state: AgentState):
+    return {"answer": "배송 정책을 확인해 주세요." if state["intent"] == "POLICY" else "상담원에게 문의해 주세요."}
+
+graph = StateGraph(AgentState)
+graph.add_node("classify", classify_node)
+graph.add_node("answer", answer_node)
+graph.add_edge(START, "classify")
+graph.add_edge("classify", "answer")
+graph.add_edge("answer", END)
+
+app = graph.compile()
+result = app.invoke({"message": "배송비가 얼마야?", "intent": "", "answer": ""})
+print(result["answer"])
+# 예제는 라우팅 구조 학습용이며 실제 정책 검색/RAG는 하지 않습니다.</pre>
+<div class="case"><h3>실전 상황: 검색 결과가 없을 때</h3><p>검색 Node가 문서를 찾지 못하면 바로 답변하지 않고 질문을 다시 작성한 뒤 재검색해야 합니다.</p><div class="flow"><span>검색</span><i>→</i><span>문서 있음?</span><i>→ 예</i><span>답변</span><br/><span>문서 없음</span><i>→</i><span>질문 재작성</span><i>→</i><span>재검색</span></div><p class="why">이처럼 반복 루프와 종료 조건이 생기면 Graph로 표현하는 편이 안전합니다.</p></div>
+</section>
+<section aria-hidden="true" class="tab-panel" hidden="" id="features" role="tabpanel">
+<h2>3. 주요 기능과 필요한 실전 상황</h2><div aria-label="④ 병렬 검색 — Fan-out / Join" class="graph-visual" role="group"><header><strong>④ 병렬 검색 — Fan-out / Join</strong><span class="graph-hint">노드 = 작업 · 화살표 = Edge · 다이아몬드 = 조건</span></header><svg aria-label="Vector와 BM25 노드를 동시에 실행한 뒤 결과를 합치고, 별도 노드에서 중복 제거·재랭킹을 수행합니다." role="img" viewbox="0 0 940 260" xmlns="http://www.w3.org/2000/svg"><defs><marker id="lg-arrow" markerheight="8" markerwidth="9" orient="auto" refx="8" refy="4"><path d="M0 0 L8 4 L0 8 Z" fill="var(--node)"></path></marker></defs><rect class="gstart" height="56" rx="12" width="105" x="10" y="95"></rect><text class="gtext" x="62.5" y="123.0">질문</text><rect class="gnode" height="57" rx="12" width="146" x="173" y="12"></rect><text class="gtext" x="246.0" y="40.5">Vector 검색</text><rect class="gnode" height="57" rx="12" width="146" x="173" y="184"></rect><text class="gtext" x="246.0" y="212.5">BM25 검색</text><rect class="gnode" height="56" rx="12" width="148" x="385" y="95"></rect><text class="gtext" x="459.0" y="116.0">결과 합치기</text><text class="gsmall" x="459.0" y="142.0">Reducer</text><rect class="gnode" height="56" rx="12" width="167" x="591" y="95"></rect><text class="gtext" x="674.5" y="123.0">중복 제거·재랭킹</text><rect class="gstart" height="56" rx="12" width="105" x="816" y="95"></rect><text class="gtext" x="868.5" y="123.0">LLM 응답</text><path class="gline" d="M115 123 H141 V41 H173"></path><path class="gline" d="M115 123 H141 V212 H173"></path><path class="gline" d="M319 41 H349 V123 H385"></path><path class="gline" d="M319 212 H349 V123 H385"></path><path class="gline" d="M533 123 H591"></path><path class="gline" d="M758 123 H816"></path></svg><p class="graph-caption">Vector와 BM25 노드를 동시에 실행한 뒤 결과를 합치고, 별도 노드에서 중복 제거·재랭킹을 수행합니다.</p></div><div class="mock-label">화면 목업 04 · 주문 취소 승인 및 재개</div><div class="demo-shell"><div class="demo-top"><span class="lights">● ● ●</span><strong>ORDER ACTION · HUMAN REVIEW</strong><span class="demo-status">APPROVAL SIMULATOR</span></div><div class="demo-content demo-two"><div class="demo-panel"><div class="mini-heading">주문 작업 요청</div><p><b>작업:</b> 주문 <code>ORD-1042</code> 취소</p><p><b>위험도:</b> 주문 상태를 변경하는 작업</p><p><b>처리 상태:</b> <span class="status-wait" id="approval-status">승인 대기 · interrupt</span></p><div class="demo-actions"><button class="demo-btn" id="approve-btn">승인</button><button class="demo-btn secondary" id="reject-btn">거절</button><button class="demo-btn subtle" id="approval-reset">재설정</button></div></div><div class="demo-panel"><div class="mini-heading">실행 이벤트 기록</div><div class="event-list" id="approval-events"><div>① 취소 요청 분류</div><div>② Checkpoint 저장</div><div>③ interrupt() · 승인 대기</div></div><div class="tiny-note">승인 시 Command(resume=...)로 이어지는 흐름을 설명하기 위한 목업입니다.</div></div></div></div>
+<div class="mock-label">화면 목업 05 · 병렬 검색 결과 결합</div><div class="demo-shell"><div class="demo-top"><span class="lights">● ● ●</span><strong>HYBRID RETRIEVAL · FAN OUT / JOIN</strong><span class="demo-status">SIMULATED</span></div><div class="demo-content"><div class="parallel-grid"><div class="demo-panel"><div class="mini-heading">Vector 검색</div><p>문서 A · 배송 정책</p><p>문서 B · 지역 안내</p></div><div class="demo-panel"><div class="mini-heading">BM25 검색</div><p>문서 A · 배송 정책</p><p>문서 C · 추가 배송비</p></div><div class="demo-panel merge"><div class="mini-heading">결과 병합 → 중복 제거</div><p>A · 배송 정책</p><p>B · 지역 안내</p><p>C · 추가 배송비</p><small>Reducer로 모은 뒤 별도 로직으로 A 중복 제거</small></div></div></div></div>
+<div class="case"><h3>조건부 분기</h3><p class="why">언제 필요한가?</p><p>사용자 요청 유형이나 처리 결과에 따라 다음 작업이 달라질 때 필요합니다.</p><p><b>실전 예:</b> “주문 내역 보여줘”는 SQL 조회, “주문 취소해줘”는 API 실행, “배송비가 얼마야?”는 정책 검색으로 분기합니다.</p></div>
+<div class="case"><h3>서브그래프</h3><p class="why">언제 필요한가?</p><p>하나의 Graph 안에 SQL 처리, API 처리, 문서 검색처럼 복잡한 흐름이 여러 개 들어갈 때 필요합니다.</p><p><b>실전 예:</b> 메인 Graph는 요청을 분류하고, <code>query_graph</code>와 <code>action_graph</code>가 각자의 검증·재시도 흐름을 담당합니다.</p></div>
+<div class="case"><h3>Checkpointer</h3><p class="why">언제 필요한가?</p><p>작업이 길거나, 중단 후 재개해야 하거나, 장애가 발생해도 진행 상태를 복구해야 할 때 필요합니다.</p><p><b>실전 예:</b>영속 저장소 기반 Checkpointer를 쓰면 서버 재시작 후에도 저장된 실행 상태를 복구할 수 있습니다. MemorySaver만 사용하면 프로세스 재시작 시 상태가 사라집니다.<code>thread_id</code>가 필요합니다.</p></div>
+<div class="case"><h3>Human-in-the-loop</h3><p class="why">언제 필요한가?</p><p>자동 실행하면 위험하거나 비용이 큰 작업에 사람의 승인이 필요할 때 사용합니다.</p><p><b>실전 예:</b> 환불, 주문 취소, 계정 삭제, 개인정보 공개 직전에 <code>interrupt()</code>로 멈추고 승인 후 <code>Command(resume=...)</code>로 재개합니다.</p></div>
+<div class="case"><h3>병렬 실행과 Reducer</h3><p class="why">언제 필요한가?</p><p>서로 독립적인 작업을 동시에 실행해 응답 시간을 줄이고, 결과를 하나로 합쳐야 할 때 필요합니다.</p><p><b>실전 예:</b>벡터 검색과 BM25 검색을 동시에 실행합니다. Reducer는 병렬 결과를 모으는 규칙이며, 중복 제거·점수 정규화·재랭킹은 별도 후처리로 구현합니다.</p></div>
+<div class="case"><h3>Streaming과 Retry</h3><p class="why">언제 필요한가?</p><p>응답이 오래 걸리거나 일시적인 네트워크·LLM 오류가 발생할 때 사용합니다.</p><p><b>실전 예:</b> 여러 도구를 순서대로 실행하는 Agent의 진행 상황을 실시간으로 보여주고, 타임아웃이 난 호출만 재시도합니다.</p></div>
+</section>
+<section aria-hidden="true" class="tab-panel" hidden="" id="tools" role="tabpanel">
+<h2>4. 관련 도구의 역할</h2><div class="mock-label">화면 목업 06 · 도구별 관측 범위</div><div class="demo-shell"><div class="demo-top"><span class="lights">● ● ●</span><strong>AGENT PLATFORM · OVERVIEW</strong><span class="demo-status">CONCEPT MAP</span></div><div class="demo-content"><div class="tool-grid"><div class="tool-card"><small>구성 요소</small><strong>LangChain</strong><span>모델 · Prompt · Tool · Retriever</span></div><div class="tool-card focus"><small>흐름 제어</small><strong>LangGraph</strong><span>Node · Edge · State · Checkpoint</span></div><div class="tool-card"><small>관측·평가</small><strong>LangSmith / Langfuse</strong><span>Trace · 지연 · 오류 · 비용</span></div></div><div class="trace-list"><div><span>classify</span><span class="trace-bar" style="--w:22%"></span><span>정상</span></div><div><span>search_policy</span><span class="trace-bar" style="--w:72%"></span><span>정상</span></div><div><span>answer</span><span class="trace-bar" style="--w:43%"></span><span>정상</span></div></div><p class="muted">추적 막대는 지연 시간 표시 방식을 설명하는 예시이며 실제 측정 결과가 아닙니다.</p></div></div>
+<table class="compare"><thead><tr><th>도구</th><th>무엇을 해결하는가?</th><th>실전 예</th></tr></thead><tbody>
+<tr><td><b>LangChain</b></td><td>모델, 프롬프트, Tool Calling, 검색 연동</td><td>LLM이 주문 조회 Tool을 호출하도록 구성</td></tr>
+<tr><td><b>LangGraph</b></td><td>분기, 반복, 상태, 승인, 복구, 병렬 실행</td><td>조회·취소·승인 흐름을 Graph로 관리</td></tr>
+<tr><td><b>LangSmith / Langfuse</b></td><td>실행 추적, 평가, 모니터링, 비용 분석</td><td>어느 Node에서 오류와 지연이 발생했는지 확인</td></tr>
+</tbody></table>
+</section>
+<section aria-hidden="true" class="tab-panel" hidden="" id="rag" role="tabpanel">
+<h2>5. RAG에서 LangGraph를 사용하는 실전 상황</h2><div aria-label="③ Corrective RAG — 조건부 분기와 재검색 루프" class="graph-visual" role="group"><header><strong>③ Corrective RAG — 조건부 분기와 재검색 루프</strong><span class="graph-hint">노드 = 작업 · 화살표 = Edge · 다이아몬드 = 조건</span></header><svg aria-label="근거가 충분하면 답변, 부족하면 재작성 후 검색으로 복귀합니다. 최대 재검색 횟수를 넘으면 보류로 종료해야 합니다." role="img" viewbox="0 0 815 253" xmlns="http://www.w3.org/2000/svg"><defs><marker id="lg-arrow" markerheight="8" markerwidth="9" orient="auto" refx="8" refy="4"><path d="M0 0 L8 4 L0 8 Z" fill="var(--node)"></path></marker></defs><rect class="gstart" height="54" rx="12" width="102" x="20" y="87"></rect><text class="gtext" x="71.0" y="114.0">START</text><rect class="gnode" height="54" rx="12" width="135" x="167" y="87"></rect><text class="gtext" x="234.5" y="114.0">검색</text><polygon class="gdecision" points="385,67 461,114 385,161 309,114"></polygon><text class="gtext" x="385" y="114">근거 충분?</text><rect class="gnode" height="54" rx="12" width="130" x="518" y="10"></rect><text class="gtext" x="583.0" y="37.0">답변 생성</text><rect class="gstart" height="54" rx="12" width="98" x="701" y="10"></rect><text class="gtext" x="750.0" y="37.0">END</text><rect class="gnode" height="54" rx="12" width="130" x="518" y="174"></rect><text class="gtext" x="583.0" y="201.0">질문 재작성</text><path class="gline" d="M122 114 H167"></path><path class="gline" d="M302 114 H309"></path><path class="gline" d="M461 114 H486 V37 H518"></path><text class="glabel" x="480" y="82">예</text><path class="gline" d="M648 37 H701"></path><path class="gline" d="M461 114 H486 V201 H518"></path><text class="glabel" x="480" y="165">아니오</text><path class="gline" d="M518 201 H231 V141"></path><text class="glabel" x="368" y="189">재검색 (횟수 제한)</text></svg><p class="graph-caption">근거가 충분하면 답변, 부족하면 재작성 후 검색으로 복귀합니다. 최대 재검색 횟수를 넘으면 보류로 종료해야 합니다.</p></div>
+<p class="lead">기본 RAG는 검색 후 답변을 생성합니다. LangGraph는 <b>검색 결과 평가, 재검색, 멀티홉, 병렬 검색, 승인·복구</b>처럼 실행 경로가 달라지는 RAG를 제어합니다.</p>
+<table class="compare"><thead><tr><th>상황</th><th>일반 RAG</th><th>LangGraph 적용</th></tr></thead><tbody>
+<tr><td>검색 결과 부족</td><td>부족한 근거로 답하거나 실패</td><td>근거 평가 → 질의 재작성 → 재검색</td></tr>
+<tr><td>멀티홉 질문</td><td>한 번에 모든 자료를 찾기 어려움</td><td>앞 문서에서 다음 검색어 추출 → 후속 검색</td></tr>
+<tr><td>하이브리드 검색</td><td>검색 함수를 직접 묶어 구현</td><td>Vector·BM25 병렬 노드 → 병합 → 중복 제거·재랭킹</td></tr>
+<tr><td>위험한 업무 처리</td><td>검색 답변과 실제 실행이 혼재</td><td>근거 확인 → 사람 승인 → API 실행</td></tr>
+</tbody></table>
+<h3>실전 1 · Corrective RAG: 찾은 문서를 평가한 뒤 다시 검색</h3>
+<p><b>질문:</b> “제주 냉장식품이 항공편 취소로 늦게 도착하면 보상되나요?”</p>
+<div class="flow"><span>START</span><i>→</i><span>retrieve</span><i>→</i><span>grade</span><i>→ 불충분</i><span>rewrite</span><i>↩</i><span>retrieve</span><i>→ 충분</i><span class="strong">generate → END</span></div>
+<div class="mock-label">화면 목업 07 · Corrective RAG 실행 콘솔</div>
+<div class="demo-shell"><div class="demo-top"><span class="lights">● ● ●</span><strong>CORRECTIVE RAG · RETRIEVAL LAB</strong><span class="demo-status">STEP SIMULATOR</span></div>
+<div class="demo-content"><div class="pipeline" id="rag-pipeline"><div class="step current">retrieve ①</div><div class="arrow">→</div><div class="step">grade</div><div class="arrow">→</div><div class="step">rewrite</div><div class="arrow">→</div><div class="step">retrieve ②</div><div class="arrow">→</div><div class="step">generate</div></div>
+<div class="demo-two"><div class="demo-panel"><div class="mini-heading">현재 질의 / 근거</div><p id="rag-question">제주 냉장식품이 항공편 취소로 늦게 도착하면 보상되나요?</p><div class="chat-answer" id="rag-doc">첫 검색 결과: 일반 배송 FAQ만 검색됨 (근거 불충분)</div></div>
+<div class="demo-panel"><div class="mini-heading">State · 실행 로그</div><pre class="json-mock" id="rag-state">{ "retry_count": 0, "evidence_ok": false }</pre><p class="tiny-note" id="rag-log">첫 번째 검색 결과를 평가하세요.</p></div></div>
+<div class="demo-actions"><button class="demo-btn" id="rag-next">다음 Node 실행</button><button class="demo-btn secondary" id="rag-reset">초기화</button></div></div></div>
+<div class="note"><b>운영 설계:</b> 문서 적합도 판정이 틀릴 수 있으므로 근거 검증을 수행하고, <code>max_retries</code>를 두어 무한 재검색을 막습니다. 끝내 근거가 없다면 답변을 보류합니다.</div>
+<h3>실전 2 · Multi-hop RAG: 앞 검색 결과가 다음 검색어를 결정</h3>
+<p><b>질문:</b> “솔바람섬 별빛 2박3일 숙소를 체크인 5일 전에 취소하면 숙소비는 몇 % 돌려받아요?”</p>
+<div class="mock-label">화면 목업 08 · 단계별 정보 연결</div>
+<div class="demo-shell"><div class="demo-top"><span class="lights">● ● ●</span><strong>MULTI-HOP RAG · EVIDENCE CHAIN</strong><span class="demo-status">CLICK TO EXPAND</span></div><div class="demo-content"><div class="route-stack">
+<div>① <b>별빛 2박3일</b> 상품 자료 검색 <em>숙소: 파도소리 리조트</em></div>
+<div>② <b>파도소리 리조트</b> 운영사 검색 <em>운영사: 해온호스피탈리티</em></div>
+<div>③ <b>해온호스피탈리티</b> 취소 규정 검색 <em>3~6일 전: 50%</em></div>
+<div>④ <b>체크인 5일 전</b> 적용 범위 검증 <em>환불: 50%</em></div></div><p class="chat-answer">교육용 가상 데이터의 결론: 숙소비의 <b>50%</b> 환불. 실제 상품 약관과는 무관합니다.</p></div></div>
+<p>Graph의 다음 검색은 <code>node_next</code>가 이미 확보한 문서의 엔티티·미해결 조건을 보고 결정합니다. 검색 종료 조건(필요한 사실 모두 확보 또는 최대 탐색 횟수)을 반드시 정의합니다.</p>
+<h3>실전 3 · Hybrid RAG: 병렬 검색과 결과 결합</h3>
+<div class="flow"><span>질문</span><i>→</i><span>Vector 검색 ∥ BM25 검색</span><i>→</i><span>Reducer로 수집</span><i>→</i><span>중복 제거·재랭킹</span><i>→</i><span class="strong">LLM</span></div>
+<p>동시에 끝난 두 검색 결과를 같은 State 키에 쓰려면 <code>Annotated</code> Reducer(예: <code>operator.add</code>)를 선언하거나 각 결과를 별도 키로 받습니다. Reducer는 합치는 방식만 정하며 <b>중복 제거·순위 결합을 자동 수행하지 않습니다.</b></p>
+<h3>실전 4 · 최소 실행 예제 (외부 LLM·벡터 DB 없이)</h3>
+<p>실제 Python에서 실행할 수 있는 간이 Corrective RAG 그래프입니다. 두 번째 검색에서 관련 문서를 찾도록 만든 실습용 데이터입니다.</p>
+<pre>from typing import TypedDict
+from langgraph.graph import StateGraph, START, END
+
+class RAGState(TypedDict):
+    question: str
+    query: str
+    docs: list[str]
+    retries: int
+    answer: str
+
+def retrieve(s: RAGState):
+    docs = (["제주 냉장식품 항공편 취소 지연: 품질 확인 후 보상 여부 심사"]
+            if "냉장식품" in s["query"] and "항공편" in s["query"]
+            else ["일반 배송은 2~3일 소요"])
+    return {"docs": docs}
+
+def grade(s: RAGState):
+    # 예제 판정: 실제 서비스에서는 관련성·충분성 평가 함수로 대체
+    ok = any("품질 확인" in d for d in s["docs"])
+    if ok: return "generate"
+    if s["retries"] &gt;= 1: return "no_evidence"
+    return "rewrite"
+
+def rewrite(s: RAGState):
+    return {"query": "제주 냉장식품 항공편 취소 보상", "retries": s["retries"] + 1}
+
+def generate(s: RAGState):
+    return {"answer": "근거: " + s["docs"][0] + " / 보상 여부는 품질 확인 후 심사"}
+
+def no_evidence(s: RAGState):
+    return {"answer": "충분한 근거를 찾지 못했습니다."}
+
+g = StateGraph(RAGState)
+g.add_node("retrieve", retrieve)
+g.add_node("rewrite", rewrite)
+g.add_node("generate", generate)
+g.add_node("no_evidence", no_evidence)
+g.add_edge(START, "retrieve")
+g.add_conditional_edges("retrieve", grade,
+    {"rewrite": "rewrite", "generate": "generate", "no_evidence": "no_evidence"})
+g.add_edge("rewrite", "retrieve")
+g.add_edge("generate", END)
+g.add_edge("no_evidence", END)
+app = g.compile()
+result = app.invoke({"question": "제주 지연 보상?", "query": "배송 보상",
+                     "docs": [], "retries": 0, "answer": ""})
+print(result["answer"])</pre>
+<div class="note"><b>주의:</b> 위 <code>grade</code>는 조건부 Edge의 라우팅 함수이며 별도 Node가 아닙니다. 검색·평가를 독립 Node로 나누려면 <code>add_node("grade", ...)</code> 후 연결하세요. 실제 RAG에는 데이터 조회, 청킹·임베딩, 충분성 평가, LLM 생성 과정이 추가됩니다.</div>
+<h3>관련 공식 문서</h3>
+<p><a href="https://docs.langchain.com/oss/python/learn" rel="noopener" target="_blank">LangGraph Custom RAG Agent 학습 자료</a> · <a href="https://docs.langchain.com/oss/python/langgraph/overview" rel="noopener" target="_blank">LangGraph 개요</a></p>
+</section><section aria-hidden="true" class="tab-panel" hidden="" id="summary" role="tabpanel">
+<h2>6. 최종 정리</h2><div class="mock-label">빠른 판단 실습 · 어떤 구조가 맞을까?</div><div class="demo-shell"><div class="demo-top"><span class="lights">● ● ●</span><strong>DESIGN DECISION · SELF CHECK</strong><span class="demo-status">INTERACTIVE</span></div><div class="demo-content"><p><b>상황:</b> 고객 주문 취소 전에 담당자의 승인을 받고, 멈춘 시점부터 다시 시작해야 합니다.</p><div class="scenario-switch"><button class="choice" data-answer="basic">단순 LLM 호출</button><button class="choice" data-answer="graph">LangGraph 워크플로우</button></div><div class="quiz-feedback" id="quiz-feedback">한 가지를 선택해 보세요.</div></div></div>
+<details><summary>강의 정리용 질문 3개 · 해설 펼치기</summary><ol><li>어떤 데이터가 State에 남아야 하는가? → 작업 요청, 승인 상태, 식별자 등.</li><li>실제 외부 API 실행 전 무엇이 필요한가? → 권한 확인·승인·실패 처리.</li><li>검색 실패 시 무한 반복을 어떻게 막을까? → 재시도 횟수와 종료 조건.</li></ol></details>
+<div class="note"><b>한 문장</b> LangChain으로 Agent의 기능을 만들고, LangGraph로 “어떤 상황에서 어떤 작업을 어떤 순서로 실행할지”를 관리합니다.</div>
+<div class="check"><label>□ 단순 호출과 Graph가 필요한 상황을 구분할 수 있다</label><label>□ State·Node·Edge의 역할을 설명할 수 있다</label><label>□ 조건부 분기와 서브그래프의 필요성을 실전 예로 설명할 수 있다</label><label>□ Checkpointer와 HITL이 필요한 상황을 알고 있다</label><label>□ 병렬 실행·Reducer·Streaming·Retry의 사용 이유를 이해한다</label></div>
+</section>
+<div class="footer">LangGraph 개요서 · 실전 상황 중심 학습 자료 · 교육용 목업 (실제 API·DB 연결 없음) · © 2026</div>
+</main>
+</div>
+<script>
+(() => {
+ const tabs=[...document.querySelectorAll('.tab-link')];
+ const sections=[...document.querySelectorAll('.tab-panel')];
+ const bar=document.querySelector('.progress i');
+ function activate(id, updateHash=true){
+   const index=tabs.findIndex(x=>x.dataset.tab===id);
+   if(index<0)return;
+   tabs.forEach(b=>{const active=b.dataset.tab===id;b.classList.toggle('active',active);b.setAttribute('aria-selected',String(active));b.tabIndex=active?0:-1});
+   sections.forEach(s=>{const active=s.id===id;s.hidden=!active;s.setAttribute('aria-hidden',String(!active))});
+   bar.style.width=((index+1)/tabs.length*100)+'%';
+   if(updateHash)history.replaceState(null,'','#'+id);
+   window.scrollTo({top:0,behavior:'instant'});
+ }
+ tabs.forEach((b,i)=>{b.addEventListener('click',()=>activate(b.dataset.tab));b.addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight'].includes(e.key))return;e.preventDefault();const n=(i+(e.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;activate(tabs[n].dataset.tab);tabs[n].focus()})});
+ activate(location.hash.slice(1)||'what',false);
+ window.addEventListener('hashchange',()=>activate(location.hash.slice(1)||'what',false));
+ const cases={shipping:{q:'제주 배송비가 얼마예요?',a:'정책 문서를 검색하여 배송비 조건을 안내합니다.',steps:[['요청 분류','POLICY'],['정책 검색','RAG'],['답변 생성','ANSWER']],note:'정책을 근거로 답변하고 DB 변경은 수행하지 않습니다.'},order:{q:'내 주문 내역을 보여줘.',a:'로그인과 권한을 확인한 뒤 주문 DB를 조회합니다.',steps:[['요청 분류','QUERY'],['인증 확인','AUTH'],['주문 DB 조회','SQL'],['결과 안내','ANSWER']],note:'사용자 본인의 주문 데이터만 조회하도록 권한을 확인합니다.'},cancel:{q:'주문 ORD-1042를 취소해줘.',a:'바로 취소하지 않고 취소 가능 여부와 승인 여부를 확인합니다.',steps:[['요청 분류','ACTION'],['취소 조건 검증','VALIDATE'],['사람 승인 요청','INTERRUPT'],['승인 후 API 실행','RESUME']],note:'상태를 바꾸는 API는 승인 뒤에만 실행합니다.'}};
+ document.querySelectorAll('[data-case]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-case]').forEach(x=>x.classList.toggle('active',x===b));const d=cases[b.dataset.case];
+  document.getElementById('customer-query').textContent=d.q;document.getElementById('customer-answer').textContent=d.a;
+  document.getElementById('route-stack').innerHTML=d.steps.map((s,i)=>'<div>'+(i+1)+' '+s[0]+' <em>'+s[1]+'</em></div>').join('');document.getElementById('route-note').textContent=d.note;
+ }));
+ let stateRun=false;document.getElementById('state-toggle').addEventListener('click',()=>{stateRun=!stateRun;document.getElementById('state-preview').textContent=JSON.stringify({message:'배송비가 얼마야?',intent:'POLICY',documents:stateRun?['배송정책']:[],retry_count:0},null,2);document.getElementById('state-toggle').textContent=stateRun?'실행 전으로 되돌리기':'Node 실행 시뮬레이션'});
+ let step=0;const stepNames=['START','classify','answer','END'];const logs=['START · 입력 State 준비','classify · POLICY 요청으로 분류','answer · 정책 답변 생성','END · 최종 State 반환'];function renderStep(){const steps=document.querySelectorAll('#execution-pipeline .step');steps.forEach((x,i)=>{x.classList.toggle('current',i===step);x.classList.toggle('done',i<step)});document.getElementById('execution-log').textContent=logs[step];document.getElementById('step-run').disabled=step===stepNames.length-1}document.getElementById('step-run').addEventListener('click',()=>{step=Math.min(step+1,3);renderStep()});document.getElementById('step-reset').addEventListener('click',()=>{step=0;renderStep()});
+ const approvalStatus=document.getElementById('approval-status'),events=document.getElementById('approval-events');function approval(v){approvalStatus.className='status-wait '+(v==='approve'?'approved':v==='reject'?'rejected':'');approvalStatus.textContent=v==='approve'?'승인 완료 · 재개됨':v==='reject'?'거절됨 · 실행 중지':'승인 대기 · interrupt';events.innerHTML=['① 취소 요청 분류','② Checkpoint 저장','③ interrupt() · 승인 대기',...(v==='approve'?['④ Command(resume=True)','⑤ 취소 API 실행 (목업)']:v==='reject'?['④ Command(resume=False)','⑤ 취소 작업 종료']:[])].map(s=>'<div>'+s+'</div>').join('')}document.getElementById('approve-btn').addEventListener('click',()=>approval('approve'));document.getElementById('reject-btn').addEventListener('click',()=>approval('reject'));document.getElementById('approval-reset').addEventListener('click',()=>approval('reset'));
+ document.querySelectorAll('[data-answer]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-answer]').forEach(x=>x.classList.toggle('active',x===b));document.getElementById('quiz-feedback').textContent=b.dataset.answer==='graph'?'정답! 승인 대기와 Checkpoint 이후 재개를 Graph로 명시적으로 관리할 수 있습니다.':'이 경우에는 승인 대기, 상태 보존, 재개가 필요하므로 단순한 1회 호출만으로는 관리하기 어렵습니다.'}));
+})();
+
+// Corrective RAG interactive mockup
+(function(){
+ const steps=[
+  {q:'제주 냉장식품이 항공편 취소로 늦게 도착하면 보상되나요?',doc:'일반 배송 FAQ만 검색됨 (근거 불충분)',log:'retrieve ① · 관련 근거를 아직 확보하지 못했습니다.',retry:0,ok:false},
+  {q:'제주 냉장식품이 항공편 취소로 늦게 도착하면 보상되나요?',doc:'일반 배송 FAQ만 검색됨',log:'grade · 현재 문서는 보상 조건을 설명하지 않습니다.',retry:0,ok:false},
+  {q:'제주 냉장식품 항공편 취소 보상',doc:'재검색에 사용할 질의를 구체화했습니다.',log:'rewrite · 구체적인 배송 조건과 예외 규정을 포함합니다.',retry:1,ok:false},
+  {q:'제주 냉장식품 항공편 취소 보상',doc:'예외 규정: 항공편 취소로 지연 시 품질 확인 후 보상 여부 심사',log:'retrieve ② · 관련 예외 규정 발견.',retry:1,ok:true},
+  {q:'제주 냉장식품 항공편 취소 보상',doc:'최종 답변: 보상 여부는 품질 확인 및 관련 정책 심사에 따라 결정됩니다.',log:'generate · 확인된 근거에 한해 응답합니다.',retry:1,ok:true}
+ ];
+ let i=0;
+ function draw(){const d=steps[i];document.getElementById('rag-question').textContent=d.q;document.getElementById('rag-doc').textContent=d.doc;document.getElementById('rag-state').textContent=JSON.stringify({retry_count:d.retry,evidence_ok:d.ok,max_retries:1},null,2);document.getElementById('rag-log').textContent=d.log;document.querySelectorAll('#rag-pipeline .step').forEach((x,j)=>{x.classList.toggle('current',i===j);x.classList.toggle('done',j<i)});document.getElementById('rag-next').disabled=i===steps.length-1;}
+ document.getElementById('rag-next').addEventListener('click',()=>{i=Math.min(i+1,steps.length-1);draw()});document.getElementById('rag-reset').addEventListener('click',()=>{i=0;draw()});draw();
+})();</script></body>
+</html>

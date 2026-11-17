@@ -1,0 +1,1126 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>05 HITL · 리듀서와 병렬 실행 · LangGraph 교안</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{word-break:keep-all;overflow-wrap:break-word;font-family:var(--body)}
+
+/* Layout: 왼쪽 고정 사이드바(단원 목차) + 오른쪽 본문 패널. 휴대폰 폭에서는 사이드바가 상단 가로 스크롤 바로 바뀜 */
+:root{
+  --bg:#f6f7fb; --paper:#ffffff; --ink:#1b2236; --muted:#5a6380; --line:#d9deeb;
+  --node:#24305e; --nodeText:#ffffff; --edge:#9aa4c2;
+  --teal:#0f8f83; --amber:#d98a1f; --coral:#d4553f; --violet:#6b5bd2;
+  --soft:#eef1f9; --tealSoft:#e2f4f1; --amberSoft:#fbf0dd; --coralSoft:#fbe7e3;
+  --code:#ffffff; --codeLine:#c9d0e2; --codeCmt:#6a7697; --outBg:#f4fbfa; --shadow:rgba(27,34,54,.08);
+  --kw:#6b5bd2; --str:#0f7d73; --fn:#b4561f;
+  --display:"Do Hyeon","IBM Plex Sans KR","Malgun Gothic",sans-serif;
+  --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12151f; --paper:#1a1e2b; --ink:#e7eaf4; --muted:#a2aac2; --line:#2e3447;
+  --node:#8f9cf0; --nodeText:#10131c; --edge:#5b6584;
+  --teal:#3cc4b5; --amber:#f0b04f; --coral:#f07a63; --violet:#a597ff;
+  --soft:#222839; --tealSoft:#163331; --amberSoft:#3a2e17; --coralSoft:#3d211c; --code:#0d1017; --codeLine:#3a4157; --codeCmt:#8d97b5; --outBg:#10201f; --shadow:rgba(0,0,0,.3);
+  --kw:#b3a8ff; --str:#5fd3c4; --fn:#f0a36a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12151f; --paper:#1a1e2b; --ink:#e7eaf4; --muted:#a2aac2; --line:#2e3447;
+  --node:#8f9cf0; --nodeText:#10131c; --edge:#5b6584;
+  --teal:#3cc4b5; --amber:#f0b04f; --coral:#f07a63; --violet:#a597ff;
+  --soft:#222839; --tealSoft:#163331; --amberSoft:#3a2e17; --coralSoft:#3d211c; --code:#0d1017; --codeLine:#3a4157; --codeCmt:#8d97b5; --outBg:#10201f; --shadow:rgba(0,0,0,.3);
+  --kw:#b3a8ff; --str:#5fd3c4; --fn:#f0a36a; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:16px/1.75 var(--body);margin:0;word-break:keep-all;overflow-wrap:break-word}
+.panel{margin-top:30px;padding-top:24px;border-top:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+.layout{max-width:1220px;margin:0 auto;display:grid;grid-template-columns:252px minmax(0,1fr);gap:40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{min-width:0;padding-block:28px 64px;max-width:900px}
+h1,h2,h3{text-wrap:balance}
+h1{font:400 clamp(30px,5vw,44px)/1.2 var(--display);margin:6px 0 10px;letter-spacing:.5px}
+h2{font:400 28px/1.3 var(--display);margin:0 0 6px;display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+h2 .no{font:inherit;color:var(--teal)}
+h3{font-size:18px;margin:26px 0 6px}
+h4{font-size:16px;margin:18px 0 4px}
+p{margin:8px 0;max-width:72ch}
+ol,ul{padding-left:22px;margin:8px 0}
+li{margin:4px 0}
+.lead{color:var(--muted);font-size:17px}
+.kicker{font:600 12px var(--mono);letter-spacing:2px;color:var(--teal);text-transform:uppercase}
+.byline{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.6}
+section{margin-top:40px}
+.panel > section:first-child{margin-top:8px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.card h4{margin-top:0}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+code,.mono{font-family:var(--mono);font-size:.9em}
+code{background:var(--soft);padding:1px 6px;border-radius:5px;word-break:break-word}
+pre{background:var(--code);border:1px solid var(--codeLine);box-shadow:0 1px 3px var(--shadow);border-radius:10px;padding:14px 16px;overflow-x:auto;font:13.5px/1.6 var(--mono);margin:8px 0;color:var(--ink);tab-size:4}
+pre .c{color:var(--codeCmt);font-style:italic}
+pre .s{color:var(--str)}
+pre .k{color:var(--kw);font-weight:600}
+pre.out{background:var(--outBg);border-style:dashed;box-shadow:none;white-space:pre-wrap;word-break:break-word;font-size:13px}
+pre.out::before{content:"출력";display:block;font:600 11px var(--mono);letter-spacing:1.5px;color:var(--teal);margin-bottom:4px}
+pre.out.ex::before{content:"출력 예시 · 모델 답변은 실행마다 달라짐"}
+pre.err{background:var(--coralSoft);border-color:var(--coral);box-shadow:none;white-space:pre-wrap;word-break:break-word;font-size:13px}
+pre.err::before{content:"에러";display:block;font:600 11px var(--mono);letter-spacing:1.5px;color:var(--coral);margin-bottom:4px}
+.codehead{display:flex;justify-content:space-between;align-items:center;gap:8px;font:600 12px var(--mono);color:var(--muted);margin:16px 0 -4px;flex-wrap:wrap}
+.copy{font:500 12px var(--body);border:1px solid var(--line);background:var(--paper);color:var(--muted);border-radius:6px;padding:2px 10px;cursor:pointer}
+.copy:hover{color:var(--ink)}
+.tw{overflow-x:auto;margin:10px 0}
+table{border-collapse:collapse;font-size:14px;min-width:100%}
+th,td{border-bottom:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+th{background:var(--soft);font-weight:600;white-space:nowrap}
+td code{white-space:nowrap}
+.note{background:var(--amberSoft);border-radius:10px;padding:12px 14px;font-size:15px;margin-top:12px}
+.note b{color:var(--amber)}
+.ragbox{background:var(--tealSoft);border-left:4px solid var(--teal);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:15px}
+.ragbox b{color:var(--teal)}
+.warn{background:var(--coralSoft);border-left:4px solid var(--coral);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:15px}
+.warn b{color:var(--coral)}
+.fix{background:var(--soft);border-left:4px solid var(--violet);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:15px}
+.fix b{color:var(--violet)}
+.note p,.ragbox p,.warn p,.fix p{margin:4px 0}
+.note ul,.ragbox ul,.warn ul,.fix ul{margin:4px 0}
+.fig{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px;overflow-x:auto;margin-top:12px}
+.fig svg{display:block;width:100%;height:auto;min-width:560px}
+svg text{font-family:var(--body)}
+.cap{font-size:13px;color:var(--muted);margin:6px 4px 0}
+.chip{display:inline-block;font:500 12px var(--body);padding:1px 10px;border-radius:999px;background:var(--soft);color:var(--muted);vertical-align:middle}
+.chip.ok{background:var(--tealSoft);color:var(--teal)}
+.chip.draft{background:var(--amberSoft);color:var(--amber)}
+.chip.ai{background:var(--coralSoft);color:var(--coral)}
+a{color:var(--teal)}
+.example{background:var(--soft);border-radius:10px;padding:12px 16px;margin:10px 0;font-size:15.5px}
+.example b{color:var(--node)}
+.steps{list-style:none;padding:0;margin:10px 0 0;counter-reset:st}
+.steps>li{counter-increment:st;padding:10px 0;border-top:1px dashed var(--line);margin:0}
+.steps>li::before{content:counter(st) ". ";font:600 14px var(--mono);color:var(--teal)}
+.steps>li:first-child{border-top:0}
+.steps .lbl{font-weight:700;color:var(--node)}
+.think{margin-top:8px;font-size:14.5px;color:var(--muted)}
+.think-h{display:inline-block;font:600 12px var(--body);color:var(--muted);margin-right:6px}
+mark{background:var(--amberSoft);color:inherit;border-bottom:2px solid var(--amber);padding:0 1px}
+details{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-top:8px}
+details summary{cursor:pointer;font-weight:600}
+details[open] summary{margin-bottom:6px}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:500 13.5px var(--mono);margin:10px 0}
+.flow span{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:4px 10px}
+.flow span.n{background:var(--node);color:var(--nodeText);border-color:var(--node)}
+.flow i{font-style:normal;color:var(--edge)}
+
+/* sidebar */
+.side{position:sticky;top:env(safe-area-inset-top,0px);align-self:start;max-height:100vh;overflow-y:auto;padding-block:28px 28px;scrollbar-width:thin}
+.side .brand{font:400 22px/1.2 var(--display);margin-bottom:2px}
+.side .brand-sub{font-size:12.5px;color:var(--muted);margin-bottom:14px}
+.prog{height:6px;background:var(--soft);border-radius:999px;overflow:hidden;margin:0 0 4px}
+.prog i{display:block;height:100%;width:0;background:var(--teal);transition:width .3s}
+.prog-t{font:500 12px var(--mono);color:var(--muted);margin-bottom:14px}
+.grp{font:600 11px var(--mono);letter-spacing:1.6px;color:var(--teal);text-transform:uppercase;margin:16px 0 6px}
+.navlist{display:flex;flex-direction:column;gap:2px}
+.navlist button{display:grid;grid-template-columns:28px minmax(0,1fr) 16px;align-items:center;gap:4px;width:100%;text-align:left;font:500 14px/1.35 var(--body);border:0;background:transparent;color:var(--ink);border-radius:8px;padding:7px 8px;cursor:pointer}
+.navlist button .n{font:600 12px var(--mono);color:var(--muted)}
+.navlist button .d{font-size:12px;color:var(--teal);visibility:hidden}
+.navlist button.done .d{visibility:visible}
+.navlist button:hover{background:var(--soft)}
+.navlist button[aria-selected="true"]{background:var(--node);color:var(--nodeText)}
+.navlist button[aria-selected="true"] .n,.navlist button[aria-selected="true"] .d{color:var(--nodeText)}
+.navlist button:focus-visible,.pager button:focus-visible,.copy:focus-visible,.donebtn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+
+/* panel footer */
+.pfoot{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center}
+.donebtn{font:600 14px var(--body);border:2px solid var(--teal);background:var(--paper);color:var(--teal);border-radius:999px;padding:6px 16px;cursor:pointer}
+.donebtn[aria-pressed="true"]{background:var(--teal);color:var(--paper)}
+.pager{display:flex;gap:8px;flex-wrap:wrap}
+.pager button{font:500 14px var(--body);border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:6px 14px;cursor:pointer;max-width:100%}
+.pager button[disabled]{opacity:.4;cursor:default}
+footer{margin-top:50px;font-size:13px;color:var(--muted)}
+
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr);gap:0}
+  .side{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);max-height:none;overflow:visible;padding-block:10px;border-bottom:1px solid var(--line);margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .side .brand,.side .brand-sub,.grp,.prog,.prog-t{display:none}
+  .navwrap{display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin;padding-bottom:2px}
+  .navlist{flex-direction:row;gap:6px}
+  .navlist button{display:flex;flex:0 0 auto;width:auto;white-space:nowrap;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13.5px}
+  .navlist button .d{display:none}
+  .navlist button.done .n{color:var(--teal)}
+  main{padding-top:18px}
+}
+@media (max-width:600px){h2{font-size:24px} pre{font-size:12.5px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+.tg{display:inline-block;font:600 11.5px/1.5 var(--body);border-radius:5px;padding:1px 7px;margin-left:6px;vertical-align:middle;white-space:nowrap;letter-spacing:.2px}
+.tg.rag{background:var(--tealSoft);color:var(--teal);border:1px solid var(--teal)}
+.tg.lg1{background:var(--violet);color:var(--paper);border:1px solid var(--violet)}
+.tg.ag{background:var(--amberSoft);color:var(--amber);border:1px solid var(--amber)}
+.sm.ag{background:var(--amber);border-radius:2px}
+.tg.lg2{background:transparent;color:var(--violet);border:1px dashed var(--violet)}
+h2 .tg{font-size:12px;position:relative;top:-3px}
+.mhead .tgs{display:inline-flex;gap:0}
+.mhead .tgs .tg:first-child{margin-left:0}
+.sm{display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:6px;vertical-align:middle}
+.sm.rag{background:var(--teal)}
+.sm.lg1{background:var(--violet)}
+.sm.lg2{border:1.5px solid var(--violet)}
+.mhead .tgs:empty{display:none}
+.navlist a[aria-current="page"] .sm{box-shadow:0 0 0 1.5px var(--nodeText)}
+.bridge{display:grid;gap:6px;margin-top:14px}
+.bridge div{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:baseline;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14.5px;line-height:1.6}
+.bridge .tg{margin-left:0}
+.legend2{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:13px;color:var(--muted);margin-top:8px}
+.legend2 .tg{margin-left:0}
+.path{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin-top:10px}
+.path .card h4{margin:0 0 6px}
+.path ol{margin:4px 0 0}
+.ucard .tgrow{display:flex;flex-wrap:wrap;gap:4px}
+.ucard .tgrow .tg{margin-left:0}
+
+.copyright{font-size:14px;color:var(--muted);line-height:1.6;margin-top:8px}
+/* 탭: 모든 화면 폭에서 왼쪽 세로 배치 */
+@media (max-width:900px){
+  .layout{grid-template-columns:200px minmax(0,1fr) !important;gap:22px !important}
+  .side{position:sticky !important;top:env(safe-area-inset-top,0px) !important;max-height:100vh !important;overflow-y:auto !important;border-bottom:0 !important;margin:0 !important;padding:22px 0 !important;background:transparent !important}
+  .side .brand,.side .brand-sub{display:block !important}
+  .navwrap{display:block !important;overflow:visible !important}
+  .navlist{flex-direction:column !important;gap:2px !important}
+  .navlist button{display:grid !important;grid-template-columns:26px minmax(0,1fr) auto !important;width:100% !important;white-space:normal !important;border:0 !important;background:transparent !important;border-radius:8px !important;padding:7px 6px !important;font-size:14px !important}
+  .navlist button[aria-selected="true"]{background:var(--node) !important}
+  .navlist button .sm{display:inline-block !important}
+  main{padding-top:24px !important}
+}
+@media (max-width:600px){
+  .layout{grid-template-columns:112px minmax(0,1fr) !important;gap:12px !important}
+  .navlist button{grid-template-columns:minmax(0,1fr) auto !important;font-size:13px !important;padding:6px 5px !important}
+  .navlist button .n,.navlist button .sm,.side .brand-sub{display:none !important}
+  .side .brand{font-size:15px !important}
+}
+.view{margin-top:26px;background:var(--paper);border:1px solid var(--line);border-left:5px solid var(--violet);border-radius:12px;padding:14px 18px 10px}
+.view-h{font:700 15px var(--body);color:var(--violet);letter-spacing:.3px;margin-bottom:4px}
+.view ul{margin:4px 0 0;padding-left:20px}
+.view li{margin:10px 0;line-height:1.8}
+.view li b{color:var(--ink)}
+/* 가독성: 글꼴 크기 */
+body{font-size:17.5px;line-height:1.85}
+p{max-width:78ch}
+h1{font-size:clamp(32px,5vw,46px)}
+h2{font-size:31px}
+h3{font-size:20.5px;margin-top:30px}
+h4{font-size:17.5px}
+pre{font-size:15px;line-height:1.7}
+pre.out,pre.err{font-size:14.5px}
+table{font-size:15.5px}
+th,td{padding:9px 12px}
+.cap{font-size:14.5px}
+.note,.warn,.ragbox,.fix{font-size:16px}
+.goal{font-size:16.5px}
+.navlist button{font-size:15.5px !important}
+.side .brand-sub{font-size:13.5px}
+.checks li{font-size:16px}
+.mhead h3{font-size:19.5px}
+.lv{font-size:13px}
+.tg{font-size:12.5px}
+.bridge div{font-size:15.5px}
+.legend2{font-size:14px}
+@media (max-width:600px){body{font-size:17px} pre{font-size:13.5px} h2{font-size:26px} table{font-size:14.5px}}
+
+.solo{max-width:1100px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.solo main{max-width:none}
+.navlist button{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:start;gap:4px;width:100%;text-align:left;font:500 14px/1.4 var(--body);border:0;background:transparent;color:var(--ink);border-radius:8px;padding:8px 8px;cursor:pointer}
+.navlist button .n{font:600 12px/1.6 var(--mono);color:var(--muted)}
+.navlist button .mc{font:500 11px var(--mono);color:var(--muted)}
+.navlist button:hover{background:var(--soft)}
+.navlist button[aria-selected="true"]{background:var(--node);color:var(--nodeText)}
+.navlist button[aria-selected="true"] .n,.navlist button[aria-selected="true"] .mc{color:var(--nodeText)}
+.navlist button[aria-selected="true"] .sm{box-shadow:0 0 0 1.5px var(--nodeText)}
+.navlist button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.side .brand{font:400 24px/1.25 var(--display);margin-bottom:4px}
+.uhead{padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:22px}
+.uhead h1{margin-bottom:0}
+.pane > section{margin-top:0}
+.pane #missions{margin-top:0;padding-top:0;border-top:0}
+.pane > section > h2{margin-bottom:12px}
+@media (max-width:900px){
+  .navlist button{display:flex;flex:0 0 auto;width:auto;white-space:nowrap;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13.5px;gap:6px}
+  .navlist button .sm{display:none}
+  .side .brand{font-size:18px}
+}
+
+.time{font:600 14px var(--body);color:var(--ink);margin-top:2px}
+.time span{font-weight:400;color:var(--muted)}
+.goal{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--node);border-radius:10px;padding:10px 14px;margin-top:12px;font-size:15px}
+.goal b{color:var(--node)}
+.goal ul{margin:4px 0 0}
+.sumlist{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 18px 14px 36px;margin-top:10px}
+.sumlist li{margin:6px 0}
+.ucard .tm{font:500 12px var(--mono);color:var(--muted)}
+
+.navlist a{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:4px;width:100%;font:500 14px/1.35 var(--body);color:var(--ink);text-decoration:none;border-radius:8px;padding:7px 8px}
+.navlist a .n{font:600 12px var(--mono);color:var(--muted)}
+.navlist a .mc{font:500 11px var(--mono);color:var(--muted)}
+.navlist a.full .mc{color:var(--teal);font-weight:600}
+.navlist a:hover{background:var(--soft)}
+.navlist a[aria-current="page"]{background:var(--node);color:var(--nodeText)}
+.navlist a[aria-current="page"] .n,.navlist a[aria-current="page"] .mc{color:var(--nodeText)}
+.navlist a:focus-visible,.pager a:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.side .brand a{color:inherit;text-decoration:none}
+.unit-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+.unit-meta a.go{font:600 13px var(--body);background:var(--teal);color:var(--paper);text-decoration:none;border-radius:999px;padding:4px 14px}
+.unit-panel{margin-top:30px;padding-top:24px;border-top:1px solid var(--line)}
+.unit-panel > section:first-child{margin-top:0}
+/* missions */
+#missions{scroll-margin-top:72px;margin-top:56px;padding-top:28px;border-top:3px double var(--line)}
+.mlegend{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 6px}
+.mprog{font:500 13px var(--mono);color:var(--muted)}
+.mission{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-top:16px;scroll-margin-top:70px}
+.mission.is-done{border-color:var(--teal);background:linear-gradient(var(--outBg),var(--outBg))}
+.mhead{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.mhead h3{margin:0;font-size:18px;flex:1 1 220px;min-width:0}
+.lv{font:600 12px var(--body);border-radius:6px;padding:2px 9px;white-space:nowrap}
+.lv1{background:var(--tealSoft);color:var(--teal)}
+.lv2{background:var(--amberSoft);color:var(--amber)}
+.lv3{background:var(--coralSoft);color:var(--coral)}
+.mdone{display:inline-flex;align-items:center;gap:6px;font:600 13px var(--body);color:var(--muted);cursor:pointer;border:1px solid var(--line);border-radius:999px;padding:3px 12px;background:var(--bg)}
+.mdone input{accent-color:var(--teal);width:16px;height:16px;margin:0}
+.mission.is-done .mdone{color:var(--teal);border-color:var(--teal)}
+.mlabel{font:600 11px var(--mono);letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin:14px 0 2px}
+.checks{list-style:none;padding:0;margin:4px 0 0}
+.checks li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:6px;align-items:start;margin:3px 0;font-size:15px}
+.checks input{accent-color:var(--teal);width:16px;height:16px;margin:5px 0 0}
+.checks label{cursor:pointer}
+.mission details{margin-top:10px}
+.mission details.ans summary{color:var(--violet)}
+.mission details.hint summary{color:var(--amber)}
+.mission .note{margin-top:10px}
+.pager{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;width:100%}
+.pager a{font:500 14px var(--body);border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:8px 14px;text-decoration:none;max-width:100%}
+.pager a:hover{border-color:var(--teal)}
+.pager .sp{flex:1}
+@media (max-width:900px){
+  .navlist a{display:flex;flex:0 0 auto;width:auto;white-space:nowrap;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13.5px;gap:6px}
+  .navlist a .mc{display:none}
+  .navlist a.full .n{color:var(--teal)}
+}
+/* index */
+.ucards{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));margin-top:10px}
+.ucard{display:flex;flex-direction:column;gap:6px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-decoration:none;color:var(--ink);min-width:0}
+.ucard:hover{border-color:var(--teal)}
+.ucard .n{font:600 12px var(--mono);color:var(--teal)}
+.ucard b{font-size:16px}
+.ucard .d{font-size:13.5px;color:var(--muted);line-height:1.55}
+.ucard .bar{height:5px;background:var(--soft);border-radius:999px;overflow:hidden;margin-top:auto}
+.ucard .bar i{display:block;height:100%;width:0;background:var(--teal)}
+.ucard .mc{font:500 12px var(--mono);color:var(--muted)}
+</style>
+</head>
+<body data-unit="hitl">
+<style>
+.mission .mlabel.st{font:700 13px var(--body);letter-spacing:.5px;color:var(--teal);text-transform:none;margin-top:22px;padding-top:12px;border-top:1px dashed var(--line)}
+.mission .mlabel.st:first-of-type{border-top:0;padding-top:0}
+.qcard{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:10px;padding:10px 14px;margin-top:10px}
+.qcard b{color:var(--teal)}
+.navlist .grp{margin:14px 8px 4px;display:flex;justify-content:space-between}
+.chip.must{background:var(--coralSoft);color:var(--coral);font-weight:700}
+.chip.rec{background:var(--amberSoft);color:var(--amber)}
+.newbadge{display:inline-block;font:700 11px var(--body);background:var(--violet);color:var(--paper);border-radius:5px;padding:1px 7px;margin-left:6px;vertical-align:middle}
+</style>
+<div class="layout">
+<aside class="side" aria-label="소단원">
+<div class="brand">05 HITL · 병렬 실행</div>
+<div class="brand-sub">LangGraph 교안 · 사람 승인과 동시 실행</div>
+<nav class="navwrap" role="tablist" aria-label="소단원" aria-orientation="vertical"><div class="navlist">
+<button type="button" role="tab" id="tab-intro" aria-controls="pane-intro" data-t="intro"><span class="n">0</span><span>개요 · 읽을 페이지</span></button>
+<button type="button" role="tab" id="tab-hitl" aria-controls="pane-hitl" data-t="hitl"><span class="n">1</span><span>HITL 설계 이슈<i class="sm ag" title="에이전트"></i></span></button>
+<button type="button" role="tab" id="tab-par" aria-controls="pane-par" data-t="par"><span class="n">2</span><span>리듀서와 병렬 실행<i class="sm rag" title="RAG"></i><i class="sm lg1" title="LangGraph 필수"></i></span></button>
+<button type="button" role="tab" id="tab-syntax" aria-controls="pane-syntax" data-t="syntax"><span class="n">3</span><span>문법 한 장<i class="sm lg1" title="LangGraph 필수"></i></span></button>
+<button type="button" role="tab" id="tab-ex1" aria-controls="pane-ex1" data-t="ex1"><span class="n">4</span><span>실제예 ① 파일 삭제 승인<i class="sm ag" title="에이전트"></i></span></button>
+<button type="button" role="tab" id="tab-ex2" aria-controls="pane-ex2" data-t="ex2"><span class="n">5</span><span>실제예 ② 3중 병렬 검색<i class="sm rag" title="RAG"></i></span></button>
+<div class="grp"><span>미션</span><span class="mc" id="mcount">0/8</span></div>
+<button type="button" role="tab" id="tab-m1" aria-controls="pane-m1" data-t="m1"><span class="n">M1</span><span>첫 결재 봇: 멈추고 재개</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m2" aria-controls="pane-m2" data-t="m2"><span class="n">M2</span><span>승인 창이 안 뜬다</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m3" aria-controls="pane-m3" data-t="m3"><span class="n">M3</span><span>거부했는데 메일이 나갔다</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m4" aria-controls="pane-m4" data-t="m4"><span class="n">M4</span><span>사람이 고쳐서 실행 (edit)</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m5" aria-controls="pane-m5" data-t="m5"><span class="n">M5</span><span>병렬 노드는 서로를 못 본다</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m6" aria-controls="pane-m6" data-t="m6"><span class="n">M6</span><span>답변이 두 번 만들어진다</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m7" aria-controls="pane-m7" data-t="m7"><span class="n">M7</span><span>병렬 검색 하나가 실패하면</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m8" aria-controls="pane-m8" data-t="m8"><span class="n">M8</span><span>법무·재무 동시 검토 + 승인</span><span class="d">✓</span></button>
+</div></nav></aside>
+<main>
+<header class="uhead"><div class="kicker">LangGraph 교안 · 05</div><h1>HITL · 리듀서와 병렬 실행</h1><div class="copyright">© 2026 부성순 · AI·클라우드 실무 과정<br>부성순 (bakpak@empas.com)</div></header>
+
+<!-- ============ 0. 개요 ============ -->
+<div class="pane" role="tabpanel" id="pane-intro" aria-labelledby="tab-intro"><section><h2><span class="no">0</span>개요 · 읽을 페이지</h2>
+<div class="goal"><b>학습 목표</b><ul>
+<li>되돌릴 수 없는 작업 앞에서 그래프를 멈추고(interrupt), 사람의 승인 · 거부 · 수정에 따라 다르게 이어 간다.</li>
+<li>거부·수정 뒤에도 도구 호출 기록이 깨지지 않게 메시지를 정리한다.</li>
+<li>병렬 실행에서 노드들이 무엇을 보고 언제 합쳐지는지(super-step) 설명하고, 합류·실패·재시도를 설계한다. <span class="newbadge">교재에 없음</span></li>
+<li>병렬로 실행된 여러 노드가 동시에 사람에게 물을 때 각각 답한다. <span class="newbadge">교재에 없음</span></li>
+</ul></div>
+<div class="note"><b>전제</b> 01 리듀서, 02 흐름 제어(Command · Send), 04 체크포인터(thread_id · @task)를 마쳤습니다.</div>
+<h3>위키독스 3페이지 + 새로 다루는 내용</h3>
+<div class="tw"><table><thead><tr><th>구분</th><th>페이지</th><th>여기서 가져갈 것</th></tr></thead><tbody>
+<tr><td><span class="chip must">필수 1</span></td><td><a href="https://wikidocs.net/261611" target="_blank" rel="noopener">2-4. Human-in-the-Loop</a></td><td>HITL이 필요한 상황, 두 가지 구현 방법</td></tr>
+<tr><td><span class="chip must">필수 2</span></td><td><a href="https://wikidocs.net/261618" target="_blank" rel="noopener">2-4-1. interrupt()와 승인 워크플로우</a></td><td>interrupt · Command(resume), 민감 도구 승인, HumanInTheLoopMiddleware — <b>아래 정정 확인</b></td></tr>
+<tr><td><span class="chip must">필수 3</span></td><td><a href="https://wikidocs.net/261619" target="_blank" rel="noopener">2-4-2. 고급 패턴과 Interrupt 규칙</a></td><td>승인/거부 분기, 다단계 승인, Interrupt 4대 규칙</td></tr>
+<tr><td><span class="chip rec">새로 추가</span></td><td>리듀서와 병렬 실행 (2번 탭)</td><td>super-step, 합류, 순서, 실패 후 재개, RetryPolicy, max_concurrency, 병렬 interrupt</td></tr>
+<tr><td><span class="chip rec">복습</span></td><td><a href="https://wikidocs.net/293355" target="_blank" rel="noopener">1-3-2-3 리듀서</a> · <a href="https://wikidocs.net/319069" target="_blank" rel="noopener">1-3-4-5 Send</a></td><td>01 · 02 교안 내용</td></tr>
+</tbody></table></div>
+<h3>교재에서 바로잡을 곳 (LangGraph 1.2.20 · langchain 1.4.10, 가짜 LLM으로 실행 확인)</h3>
+<div class="tw"><table><thead><tr><th>페이지</th><th>문제</th><th>바르게</th></tr></thead><tbody>
+<tr><td>2-4-1 민감 도구 승인</td><td>거부하면 ToolMessage를 돌려주지만, 그 뒤 <code>check_sensitive → tools</code> 고정 엣지로 <b>ToolNode가 원래 도구 호출을 그대로 실행</b>합니다.</td><td>실제로 <b>거부했는데 메일이 발송</b>됩니다. 2-4-2처럼 거부 시 <code>Command(goto="reasoning")</code>으로 tools를 건너뛰어야 합니다. → M3</td></tr>
+<tr><td>2-4-1</td><td>"Checkpointer가 없으면 재개가 불가능"</td><td>정확히는: 체크포인터가 없어도 <b>멈추기는 합니다</b>(<code>__interrupt__</code> 반환). 재개할 때 <code>RuntimeError: Cannot use Command(resume=...) without checkpointer</code>. → M1</td></tr>
+<tr><td>2-4-1 미들웨어</td><td>edit(수정) 결정의 resume 형식 예시가 없음</td><td><code>{"type": "edit", "edited_action": {"name": "send_email", "args": {...}}}</code> (3번 탭)</td></tr>
+<tr><td>2-4-2</td><td>첫 예제 <code>approval_node</code></td><td>reasoning · execute · escalate 노드가 정의되지 않은 조각 코드입니다. 구조 설명용으로만 보세요.</td></tr>
+</tbody></table></div>
+<div class="bridge">
+<div><span class="tg rag">RAG</span><span>벡터·키워드·웹 검색을 동시에 돌리고 합치는 것이 병렬 실행의 대표 예입니다.</span></div>
+<div><span class="tg lg1">LangGraph 필수</span><span>interrupt는 04 체크포인터 위에서, 병렬 실행은 01 리듀서 위에서 동작합니다.</span></div>
+<div><span class="tg ag">MCP·에이전트</span><span>메일 발송, 파일 삭제, 결제처럼 되돌릴 수 없는 도구는 사람 승인 뒤에만 실행합니다.</span></div>
+</div>
+</section></div>
+
+<!-- ============ 1. HITL 설계 ============ -->
+<div class="pane" role="tabpanel" id="pane-hitl" aria-labelledby="tab-hitl" hidden><section><h2><span class="no">1</span>HITL 설계 이슈<span class="tg ag">MCP·에이전트</span></h2>
+<h3>interrupt가 하는 일</h3>
+<p><code>interrupt(값)</code>을 만나면 그래프는 그 자리에서 멈추고, State를 체크포인터에 저장한 뒤 <code>값</code>을 사람(화면)에게 돌려줍니다. 사람이 <code>Command(resume=답)</code>으로 다시 invoke하면, 멈췄던 노드가 <b>처음부터 다시 실행</b>되고 이번에는 <code>interrupt()</code>가 <code>답</code>을 돌려줍니다.</p>
+<div class="flow"><span class="n">노드 실행</span><i>→</i><span>interrupt(질문)</span><i>→</i><span>멈춤 · 저장</span><i>→</i><span>사람이 결정</span><i>→</i><span>Command(resume=답)</span><i>→</i><span class="n">노드 처음부터 · interrupt()가 답을 반환</span></div>
+<h3>설계할 때 던질 5가지 질문</h3>
+<div class="qcard"><b>Q1. 어디서 멈출까?</b><br>되돌릴 수 없는 작업(메일, 삭제, 결제), 비용이 큰 작업, 규정상 승인이 필요한 작업 <b>바로 앞</b>. 모든 도구에서 멈추면 아무도 안 쓰는 시스템이 됩니다(검색은 자동).</div>
+<div class="qcard"><b>Q2. 사람에게 무엇을 보여 줄까?</b><br>무엇을(도구 이름), 어떻게(인자), 왜(이유), 무엇을 고를 수 있는지(options). 값은 JSON으로 저장 가능해야 합니다(dict, list, str, 숫자).</div>
+<div class="qcard"><b>Q3. 사람이 고를 수 있는 결정과 그 다음 길은?</b><br>approve → 실행 노드, reject → 실행 건너뛰기, edit → 고친 값으로 실행, escalate → 상급자. 결정마다 다음 노드를 <code>Command(goto=...)</code>로 정합니다.</div>
+<div class="qcard"><b>Q4. 거부·수정 뒤에도 기록이 맞는가?</b><br>LLM이 도구를 부른 AIMessage에는 tool_call마다 ToolMessage 답이 있어야 합니다. 거부면 "거부됨" ToolMessage를 넣고 도구 노드를 <b>건너뛰고</b>, 수정이면 같은 id의 AIMessage로 교체합니다(01 add_messages).</div>
+<div class="qcard"><b>Q5. 멈춘 동안 안전한가?</b><br>체크포인터 + thread_id 필수(04). 재개하면 노드가 처음부터 다시 돌기 때문에 interrupt <b>앞</b>에 알림 발송 같은 부작용을 두지 않습니다(04 M7).</div>
+<h3>Interrupt 4대 규칙 (위키독스 2-4-2) — 실행으로 확인</h3>
+<div class="tw"><table><thead><tr><th>규칙</th><th>어기면 (실제 결과)</th></tr></thead><tbody>
+<tr><td>① try/except로 감싸지 않는다</td><td><code>except Exception</code>이 멈춤 신호(GraphInterrupt)를 잡아 <b>승인 창 없이 지나감</b> → M2</td></tr>
+<tr><td>② 한 노드 안의 interrupt 순서는 매번 같게</td><td>재개 값이 순서(번호)로 짝지어지므로 순서가 바뀌면 엉뚱한 질문에 답이 들어감</td></tr>
+<tr><td>③ 값은 JSON 직렬화 가능하게</td><td><code>interrupt({"cb": lambda x: x})</code> → <code>TypeError: Type is not msgpack serializable</code></td></tr>
+<tr><td>④ interrupt 앞에 부작용 금지</td><td>재개 때 다시 실행되어 알림·메일이 두 번 감</td></tr>
+</tbody></table></div>
+<h3>두 가지 구현 방법</h3>
+<div class="tw"><table><thead><tr><th></th><th>interrupt() + StateGraph</th><th>HumanInTheLoopMiddleware</th></tr></thead><tbody>
+<tr><td>대상</td><td>직접 만든 그래프</td><td><code>create_agent</code></td></tr>
+<tr><td>설정</td><td>노드 안에서 interrupt 호출</td><td>도구 이름별로 허용 결정 선언</td></tr>
+<tr><td>resume</td><td>자유 (<code>"approve"</code>, dict 등)</td><td><code>{"decisions": [{"type": "approve" | "edit" | "reject", ...}]}</code></td></tr>
+<tr><td>좋은 때</td><td>다단계 승인, 금액별 분기, 병렬 검토</td><td>"이 도구들은 실행 전 승인" 같은 표준 승인</td></tr>
+</tbody></table></div>
+</section></div>
+
+<!-- ============ 2. 병렬 ============ -->
+<div class="pane" role="tabpanel" id="pane-par" aria-labelledby="tab-par" hidden><section><h2><span class="no">2</span>리듀서와 병렬 실행<span class="tg rag">RAG</span><span class="tg lg1">LangGraph 필수</span><span class="newbadge">교재에 없음</span></h2>
+<h3>병렬 실행은 "단계(super-step)" 단위로 일어난다</h3>
+<p>LangGraph는 그래프를 단계별로 실행합니다. 한 단계에서 실행할 수 있는 노드는 <b>모두 동시에</b> 실행되고, 단계가 끝나면 각 노드가 돌려준 값을 <b>리듀서로 한꺼번에</b> State에 합칩니다. 그 다음 단계의 노드는 합쳐진 State를 봅니다.</p>
+<div class="flow"><span>단계 1: vector · bm25 · web 동시 실행 (셋 다 같은 State를 봄)</span><i>→</i><span class="n">리듀서로 합치기</span><i>→</i><span>단계 2: answer (합쳐진 State를 봄)</span></div>
+<pre class="out">['bm25(본 로그 0개)', 'vector(본 로그 0개)', 'web(본 로그 0개)', 'merge(본 로그 3개)']
+# 같은 단계의 세 노드는 서로의 결과를 못 보고, 다음 단계 merge 는 셋을 다 본다</pre>
+<h3>병렬을 만드는 세 가지 방법</h3>
+<div class="tw"><table><thead><tr><th>방법</th><th>코드</th><th>갈래 수</th></tr></thead><tbody>
+<tr><td>고정 팬아웃</td><td><code>add_edge(START, "a")</code>, <code>add_edge(START, "b")</code></td><td>코드에 정해짐</td></tr>
+<tr><td>조건부 엣지가 리스트 반환</td><td><code>return ["vector", "web"]</code></td><td>상황에 따라 고른 만큼</td></tr>
+<tr><td>Send</td><td><code>return [Send("summ", {"doc": d}) for d in docs]</code></td><td>데이터 개수만큼</td></tr>
+</tbody></table></div>
+<h3>병렬 설계 5가지 질문</h3>
+<div class="qcard"><b>P1. 같은 키에 동시에 쓰나?</b> → 그 키에는 리듀서 필수. 없으면 InvalidUpdateError (01).</div>
+<div class="qcard"><b>P2. 결과 순서가 중요한가?</b> → 병렬 결과의 순서는 정해져 있지 않습니다. 순서가 필요하면 리듀서 안에서 정렬합니다.</div>
+<div class="qcard"><b>P3. 어디서 합류하나? 모두 기다리나?</b> → <code>add_edge(["a", "b"], "c")</code>는 <b>둘 다 끝나면 c를 한 번</b>. <code>add_edge("a","c")</code> + <code>add_edge("b","c")</code>는 <b>도착할 때마다</b> c를 실행합니다. 갈래 길이가 다르면 c가 두 번 돕니다. → M6</div>
+<div class="qcard"><b>P4. 하나가 실패하면?</b> → 그 단계 전체가 에러로 멈춥니다. 체크포인터가 있으면 성공한 노드의 결과는 보존되고, <code>invoke(None, cfg)</code>로 <b>실패한 노드만</b> 다시 실행합니다. 일시적 오류는 <code>RetryPolicy</code>로 자동 재시도. → M7</div>
+<div class="qcard"><b>P5. 너무 많이 동시에 돌지 않나?</b> → Send로 문서 100개를 보내면 LLM 100번이 동시에 갑니다. <code>{"max_concurrency": 5}</code>로 동시 실행 수를 제한합니다(API 속도 제한 대응).</div>
+<h3>병렬 + HITL: 여러 곳에서 동시에 멈추면</h3>
+<p>병렬 노드 두 개가 모두 interrupt하면 멈춤이 두 개 생깁니다. 이때 <code>Command(resume="승인")</code> 하나로는 재개할 수 없고, <b>interrupt id별로</b> 답을 줘야 합니다.</p>
+<pre class="err">RuntimeError: When there are multiple pending interrupts, you must specify the interrupt id when resuming.</pre>
+<pre class="py">ints = result["__interrupt__"]                              # 두 개
+answers = {i.id: ("승인" if i.value["who"] == "법무" else "보류") for i in ints}
+app.invoke(Command(resume=answers), cfg)                    # id → 답 dict</pre>
+<h3>병렬 문제 정리</h3>
+<div class="tw"><table><thead><tr><th>증상</th><th>원인</th><th>해결</th><th>어디서</th></tr></thead><tbody>
+<tr><td>InvalidUpdateError</td><td>리듀서 없는 키에 동시 쓰기 (P1)</td><td>리듀서</td><td>01 · 실제예 ②</td></tr>
+<tr><td>병렬 노드가 앞 결과를 못 봄</td><td>같은 단계라서 (super-step)</td><td>의존하면 순차로, 아니면 합류 뒤에서 사용</td><td>M5</td></tr>
+<tr><td>합류 노드가 두 번 실행</td><td>합류 엣지를 따로 연결 (P3)</td><td><code>add_edge([...], c)</code></td><td>M6</td></tr>
+<tr><td>한 검색 실패로 전체 실패</td><td>단계 단위 실행 (P4)</td><td>RetryPolicy, 체크포인터 재개</td><td>M7</td></tr>
+<tr><td>재개 RuntimeError</td><td>멈춤이 여러 개인데 답 하나 (병렬+HITL)</td><td>id별 resume</td><td>M8</td></tr>
+</tbody></table></div>
+</section></div>
+
+<!-- ============ 3. 문법 ============ -->
+<div class="pane" role="tabpanel" id="pane-syntax" aria-labelledby="tab-syntax" hidden><section><h2><span class="no">3</span>문법 한 장<span class="tg lg1">LangGraph 필수</span></h2>
+<h3>멈추기와 재개</h3>
+<pre class="py">from langgraph.types import interrupt, Command
+
+def gate(state) -&gt; Command[Literal["run", "cancel"]]:
+    answer = interrupt({"action": "delete_file", "path": state["path"], "options": ["approve", "reject"]})
+    return Command(goto="run" if answer == "approve" else "cancel")
+
+app = builder.compile(checkpointer=InMemorySaver())          # 체크포인터 필수
+cfg = {"configurable": {"thread_id": "t-1"}}
+r = app.invoke(입력, cfg)
+r["__interrupt__"][0].value                                  # 사람에게 보여 줄 값
+app.get_state(cfg).next, app.get_state(cfg).interrupts       # 어디서 멈췄나
+app.invoke(Command(resume="approve"), cfg)                   # 재개</pre>
+<h3>도구 호출 승인 · 거부 · 수정 (StateGraph)</h3>
+<pre class="py">def review(state) -&gt; Command[Literal["tools", "reasoning"]]:
+    ai = state["messages"][-1]; tc = ai.tool_calls[0]
+    d = interrupt({"tool": tc["name"], "args": tc["args"]})
+    if d["type"] == "approve":
+        return Command(goto="tools")
+    if d["type"] == "edit":                                   # 같은 id 로 교체 (add_messages)
+        edited = AIMessage(content=ai.content, id=ai.id, tool_calls=[{**tc, "args": {**tc["args"], **d["args"]}}])
+        return Command(goto="tools", update={"messages": [edited]})
+    return Command(goto="reasoning",                           # 거부: tools 건너뛰기
+                   update={"messages": [ToolMessage(content="사람이 거부", tool_call_id=tc["id"])]})</pre>
+<h3>create_agent + HumanInTheLoopMiddleware (실행 확인한 형식)</h3>
+<pre class="py">from langchain.agents import create_agent
+from langchain.agents.middleware import HumanInTheLoopMiddleware
+
+agent = create_agent(model=llm, tools=[send_email, web_search], checkpointer=InMemorySaver(),
+    middleware=[HumanInTheLoopMiddleware(interrupt_on={
+        "send_email": {"allowed_decisions": ["approve", "edit", "reject"]}})])
+
+# 멈춤 값: {'action_requests': [{'name': 'send_email', 'args': {...}, 'description': ...}], 'review_configs': [...]}
+agent.invoke(Command(resume={"decisions": [{"type": "approve"}]}), cfg)
+agent.invoke(Command(resume={"decisions": [{"type": "edit",
+    "edited_action": {"name": "send_email", "args": {"to": "team@test.com", "subject": "회의(수정)", "body": "내일 3시"}}}]}), cfg)
+agent.invoke(Command(resume={"decisions": [{"type": "reject", "message": "보내지 마세요"}]}), cfg)</pre>
+<h3>병렬 · 합류 · 재시도 · 동시 실행 제한</h3>
+<pre class="py">from langgraph.types import RetryPolicy
+
+for n in ["vector", "bm25", "web"]:
+    g.add_edge(START, n)                                     # 동시에 실행
+g.add_edge(["vector", "bm25", "web"], "answer")             # 셋 다 끝나면 한 번
+
+g.add_node("web", web_search_node,
+           retry_policy=RetryPolicy(max_attempts=3, retry_on=ConnectionError))
+
+app.invoke(입력, {"max_concurrency": 5})                    # 동시에 최대 5개
+app.invoke(None, cfg)                                        # 실패 후: 실패한 노드만 다시</pre>
+<h3>고정 중단점 (디버깅용)</h3>
+<pre class="py">app = g.compile(checkpointer=InMemorySaver(), interrupt_before=["tools"])   # tools 직전마다 멈춤
+app.invoke(입력, cfg); app.invoke(None, cfg)                                 # None 으로 계속</pre>
+</section></div>
+
+<!-- ============ 실제예 1 ============ -->
+<div class="pane" role="tabpanel" id="pane-ex1" aria-labelledby="tab-ex1" hidden><section><h2><span class="no">4</span>실제예 ① 공유 폴더 파일 삭제 승인<span class="tg lg1">LangGraph 필수</span><span class="tg ag">MCP·에이전트</span></h2>
+<div class="mission">
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>파일 정리 에이전트가 90일 이상 안 쓴 파일을 지우려 합니다. 삭제는 되돌릴 수 없으므로 담당자 승인 뒤에만 실행합니다.</p>
+<div class="mlabel st">STEP 2 · 설계 (Q1~Q5)</div>
+<div class="tw"><table><thead><tr><th>질문</th><th>답</th></tr></thead><tbody>
+<tr><td>Q1 어디서 멈추나</td><td>delete 노드 직전 (approve_gate)</td></tr>
+<tr><td>Q2 무엇을 보여 주나</td><td>action, path, reason, options</td></tr>
+<tr><td>Q3 결정과 다음 길</td><td>approve → delete, reject → cancel (status 기록)</td></tr>
+<tr><td>Q5 안전</td><td>InMemorySaver + 파일마다 thread_id. interrupt 앞에는 부작용 없음</td></tr>
+</tbody></table></div>
+<div class="flow"><span class="n">plan</span><i>→</i><span class="n">approve_gate (interrupt)</span><i>→</i><span class="n">delete</span><i>/</i><span class="n">cancel</span></div>
+<div class="mlabel st">STEP 3 · 코드</div>
+<pre class="py">from typing import Literal
+from typing_extensions import TypedDict
+from langgraph.graph import StateGraph, START, END
+from langgraph.types import interrupt, Command
+from langgraph.checkpoint.memory import InMemorySaver
+
+class DeleteState(TypedDict):
+    path: str
+    reason: str
+    status: str
+
+DELETED = []
+def plan(s): return {"reason": f"{s['path']}는 90일 이상 사용되지 않음"}
+
+def approve_gate(s) -&gt; Command[Literal["delete", "cancel"]]:
+    answer = interrupt({"action": "delete_file", "path": s["path"], "reason": s["reason"],
+                        "options": ["approve", "reject"]})
+    if answer == "approve":
+        return Command(goto="delete")
+    return Command(goto="cancel", update={"status": "취소: 사람이 거부"})
+
+def delete(s):
+    DELETED.append(s["path"])                 # 실제로는 os.remove
+    return {"status": f"삭제 완료: {s['path']}"}
+def cancel(s): return {}
+
+g = StateGraph(DeleteState)
+for n, f in [("plan", plan), ("approve_gate", approve_gate), ("delete", delete), ("cancel", cancel)]:
+    g.add_node(n, f)
+g.add_edge(START, "plan"); g.add_edge("plan", "approve_gate")
+g.add_edge("delete", END); g.add_edge("cancel", END)
+app = g.compile(checkpointer=InMemorySaver())</pre>
+<div class="mlabel st">STEP 4 · 멈추고, 확인하고, 재개</div>
+<pre class="py">cfg = {"configurable": {"thread_id": "del-1"}}
+r = app.invoke({"path": "/share/old_report.xlsx"}, cfg)
+print("멈춤:", r["__interrupt__"][0].value)
+st = app.get_state(cfg)
+print("next:", st.next, "| 대기 중 interrupt:", st.interrupts[0].value["path"])
+print("재개:", app.invoke(Command(resume="approve"), cfg)["status"], "| DELETED:", DELETED)
+
+cfg2 = {"configurable": {"thread_id": "del-2"}}
+app.invoke({"path": "/share/contract.pdf"}, cfg2)
+print("거부:", app.invoke(Command(resume="reject"), cfg2)["status"], "| DELETED:", DELETED)</pre>
+<div class="mlabel st">STEP 5 · 결과 확인</div>
+<pre class="out">멈춤: {'action': 'delete_file', 'path': '/share/old_report.xlsx', 'reason': '/share/old_report.xlsx는 90일 이상 사용되지 않음', 'options': ['approve', 'reject']}
+next: ('approve_gate',) | 대기 중 interrupt: /share/old_report.xlsx
+재개: 삭제 완료: /share/old_report.xlsx | DELETED: ['/share/old_report.xlsx']
+거부: 취소: 사람이 거부 | DELETED: ['/share/old_report.xlsx']</pre>
+<ol class="steps">
+<li><span class="lbl">멈춘 상태는 언제든 조회.</span> 웹 화면에서는 <code>get_state(cfg).interrupts</code>로 "승인 대기 목록"을 그립니다.</li>
+<li><span class="lbl">승인과 실행 노드를 분리.</span> delete는 승인된 뒤에만 도달합니다. 거부 경로에는 delete가 아예 없습니다.</li>
+<li><span class="lbl">파일마다 thread_id.</span> 여러 삭제 요청이 서로의 승인과 섞이지 않습니다.</li>
+</ol>
+</div>
+</section></div>
+
+<!-- ============ 실제예 2 ============ -->
+<div class="pane" role="tabpanel" id="pane-ex2" aria-labelledby="tab-ex2" hidden><section><h2><span class="no">5</span>실제예 ② 사내 규정 3중 병렬 검색<span class="tg rag">RAG</span><span class="tg lg1">LangGraph 필수</span></h2>
+<div class="mission">
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>벡터 · BM25 · 웹 검색을 동시에 돌려 응답 시간을 줄이고, 결과는 중복 없이 점수순으로 합쳐 답변 노드에 넘깁니다.</p>
+<div class="mlabel st">STEP 2 · 병렬 설계 (P1~P3)</div>
+<div class="tw"><table><thead><tr><th>질문</th><th>답</th></tr></thead><tbody>
+<tr><td>P1 같은 키 동시 쓰기</td><td>docs, trace → 리듀서 필수</td></tr>
+<tr><td>P2 순서</td><td>점수순이 필요 → 리듀서 <code>merge_sorted</code> 안에서 정렬 + 중복 제거</td></tr>
+<tr><td>P3 합류</td><td>세 검색이 모두 끝난 뒤 answer 한 번 → <code>add_edge([...], "answer")</code></td></tr>
+</tbody></table></div>
+<div class="mlabel st">STEP 3 · 리듀서와 상태</div>
+<pre class="py">from typing import Annotated
+from operator import add
+
+def merge_sorted(old, new):
+    best = {d["id"]: d for d in (old or [])}
+    for d in new or []:
+        if d["id"] not in best or d["score"] &gt; best[d["id"]]["score"]:
+            best[d["id"]] = d
+    return sorted(best.values(), key=lambda d: -d["score"])
+
+class SearchState(TypedDict):
+    question: str
+    docs: Annotated[list[dict], merge_sorted]
+    trace: Annotated[list[str], add]
+    answer: str</pre>
+<div class="mlabel st">STEP 4 · 노드와 연결</div>
+<pre class="py">def vector(s): return {"docs": [{"id": "HR-01", "score": 0.82, "src": "vector"}], "trace": [f"vector(본 문서 {len(s['docs'])}개)"]}
+def bm25(s):   return {"docs": [{"id": "HR-01", "score": 0.91, "src": "bm25"}, {"id": "HR-07", "score": 0.55, "src": "bm25"}],
+                       "trace": [f"bm25(본 문서 {len(s['docs'])}개)"]}
+def web(s):    return {"docs": [{"id": "WEB-3", "score": 0.40, "src": "web"}], "trace": [f"web(본 문서 {len(s['docs'])}개)"]}
+def answer(s): return {"answer": " &gt; ".join(f"{d['id']}({d['score']})" for d in s["docs"]),
+                       "trace": [f"answer(본 문서 {len(s['docs'])}개)"]}
+
+g = StateGraph(SearchState)
+for n, f in [("vector", vector), ("bm25", bm25), ("web", web), ("answer", answer)]:
+    g.add_node(n, f)
+for n in ["vector", "bm25", "web"]:
+    g.add_edge(START, n)
+g.add_edge(["vector", "bm25", "web"], "answer")
+g.add_edge("answer", END)
+r = g.compile().invoke({"question": "연차"})
+print(r["answer"]); print(r["trace"])</pre>
+<div class="mlabel st">STEP 5 · 결과 확인</div>
+<pre class="out">HR-01(0.91) &gt; HR-07(0.55) &gt; WEB-3(0.4)
+['bm25(본 문서 0개)', 'vector(본 문서 0개)', 'web(본 문서 0개)', 'answer(본 문서 3개)']</pre>
+<ol class="steps">
+<li><span class="lbl">세 검색은 서로를 못 본다.</span> 모두 "본 문서 0개". 같은 단계라서입니다.</li>
+<li><span class="lbl">합치기는 리듀서가.</span> HR-01은 높은 점수(bm25)만 남고, 결과는 점수순입니다. trace 순서(bm25가 먼저)는 실행마다 다를 수 있습니다.</li>
+<li><span class="lbl">answer는 한 번.</span> 리스트 합류 엣지 덕분에 셋 다 끝난 뒤 한 번만 실행됩니다.</li>
+</ol>
+</div>
+</section></div>
+
+<!-- ============ M1 ============ -->
+<div class="pane" role="tabpanel" id="pane-m1" aria-labelledby="tab-m1" hidden><section>
+<div class="mission" id="hitl-m1" data-mid="hitl-m1">
+<div class="mhead"><span class="lv lv1">★ 기본</span><span class="tgs"><span class="tg lg1">LangGraph 필수</span></span><h3>M1. 첫 결재 봇: 멈추고 재개하기</h3><label class="mdone"><input type="checkbox" id="hitl-m1-done" data-done="hitl-m1"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>법인카드 사용 요청을 팀장이 승인/반려합니다. 노드 하나(<code>approve</code>)에서 interrupt로 물어보고, 답에 따라 status를 정합니다.</p>
+<pre class="py">class CardState(TypedDict):
+    item: str
+    amount: int
+    status: str
+# approve 노드: interrupt({"item":..., "amount":..., "options": ["approve", "reject"]})
+#              → "승인됨" / "반려됨"</pre>
+<div class="mlabel st">STEP 2 · 작성</div>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">def approve(s):
+    ans = interrupt({"item": s["item"], "amount": s["amount"], "options": ["approve", "reject"]})
+    return {"status": "승인됨" if ans == "approve" else "반려됨"}
+
+g = StateGraph(CardState); g.add_node("approve", approve); g.add_edge(START, "approve")
+app = g.compile(checkpointer=InMemorySaver())
+cfg = {"configurable": {"thread_id": "card-1"}}
+r = app.invoke({"item": "팀 회식", "amount": 320000, "status": ""}, cfg)</pre></details>
+<div class="mlabel st">STEP 3 · 예측</div>
+<p>① 첫 invoke의 반환값에 무엇이 들어 있을까요? ② <code>get_state(cfg).next</code>는? ③ <code>Command(resume="approve")</code> 후 status는?</p>
+<details class="ans"><summary>확인</summary><pre class="out">① {'item': '팀 회식', 'amount': 320000, 'status': '', '__interrupt__': [Interrupt(value={...}, id='...')]}
+② ('approve',)
+③ '승인됨'</pre></details>
+<div class="mlabel st">STEP 4 · 체크포인터를 빼 보기</div>
+<p><code>g.compile()</code>로 바꿔 같은 순서로 실행하세요. 어디서 문제가 생기나요?</p>
+<details class="ans"><summary>실제 결과</summary><p>첫 invoke는 멈추고 <code>__interrupt__</code>까지 돌려줍니다(에러 없음). 재개할 때 에러가 납니다.</p><pre class="err">RuntimeError: Cannot use Command(resume=...) without checkpointer</pre><p>멈춘 상태를 저장할 곳이 없어 "어디서 멈췄는지" 다시 찾을 수 없기 때문입니다.</p></details>
+<div class="mlabel st">STEP 5 · 확인</div>
+<ul class="checks">
+<li><input type="checkbox" id="hitl-m1-c1" data-chk="hitl-m1-c1"><label for="hitl-m1-c1">승인·반려 두 thread를 만들어 각각 결과를 확인했다</label></li>
+<li><input type="checkbox" id="hitl-m1-c2" data-chk="hitl-m1-c2"><label for="hitl-m1-c2">체크포인터 없이 재개할 때의 에러를 확인했다</label></li>
+<li><input type="checkbox" id="hitl-m1-c3" data-chk="hitl-m1-c3"><label for="hitl-m1-c3">확장: 50만원 이상만 승인을 받고 미만은 자동 승인하도록 조건부 엣지를 추가했다</label></li>
+</ul>
+</div>
+</section></div>
+
+<!-- ============ M2 ============ -->
+<div class="pane" role="tabpanel" id="pane-m2" aria-labelledby="tab-m2" hidden><section>
+<div class="mission" id="hitl-m2" data-mid="hitl-m2">
+<div class="mhead"><span class="lv lv1">★ 기본</span><span class="tgs"><span class="tg lg1">LangGraph 필수</span></span><h3>M2. 승인 창이 안 뜬다 (규칙 ①)</h3><label class="mdone"><input type="checkbox" id="hitl-m2-done" data-done="hitl-m2"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>"에러가 나도 서비스가 죽지 않게" 노드 전체를 try/except로 감쌌더니, 승인 창이 뜨지 않고 바로 끝납니다.</p>
+<pre class="py">class S(TypedDict):
+    x: str
+
+def approve(s):
+    try:
+        r = interrupt("송금 50만원 승인?")
+        return {"x": r}
+    except Exception as e:
+        return {"x": f"에러 처리됨: {type(e).__name__}"}
+
+g = StateGraph(S); g.add_node("approve", approve); g.add_edge(START, "approve")
+app = g.compile(checkpointer=InMemorySaver())
+print(app.invoke({"x": ""}, {"configurable": {"thread_id": "t"}}))</pre>
+<div class="mlabel st">STEP 2 · 결과 예측</div>
+<details class="ans"><summary>실제 출력</summary><pre class="out">{'x': '에러 처리됨: GraphInterrupt'}</pre><p><code>__interrupt__</code>가 없습니다. 멈춤 신호(GraphInterrupt 예외)를 except가 잡아 먹었습니다.</p></details>
+<div class="mlabel st">STEP 3 · 원리</div>
+<p>interrupt는 내부적으로 예외를 던져 그래프 실행을 멈춥니다. <code>except Exception</code>은 그 예외도 잡습니다.</p>
+<div class="mlabel st">STEP 4 · 고치기 (에러 처리는 유지)</div>
+<details class="hint"><summary>힌트 보기</summary><p>interrupt는 try 밖으로 빼고, 실제로 실패할 수 있는 코드(송금 API 호출)만 try로 감쌉니다.</p></details>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">def approve(s):
+    r = interrupt("송금 50만원 승인?")                 # try 밖
+    if r != "approve":
+        return {"x": "반려"}
+    try:
+        result = transfer_api(500000)                  # 실패할 수 있는 것만
+        return {"x": f"송금 완료: {result}"}
+    except ConnectionError as e:
+        return {"x": f"송금 실패: {e}"}</pre></details>
+<div class="mlabel st">STEP 5 · 확인</div>
+<ul class="checks">
+<li><input type="checkbox" id="hitl-m2-c1" data-chk="hitl-m2-c1"><label for="hitl-m2-c1">고친 뒤 <code>__interrupt__</code>가 나타난다</label></li>
+<li><input type="checkbox" id="hitl-m2-c2" data-chk="hitl-m2-c2"><label for="hitl-m2-c2">except를 <code>Exception</code> 대신 구체적인 예외로 좁히는 것이 왜 좋은지 설명했다</label></li>
+</ul>
+</div>
+</section></div>
+
+<!-- ============ M3 ============ -->
+<div class="pane" role="tabpanel" id="pane-m3" aria-labelledby="tab-m3" hidden><section>
+<div class="mission" id="hitl-m3" data-mid="hitl-m3">
+<div class="mhead"><span class="lv lv2">★★ 응용</span><span class="tgs"><span class="tg ag">MCP·에이전트</span><span class="tg lg1">LangGraph 필수</span></span><h3>M3. 거부했는데 메일이 나갔다 (위키독스 2-4-1)</h3><label class="mdone"><input type="checkbox" id="hitl-m3-done" data-done="hitl-m3"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>위키독스 2-4-1의 민감 도구 승인 패턴을 가짜 LLM으로 옮겼습니다. 사용자가 reject했는데 메일 발송 기록(SENT)에 주소가 남았습니다.</p>
+<pre class="py">from langgraph.prebuilt import ToolNode
+from langchain_core.tools import tool
+from langchain_core.messages import AIMessage, ToolMessage, HumanMessage
+
+SENT = []
+@tool
+def send_email(to: str, subject: str, body: str) -&gt; str:
+    """이메일을 발송합니다."""
+    SENT.append(to); return f"{to}에게 이메일 발송 완료: {subject}"
+
+def reasoning(state: MessagesState):           # 가짜 LLM: 첫 요청엔 send_email 호출
+    last = state["messages"][-1]
+    if isinstance(last, HumanMessage):
+        return {"messages": [AIMessage(content="", tool_calls=[{"name": "send_email",
+                "args": {"to": "hello@test.com", "subject": "회의", "body": "내일 2시"}, "id": "call_1"}])]}
+    return {"messages": [AIMessage(content=f"완료: {last.content}")]}
+
+def check_sensitive_tools(state):               # 위키독스 2-4-1 그대로
+    last = state["messages"][-1]
+    if not getattr(last, "tool_calls", None):
+        return {}
+    for tc in last.tool_calls:
+        if tc["name"] in {"send_email"}:
+            r = interrupt({"tool": tc["name"], "args": tc["args"]})
+            if r != "approve":
+                return {"messages": [ToolMessage(content=f"사용자가 '{tc['name']}' 실행을 거부했습니다.",
+                                                 tool_call_id=tc["id"])]}
+    return {}
+
+def should_continue(state):
+    return "check_sensitive" if getattr(state["messages"][-1], "tool_calls", None) else END
+
+g = StateGraph(MessagesState)
+g.add_node("reasoning", reasoning); g.add_node("check_sensitive", check_sensitive_tools)
+g.add_node("tools", ToolNode([send_email]))
+g.add_edge(START, "reasoning")
+g.add_conditional_edges("reasoning", should_continue, {"check_sensitive": "check_sensitive", END: END})
+g.add_edge("check_sensitive", "tools")
+g.add_edge("tools", "reasoning")
+app = g.compile(checkpointer=InMemorySaver())
+cfg = {"configurable": {"thread_id": "x"}}
+app.invoke({"messages": [HumanMessage(content="메일 보내줘")]}, cfg)
+r = app.invoke(Command(resume="reject"), cfg)
+print([f"{type(m).__name__}:{m.content[:40]}" for m in r["messages"]], SENT)</pre>
+<div class="mlabel st">STEP 2 · 흐름 따라가기 (Q3, Q4)</div>
+<p>reject 후 check_sensitive 노드가 끝나면 어느 노드로 가나요? 그 노드는 무엇을 실행하나요?</p>
+<details class="ans"><summary>확인</summary><p>고정 엣지 <code>check_sensitive → tools</code> 때문에 결정과 상관없이 tools로 갑니다. ToolNode는 마지막 AIMessage의 tool_calls를 찾아 실행하므로, 거부 ToolMessage를 넣었어도 send_email이 그대로 실행됩니다.</p></details>
+<div class="mlabel st">STEP 3 · 결과 확인</div>
+<details class="ans"><summary>실제 출력</summary><pre class="out">['HumanMessage:메일 보내줘', 'AIMessage:', "ToolMessage:사용자가 'send_email' 실행을 거부했습니다.",
+ 'ToolMessage:hello@test.com에게 이메일 발송 완료: 회의', 'AIMessage:완료: hello@test.com에게 이메일 발송 완료: 회의']
+['hello@test.com']        ← 거부했는데 발송됨</pre></details>
+<div class="mlabel st">STEP 4 · 고치기</div>
+<p>결정에 따라 다음 노드가 달라지도록 고치세요. 고정 엣지 <code>check_sensitive → tools</code>는 지웁니다(02 M2: Command와 고정 엣지를 섞지 않는다).</p>
+<details class="ans"><summary>예시 답안 보기 (위키독스 2-4-2 방식)</summary><pre class="py">def check_sensitive(state) -&gt; Command[Literal["tools", "reasoning"]]:
+    last = state["messages"][-1]
+    calls = [tc for tc in last.tool_calls if tc["name"] in {"send_email"}]
+    if calls:
+        r = interrupt({"tool_calls": calls})
+        if r == "reject":
+            return Command(goto="reasoning",
+                           update={"messages": [ToolMessage(content="사용자가 실행을 거부했습니다.",
+                                                            tool_call_id=tc["id"]) for tc in calls]})
+    return Command(goto="tools")
+
+# g.add_edge("check_sensitive", "tools")   ← 삭제</pre>
+<pre class="out">approve → [..., 'ToolMessage:hello@test.com에게 이메일 발송 완료: 회의', 'AIMessage:완료: ...']  SENT=['hello@test.com']
+reject  → [..., 'ToolMessage:사용자가 실행을 거부했습니다.', 'AIMessage:완료: 사용자가 실행을 거부했습니다.']  SENT=[]</pre></details>
+<div class="mlabel st">STEP 5 · 확인과 확장</div>
+<ul class="checks">
+<li><input type="checkbox" id="hitl-m3-c1" data-chk="hitl-m3-c1"><label for="hitl-m3-c1">버그 버전에서 SENT에 주소가 남는 것을 직접 확인했다</label></li>
+<li><input type="checkbox" id="hitl-m3-c2" data-chk="hitl-m3-c2"><label for="hitl-m3-c2">고친 뒤 reject면 SENT가 비어 있다</label></li>
+<li><input type="checkbox" id="hitl-m3-c3" data-chk="hitl-m3-c3"><label for="hitl-m3-c3">확장: LLM이 도구 두 개(검색 + 메일)를 한 번에 부르면, 거부 시 각 tool_call마다 ToolMessage가 필요한 이유를 설명했다</label></li>
+</ul>
+<div class="warn"><b>수업 포인트</b> 이 버그는 테스트에서 "approve"만 해 보면 절대 드러나지 않습니다. HITL은 <b>거부 경로를 반드시 테스트</b>해야 합니다.</div>
+</div>
+</section></div>
+
+<!-- ============ M4 ============ -->
+<div class="pane" role="tabpanel" id="pane-m4" aria-labelledby="tab-m4" hidden><section>
+<div class="mission" id="hitl-m4" data-mid="hitl-m4">
+<div class="mhead"><span class="lv lv2">★★ 응용</span><span class="tgs"><span class="tg ag">MCP·에이전트</span></span><h3>M4. 사람이 고쳐서 실행하기 (edit)</h3><label class="mdone"><input type="checkbox" id="hitl-m4-done" data-done="hitl-m4"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>에이전트가 회의 안내를 <b>전 직원</b>(all@company.com)에게 보내려 합니다. 담당자는 거부 대신 "받는 사람만 team-a로 바꿔서 보내라"고 하고 싶습니다. approve / edit / reject 세 결정을 지원하세요.</p>
+<div class="mlabel st">STEP 2 · 설계 (Q3, Q4)</div>
+<p>edit일 때 도구에 고친 인자가 들어가려면 State의 무엇을 바꿔야 하나요? 기록(messages)에는 원래 호출과 고친 호출 중 무엇이 남아야 할까요?</p>
+<details class="ans"><summary>확인</summary><p>ToolNode는 마지막 AIMessage의 tool_calls를 실행합니다. 그 AIMessage를 <b>같은 id</b>로 다시 넣으면 add_messages가 교체합니다(01 실제예 ②). 그러면 기록에도 실제로 실행된 인자가 남아 감사(audit)에 맞습니다.</p></details>
+<div class="mlabel st">STEP 3 · review 노드 작성</div>
+<pre class="py"># resume 형식: {"type": "approve"} | {"type": "edit", "args": {...바꿀 인자...}} | {"type": "reject", "reason": "..."}
+def review(s: MessagesState) -&gt; Command[Literal["tools", "reasoning"]]:
+    ...</pre>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">def review(s: MessagesState) -&gt; Command[Literal["tools", "reasoning"]]:
+    ai = s["messages"][-1]
+    tc = ai.tool_calls[0]
+    d = interrupt({"tool": tc["name"], "args": tc["args"], "options": ["approve", "edit", "reject"]})
+    if d["type"] == "approve":
+        return Command(goto="tools")
+    if d["type"] == "edit":
+        edited = AIMessage(content=ai.content, id=ai.id,
+                           tool_calls=[{**tc, "args": {**tc["args"], **d["args"]}}])
+        return Command(goto="tools", update={"messages": [edited]})
+    return Command(goto="reasoning",
+                   update={"messages": [ToolMessage(content=f"사람이 거부: {d.get('reason','')}", tool_call_id=tc["id"])]})
+
+def route(s) -&gt; Literal["review", "__end__"]:
+    return "review" if getattr(s["messages"][-1], "tool_calls", None) else END
+
+g = StateGraph(MessagesState)
+g.add_node("reasoning", reasoning); g.add_node("review", review); g.add_node("tools", ToolNode([send_email]))
+g.add_edge(START, "reasoning"); g.add_conditional_edges("reasoning", route); g.add_edge("tools", "reasoning")
+agent = g.compile(checkpointer=InMemorySaver())
+# reasoning 은 M3 의 가짜 LLM에서 to="all@company.com", AIMessage id="ai-1" 로 바꿔 사용</pre></details>
+<div class="mlabel st">STEP 4 · 실행</div>
+<details class="ans"><summary>실제 출력</summary><pre class="out">edit   → 완료: team-a@company.com에게 '회의' 발송 완료 | SENT: [('team-a@company.com', '회의')] | 메시지 수: 4 | 저장된 tool_call to: team-a@company.com
+reject → 완료: 사람이 거부: 전체 메일 금지 | SENT: [] | 메시지 수: 4 | 저장된 tool_call to: all@company.com</pre><p>edit 후에도 메시지가 4개(교체이므로 늘지 않음)이고, 기록된 tool_call의 수신자가 고친 값입니다.</p></details>
+<div class="mlabel st">STEP 5 · 확인과 비교</div>
+<ul class="checks">
+<li><input type="checkbox" id="hitl-m4-c1" data-chk="hitl-m4-c1"><label for="hitl-m4-c1">세 결정을 모두 실행해 SENT를 비교했다</label></li>
+<li><input type="checkbox" id="hitl-m4-c2" data-chk="hitl-m4-c2"><label for="hitl-m4-c2">AIMessage에 id를 안 주면(새 id) 어떻게 되는지 확인했다</label></li>
+<li><input type="checkbox" id="hitl-m4-c3" data-chk="hitl-m4-c3"><label for="hitl-m4-c3">같은 기능을 HumanInTheLoopMiddleware의 edit 결정(3번 탭 형식)으로 만들 때와 코드량을 비교했다</label></li>
+</ul>
+</div>
+</section></div>
+
+<!-- ============ M5 ============ -->
+<div class="pane" role="tabpanel" id="pane-m5" aria-labelledby="tab-m5" hidden><section>
+<div class="mission" id="hitl-m5" data-mid="hitl-m5">
+<div class="mhead"><span class="lv lv1">★ 기본</span><span class="tgs"><span class="tg rag">RAG</span><span class="tg lg1">LangGraph 필수</span></span><h3>M5. 병렬 노드는 서로를 못 본다</h3><label class="mdone"><input type="checkbox" id="hitl-m5-done" data-done="hitl-m5"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>동료가 "벡터 검색 결과에 없는 것만 웹에서 찾자"며 web 노드가 vector의 결과를 읽게 만들었습니다. 그런데 web이 늘 전부 검색합니다.</p>
+<pre class="py">class S(TypedDict):
+    docs: Annotated[list[str], add]
+
+def vector(s): return {"docs": ["연차 규정"]}
+def web(s):
+    already = set(s["docs"])
+    wanted = ["연차 규정", "출장 규정"]
+    return {"docs": [f"web:{w}" for w in wanted if w not in already]}
+
+g = StateGraph(S); g.add_node("vector", vector); g.add_node("web", web)
+g.add_edge(START, "vector"); g.add_edge(START, "web")
+print(g.compile().invoke({"docs": []}))</pre>
+<div class="mlabel st">STEP 2 · 예측 (super-step)</div>
+<details class="ans"><summary>실제 출력</summary><pre class="out">{'docs': ['연차 규정', 'web:연차 규정', 'web:출장 규정']}</pre><p>vector와 web은 같은 단계라 web이 볼 때 docs는 아직 비어 있습니다. 결과의 순서도 실행마다 바뀔 수 있습니다.</p></details>
+<div class="mlabel st">STEP 3 · 설계 판단</div>
+<p>web이 vector의 결과에 <b>의존</b>합니다. 병렬로 둘 수 있는 일인가요?</p>
+<details class="ans"><summary>확인</summary><p>의존 관계가 있으면 병렬이 아닙니다. 선택지: ① 순차로 바꾼다(vector → web) ② 둘 다 병렬로 전부 가져온 뒤, 합류 노드나 리듀서(01 M4의 중복 제거)에서 정리한다. 응답 속도가 중요하면 ②가 낫습니다.</p></details>
+<div class="mlabel st">STEP 4 · 두 방법 모두 구현</div>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py"># ① 순차
+g.add_edge(START, "vector"); g.add_edge("vector", "web")
+# → {'docs': ['연차 규정', 'web:출장 규정']}
+
+# ② 병렬 + 리듀서에서 중복 제거
+def dedup(old, new):
+    seen = {d.replace("web:", "") for d in old or []}
+    return (old or []) + [d for d in new or [] if d.replace("web:", "") not in seen]
+class S(TypedDict):
+    docs: Annotated[list[str], dedup]
+# → {'docs': ['연차 규정', 'web:출장 규정']}</pre>
+<p class="cap">②에서는 같은 단계의 결과가 합쳐지는 순서에 따라 vector 쪽 대신 web 쪽 "연차 규정"이 남을 수도 있습니다. 출처 우선순위가 중요하면 리듀서에 그 규칙(예: vector 우선)을 직접 넣으세요.</p></details>
+<div class="mlabel st">STEP 5 · 확인</div>
+<ul class="checks">
+<li><input type="checkbox" id="hitl-m5-c1" data-chk="hitl-m5-c1"><label for="hitl-m5-c1">"같은 단계의 노드는 같은 State를 본다"로 원인을 설명했다</label></li>
+<li><input type="checkbox" id="hitl-m5-c2" data-chk="hitl-m5-c2"><label for="hitl-m5-c2">두 방법의 결과와 장단점을 비교했다</label></li>
+</ul>
+</div>
+</section></div>
+
+<!-- ============ M6 ============ -->
+<div class="pane" role="tabpanel" id="pane-m6" aria-labelledby="tab-m6" hidden><section>
+<div class="mission" id="hitl-m6" data-mid="hitl-m6">
+<div class="mhead"><span class="lv lv2">★★ 응용</span><span class="tgs"><span class="tg rag">RAG</span><span class="tg lg1">LangGraph 필수</span></span><h3>M6. 답변이 두 번 만들어진다 (합류)</h3><label class="mdone"><input type="checkbox" id="hitl-m6-done" data-done="hitl-m6"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>벡터 검색 앞에만 질문 재작성(rewrite)을 넣었더니, 답변 생성(generate) 비용이 두 배로 나옵니다.</p>
+<pre class="py">class J(TypedDict):
+    log: Annotated[list[str], add]
+
+g = StateGraph(J)
+g.add_node("rewrite", lambda s: {"log": ["rewrite"]})
+g.add_node("vector",  lambda s: {"log": ["vector"]})
+g.add_node("keyword", lambda s: {"log": ["keyword"]})
+g.add_node("generate", lambda s: {"log": [f"generate(문서 {len([x for x in s['log'] if x in ('vector','keyword')])}개 봄)"]})
+g.add_edge(START, "rewrite"); g.add_edge("rewrite", "vector")      # 갈래 1: 2단계
+g.add_edge(START, "keyword")                                        # 갈래 2: 1단계
+g.add_edge("vector", "generate"); g.add_edge("keyword", "generate")
+g.add_edge("generate", END)
+print(g.compile().invoke({"log": []})["log"])</pre>
+<div class="mlabel st">STEP 2 · 단계 표 그리기 (P3)</div>
+<p>단계 1, 2, 3에서 각각 어떤 노드가 실행되는지 표로 그려 보세요.</p>
+<details class="ans"><summary>확인</summary><div class="tw"><table><thead><tr><th>단계</th><th>실행</th><th>이유</th></tr></thead><tbody>
+<tr><td>1</td><td>rewrite, keyword</td><td>START에서 출발</td></tr>
+<tr><td>2</td><td>vector, <b>generate</b></td><td>keyword가 끝나 generate가 바로 실행됨 (문서 1개만 봄)</td></tr>
+<tr><td>3</td><td><b>generate</b></td><td>vector가 끝나 또 실행됨 (문서 2개)</td></tr>
+</tbody></table></div></details>
+<div class="mlabel st">STEP 3 · 결과 확인</div>
+<details class="ans"><summary>실제 출력</summary><pre class="out">['keyword', 'rewrite', 'generate(문서 1개 봄)', 'vector', 'generate(문서 2개 봄)']</pre></details>
+<div class="mlabel st">STEP 4 · 고치기</div>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">g.add_edge(["vector", "keyword"], "generate")      # 둘 다 끝나면 한 번
+# 따로 연결한 두 줄은 삭제</pre>
+<pre class="out">['keyword', 'rewrite', 'vector', 'generate(문서 2개 봄)']</pre></details>
+<div class="mlabel st">STEP 5 · 확인</div>
+<ul class="checks">
+<li><input type="checkbox" id="hitl-m6-c1" data-chk="hitl-m6-c1"><label for="hitl-m6-c1">갈래 길이가 같을 때(rewrite 없음)는 따로 연결해도 한 번만 도는 것을 확인했다</label></li>
+<li><input type="checkbox" id="hitl-m6-c2" data-chk="hitl-m6-c2"><label for="hitl-m6-c2">"그때는 운 좋게 맞았을 뿐"인 이유를 설명했다</label></li>
+</ul>
+<div class="note"><b>설계 규칙</b> 여러 갈래가 모이는 노드는 항상 <code>add_edge([...], 노드)</code>로 연결합니다. 나중에 한 갈래에 노드가 추가되어도 안전합니다.</div>
+</div>
+</section></div>
+
+<!-- ============ M7 ============ -->
+<div class="pane" role="tabpanel" id="pane-m7" aria-labelledby="tab-m7" hidden><section>
+<div class="mission" id="hitl-m7" data-mid="hitl-m7">
+<div class="mhead"><span class="lv lv2">★★ 응용</span><span class="tgs"><span class="tg rag">RAG</span><span class="tg lg1">LangGraph 필수</span></span><h3>M7. 병렬 검색 하나가 실패하면</h3><label class="mdone"><input type="checkbox" id="hitl-m7-done" data-done="hitl-m7"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>벡터 검색(비싼 임베딩 호출)과 웹 검색을 병렬로 돌립니다. 웹 검색 API가 가끔 타임아웃됩니다. 재시도할 때 벡터 검색까지 다시 하면 비용이 두 배입니다.</p>
+<pre class="py">calls = {"vector": 0, "web": 0}
+fail = {"on": True}
+
+class S(TypedDict):
+    docs: Annotated[list[str], add]
+
+def vector(s):
+    calls["vector"] += 1; return {"docs": ["vector결과"]}
+def web(s):
+    calls["web"] += 1
+    if fail["on"]:
+        raise ConnectionError("웹검색 API 타임아웃")
+    return {"docs": ["web결과"]}
+
+g = StateGraph(S); g.add_node("vector", vector); g.add_node("web", web)
+g.add_edge(START, "vector"); g.add_edge(START, "web")</pre>
+<div class="mlabel st">STEP 2 · 방법 ①: 체크포인터로 실패한 것만 다시</div>
+<pre class="py">app = g.compile(checkpointer=InMemorySaver()); cfg = {"configurable": {"thread_id": "f"}}
+try:
+    app.invoke({"docs": []}, cfg)
+except ConnectionError as e:
+    print("실패:", e, "| next:", app.get_state(cfg).next)
+fail["on"] = False                     # API 복구
+print(app.invoke(None, cfg), calls)</pre>
+<details class="ans"><summary>실제 출력</summary><pre class="out">실패: 웹검색 API 타임아웃 | next: ('web',)
+{'docs': ['vector결과', 'web결과']} {'vector': 1, 'web': 2}</pre><p>vector는 한 번만 실행됐습니다. 성공한 노드의 결과는 체크포인트에 "대기 중 쓰기"로 보존되고, <code>invoke(None)</code>은 실패한 web만 다시 실행합니다.</p></details>
+<div class="mlabel st">STEP 3 · 방법 ②: RetryPolicy로 자동 재시도</div>
+<p>web 노드가 처음 두 번은 실패하고 세 번째에 성공한다고 할 때, 노드 등록만 바꿔 자동으로 재시도하게 하세요.</p>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">from langgraph.types import RetryPolicy
+g.add_node("web", web, retry_policy=RetryPolicy(max_attempts=3, initial_interval=0.5,
+                                                retry_on=ConnectionError))</pre>
+<pre class="out">{'docs': ['web결과']} {'web': 3}       # 두 번 실패 후 세 번째 성공, 에러 없이 끝남</pre></details>
+<div class="mlabel st">STEP 4 · 설계 판단</div>
+<p>RetryPolicy와 체크포인터 재개는 각각 언제 쓰나요? 웹 검색이 3번 다 실패하면 답변을 아예 못 하게 둘까요?</p>
+<details class="ans"><summary>확인</summary><p>RetryPolicy: 몇 초 안에 풀리는 일시적 오류. 체크포인터 재개: 오래 걸리는 장애나 사람이 고친 뒤 다시 돌릴 때. 웹 검색은 "있으면 좋은" 결과이므로, 재시도 후에도 실패하면 노드 안에서 예외를 잡아 <code>{"docs": []}</code>를 돌려주고 벡터 결과만으로 답하는 것이 사용자 경험에 낫습니다(우아한 실패).</p></details>
+<div class="mlabel st">STEP 5 · 확인</div>
+<ul class="checks">
+<li><input type="checkbox" id="hitl-m7-c1" data-chk="hitl-m7-c1"><label for="hitl-m7-c1">재개 후 vector 호출 횟수가 1인 것을 확인했다</label></li>
+<li><input type="checkbox" id="hitl-m7-c2" data-chk="hitl-m7-c2"><label for="hitl-m7-c2">RetryPolicy로 에러 없이 끝나는 것을 확인했다</label></li>
+<li><input type="checkbox" id="hitl-m7-c3" data-chk="hitl-m7-c3"><label for="hitl-m7-c3">확장: Send로 문서 10개를 요약할 때 <code>{"max_concurrency": 2}</code>로 동시 실행을 2개로 제한했다</label></li>
+</ul>
+</div>
+</section></div>
+
+<!-- ============ M8 ============ -->
+<div class="pane" role="tabpanel" id="pane-m8" aria-labelledby="tab-m8" hidden><section>
+<div class="mission" id="hitl-m8" data-mid="hitl-m8">
+<div class="mhead"><span class="lv lv3">★★★ 도전</span><span class="tgs"><span class="tg lg1">LangGraph 필수</span><span class="tg ag">MCP·에이전트</span></span><h3>M8. 계약서를 법무·재무가 동시에 검토하고 승인</h3><label class="mdone"><input type="checkbox" id="hitl-m8-done" data-done="hitl-m8"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>계약서 검토를 법무팀과 재무팀이 <b>동시에</b> 합니다. 각 팀 노드가 담당자에게 의견을 묻고(interrupt), 두 의견이 모두 모이면 최종 판정 노드가 "둘 다 승인이면 체결, 아니면 보류"를 정합니다.</p>
+<div class="flow"><span class="n">START</span><i>→</i><span class="n">legal (interrupt)</span><i>+</i><span class="n">finance (interrupt)</span><i>→</i><span class="n">decide</span><i>→</i><span class="n">END</span></div>
+<div class="mlabel st">STEP 2 · 설계 (P1, P3, Q2)</div>
+<p>두 노드가 의견을 쓰는 키와 리듀서, 합류 방법, interrupt 값(담당자 화면에 보여 줄 것)을 정하세요.</p>
+<details class="ans"><summary>확인</summary><p><code>reviews: Annotated[list[str], add]</code> (동시 쓰기), <code>add_edge(["legal", "finance"], "decide")</code>, interrupt 값은 <code>{"who": "법무", "doc": ...}</code>처럼 누가 답해야 하는지 포함.</p></details>
+<div class="mlabel st">STEP 3 · 그래프 작성</div>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">class Contract(TypedDict):
+    doc: str
+    reviews: Annotated[list[str], add]
+    result: str
+
+def legal(s):   return {"reviews": [f"법무:{interrupt({'who': '법무', 'doc': s['doc']})}"]}
+def finance(s): return {"reviews": [f"재무:{interrupt({'who': '재무', 'doc': s['doc']})}"]}
+def decide(s):
+    ok = all(r.endswith("승인") for r in s["reviews"])
+    return {"result": "체결" if ok else "보류"}
+
+g = StateGraph(Contract)
+for n, f in [("legal", legal), ("finance", finance), ("decide", decide)]:
+    g.add_node(n, f)
+g.add_edge(START, "legal"); g.add_edge(START, "finance")
+g.add_edge(["legal", "finance"], "decide"); g.add_edge("decide", END)
+app = g.compile(checkpointer=InMemorySaver())
+cfg = {"configurable": {"thread_id": "contract-A"}}
+r = app.invoke({"doc": "계약서A", "reviews": [], "result": ""}, cfg)</pre></details>
+<div class="mlabel st">STEP 4 · 멈춤이 두 개일 때 재개</div>
+<p>먼저 <code>app.invoke(Command(resume="승인"), cfg)</code>을 해 보고 에러를 확인한 뒤, interrupt id별로 답하세요(법무 승인, 재무 보류).</p>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="err">RuntimeError: When there are multiple pending interrupts, you must specify the interrupt id when resuming.</pre>
+<pre class="py">ints = r["__interrupt__"]
+print([i.value for i in ints])
+answers = {i.id: ("승인" if i.value["who"] == "법무" else "보류") for i in ints}
+print(app.invoke(Command(resume=answers), cfg))</pre>
+<pre class="out">[{'who': '재무', 'doc': '계약서A'}, {'who': '법무', 'doc': '계약서A'}]
+{'doc': '계약서A', 'reviews': ['재무:보류', '법무:승인'], 'result': '보류'}</pre>
+<p class="cap">interrupt 목록과 reviews의 순서는 실행마다 다를 수 있습니다. 그래서 순서가 아니라 <code>value["who"]</code>로 구분합니다.</p></details>
+<div class="mlabel st">STEP 5 · 확인과 확장</div>
+<ul class="checks">
+<li><input type="checkbox" id="hitl-m8-c1" data-chk="hitl-m8-c1"><label for="hitl-m8-c1">답 하나로 재개할 때의 RuntimeError를 확인했다</label></li>
+<li><input type="checkbox" id="hitl-m8-c2" data-chk="hitl-m8-c2"><label for="hitl-m8-c2">둘 다 승인이면 "체결", 하나라도 보류면 "보류"가 나온다</label></li>
+<li><input type="checkbox" id="hitl-m8-c3" data-chk="hitl-m8-c3"><label for="hitl-m8-c3">확장: 계약 금액이 1억 이상이면 decide 뒤에 대표 승인(3번째 interrupt)을 추가했다</label></li>
+<li><input type="checkbox" id="hitl-m8-c4" data-chk="hitl-m8-c4"><label for="hitl-m8-c4">확장: 법무만 먼저 답하고(id 하나만 resume) 재무는 나중에 답하는 것이 되는지 실험했다</label></li>
+</ul>
+</div>
+</section></div>
+
+<footer>LangGraph 교안 · 교재: 위키독스 「LangGraph 가이드북 - 에이전트 RAG with 랭그래프 [ver 1.0+]」 2-4 · 코드 검증: LangGraph 1.2.20 · langchain 1.4.10 (2026-11-11)</footer>
+</main>
+</div>
+<script>
+(function(){
+  function sync(){ document.querySelectorAll('input[data-done]').forEach(i => {
+    const t = document.getElementById('tab-' + i.dataset.done.replace('hitl-', ''));
+    if (t) t.classList.toggle('done', i.checked); }); }
+  document.addEventListener('change', e => { if (e.target.matches('input[data-done]')) sync(); });
+  window.addEventListener('load', sync);
+})();
+</script>
+
+
+<script>
+(function(){
+  const UNITS = {"hitl": ["hitl-m1", "hitl-m2", "hitl-m3", "hitl-m4", "hitl-m5", "hitl-m6", "hitl-m7", "hitl-m8"]};
+  const KEY = 'lg-missions-v1';
+  let st = {};
+  try { st = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch(e) { st = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch(e) {} };
+
+  // 코드 하이라이트 + 복사
+  const KW = /^(from|import|def|return|for|in|if|elif|else|not|and|or|with|as|class|lambda|True|False|None|try|except|finally|await|yield|is|raise|continue|print)$/;
+  const RE = /("""[\s\S]*?"""|f?"(?:[^"\\\n]|\\.)*"|f?'(?:[^'\\\n]|\\.)*'|#[^\n]*|\b[A-Za-z_]+\b)/g;
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  function selectText(el){ const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+  document.querySelectorAll('pre.py').forEach(pre => {
+    const src = pre.textContent; let out = '', last = 0, m; RE.lastIndex = 0;
+    while ((m = RE.exec(src))) {
+      out += esc(src.slice(last, m.index)); const t = m[0];
+      if (t[0] === '#') out += '<span class="c">' + esc(t) + '</span>';
+      else if (t[0] === '"' || t[0] === "'" || (t[0] === 'f' && (t[1] === '"' || t[1] === "'"))) out += '<span class="s">' + esc(t) + '</span>';
+      else if (KW.test(t)) out += '<span class="k">' + t + '</span>';
+      else out += esc(t);
+      last = m.index + t.length;
+    }
+    pre.innerHTML = out + esc(src.slice(last));
+    const wrap = document.createElement('div'); wrap.style.position = 'relative';
+    pre.parentNode.insertBefore(wrap, pre); wrap.appendChild(pre);
+    const b = document.createElement('button'); b.className = 'copy'; b.type = 'button'; b.textContent = '복사';
+    b.style.cssText = 'position:absolute;top:8px;right:8px';
+    b.addEventListener('click', () => {
+      const ok = () => { b.textContent = '복사됨'; setTimeout(() => b.textContent = '복사', 1400); };
+      const fail = () => { selectText(pre); b.textContent = '선택됨'; };
+      try { navigator.clipboard.writeText(src).then(ok, fail); } catch(e) { fail(); }
+    });
+    wrap.appendChild(b);
+  });
+
+  // 미션 체크 상태
+  document.querySelectorAll('input[data-done],input[data-chk]').forEach(inp => {
+    const k = inp.dataset.done || inp.dataset.chk;
+    inp.checked = !!st[k];
+    inp.addEventListener('change', () => { st[k] = inp.checked; save(); paint(); });
+  });
+  function paint(){
+    document.querySelectorAll('.mission').forEach(m => m.classList.toggle('is-done', !!st[m.dataset.mid]));
+    let total = 0, done = 0;
+    Object.keys(UNITS).forEach(u => {
+      const ids = UNITS[u]; const d = ids.filter(id => st[id]).length;
+      total += ids.length; done += d;
+      document.querySelectorAll('[data-mc="' + u + '"]').forEach(el => el.textContent = d + '/' + ids.length);
+      document.querySelectorAll('[data-u="' + u + '"]').forEach(el => el.classList.toggle('full', d === ids.length));
+      document.querySelectorAll('[data-bar="' + u + '"]').forEach(el => el.style.width = (d / ids.length * 100) + '%');
+    });
+    const pb = document.getElementById('progbar'); if (pb) pb.style.width = (done / total * 100) + '%';
+    const pt = document.getElementById('progtext'); if (pt) pt.textContent = '미션 ' + done + ' / ' + total + ' 완료';
+    const mp = document.getElementById('mprog'); const cur = document.body.dataset.unit;
+    if (mp && cur) { const ids = UNITS[cur]; mp.textContent = '· 완료 ' + ids.filter(id => st[id]).length + ' / ' + ids.length; }
+    const mc = document.getElementById('mcount'); if (mc && cur) { const ids = UNITS[cur]; mc.textContent = ids.filter(id => st[id]).length + '/' + ids.length; }
+  }
+  paint();
+})();
+</script>
+
+<script>
+(function(){
+  const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+  if (!tabs.length) return;
+  const ids = tabs.map(t => t.dataset.t);
+  function show(id, push){
+    tabs.forEach(t => { const on = t.dataset.t === id; t.setAttribute('aria-selected', on ? 'true' : 'false'); t.tabIndex = on ? 0 : -1;
+      if (on) t.scrollIntoView({block:'nearest', inline:'nearest'}); });
+    document.querySelectorAll('[role="tabpanel"]').forEach(p => p.hidden = p.id !== 'pane-' + id);
+    if (push) { try { history.replaceState(null, '', '#' + id); } catch(e){} window.scrollTo({top: 0}); }
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => show(t.dataset.t, true));
+    t.addEventListener('keydown', e => {
+      const f = e.key === 'ArrowDown' || e.key === 'ArrowRight', b = e.key === 'ArrowUp' || e.key === 'ArrowLeft';
+      if (!f && !b) return; e.preventDefault();
+      const n = tabs[(i + (f ? 1 : tabs.length - 1)) % tabs.length]; n.focus(); show(n.dataset.t, true);
+    });
+  });
+  const h = location.hash.slice(1);
+  show(ids.includes(h) ? h : 'intro', false);
+  window.addEventListener('hashchange', () => { const x = location.hash.slice(1); if (ids.includes(x)) show(x, false); });
+})();
+</script>
+</body>
+</html>

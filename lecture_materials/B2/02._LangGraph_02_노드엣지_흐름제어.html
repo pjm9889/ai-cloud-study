@@ -1,0 +1,992 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>02 노드 · 엣지 흐름 제어 · LangGraph 교안</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{word-break:keep-all;overflow-wrap:break-word;font-family:var(--body)}
+
+/* Layout: 왼쪽 고정 사이드바(단원 목차) + 오른쪽 본문 패널. 휴대폰 폭에서는 사이드바가 상단 가로 스크롤 바로 바뀜 */
+:root{
+  --bg:#f6f7fb; --paper:#ffffff; --ink:#1b2236; --muted:#5a6380; --line:#d9deeb;
+  --node:#24305e; --nodeText:#ffffff; --edge:#9aa4c2;
+  --teal:#0f8f83; --amber:#d98a1f; --coral:#d4553f; --violet:#6b5bd2;
+  --soft:#eef1f9; --tealSoft:#e2f4f1; --amberSoft:#fbf0dd; --coralSoft:#fbe7e3;
+  --code:#ffffff; --codeLine:#c9d0e2; --codeCmt:#6a7697; --outBg:#f4fbfa; --shadow:rgba(27,34,54,.08);
+  --kw:#6b5bd2; --str:#0f7d73; --fn:#b4561f;
+  --display:"Do Hyeon","IBM Plex Sans KR","Malgun Gothic",sans-serif;
+  --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12151f; --paper:#1a1e2b; --ink:#e7eaf4; --muted:#a2aac2; --line:#2e3447;
+  --node:#8f9cf0; --nodeText:#10131c; --edge:#5b6584;
+  --teal:#3cc4b5; --amber:#f0b04f; --coral:#f07a63; --violet:#a597ff;
+  --soft:#222839; --tealSoft:#163331; --amberSoft:#3a2e17; --coralSoft:#3d211c; --code:#0d1017; --codeLine:#3a4157; --codeCmt:#8d97b5; --outBg:#10201f; --shadow:rgba(0,0,0,.3);
+  --kw:#b3a8ff; --str:#5fd3c4; --fn:#f0a36a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12151f; --paper:#1a1e2b; --ink:#e7eaf4; --muted:#a2aac2; --line:#2e3447;
+  --node:#8f9cf0; --nodeText:#10131c; --edge:#5b6584;
+  --teal:#3cc4b5; --amber:#f0b04f; --coral:#f07a63; --violet:#a597ff;
+  --soft:#222839; --tealSoft:#163331; --amberSoft:#3a2e17; --coralSoft:#3d211c; --code:#0d1017; --codeLine:#3a4157; --codeCmt:#8d97b5; --outBg:#10201f; --shadow:rgba(0,0,0,.3);
+  --kw:#b3a8ff; --str:#5fd3c4; --fn:#f0a36a; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:16px/1.75 var(--body);margin:0;word-break:keep-all;overflow-wrap:break-word}
+.panel{margin-top:30px;padding-top:24px;border-top:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+.layout{max-width:1220px;margin:0 auto;display:grid;grid-template-columns:252px minmax(0,1fr);gap:40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{min-width:0;padding-block:28px 64px;max-width:900px}
+h1,h2,h3{text-wrap:balance}
+h1{font:400 clamp(30px,5vw,44px)/1.2 var(--display);margin:6px 0 10px;letter-spacing:.5px}
+h2{font:400 28px/1.3 var(--display);margin:0 0 6px;display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+h2 .no{font:inherit;color:var(--teal)}
+h3{font-size:18px;margin:26px 0 6px}
+h4{font-size:16px;margin:18px 0 4px}
+p{margin:8px 0;max-width:72ch}
+ol,ul{padding-left:22px;margin:8px 0}
+li{margin:4px 0}
+.lead{color:var(--muted);font-size:17px}
+.kicker{font:600 12px var(--mono);letter-spacing:2px;color:var(--teal);text-transform:uppercase}
+.byline{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.6}
+section{margin-top:40px}
+.panel > section:first-child{margin-top:8px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.card h4{margin-top:0}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+code,.mono{font-family:var(--mono);font-size:.9em}
+code{background:var(--soft);padding:1px 6px;border-radius:5px;word-break:break-word}
+pre{background:var(--code);border:1px solid var(--codeLine);box-shadow:0 1px 3px var(--shadow);border-radius:10px;padding:14px 16px;overflow-x:auto;font:13.5px/1.6 var(--mono);margin:8px 0;color:var(--ink);tab-size:4}
+pre .c{color:var(--codeCmt);font-style:italic}
+pre .s{color:var(--str)}
+pre .k{color:var(--kw);font-weight:600}
+pre.out{background:var(--outBg);border-style:dashed;box-shadow:none;white-space:pre-wrap;word-break:break-word;font-size:13px}
+pre.out::before{content:"출력";display:block;font:600 11px var(--mono);letter-spacing:1.5px;color:var(--teal);margin-bottom:4px}
+pre.out.ex::before{content:"출력 예시 · 모델 답변은 실행마다 달라짐"}
+pre.err{background:var(--coralSoft);border-color:var(--coral);box-shadow:none;white-space:pre-wrap;word-break:break-word;font-size:13px}
+pre.err::before{content:"에러";display:block;font:600 11px var(--mono);letter-spacing:1.5px;color:var(--coral);margin-bottom:4px}
+.codehead{display:flex;justify-content:space-between;align-items:center;gap:8px;font:600 12px var(--mono);color:var(--muted);margin:16px 0 -4px;flex-wrap:wrap}
+.copy{font:500 12px var(--body);border:1px solid var(--line);background:var(--paper);color:var(--muted);border-radius:6px;padding:2px 10px;cursor:pointer}
+.copy:hover{color:var(--ink)}
+.tw{overflow-x:auto;margin:10px 0}
+table{border-collapse:collapse;font-size:14px;min-width:100%}
+th,td{border-bottom:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+th{background:var(--soft);font-weight:600;white-space:nowrap}
+td code{white-space:nowrap}
+.note{background:var(--amberSoft);border-radius:10px;padding:12px 14px;font-size:15px;margin-top:12px}
+.note b{color:var(--amber)}
+.ragbox{background:var(--tealSoft);border-left:4px solid var(--teal);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:15px}
+.ragbox b{color:var(--teal)}
+.warn{background:var(--coralSoft);border-left:4px solid var(--coral);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:15px}
+.warn b{color:var(--coral)}
+.fix{background:var(--soft);border-left:4px solid var(--violet);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:15px}
+.fix b{color:var(--violet)}
+.note p,.ragbox p,.warn p,.fix p{margin:4px 0}
+.note ul,.ragbox ul,.warn ul,.fix ul{margin:4px 0}
+.fig{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px;overflow-x:auto;margin-top:12px}
+.fig svg{display:block;width:100%;height:auto;min-width:560px}
+svg text{font-family:var(--body)}
+.cap{font-size:13px;color:var(--muted);margin:6px 4px 0}
+.chip{display:inline-block;font:500 12px var(--body);padding:1px 10px;border-radius:999px;background:var(--soft);color:var(--muted);vertical-align:middle}
+.chip.ok{background:var(--tealSoft);color:var(--teal)}
+.chip.draft{background:var(--amberSoft);color:var(--amber)}
+.chip.ai{background:var(--coralSoft);color:var(--coral)}
+a{color:var(--teal)}
+.example{background:var(--soft);border-radius:10px;padding:12px 16px;margin:10px 0;font-size:15.5px}
+.example b{color:var(--node)}
+.steps{list-style:none;padding:0;margin:10px 0 0;counter-reset:st}
+.steps>li{counter-increment:st;padding:10px 0;border-top:1px dashed var(--line);margin:0}
+.steps>li::before{content:counter(st) ". ";font:600 14px var(--mono);color:var(--teal)}
+.steps>li:first-child{border-top:0}
+.steps .lbl{font-weight:700;color:var(--node)}
+.think{margin-top:8px;font-size:14.5px;color:var(--muted)}
+.think-h{display:inline-block;font:600 12px var(--body);color:var(--muted);margin-right:6px}
+mark{background:var(--amberSoft);color:inherit;border-bottom:2px solid var(--amber);padding:0 1px}
+details{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-top:8px}
+details summary{cursor:pointer;font-weight:600}
+details[open] summary{margin-bottom:6px}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:500 13.5px var(--mono);margin:10px 0}
+.flow span{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:4px 10px}
+.flow span.n{background:var(--node);color:var(--nodeText);border-color:var(--node)}
+.flow i{font-style:normal;color:var(--edge)}
+
+/* sidebar */
+.side{position:sticky;top:env(safe-area-inset-top,0px);align-self:start;max-height:100vh;overflow-y:auto;padding-block:28px 28px;scrollbar-width:thin}
+.side .brand{font:400 22px/1.2 var(--display);margin-bottom:2px}
+.side .brand-sub{font-size:12.5px;color:var(--muted);margin-bottom:14px}
+.prog{height:6px;background:var(--soft);border-radius:999px;overflow:hidden;margin:0 0 4px}
+.prog i{display:block;height:100%;width:0;background:var(--teal);transition:width .3s}
+.prog-t{font:500 12px var(--mono);color:var(--muted);margin-bottom:14px}
+.grp{font:600 11px var(--mono);letter-spacing:1.6px;color:var(--teal);text-transform:uppercase;margin:16px 0 6px}
+.navlist{display:flex;flex-direction:column;gap:2px}
+.navlist button{display:grid;grid-template-columns:28px minmax(0,1fr) 16px;align-items:center;gap:4px;width:100%;text-align:left;font:500 14px/1.35 var(--body);border:0;background:transparent;color:var(--ink);border-radius:8px;padding:7px 8px;cursor:pointer}
+.navlist button .n{font:600 12px var(--mono);color:var(--muted)}
+.navlist button .d{font-size:12px;color:var(--teal);visibility:hidden}
+.navlist button.done .d{visibility:visible}
+.navlist button:hover{background:var(--soft)}
+.navlist button[aria-selected="true"]{background:var(--node);color:var(--nodeText)}
+.navlist button[aria-selected="true"] .n,.navlist button[aria-selected="true"] .d{color:var(--nodeText)}
+.navlist button:focus-visible,.pager button:focus-visible,.copy:focus-visible,.donebtn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+
+/* panel footer */
+.pfoot{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center}
+.donebtn{font:600 14px var(--body);border:2px solid var(--teal);background:var(--paper);color:var(--teal);border-radius:999px;padding:6px 16px;cursor:pointer}
+.donebtn[aria-pressed="true"]{background:var(--teal);color:var(--paper)}
+.pager{display:flex;gap:8px;flex-wrap:wrap}
+.pager button{font:500 14px var(--body);border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:6px 14px;cursor:pointer;max-width:100%}
+.pager button[disabled]{opacity:.4;cursor:default}
+footer{margin-top:50px;font-size:13px;color:var(--muted)}
+
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr);gap:0}
+  .side{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);max-height:none;overflow:visible;padding-block:10px;border-bottom:1px solid var(--line);margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .side .brand,.side .brand-sub,.grp,.prog,.prog-t{display:none}
+  .navwrap{display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin;padding-bottom:2px}
+  .navlist{flex-direction:row;gap:6px}
+  .navlist button{display:flex;flex:0 0 auto;width:auto;white-space:nowrap;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13.5px}
+  .navlist button .d{display:none}
+  .navlist button.done .n{color:var(--teal)}
+  main{padding-top:18px}
+}
+@media (max-width:600px){h2{font-size:24px} pre{font-size:12.5px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+.tg{display:inline-block;font:600 11.5px/1.5 var(--body);border-radius:5px;padding:1px 7px;margin-left:6px;vertical-align:middle;white-space:nowrap;letter-spacing:.2px}
+.tg.rag{background:var(--tealSoft);color:var(--teal);border:1px solid var(--teal)}
+.tg.lg1{background:var(--violet);color:var(--paper);border:1px solid var(--violet)}
+.tg.ag{background:var(--amberSoft);color:var(--amber);border:1px solid var(--amber)}
+.sm.ag{background:var(--amber);border-radius:2px}
+.tg.lg2{background:transparent;color:var(--violet);border:1px dashed var(--violet)}
+h2 .tg{font-size:12px;position:relative;top:-3px}
+.mhead .tgs{display:inline-flex;gap:0}
+.mhead .tgs .tg:first-child{margin-left:0}
+.sm{display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:6px;vertical-align:middle}
+.sm.rag{background:var(--teal)}
+.sm.lg1{background:var(--violet)}
+.sm.lg2{border:1.5px solid var(--violet)}
+.mhead .tgs:empty{display:none}
+.navlist a[aria-current="page"] .sm{box-shadow:0 0 0 1.5px var(--nodeText)}
+.bridge{display:grid;gap:6px;margin-top:14px}
+.bridge div{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:baseline;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14.5px;line-height:1.6}
+.bridge .tg{margin-left:0}
+.legend2{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:13px;color:var(--muted);margin-top:8px}
+.legend2 .tg{margin-left:0}
+.path{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin-top:10px}
+.path .card h4{margin:0 0 6px}
+.path ol{margin:4px 0 0}
+.ucard .tgrow{display:flex;flex-wrap:wrap;gap:4px}
+.ucard .tgrow .tg{margin-left:0}
+
+.copyright{font-size:14px;color:var(--muted);line-height:1.6;margin-top:8px}
+/* 탭: 모든 화면 폭에서 왼쪽 세로 배치 */
+@media (max-width:900px){
+  .layout{grid-template-columns:200px minmax(0,1fr) !important;gap:22px !important}
+  .side{position:sticky !important;top:env(safe-area-inset-top,0px) !important;max-height:100vh !important;overflow-y:auto !important;border-bottom:0 !important;margin:0 !important;padding:22px 0 !important;background:transparent !important}
+  .side .brand,.side .brand-sub{display:block !important}
+  .navwrap{display:block !important;overflow:visible !important}
+  .navlist{flex-direction:column !important;gap:2px !important}
+  .navlist button{display:grid !important;grid-template-columns:26px minmax(0,1fr) auto !important;width:100% !important;white-space:normal !important;border:0 !important;background:transparent !important;border-radius:8px !important;padding:7px 6px !important;font-size:14px !important}
+  .navlist button[aria-selected="true"]{background:var(--node) !important}
+  .navlist button .sm{display:inline-block !important}
+  main{padding-top:24px !important}
+}
+@media (max-width:600px){
+  .layout{grid-template-columns:112px minmax(0,1fr) !important;gap:12px !important}
+  .navlist button{grid-template-columns:minmax(0,1fr) auto !important;font-size:13px !important;padding:6px 5px !important}
+  .navlist button .n,.navlist button .sm,.side .brand-sub{display:none !important}
+  .side .brand{font-size:15px !important}
+}
+.view{margin-top:26px;background:var(--paper);border:1px solid var(--line);border-left:5px solid var(--violet);border-radius:12px;padding:14px 18px 10px}
+.view-h{font:700 15px var(--body);color:var(--violet);letter-spacing:.3px;margin-bottom:4px}
+.view ul{margin:4px 0 0;padding-left:20px}
+.view li{margin:10px 0;line-height:1.8}
+.view li b{color:var(--ink)}
+/* 가독성: 글꼴 크기 */
+body{font-size:17.5px;line-height:1.85}
+p{max-width:78ch}
+h1{font-size:clamp(32px,5vw,46px)}
+h2{font-size:31px}
+h3{font-size:20.5px;margin-top:30px}
+h4{font-size:17.5px}
+pre{font-size:15px;line-height:1.7}
+pre.out,pre.err{font-size:14.5px}
+table{font-size:15.5px}
+th,td{padding:9px 12px}
+.cap{font-size:14.5px}
+.note,.warn,.ragbox,.fix{font-size:16px}
+.goal{font-size:16.5px}
+.navlist button{font-size:15.5px !important}
+.side .brand-sub{font-size:13.5px}
+.checks li{font-size:16px}
+.mhead h3{font-size:19.5px}
+.lv{font-size:13px}
+.tg{font-size:12.5px}
+.bridge div{font-size:15.5px}
+.legend2{font-size:14px}
+@media (max-width:600px){body{font-size:17px} pre{font-size:13.5px} h2{font-size:26px} table{font-size:14.5px}}
+
+.solo{max-width:1100px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.solo main{max-width:none}
+.navlist button{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:start;gap:4px;width:100%;text-align:left;font:500 14px/1.4 var(--body);border:0;background:transparent;color:var(--ink);border-radius:8px;padding:8px 8px;cursor:pointer}
+.navlist button .n{font:600 12px/1.6 var(--mono);color:var(--muted)}
+.navlist button .mc{font:500 11px var(--mono);color:var(--muted)}
+.navlist button:hover{background:var(--soft)}
+.navlist button[aria-selected="true"]{background:var(--node);color:var(--nodeText)}
+.navlist button[aria-selected="true"] .n,.navlist button[aria-selected="true"] .mc{color:var(--nodeText)}
+.navlist button[aria-selected="true"] .sm{box-shadow:0 0 0 1.5px var(--nodeText)}
+.navlist button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.side .brand{font:400 24px/1.25 var(--display);margin-bottom:4px}
+.uhead{padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:22px}
+.uhead h1{margin-bottom:0}
+.pane > section{margin-top:0}
+.pane #missions{margin-top:0;padding-top:0;border-top:0}
+.pane > section > h2{margin-bottom:12px}
+@media (max-width:900px){
+  .navlist button{display:flex;flex:0 0 auto;width:auto;white-space:nowrap;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13.5px;gap:6px}
+  .navlist button .sm{display:none}
+  .side .brand{font-size:18px}
+}
+
+.time{font:600 14px var(--body);color:var(--ink);margin-top:2px}
+.time span{font-weight:400;color:var(--muted)}
+.goal{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--node);border-radius:10px;padding:10px 14px;margin-top:12px;font-size:15px}
+.goal b{color:var(--node)}
+.goal ul{margin:4px 0 0}
+.sumlist{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 18px 14px 36px;margin-top:10px}
+.sumlist li{margin:6px 0}
+.ucard .tm{font:500 12px var(--mono);color:var(--muted)}
+
+.navlist a{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:4px;width:100%;font:500 14px/1.35 var(--body);color:var(--ink);text-decoration:none;border-radius:8px;padding:7px 8px}
+.navlist a .n{font:600 12px var(--mono);color:var(--muted)}
+.navlist a .mc{font:500 11px var(--mono);color:var(--muted)}
+.navlist a.full .mc{color:var(--teal);font-weight:600}
+.navlist a:hover{background:var(--soft)}
+.navlist a[aria-current="page"]{background:var(--node);color:var(--nodeText)}
+.navlist a[aria-current="page"] .n,.navlist a[aria-current="page"] .mc{color:var(--nodeText)}
+.navlist a:focus-visible,.pager a:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.side .brand a{color:inherit;text-decoration:none}
+.unit-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+.unit-meta a.go{font:600 13px var(--body);background:var(--teal);color:var(--paper);text-decoration:none;border-radius:999px;padding:4px 14px}
+.unit-panel{margin-top:30px;padding-top:24px;border-top:1px solid var(--line)}
+.unit-panel > section:first-child{margin-top:0}
+/* missions */
+#missions{scroll-margin-top:72px;margin-top:56px;padding-top:28px;border-top:3px double var(--line)}
+.mlegend{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 6px}
+.mprog{font:500 13px var(--mono);color:var(--muted)}
+.mission{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-top:16px;scroll-margin-top:70px}
+.mission.is-done{border-color:var(--teal);background:linear-gradient(var(--outBg),var(--outBg))}
+.mhead{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.mhead h3{margin:0;font-size:18px;flex:1 1 220px;min-width:0}
+.lv{font:600 12px var(--body);border-radius:6px;padding:2px 9px;white-space:nowrap}
+.lv1{background:var(--tealSoft);color:var(--teal)}
+.lv2{background:var(--amberSoft);color:var(--amber)}
+.lv3{background:var(--coralSoft);color:var(--coral)}
+.mdone{display:inline-flex;align-items:center;gap:6px;font:600 13px var(--body);color:var(--muted);cursor:pointer;border:1px solid var(--line);border-radius:999px;padding:3px 12px;background:var(--bg)}
+.mdone input{accent-color:var(--teal);width:16px;height:16px;margin:0}
+.mission.is-done .mdone{color:var(--teal);border-color:var(--teal)}
+.mlabel{font:600 11px var(--mono);letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin:14px 0 2px}
+.checks{list-style:none;padding:0;margin:4px 0 0}
+.checks li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:6px;align-items:start;margin:3px 0;font-size:15px}
+.checks input{accent-color:var(--teal);width:16px;height:16px;margin:5px 0 0}
+.checks label{cursor:pointer}
+.mission details{margin-top:10px}
+.mission details.ans summary{color:var(--violet)}
+.mission details.hint summary{color:var(--amber)}
+.mission .note{margin-top:10px}
+.pager{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;width:100%}
+.pager a{font:500 14px var(--body);border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:8px 14px;text-decoration:none;max-width:100%}
+.pager a:hover{border-color:var(--teal)}
+.pager .sp{flex:1}
+@media (max-width:900px){
+  .navlist a{display:flex;flex:0 0 auto;width:auto;white-space:nowrap;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13.5px;gap:6px}
+  .navlist a .mc{display:none}
+  .navlist a.full .n{color:var(--teal)}
+}
+/* index */
+.ucards{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));margin-top:10px}
+.ucard{display:flex;flex-direction:column;gap:6px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-decoration:none;color:var(--ink);min-width:0}
+.ucard:hover{border-color:var(--teal)}
+.ucard .n{font:600 12px var(--mono);color:var(--teal)}
+.ucard b{font-size:16px}
+.ucard .d{font-size:13.5px;color:var(--muted);line-height:1.55}
+.ucard .bar{height:5px;background:var(--soft);border-radius:999px;overflow:hidden;margin-top:auto}
+.ucard .bar i{display:block;height:100%;width:0;background:var(--teal)}
+.ucard .mc{font:500 12px var(--mono);color:var(--muted)}
+</style>
+</head>
+<body data-unit="flow">
+<style>
+.mission .mlabel.st{font:700 13px var(--body);letter-spacing:.5px;color:var(--teal);text-transform:none;margin-top:22px;padding-top:12px;border-top:1px dashed var(--line)}
+.mission .mlabel.st:first-of-type{border-top:0;padding-top:0}
+.qcard{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--teal);border-radius:10px;padding:10px 14px;margin-top:10px}
+.qcard b{color:var(--teal)}
+.navlist .grp{margin:14px 8px 4px;display:flex;justify-content:space-between}
+.chip.must{background:var(--coralSoft);color:var(--coral);font-weight:700}
+.chip.rec{background:var(--amberSoft);color:var(--amber)}
+.chip.ref{background:var(--soft);color:var(--muted)}
+</style>
+<div class="layout">
+<aside class="side" aria-label="소단원">
+<div class="brand">02 노드 · 엣지</div>
+<div class="brand-sub">LangGraph 교안 · 흐름 제어</div>
+<nav class="navwrap" role="tablist" aria-label="소단원" aria-orientation="vertical"><div class="navlist">
+<button type="button" role="tab" id="tab-intro" aria-controls="pane-intro" data-t="intro"><span class="n">0</span><span>개요 · 읽을 페이지</span></button>
+<button type="button" role="tab" id="tab-design" aria-controls="pane-design" data-t="design"><span class="n">1</span><span>흐름 설계 이슈<i class="sm rag" title="RAG"></i><i class="sm lg1" title="LangGraph 필수"></i></span></button>
+<button type="button" role="tab" id="tab-syntax" aria-controls="pane-syntax" data-t="syntax"><span class="n">2</span><span>핵심 문법 한 장<i class="sm lg1" title="LangGraph 필수"></i></span></button>
+<button type="button" role="tab" id="tab-ex1" aria-controls="pane-ex1" data-t="ex1"><span class="n">3</span><span>실제예 ① 재검색 RAG 루프<i class="sm rag" title="RAG"></i></span></button>
+<button type="button" role="tab" id="tab-ex2" aria-controls="pane-ex2" data-t="ex2"><span class="n">4</span><span>실제예 ② 고객센터 라우팅<i class="sm ag" title="에이전트"></i></span></button>
+<div class="grp"><span>미션</span><span class="mc" id="mcount">0/5</span></div>
+<button type="button" role="tab" id="tab-m1" aria-controls="pane-m1" data-t="m1"><span class="n">M1</span><span>처음 보는 문의에 터지는 봇</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m2" aria-controls="pane-m2" data-t="m2"><span class="n">M2</span><span>취소했는데 결제도 됐다</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m3" aria-controls="pane-m3" data-t="m3"><span class="n">M3</span><span>끝나지 않는 재검색</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m4" aria-controls="pane-m4" data-t="m4"><span class="n">M4</span><span>문서 N개 병렬 요약</span><span class="d">✓</span></button>
+<button type="button" role="tab" id="tab-m5" aria-controls="pane-m5" data-t="m5"><span class="n">M5</span><span>미니 ReAct 에이전트</span><span class="d">✓</span></button>
+</div></nav></aside>
+<main>
+<header class="uhead"><div class="kicker">LangGraph 교안 · 02</div><h1>노드 · 엣지 흐름 제어</h1><div class="copyright">© 2026 부성순 · AI·클라우드 실무 과정<br>부성순 (bakpak@empas.com)</div></header>
+
+<!-- ============ 0. 개요 ============ -->
+<div class="pane" role="tabpanel" id="pane-intro" aria-labelledby="tab-intro"><section><h2><span class="no">0</span>개요 · 읽을 페이지</h2>
+<div class="goal"><b>학습 목표</b><ul>
+<li>"다음에 무엇을 실행할지"를 고정 엣지 · 조건부 엣지 · Command · Send 중에서 이유를 들어 고를 수 있다.</li>
+<li>재검색 RAG 루프와 ReAct 에이전트 루프를 종료 조건까지 포함해 설계할 수 있다.</li>
+<li>KeyError, 두 번 실행, 무한 루프, 병렬 충돌 같은 흐름 버그를 출력만 보고 진단할 수 있다.</li>
+</ul></div>
+<div class="note"><b>전제</b> TypedDict, 기본 노드·엣지 그래프, 01 리듀서(특히 병렬이면 리듀서)를 알고 있습니다.</div>
+<h3>위키독스 15페이지 분류</h3>
+<p><span class="chip must">필수</span> 6개는 꼭 읽고, <span class="chip rec">권장</span>은 시간이 되면, <span class="chip ref">참고</span>는 필요할 때 찾아봅니다. 필수는 아래 순서대로 읽으세요.</p>
+<div class="tw"><table><thead><tr><th>구분</th><th>페이지</th><th>여기서 가져갈 것</th></tr></thead><tbody>
+<tr><td><span class="chip must">필수 1</span></td><td><a href="https://wikidocs.net/261580" target="_blank" rel="noopener">1-3-3. 노드 (Node)</a></td><td>노드 함수 시그니처(state · config · writer), 비동기 노드</td></tr>
+<tr><td><span class="chip must">필수 2</span></td><td><a href="https://wikidocs.net/262302" target="_blank" rel="noopener">1-3-4. 엣지 (Edge)</a></td><td>엣지 4종(일반 · 조건부 · Command · Send) 한눈에</td></tr>
+<tr><td><span class="chip must">필수 3</span></td><td><a href="https://wikidocs.net/293535" target="_blank" rel="noopener">1-3-4-3. 조건부 엣지</a></td><td>라우터 함수, 경로 맵, 여러 노드로 동시에 보내기</td></tr>
+<tr><td><span class="chip must">필수 4</span></td><td><a href="https://wikidocs.net/293558" target="_blank" rel="noopener">1-3-4-4. Command</a></td><td>이동 + 상태 업데이트를 한 번에, 핸드오프, interrupt 재개</td></tr>
+<tr><td><span class="chip must">필수 5</span></td><td><a href="https://wikidocs.net/319069" target="_blank" rel="noopener">1-3-4-5. Send API</a></td><td>개수가 정해지지 않은 병렬 실행(Map-Reduce)</td></tr>
+<tr><td><span class="chip must">필수 6</span></td><td><a href="https://wikidocs.net/293826" target="_blank" rel="noopener">1-3-5-2. 그래프 실행 방법</a></td><td>invoke · stream · recursion_limit</td></tr>
+<tr><td><span class="chip rec">권장</span></td><td><a href="https://wikidocs.net/293528" target="_blank" rel="noopener">1-3-3-4. 노드와 구성 (Configuration)</a></td><td>실행할 때 모델·옵션 바꾸기 (config)</td></tr>
+<tr><td><span class="chip rec">권장</span></td><td><a href="https://wikidocs.net/293393" target="_blank" rel="noopener">1-3-5-1. 그래프 구성 요소 연결</a></td><td>입력 검증 → 에러 노드로 분기하는 실무 패턴</td></tr>
+<tr><td><span class="chip ref">참고</span></td><td><a href="https://wikidocs.net/261593" target="_blank" rel="noopener">1-3-3-1. 노드의 기본 개념</a></td><td>이미 아는 내용(기본 노드)</td></tr>
+<tr><td><span class="chip ref">참고</span></td><td><a href="https://wikidocs.net/293519" target="_blank" rel="noopener">1-3-3-2. 노드의 역할과 책임</a></td><td>설명 위주, 리듀서 복습</td></tr>
+<tr><td><span class="chip ref">참고</span></td><td><a href="https://wikidocs.net/293520" target="_blank" rel="noopener">1-3-3-3. 노드 타입과 패턴</a></td><td>동기·비동기·검증 노드 예시</td></tr>
+<tr><td><span class="chip ref">참고</span></td><td><a href="https://wikidocs.net/293529" target="_blank" rel="noopener">1-3-3-5. 노드 구성 고급 패턴</a></td><td>클래스·데코레이터·팩토리 (파이썬 설계 기법)</td></tr>
+<tr><td><span class="chip ref">참고</span></td><td><a href="https://wikidocs.net/261594" target="_blank" rel="noopener">1-3-4-1. 엣지의 개념과 종류</a></td><td>이미 아는 내용(기본 엣지)</td></tr>
+<tr><td><span class="chip ref">참고</span></td><td><a href="https://wikidocs.net/293533" target="_blank" rel="noopener">1-3-4-2. 엣지의 역할과 기능</a></td><td>순차·분기·상태 전달 예시</td></tr>
+<tr><td><span class="chip ref">참고</span></td><td><a href="https://wikidocs.net/262304" target="_blank" rel="noopener">1-3-5. 그래프 연결(컴파일) 및 실행</a></td><td>이미 아는 내용(compile · invoke)</td></tr>
+</tbody></table></div>
+<h3>교재에서 바로잡을 곳 (LangGraph 1.2.20으로 실행 확인)</h3>
+<div class="tw"><table><thead><tr><th>페이지</th><th>문제</th><th>바르게</th></tr></thead><tbody>
+<tr><td>1-3-3 노드</td><td><code>stream_writer: StreamWriter</code> 인자 → TypeError</td><td>인자 이름은 <code>writer</code></td></tr>
+<tr><td>1-3-3 노드</td><td>캐시 import 두 줄 모두 ImportError</td><td><code>from langgraph.cache.memory import InMemoryCache</code><br><code>from langgraph.types import CachePolicy</code></td></tr>
+<tr><td>1-3-4 엣지</td><td>Map-Reduce 예제의 <code>aggregate</code>가 스키마에 없는 <code>final</code> 반환</td><td>값이 조용히 버려짐 → State에 <code>final: str</code> 추가</td></tr>
+<tr><td>1-3-4-3 조건부 엣지</td><td><code>complex_router</code>의 병렬 분기는 절대 실행되지 않음(앞의 if에서 먼저 return)</td><td>실행되더라도 <code>routes_taken</code>에 리듀서가 없어 충돌. 개념 설명용으로만 볼 것</td></tr>
+<tr><td>1-3-4-4 Command</td><td>Command.PARENT 예제의 ParentState에 <code>task</code>가 없어 에스컬레이션이 일어나지 않음</td><td>ParentState에 <code>task: str</code> 추가하면 동작</td></tr>
+<tr><td>1-3-4-4 Command</td><td>도구 안 Command의 <code>tool_call_id="lookup"</code> 고정값</td><td>실제로는 <code>InjectedToolCallId</code>로 받아야 함(Part 2에서)</td></tr>
+<tr><td>1-3-5-2 실행</td><td>recursion_limit 기본값을 25로 알고 있는 경우가 많음</td><td>1.2.x 기본값은 <b>10007</b>. 루프 그래프는 직접 지정 권장</td></tr>
+</tbody></table></div>
+<div class="bridge">
+<div><span class="tg rag">RAG</span><span>문서 평가 → 생성/재검색 분기, 재검색 루프, 문서 N개 병렬 요약이 모두 이 단원입니다.</span></div>
+<div><span class="tg lg1">LangGraph 필수</span><span>조건부 엣지 · Command · Send는 이후 모든 그래프의 뼈대입니다.</span></div>
+<div><span class="tg ag">MCP·에이전트</span><span>ReAct 에이전트는 "도구 호출이 있으면 tools, 없으면 END"라는 조건부 엣지 하나입니다(M5).</span></div>
+</div>
+</section></div>
+
+<!-- ============ 1. 설계 이슈 ============ -->
+<div class="pane" role="tabpanel" id="pane-design" aria-labelledby="tab-design" hidden><section><h2><span class="no">1</span>흐름 설계 이슈<span class="tg rag">RAG</span><span class="tg lg1">LangGraph 필수</span></h2>
+<h3>왜 설계가 먼저인가</h3>
+<p>노드가 "무엇을 할지"라면 엣지는 "다음에 누가 실행될지"입니다. 흐름을 잘못 설계하면 처음 보는 입력에서 멈추거나, 두 노드가 함께 실행되거나, 루프가 끝나지 않습니다. 그래서 노드 사이의 <b>연결마다</b> 아래 질문에 답한 뒤 도구를 고릅니다.</p>
+<h3>연결마다 던질 5가지 질문</h3>
+<div class="qcard"><b>Q1. 다음 노드가 항상 같은가?</b><br>그렇다면 <code>add_edge</code>. 가장 단순하고 가장 안전합니다.</div>
+<div class="qcard"><b>Q2. 상태를 보고 정해진 후보 중에서 고르나?</b><br><code>add_conditional_edges</code>. 라우터는 <b>고르기만</b> 하고 상태는 바꾸지 못합니다. 후보 목록(라우터가 돌려줄 수 있는 값 전부)을 먼저 적어 둡니다.</div>
+<div class="qcard"><b>Q3. 고르면서 상태도 바꿔야 하나?</b><br>판단 결과를 기록하거나(의도, 담당자) 다른 에이전트에게 넘길 때는 <code>Command(goto=..., update=...)</code>. 이 노드에서 나가는 고정 엣지는 만들지 않습니다.</div>
+<div class="qcard"><b>Q4. 몇 갈래로 갈지가 실행 중에 정해지나?</b><br>문서 수, 하위 질문 수처럼 개수가 바뀌면 <code>Send</code>. 갈래마다 다른 입력을 주고, 결과를 모을 키에는 <b>리듀서</b>가 필요합니다.</div>
+<div class="qcard"><b>Q5. 되돌아가는 길(루프)이 있나?</b><br>있다면 <b>종료 조건</b>, 횟수를 세는 상태, <code>recursion_limit</code> 세 가지를 함께 설계합니다.</div>
+<h3>질문의 답 → 도구</h3>
+<div class="tw"><table><thead><tr><th>상황</th><th>도구</th><th>RAG · 에이전트 예</th></tr></thead><tbody>
+<tr><td>고정 순서</td><td><code>add_edge</code></td><td>retrieve → generate</td></tr>
+<tr><td>후보 중 선택</td><td><code>add_conditional_edges</code></td><td>문서 평가 후 generate / rewrite, ReAct의 tools / END</td></tr>
+<tr><td>선택 + 기록</td><td><code>Command</code></td><td>의도 분류하며 intent 저장, 에이전트 간 핸드오프, HITL 재개</td></tr>
+<tr><td>개수가 바뀌는 병렬</td><td><code>Send</code> + 리듀서</td><td>문서 N개 요약, 질문을 쪼개 동시 검색</td></tr>
+<tr><td>루프</td><td>조건부 엣지 + 횟수 상태 + recursion_limit</td><td>재검색 RAG, ReAct 반복</td></tr>
+</tbody></table></div>
+<h3>설계를 안 하면 생기는 5가지 문제</h3>
+<div class="tw"><table><thead><tr><th>증상</th><th>원인 (놓친 질문)</th><th>해결</th><th>어디서</th></tr></thead><tbody>
+<tr><td><code>KeyError: 'refund'</code></td><td>라우터가 경로 맵에 없는 값을 돌려줌 (Q2)</td><td>모든 값을 맵에 넣거나 기본 경로</td><td>M1</td></tr>
+<tr><td>두 노드가 함께 실행</td><td>Command와 고정 엣지를 같이 씀 (Q3)</td><td>Command 노드의 고정 엣지 삭제</td><td>M2</td></tr>
+<tr><td><code>GraphRecursionError</code></td><td>종료 조건 없음, 또는 라우터에서 횟수를 올림 (Q5, Q2)</td><td>횟수는 노드가 올리고, 라우터는 읽기만</td><td>실제예 ① · M3</td></tr>
+<tr><td><code>InvalidUpdateError</code></td><td>Send 결과를 모으는 키에 리듀서 없음 (Q4)</td><td><code>Annotated[list, add]</code></td><td>M4</td></tr>
+<tr><td>에이전트가 끝없이 도구 호출</td><td>루프 탈출 조건이 메시지 상태와 맞지 않음 (Q5)</td><td>마지막 메시지의 tool_calls로 판단 + 한도</td><td>M5</td></tr>
+</tbody></table></div>
+<div class="warn"><b>무한 루프 주의</b> LangGraph 1.2.x의 기본 recursion_limit은 10007입니다. 종료 조건이 틀리면 LLM을 1만 번 가까이 부른 뒤에야 멈출 수 있습니다. 루프가 있는 그래프는 <code>invoke(..., {"recursion_limit": 20})</code>처럼 직접 지정하세요.</div>
+</section></div>
+
+<!-- ============ 2. 핵심 문법 ============ -->
+<div class="pane" role="tabpanel" id="pane-syntax" aria-labelledby="tab-syntax" hidden><section><h2><span class="no">2</span>핵심 문법 한 장<span class="tg lg1">LangGraph 필수</span></h2>
+<h3>노드 함수: 받을 수 있는 인자 3가지</h3>
+<pre class="py">from langchain_core.runnables import RunnableConfig
+from langgraph.types import StreamWriter
+
+def node_a(state):                                  # 기본: 상태만
+    return {"answer": "..."}
+
+def node_b(state, config: RunnableConfig):          # 실행 설정 받기
+    model = config["configurable"].get("model", "gpt-4o-mini")
+    return {"answer": f"{model}로 답변"}
+
+def node_c(state, *, writer: StreamWriter):         # 진행 상황 스트리밍 (이름은 writer)
+    writer({"progress": "검색 중"})
+    return {"answer": "..."}
+
+app.invoke({...}, {"configurable": {"model": "gpt-4o"}})   # node_b 에 전달됨</pre>
+<h3>조건부 엣지: 라우터 함수 + 후보</h3>
+<pre class="py">from typing import Literal
+
+def route(state) -&gt; Literal["generate", "rewrite"]:    # 반환 후보를 타입힌트로 명시
+    return "generate" if state["score"] &gt;= 0.7 else "rewrite"
+
+g.add_conditional_edges("grade", route)                                    # ① Literal 로 후보 전달
+g.add_conditional_edges("grade", route, ["generate", "rewrite"])           # ② 리스트로 후보 전달
+g.add_conditional_edges("grade", route, {"generate": "gen", "rewrite": "rw"})  # ③ 반환값 → 노드 이름 맵</pre>
+<p class="cap">③의 맵을 쓰면 라우터가 맵에 없는 값을 돌려줄 때 KeyError가 납니다. 리스트를 반환하면 여러 노드가 동시에 실행됩니다.</p>
+<h3>Command: 이동 + 상태 업데이트</h3>
+<pre class="py">from langgraph.types import Command
+
+def classify(state) -&gt; Command[Literal["billing", "tech"]]:   # 타입힌트가 있어야 그래프 그림에 엣지가 보임
+    if "환불" in state["text"]:
+        return Command(goto="billing", update={"intent": "billing"})
+    return Command(goto="tech", update={"intent": "tech"})
+
+g.add_edge(START, "classify")      # classify 에서 나가는 add_edge 는 만들지 않는다</pre>
+<h3>Send: 개수가 정해지지 않은 병렬</h3>
+<pre class="py">from langgraph.types import Send
+
+def fan_out(state):                                   # 조건부 엣지 자리에서 Send 리스트 반환
+    return [Send("summarize", {"doc": d}) for d in state["docs"]]
+
+g.add_conditional_edges("load", fan_out, ["summarize"])
+# summarize 는 {"doc": ...} 만 받고, {"summaries": [...]} 를 돌려준다 → summaries 에는 add 리듀서 필수</pre>
+<h3>실행</h3>
+<pre class="py">app.invoke(입력, {"recursion_limit": 20})                       # 최종 상태
+for upd in app.stream(입력, stream_mode="updates"):            # 노드별로 바뀐 부분만
+    print(upd)
+await app.ainvoke(입력)                                          # 비동기</pre>
+<div class="ragbox"><b>디버깅 습관</b> 흐름이 이상하면 <code>stream_mode="updates"</code>로 실행해 "어떤 노드가 어떤 순서로 무엇을 바꿨는지"부터 확인합니다. 실제예와 미션 답안도 모두 이 방법으로 출력을 보여 줍니다.</div>
+</section></div>
+
+<!-- ============ 실제예 1 ============ -->
+<div class="pane" role="tabpanel" id="pane-ex1" aria-labelledby="tab-ex1" hidden><section><h2><span class="no">3</span>실제예 ① 사내 규정 재검색 RAG<span class="tg rag">RAG</span><span class="tg lg1">LangGraph 필수</span></h2>
+<div class="mission">
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>사내 규정 챗봇이 "연차 며칠?" 같은 짧은 질문에서는 관련 문서를 잘 못 찾습니다. 검색 점수가 낮으면 질문을 고쳐 다시 검색하고, 두 번 고쳐도 안 되면 담당자에게 넘기기로 했습니다.</p>
+<div class="mlabel st">STEP 2 · 흐름 설계 (연결마다 Q1~Q5)</div>
+<div class="tw"><table><thead><tr><th>연결</th><th>판단</th><th>도구</th></tr></thead><tbody>
+<tr><td>START → retrieve</td><td>Q1 항상 같음</td><td>add_edge</td></tr>
+<tr><td>retrieve → ?</td><td>Q2 점수와 횟수를 보고 generate / rewrite / fallback 중 선택</td><td>조건부 엣지</td></tr>
+<tr><td>rewrite → retrieve</td><td>Q5 <b>루프</b> → 종료 조건(점수 ≥ 0.7 또는 재시도 ≥ 2), 횟수 상태 <code>retry</code></td><td>add_edge + 카운터</td></tr>
+<tr><td>generate, fallback → END</td><td>Q1</td><td>add_edge</td></tr>
+</tbody></table></div>
+<div class="flow"><span class="n">START</span><i>→</i><span class="n">retrieve</span><i>→</i><span>route</span><i>→</i><span class="n">generate</span><i>/</i><span class="n">rewrite ↺</span><i>/</i><span class="n">fallback</span><i>→</i><span class="n">END</span></div>
+<div class="mlabel st">STEP 3 · 상태와 노드</div>
+<pre class="py">from typing import Annotated, Literal
+from typing_extensions import TypedDict
+from operator import add
+from langgraph.graph import StateGraph, START, END
+
+class RagState(TypedDict):
+    query: str
+    score: float
+    retry: Annotated[int, add]       # 노드는 이번 몫(1)만 돌려준다 (01 리듀서 M3)
+    answer: str
+
+def retrieve(s):
+    score = 0.85 if "사내" in s["query"] else 0.40      # 가짜 검색 점수
+    return {"score": score}
+
+def rewrite(s):
+    return {"query": s["query"] + " 사내 규정", "retry": 1}
+
+def generate(s): return {"answer": f"[{s['query']}] 근거로 답변"}
+def fallback(s): return {"answer": "관련 규정을 찾지 못했습니다. 담당자에게 연결합니다."}</pre>
+<div class="mlabel st">STEP 4 · 라우터와 연결</div>
+<pre class="py">def route_after_retrieve(s) -&gt; Literal["generate", "rewrite", "fallback"]:
+    if s["score"] &gt;= 0.7:
+        return "generate"
+    if s["retry"] &gt;= 2:              # 종료 조건 ② : 횟수 초과
+        return "fallback"
+    return "rewrite"
+
+g = StateGraph(RagState)
+for n, f in [("retrieve", retrieve), ("rewrite", rewrite),
+             ("generate", generate), ("fallback", fallback)]:
+    g.add_node(n, f)
+g.add_edge(START, "retrieve")
+g.add_conditional_edges("retrieve", route_after_retrieve)   # Literal 이 후보 목록
+g.add_edge("rewrite", "retrieve")                            # 루프
+g.add_edge("generate", END); g.add_edge("fallback", END)
+rag = g.compile()
+
+for upd in rag.stream({"query": "연차 며칠?", "score": 0.0, "retry": 0, "answer": ""},
+                      {"recursion_limit": 20}, stream_mode="updates"):
+    print(upd)</pre>
+<div class="mlabel st">STEP 5 · 결과 확인</div>
+<pre class="out">{'retrieve': {'score': 0.4}}
+{'rewrite': {'query': '연차 며칠? 사내 규정', 'retry': 1}}
+{'retrieve': {'score': 0.85}}
+{'generate': {'answer': '[연차 며칠? 사내 규정] 근거로 답변'}}</pre>
+<ol class="steps">
+<li><span class="lbl">라우터는 읽기만.</span> 점수와 횟수를 읽어 이름만 돌려줍니다. 횟수 증가는 rewrite 노드가 합니다.</li>
+<li><span class="lbl">루프에는 탈출구 두 개.</span> 성공(점수)과 포기(횟수). 포기 경로가 없으면 점수가 끝내 안 오를 때 무한 루프입니다.</li>
+<li><span class="lbl">stream으로 확인.</span> 어떤 노드가 몇 번 돌았는지 한눈에 보입니다.</li>
+</ol>
+</div>
+</section></div>
+
+<!-- ============ 실제예 2 ============ -->
+<div class="pane" role="tabpanel" id="pane-ex2" aria-labelledby="tab-ex2" hidden><section><h2><span class="no">4</span>실제예 ② 고객센터 문의 라우팅<span class="tg lg1">LangGraph 필수</span><span class="tg ag">MCP·에이전트</span></h2>
+<div class="mission">
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>고객 문의를 결제팀 · 기술지원 · 상담원 중 한 곳으로 보냅니다. 나중에 통계를 내려고 <b>분류 결과(intent)도 상태에 남겨야</b> 합니다.</p>
+<div class="mlabel st">STEP 2 · 흐름 설계</div>
+<div class="tw"><table><thead><tr><th>연결</th><th>판단</th><th>도구</th></tr></thead><tbody>
+<tr><td>classify → ?</td><td>Q2 후보 중 선택 + <b>Q3 상태(intent)도 기록</b></td><td><b>Command</b></td></tr>
+<tr><td>각 팀 → END</td><td>Q1</td><td>add_edge</td></tr>
+</tbody></table></div>
+<p>조건부 엣지로도 만들 수 있지만, 그러면 "분류해서 intent 저장하는 노드" + "intent를 읽어 이름을 돌려주는 라우터" 두 개가 필요합니다. Command는 판단한 자리에서 이동과 기록을 함께 합니다.</p>
+<div class="mlabel st">STEP 3 · Command 노드</div>
+<pre class="py">from langgraph.types import Command
+
+class CsState(TypedDict):
+    text: str
+    intent: str
+    answer: str
+
+def classify(s) -&gt; Command[Literal["billing", "tech", "human"]]:
+    t = s["text"]
+    if "환불" in t or "결제" in t:
+        return Command(goto="billing", update={"intent": "billing"})
+    if "오류" in t or "로그인" in t:
+        return Command(goto="tech", update={"intent": "tech"})
+    return Command(goto="human", update={"intent": "unknown"})      # 기본 경로
+
+def billing(s): return {"answer": "결제팀 안내: 환불은 14일 이내"}
+def tech(s):    return {"answer": "기술지원 안내: 캐시 삭제 후 재로그인"}
+def human(s):   return {"answer": "상담원에게 연결합니다"}</pre>
+<div class="mlabel st">STEP 4 · 연결 (classify 에서 나가는 add_edge 없음)</div>
+<pre class="py">g = StateGraph(CsState)
+for n, f in [("classify", classify), ("billing", billing), ("tech", tech), ("human", human)]:
+    g.add_node(n, f)
+g.add_edge(START, "classify")
+for n in ["billing", "tech", "human"]:
+    g.add_edge(n, END)
+cs = g.compile()
+
+for t in ["환불하고 싶어요", "로그인 오류가 나요", "배송지 바꿔주세요"]:
+    print(cs.invoke({"text": t, "intent": "", "answer": ""}))</pre>
+<div class="mlabel st">STEP 5 · 결과 확인</div>
+<pre class="out">{'text': '환불하고 싶어요', 'intent': 'billing', 'answer': '결제팀 안내: 환불은 14일 이내'}
+{'text': '로그인 오류가 나요', 'intent': 'tech', 'answer': '기술지원 안내: 캐시 삭제 후 재로그인'}
+{'text': '배송지 바꿔주세요', 'intent': 'unknown', 'answer': '상담원에게 연결합니다'}</pre>
+<ol class="steps">
+<li><span class="lbl">Command = 이동 + 기록.</span> 멀티 에이전트의 "핸드오프"도 같은 모양입니다(다른 에이전트로 goto + 넘길 정보 update).</li>
+<li><span class="lbl">기본 경로를 꼭 둔다.</span> 마지막 return이 처음 보는 문의를 받습니다 → M1</li>
+<li><span class="lbl">고정 엣지와 섞지 않는다.</span> classify에 add_edge를 더하면 두 곳이 함께 실행됩니다 → M2</li>
+</ol>
+</div>
+</section></div>
+
+<!-- ============ M1 ============ -->
+<div class="pane" role="tabpanel" id="pane-m1" aria-labelledby="tab-m1" hidden><section>
+<div class="mission" id="flow-m1" data-mid="flow-m1">
+<div class="mhead"><span class="lv lv1">★ 기본</span><span class="tgs"><span class="tg lg1">LangGraph 필수</span></span><h3>M1. 처음 보는 문의에 터지는 사내 헬프봇</h3><label class="mdone"><input type="checkbox" id="flow-m1-done" data-done="flow-m1"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>비밀번호·연차 문의는 잘 처리하던 헬프봇이 "환불 되나요?"에서 멈췄습니다.</p>
+<pre class="py">class FaqState(TypedDict):
+    text: str
+    intent: str
+    answer: str
+
+def classify(s):
+    t = s["text"]
+    if "비밀번호" in t: return {"intent": "password"}
+    if "연차" in t:    return {"intent": "leave"}
+    if "환불" in t:    return {"intent": "refund"}
+    return {"intent": "etc"}
+
+def route(s): return s["intent"]
+
+def password(s): return {"answer": "비밀번호 초기화 링크를 보냈습니다"}
+def leave(s):    return {"answer": "연차는 인사시스템에서 확인하세요"}
+def human(s):    return {"answer": "담당자에게 연결합니다"}
+
+g = StateGraph(FaqState)
+for n, f in [("classify", classify), ("password", password), ("leave", leave), ("human", human)]:
+    g.add_node(n, f)
+g.add_edge(START, "classify")
+g.add_conditional_edges("classify", route, {"password": "password", "leave": "leave"})
+for n in ["password", "leave", "human"]:
+    g.add_edge(n, END)
+app = g.compile()
+for t in ["비밀번호를 잊었어요", "연차 며칠 남았죠?", "환불 되나요?"]:
+    print(app.invoke({"text": t, "intent": "", "answer": ""})["answer"])</pre>
+<div class="mlabel st">STEP 2 · 설계 점검 (Q2)</div>
+<p>라우터 <code>route</code>가 돌려줄 수 있는 값을 <b>전부</b> 적고, 경로 맵의 키와 비교하세요. human 노드는 어디서 들어오나요?</p>
+<details class="ans"><summary>확인</summary><p>라우터 반환값: password · leave · refund · etc (4개). 맵의 키: password · leave (2개). refund와 etc가 빠졌고, human 노드로 들어오는 엣지가 하나도 없습니다.</p></details>
+<div class="mlabel st">STEP 3 · 결과 예측</div>
+<details class="ans"><summary>실제 출력</summary><pre class="out">비밀번호 초기화 링크를 보냈습니다
+연차는 인사시스템에서 확인하세요</pre><pre class="err">KeyError: 'refund'</pre></details>
+<div class="mlabel st">STEP 4 · 고치기</div>
+<p>새 의도가 추가돼도 다시 터지지 않도록, 모르는 의도는 모두 human으로 보내세요. 맵 대신 <code>Literal</code> 타입힌트를 써 봅니다.</p>
+<details class="hint"><summary>힌트 보기</summary><p>라우터 안에서 "아는 것만 그대로, 나머지는 human"으로 정리하면 맵이 필요 없습니다.</p></details>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">def route(s) -&gt; Literal["password", "leave", "human"]:
+    if s["intent"] in ("password", "leave"):
+        return s["intent"]
+    return "human"                                   # 기본 경로
+
+g.add_conditional_edges("classify", route)           # 후보는 Literal 에서</pre>
+<pre class="out">비밀번호 초기화 링크를 보냈습니다
+연차는 인사시스템에서 확인하세요
+담당자에게 연결합니다</pre></details>
+<div class="mlabel st">STEP 5 · 확인</div>
+<ul class="checks">
+<li><input type="checkbox" id="flow-m1-c1" data-chk="flow-m1-c1"><label for="flow-m1-c1">라우터의 반환값 목록과 맵 키를 비교해 원인을 찾았다</label></li>
+<li><input type="checkbox" id="flow-m1-c2" data-chk="flow-m1-c2"><label for="flow-m1-c2">세 질문 모두 답이 나온다</label></li>
+<li><input type="checkbox" id="flow-m1-c3" data-chk="flow-m1-c3"><label for="flow-m1-c3">LLM이 의도를 분류한다면 이 기본 경로가 왜 더 중요한지 한 줄로 적었다</label></li>
+</ul>
+<details class="ans"><summary>설명 예시</summary><p>LLM은 지시하지 않은 라벨("refund_request", "기타" 등)을 언제든 돌려줄 수 있습니다. 라우터는 항상 "모르는 값"을 받을 수 있다고 가정하고 기본 경로를 둬야 합니다.</p></details>
+</div>
+</section></div>
+
+<!-- ============ M2 ============ -->
+<div class="pane" role="tabpanel" id="pane-m2" aria-labelledby="tab-m2" hidden><section>
+<div class="mission" id="flow-m2" data-mid="flow-m2">
+<div class="mhead"><span class="lv lv1">★ 기본</span><span class="tgs"><span class="tg lg1">LangGraph 필수</span></span><h3>M2. 품절로 취소했는데 결제도 됐다</h3><label class="mdone"><input type="checkbox" id="flow-m2-done" data-done="flow-m2"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>조건부 엣지로 만든 주문 그래프를 Command 방식으로 바꿨습니다. 그런데 품절 상품을 주문했더니 "주문 취소"와 "결제 완료"가 둘 다 찍혔습니다.</p>
+<pre class="py">class OrderState(TypedDict):
+    item: str
+    qty: int
+    log: Annotated[list[str], add]
+
+STOCK = {"사과": 10, "오렌지": 0}
+
+def check_stock(s) -&gt; Command[Literal["pay", "cancel"]]:
+    if STOCK.get(s["item"], 0) &gt;= s["qty"]:
+        return Command(goto="pay", update={"log": ["재고 확인"]})
+    return Command(goto="cancel", update={"log": ["재고 부족"]})
+
+def pay(s):    return {"log": ["결제 완료"]}
+def cancel(s): return {"log": ["주문 취소"]}
+
+g = StateGraph(OrderState)
+for n, f in [("check_stock", check_stock), ("pay", pay), ("cancel", cancel)]:
+    g.add_node(n, f)
+g.add_edge(START, "check_stock")
+g.add_edge("check_stock", "pay")          # 예전 코드에서 남은 줄
+g.add_edge("pay", END); g.add_edge("cancel", END)
+print(g.compile().invoke({"item": "오렌지", "qty": 2, "log": []}))</pre>
+<div class="mlabel st">STEP 2 · 설계 점검 (Q1 vs Q3)</div>
+<p>check_stock에서 나가는 길을 정하는 것이 몇 개인지 세어 보세요. Command의 goto와 add_edge는 서로를 지울까요, 더해질까요?</p>
+<details class="ans"><summary>확인</summary><p>두 개입니다: Command의 goto("cancel")와 고정 엣지(check_stock → pay). 둘은 <b>더해집니다</b>. 그래서 같은 단계에서 cancel과 pay가 함께 실행됩니다.</p></details>
+<div class="mlabel st">STEP 3 · 결과 예측</div>
+<details class="ans"><summary>실제 출력</summary><pre class="out">{'item': '오렌지', 'qty': 2, 'log': ['재고 부족', '주문 취소', '결제 완료']}</pre><p>log에 리듀서가 있어서 에러 없이 둘 다 기록됐습니다. 리듀서가 없었다면 InvalidUpdateError로 바로 드러났을 것입니다.</p></details>
+<div class="mlabel st">STEP 4 · 고치기</div>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py"># g.add_edge("check_stock", "pay")   ← 삭제. Command 노드에서 나가는 길은 goto 만.</pre>
+<pre class="out">{'item': '오렌지', 'qty': 2, 'log': ['재고 부족', '주문 취소']}
+{'item': '사과', 'qty': 2, 'log': ['재고 확인', '결제 완료']}</pre></details>
+<div class="mlabel st">STEP 5 · 확인</div>
+<ul class="checks">
+<li><input type="checkbox" id="flow-m2-c1" data-chk="flow-m2-c1"><label for="flow-m2-c1">품절일 때 결제가 실행되지 않는다</label></li>
+<li><input type="checkbox" id="flow-m2-c2" data-chk="flow-m2-c2"><label for="flow-m2-c2">재고가 있을 때 결제가 실행된다</label></li>
+<li><input type="checkbox" id="flow-m2-c3" data-chk="flow-m2-c3"><label for="flow-m2-c3"><code>app.get_graph().draw_mermaid()</code>로 그림을 뽑아, 고치기 전후 엣지 차이를 확인했다</label></li>
+</ul>
+<div class="note"><b>설계 규칙</b> 한 노드에서 나가는 길은 한 가지 방법으로만 정합니다. add_edge · 조건부 엣지 · Command 중 하나.</div>
+</div>
+</section></div>
+
+<!-- ============ M3 ============ -->
+<div class="pane" role="tabpanel" id="pane-m3" aria-labelledby="tab-m3" hidden><section>
+<div class="mission" id="flow-m3" data-mid="flow-m3">
+<div class="mhead"><span class="lv lv2">★★ 응용</span><span class="tgs"><span class="tg rag">RAG</span><span class="tg lg1">LangGraph 필수</span></span><h3>M3. 끝나지 않는 재검색</h3><label class="mdone"><input type="checkbox" id="flow-m3-done" data-done="flow-m3"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>실제예 ①을 본 동료가 "재시도 3번까지"를 라우터 안에서 세도록 만들었습니다. 검색 점수가 계속 낮자 그래프가 멈추지 않습니다.</p>
+<pre class="py">class LoopState(TypedDict):
+    query: str
+    score: float
+    retry: int
+
+def retrieve(s): return {"score": 0.3}                 # 늘 낮은 점수
+def rewrite(s):  return {"query": s["query"] + "+"}
+def generate(s): return {}
+def fallback(s): return {}
+
+def route(s):
+    if s["score"] &gt;= 0.7:
+        return "generate"
+    s["retry"] += 1                                     # 라우터에서 횟수 증가
+    return "rewrite" if s["retry"] &lt; 3 else "fallback"
+
+g = StateGraph(LoopState)
+for n, f in [("retrieve", retrieve), ("rewrite", rewrite),
+             ("generate", generate), ("fallback", fallback)]:
+    g.add_node(n, f)
+g.add_edge(START, "retrieve")
+g.add_conditional_edges("retrieve", route, ["generate", "rewrite", "fallback"])
+g.add_edge("rewrite", "retrieve")
+g.add_edge("generate", END); g.add_edge("fallback", END)
+g.compile().invoke({"query": "연차", "score": 0.0, "retry": 0}, {"recursion_limit": 20})</pre>
+<div class="mlabel st">STEP 2 · 설계 점검 (Q2, Q5)</div>
+<p>종료 조건은 있습니다. 그런데 왜 도달하지 못할까요? "라우터는 무엇을 할 수 있고 무엇을 못 하나"로 설명하세요.</p>
+<details class="ans"><summary>확인</summary><p>라우터는 <b>다음 노드 이름만</b> 돌려줍니다. 라우터 안에서 <code>s["retry"] += 1</code>을 해도 상태에 저장되지 않아 retry는 매번 0입니다. 상태를 바꾸는 것은 노드의 반환값(또는 Command의 update)뿐입니다.</p></details>
+<div class="mlabel st">STEP 3 · 결과 예측</div>
+<details class="ans"><summary>실제 출력</summary><pre class="err">GraphRecursionError: Recursion limit of 20 reached without hitting a stop condition.</pre><p>recursion_limit을 지정하지 않았다면 기본값 10007까지 돌았을 것입니다. 실제 LLM이었다면 비용이 그대로 청구됩니다.</p></details>
+<div class="mlabel st">STEP 4 · 고치기</div>
+<p>횟수를 올리는 책임을 노드로 옮기세요. 라우터는 읽기만 합니다.</p>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">def rewrite(s):
+    return {"query": s["query"] + "+", "retry": s["retry"] + 1}   # 노드가 올린다
+
+def route(s):
+    if s["score"] &gt;= 0.7:
+        return "generate"
+    return "rewrite" if s["retry"] &lt; 3 else "fallback"          # 라우터는 읽기만</pre>
+<pre class="out">{'retrieve': {'score': 0.3}}
+{'rewrite': {'query': '연차+', 'retry': 1}}
+{'retrieve': {'score': 0.3}}
+{'rewrite': {'query': '연차++', 'retry': 2}}
+{'retrieve': {'score': 0.3}}
+{'rewrite': {'query': '연차+++', 'retry': 3}}
+{'retrieve': {'score': 0.3}}
+{'fallback': None}</pre></details>
+<div class="mlabel st">STEP 5 · 확인</div>
+<ul class="checks">
+<li><input type="checkbox" id="flow-m3-c1" data-chk="flow-m3-c1"><label for="flow-m3-c1">"라우터는 상태를 못 바꾼다"로 원인을 설명했다</label></li>
+<li><input type="checkbox" id="flow-m3-c2" data-chk="flow-m3-c2"><label for="flow-m3-c2">stream으로 rewrite가 정확히 3번 돈 뒤 fallback으로 가는 것을 확인했다</label></li>
+<li><input type="checkbox" id="flow-m3-c3" data-chk="flow-m3-c3"><label for="flow-m3-c3">retry 3번이면 recursion_limit은 최소 얼마가 필요한지 계산했다</label></li>
+</ul>
+<details class="ans"><summary>계산 확인</summary><p>retrieve 4번 + rewrite 3번 + fallback 1번 = 8단계. 실제로 돌려 보면 한도 8에서는 에러, <b>9부터 통과</b>합니다(실행 단계 수보다 커야 함). 여유를 두고 10~20으로 지정합니다. 한도는 "정상 흐름이 쓰는 단계 수"보다 조금 크게 잡습니다.</p></details>
+</div>
+</section></div>
+
+<!-- ============ M4 ============ -->
+<div class="pane" role="tabpanel" id="pane-m4" aria-labelledby="tab-m4" hidden><section>
+<div class="mission" id="flow-m4" data-mid="flow-m4">
+<div class="mhead"><span class="lv lv2">★★ 응용</span><span class="tgs"><span class="tg rag">RAG</span><span class="tg lg1">LangGraph 필수</span></span><h3>M4. 검색된 문서 N개를 동시에 요약하기</h3><label class="mdone"><input type="checkbox" id="flow-m4-done" data-done="flow-m4"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>검색 결과는 질문마다 1개일 수도, 10개일 수도 있습니다. 문서마다 따로 요약(LLM 호출)을 <b>동시에</b> 돌리고, 끝나면 보고서 노드가 한 번만 실행되게 하려 합니다.</p>
+<pre class="py">from langgraph.types import Send
+
+class MapState(TypedDict):
+    docs: list[str]
+    summaries: list[str]
+    report: str
+
+def fan_out(s):
+    return [Send("summarize", {"doc": d}) for d in s["docs"]]
+
+def summarize(s: dict):                       # Send 로 받은 {"doc": ...} 만 보인다
+    return {"summaries": [s["doc"][:6] + "… 요약"]}
+
+def report(s):
+    return {"report": f"{len(s['summaries'])}건 요약 완료"}
+
+g = StateGraph(MapState)
+g.add_node("summarize", summarize); g.add_node("report", report)
+g.add_conditional_edges(START, fan_out, ["summarize"])
+g.add_edge("summarize", "report"); g.add_edge("report", END)
+
+DOCS = ["휴가 규정: 연차는 15일", "출장 규정: 일비 5만원", "보안 규정: 비밀번호 90일"]
+g.compile().invoke({"docs": DOCS, "summaries": [], "report": ""})</pre>
+<div class="mlabel st">STEP 2 · 설계 점검 (Q4)</div>
+<p>갈래 수가 실행 중에 정해지므로 Send를 고른 것은 맞습니다. Q4의 두 번째 조건("결과를 모을 키")을 확인하세요.</p>
+<details class="ans"><summary>확인</summary><p>summarize 3개가 같은 단계에서 <code>summaries</code>에 동시에 씁니다. 리듀서가 없으니 충돌합니다(01 리듀서의 실제예 ①과 같은 원리).</p></details>
+<div class="mlabel st">STEP 3 · 결과 예측</div>
+<details class="ans"><summary>실제 출력</summary><pre class="err">InvalidUpdateError: At key 'summaries': Can receive only one value per step. Use an Annotated key to handle multiple values.</pre></details>
+<div class="mlabel st">STEP 4 · 고치기</div>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">class MapState(TypedDict):
+    docs: list[str]
+    summaries: Annotated[list[str], add]      # Send 결과를 모으는 키
+    report: str</pre>
+<pre class="out">{'docs': [...3개...], 'summaries': ['휴가 규정:… 요약', '출장 규정:… 요약', '보안 규정:… 요약'], 'report': '3건 요약 완료'}
+# 문서 1개로 실행하면
+{'docs': ['휴가 규정: 연차는 15일'], 'summaries': ['휴가 규정:… 요약'], 'report': '1건 요약 완료'}</pre></details>
+<div class="mlabel st">STEP 5 · 확인</div>
+<ul class="checks">
+<li><input type="checkbox" id="flow-m4-c1" data-chk="flow-m4-c1"><label for="flow-m4-c1">문서 수를 1, 3, 5개로 바꿔도 코드 수정 없이 동작한다</label></li>
+<li><input type="checkbox" id="flow-m4-c2" data-chk="flow-m4-c2"><label for="flow-m4-c2">report가 문서 수와 상관없이 한 번만 실행되는 것을 stream으로 확인했다</label></li>
+<li><input type="checkbox" id="flow-m4-c3" data-chk="flow-m4-c3"><label for="flow-m4-c3">위키독스 1-3-4 Map-Reduce 예제의 <code>final</code>이 왜 결과에 없는지 설명했다</label></li>
+</ul>
+<details class="ans"><summary>설명 예시</summary><p>aggregate 노드가 돌려준 <code>final</code> 키가 State에 없어서 에러 없이 버려집니다(01 리듀서 M1과 같은 원리). State에 <code>final: str</code>을 추가해야 합니다.</p></details>
+</div>
+</section></div>
+
+<!-- ============ M5 ============ -->
+<div class="pane" role="tabpanel" id="pane-m5" aria-labelledby="tab-m5" hidden><section>
+<div class="mission" id="flow-m5" data-mid="flow-m5">
+<div class="mhead"><span class="lv lv3">★★★ 도전</span><span class="tgs"><span class="tg lg1">LangGraph 필수</span><span class="tg ag">MCP·에이전트</span></span><h3>M5. 미니 ReAct 에이전트의 흐름 만들기</h3><label class="mdone"><input type="checkbox" id="flow-m5-done" data-done="flow-m5"> 완료</label></div>
+<div class="mlabel st">STEP 1 · 상황 읽기</div>
+<p>IT 헬프데스크 에이전트를 만듭니다. LLM이 도구가 필요하다고 판단하면 도구를 실행하고 그 결과를 다시 LLM에게 보여 주며, 도구가 필요 없으면 답하고 끝냅니다. 이것이 ReAct 루프입니다. LLM은 아래 가짜 함수로 대신합니다.</p>
+<pre class="py">from typing import Literal
+from langgraph.graph import StateGraph, MessagesState, START, END
+from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
+
+def fake_llm(messages):                      # 진짜 LLM 대신
+    last = messages[-1]
+    if isinstance(last, HumanMessage) and "VPN" in last.content:
+        return AIMessage(content="", tool_calls=[{"name": "check_vpn", "args": {}, "id": "call_1"}])
+    if isinstance(last, ToolMessage):
+        return AIMessage(content=f"점검 결과: {last.content}. 재접속해 보세요.")
+    return AIMessage(content="무엇을 도와드릴까요?")
+
+TOOLS = {"check_vpn": lambda: "VPN 서버 정상"}</pre>
+<div class="mlabel st">STEP 2 · 흐름 설계</div>
+<p>노드는 agent, tools 두 개입니다. 아래 표의 빈칸(도구, 판단 기준)을 채우세요.</p>
+<pre class="py"># | 연결            | Q1~Q5 판단 | 도구 | 판단 기준 |
+# | START → agent   |            |      |           |
+# | agent → ?       |            |      |           |
+# | tools → ?       |            |      |           |</pre>
+<details class="ans"><summary>설계표 확인</summary><div class="tw"><table><thead><tr><th>연결</th><th>판단</th><th>도구</th><th>판단 기준</th></tr></thead><tbody>
+<tr><td>START → agent</td><td>Q1</td><td>add_edge</td><td>-</td></tr>
+<tr><td>agent → ?</td><td>Q2 tools / END 중 선택, Q5 루프</td><td>조건부 엣지</td><td><b>마지막 메시지에 tool_calls가 있는가</b></td></tr>
+<tr><td>tools → agent</td><td>Q1 (루프의 되돌아가는 길)</td><td>add_edge</td><td>-</td></tr>
+</tbody></table></div><p>상태는 MessagesState(01 리듀서의 add_messages)를 씁니다. 대화와 도구 결과가 모두 messages에 쌓입니다.</p></details>
+<div class="mlabel st">STEP 3 · 노드 두 개와 라우터 작성</div>
+<p>① agent: fake_llm을 호출해 AIMessage를 추가 ② tools: 마지막 AIMessage의 tool_calls마다 TOOLS를 실행해 ToolMessage(<code>tool_call_id</code> 일치)를 추가 ③ should_continue: tools 또는 END 반환</p>
+<details class="hint"><summary>힌트 보기</summary><p>도구 호출 정보는 <code>s["messages"][-1].tool_calls</code>에 <code>[{"name": ..., "args": ..., "id": ...}]</code> 형태로 들어 있습니다. 라우터는 <code>getattr(last, "tool_calls", None)</code>로 확인하면 안전합니다.</p></details>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">def agent(s: MessagesState):
+    return {"messages": [fake_llm(s["messages"])]}
+
+def tools(s: MessagesState):
+    last = s["messages"][-1]
+    return {"messages": [ToolMessage(content=TOOLS[c["name"]](), tool_call_id=c["id"])
+                         for c in last.tool_calls]}
+
+def should_continue(s: MessagesState) -&gt; Literal["tools", "__end__"]:
+    last = s["messages"][-1]
+    return "tools" if getattr(last, "tool_calls", None) else END</pre></details>
+<div class="mlabel st">STEP 4 · 연결하고 실행 (루프 한도 포함)</div>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">g = StateGraph(MessagesState)
+g.add_node("agent", agent); g.add_node("tools", tools)
+g.add_edge(START, "agent")
+g.add_conditional_edges("agent", should_continue)
+g.add_edge("tools", "agent")                          # 루프
+react = g.compile()
+
+for q in ["VPN이 안 붙어요", "안녕하세요"]:
+    out = react.invoke({"messages": [HumanMessage(content=q)]}, {"recursion_limit": 10})
+    print([type(m).__name__ for m in out["messages"]], "→", out["messages"][-1].content)</pre>
+<pre class="out">['HumanMessage', 'AIMessage', 'ToolMessage', 'AIMessage'] → 점검 결과: VPN 서버 정상. 재접속해 보세요.
+['HumanMessage', 'AIMessage'] → 무엇을 도와드릴까요?</pre></details>
+<div class="mlabel st">STEP 5 · 확인과 확장</div>
+<ul class="checks">
+<li><input type="checkbox" id="flow-m5-c1" data-chk="flow-m5-c1"><label for="flow-m5-c1">VPN 질문은 4개, 인사는 2개 메시지로 끝난다</label></li>
+<li><input type="checkbox" id="flow-m5-c2" data-chk="flow-m5-c2"><label for="flow-m5-c2">fake_llm이 매번 도구를 부르도록 바꿔 보고, recursion_limit이 비용을 막아 주는 것을 확인했다</label></li>
+<li><input type="checkbox" id="flow-m5-c3" data-chk="flow-m5-c3"><label for="flow-m5-c3">이 그래프가 LangGraph의 <code>create_agent</code> / <code>ToolNode</code> / <code>tools_condition</code>이 대신 해 주는 일과 같다는 것을 설명했다</label></li>
+</ul>
+<div class="note"><b>다음 단원 연결</b> fake_llm 자리에 <code>llm.bind_tools([...])</code>를, tools 자리에 ToolNode를 넣으면 Part 2의 실제 ReAct 에이전트가 됩니다. 흐름 설계는 그대로입니다.</div>
+</div>
+</section></div>
+
+<footer>LangGraph 교안 · 교재: 위키독스 「LangGraph 가이드북 - 에이전트 RAG with 랭그래프 [ver 1.0+]」 1-3-3 ~ 1-3-5 · 코드 검증: LangGraph 1.2.20 (2026-11-11)</footer>
+</main>
+</div>
+<script>
+(function(){
+  function sync(){ document.querySelectorAll('input[data-done]').forEach(i => {
+    const t = document.getElementById('tab-' + i.dataset.done.replace('flow-', ''));
+    if (t) t.classList.toggle('done', i.checked); }); }
+  document.addEventListener('change', e => { if (e.target.matches('input[data-done]')) sync(); });
+  window.addEventListener('load', sync);
+})();
+</script>
+
+
+<script>
+(function(){
+  const UNITS = {"flow": ["flow-m1", "flow-m2", "flow-m3", "flow-m4", "flow-m5"]};
+  const KEY = 'lg-missions-v1';
+  let st = {};
+  try { st = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch(e) { st = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch(e) {} };
+
+  // 코드 하이라이트 + 복사
+  const KW = /^(from|import|def|return|for|in|if|elif|else|not|and|or|with|as|class|lambda|True|False|None|try|except|finally|await|yield|is|raise|continue|print)$/;
+  const RE = /("""[\s\S]*?"""|f?"(?:[^"\\\n]|\\.)*"|f?'(?:[^'\\\n]|\\.)*'|#[^\n]*|\b[A-Za-z_]+\b)/g;
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  function selectText(el){ const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+  document.querySelectorAll('pre.py').forEach(pre => {
+    const src = pre.textContent; let out = '', last = 0, m; RE.lastIndex = 0;
+    while ((m = RE.exec(src))) {
+      out += esc(src.slice(last, m.index)); const t = m[0];
+      if (t[0] === '#') out += '<span class="c">' + esc(t) + '</span>';
+      else if (t[0] === '"' || t[0] === "'" || (t[0] === 'f' && (t[1] === '"' || t[1] === "'"))) out += '<span class="s">' + esc(t) + '</span>';
+      else if (KW.test(t)) out += '<span class="k">' + t + '</span>';
+      else out += esc(t);
+      last = m.index + t.length;
+    }
+    pre.innerHTML = out + esc(src.slice(last));
+    const wrap = document.createElement('div'); wrap.style.position = 'relative';
+    pre.parentNode.insertBefore(wrap, pre); wrap.appendChild(pre);
+    const b = document.createElement('button'); b.className = 'copy'; b.type = 'button'; b.textContent = '복사';
+    b.style.cssText = 'position:absolute;top:8px;right:8px';
+    b.addEventListener('click', () => {
+      const ok = () => { b.textContent = '복사됨'; setTimeout(() => b.textContent = '복사', 1400); };
+      const fail = () => { selectText(pre); b.textContent = '선택됨'; };
+      try { navigator.clipboard.writeText(src).then(ok, fail); } catch(e) { fail(); }
+    });
+    wrap.appendChild(b);
+  });
+
+  // 미션 체크 상태
+  document.querySelectorAll('input[data-done],input[data-chk]').forEach(inp => {
+    const k = inp.dataset.done || inp.dataset.chk;
+    inp.checked = !!st[k];
+    inp.addEventListener('change', () => { st[k] = inp.checked; save(); paint(); });
+  });
+  function paint(){
+    document.querySelectorAll('.mission').forEach(m => m.classList.toggle('is-done', !!st[m.dataset.mid]));
+    let total = 0, done = 0;
+    Object.keys(UNITS).forEach(u => {
+      const ids = UNITS[u]; const d = ids.filter(id => st[id]).length;
+      total += ids.length; done += d;
+      document.querySelectorAll('[data-mc="' + u + '"]').forEach(el => el.textContent = d + '/' + ids.length);
+      document.querySelectorAll('[data-u="' + u + '"]').forEach(el => el.classList.toggle('full', d === ids.length));
+      document.querySelectorAll('[data-bar="' + u + '"]').forEach(el => el.style.width = (d / ids.length * 100) + '%');
+    });
+    const pb = document.getElementById('progbar'); if (pb) pb.style.width = (done / total * 100) + '%';
+    const pt = document.getElementById('progtext'); if (pt) pt.textContent = '미션 ' + done + ' / ' + total + ' 완료';
+    const mp = document.getElementById('mprog'); const cur = document.body.dataset.unit;
+    if (mp && cur) { const ids = UNITS[cur]; mp.textContent = '· 완료 ' + ids.filter(id => st[id]).length + ' / ' + ids.length; }
+    const mc = document.getElementById('mcount'); if (mc && cur) { const ids = UNITS[cur]; mc.textContent = ids.filter(id => st[id]).length + '/' + ids.length; }
+  }
+  paint();
+})();
+</script>
+
+<script>
+(function(){
+  const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+  if (!tabs.length) return;
+  const ids = tabs.map(t => t.dataset.t);
+  function show(id, push){
+    tabs.forEach(t => { const on = t.dataset.t === id; t.setAttribute('aria-selected', on ? 'true' : 'false'); t.tabIndex = on ? 0 : -1;
+      if (on) t.scrollIntoView({block:'nearest', inline:'nearest'}); });
+    document.querySelectorAll('[role="tabpanel"]').forEach(p => p.hidden = p.id !== 'pane-' + id);
+    if (push) { try { history.replaceState(null, '', '#' + id); } catch(e){} window.scrollTo({top: 0}); }
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => show(t.dataset.t, true));
+    t.addEventListener('keydown', e => {
+      const f = e.key === 'ArrowDown' || e.key === 'ArrowRight', b = e.key === 'ArrowUp' || e.key === 'ArrowLeft';
+      if (!f && !b) return; e.preventDefault();
+      const n = tabs[(i + (f ? 1 : tabs.length - 1)) % tabs.length]; n.focus(); show(n.dataset.t, true);
+    });
+  });
+  const h = location.hash.slice(1);
+  show(ids.includes(h) ? h : 'intro', false);
+  window.addEventListener('hashchange', () => { const x = location.hash.slice(1); if (ids.includes(x)) show(x, false); });
+})();
+</script>
+</body>
+</html>

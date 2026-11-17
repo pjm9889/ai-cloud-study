@@ -1,0 +1,130 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LangChain create_agent 단계별 학습</title><style>*{box-sizing:border-box}body{margin:0;background:#f7f8fb;color:#1e293b;font-family:Arial,"Malgun Gothic",sans-serif;line-height:1.65}header{background:#16243e;color:#fff;padding:22px max(24px,calc((100% - 1160px)/2))}header .mini{font-size:13px;opacity:.75}header h1{margin:4px 0;font-size:26px}header p{margin:0;opacity:.8}main{max-width:1160px;margin:22px auto;padding:0 22px}.layout{display:grid;grid-template-columns:minmax(0,1fr) 210px;gap:24px}.panel,.nav{background:white;border:1px solid #e2e8f0;border-radius:14px;padding:24px;box-shadow:0 4px 18px #10233a09}.nav{align-self:start;position:sticky;top:15px;padding:12px}.nav button{display:block;width:100%;text-align:left;border:0;border-radius:9px;background:transparent;padding:11px;cursor:pointer;color:#334155;font-size:13px;margin:3px 0}.nav button.current{background:#fce7ef;color:#ae2456;font-weight:bold}.nav button:disabled{opacity:.36;cursor:not-allowed}.eyebrow{color:#be285b;font-size:12px;font-weight:bold;letter-spacing:1px}h2{font-size:23px;margin:8px 0 14px}h3{font-size:16px;margin:22px 0 8px}.desc{background:#f8fafc;border-left:3px solid #db2777;padding:14px;border-radius:6px}.codebar{display:flex;justify-content:space-between;align-items:center;background:#152238;color:#cbd5e1;padding:8px 12px;border-radius:9px 9px 0 0;font-size:12px}pre{margin:0;background:#101a2c;color:#e2e8f0;overflow:auto;padding:18px;font-size:13px;line-height:1.6;border-radius:0 0 9px 9px;white-space:pre;tab-size:4}button.copy{border:1px solid #64748b;background:#26374e;color:#fff;border-radius:6px;padding:4px 10px;cursor:pointer}.quiz{border:1px solid #f5c7d8;background:#fff8fa;padding:18px;border-radius:10px;margin-top:22px}.choice{display:block;padding:9px;border-bottom:1px solid #f5e6ed;cursor:pointer}.action{background:#be285b;color:#fff;border:0;border-radius:7px;padding:10px 18px;cursor:pointer;font-weight:bold;margin-top:13px}.action:disabled{background:#94a3b8;cursor:not-allowed}.feedback{margin-top:10px;font-weight:bold}.nextrow{display:flex;justify-content:space-between;margin-top:22px;gap:8px}.ghost{background:#fff;color:#334155;border:1px solid #cbd5e1;border-radius:7px;padding:10px 16px;cursor:pointer}.progress{height:7px;border-radius:20px;background:#e2e8f0;margin:12px 0 16px;overflow:hidden}.bar{height:100%;width:0;background:#db2777;transition:.2s}.note{font-size:12px;color:#64748b;margin-top:16px}footer{max-width:1160px;margin:0 auto;padding:12px 24px 28px;color:#64748b;font-size:12px}@media(max-width:720px){.layout{grid-template-columns:1fr}.nav{position:static;display:grid;grid-template-columns:1fr 1fr}.panel{padding:17px}header{padding:20px}.nav button{font-size:12px}h2{font-size:20px}}</style></head><body><header><div class="mini">부성순 · LangChain Python 실습</div><h1>from langchain.agents import create_agent</h1><p>한 단계 학습 → 퀴즈 정답 확인 → 다음 단계 열기</p></header><main><div class="progress"><div class="bar" id="progress"></div></div><div class="layout"><section class="panel"><article class="step" id="step0" hidden><div class="eyebrow">STEP 01 / 10</div><h2>create_agent란?</h2><div class="desc">LLM이 필요한 도구를 선택하고 실행한 뒤 결과를 바탕으로 답하는 그래프를 자동으로 만듭니다.</div><h3>따라하기 코드</h3><div class="codebar"><span>Python · 복사 후 실행</span><button class="copy" onclick="copyCode(0)">코드 복사</button></div><pre><code id="code0">from langchain.agents import create_agent
+
+# create_agent(model=..., tools=...) 형태로 사용합니다.
+# 에이전트를 생성하는 것과 질문을 실행하는 것은 별개입니다.</code></pre><div class="quiz"><strong>이해도 확인 01</strong><p>create_agent의 핵심 역할은?</p><label class="choice"><input type="radio" name="q0" value="0"> ① 도구 실행이 가능한 에이전트 그래프 생성</label><label class="choice"><input type="radio" name="q0" value="1"> ② 텍스트를 임베딩 벡터로 변환</label><label class="choice"><input type="radio" name="q0" value="2"> ③ CSV를 DB로 저장</label><button class="action" onclick="checkAnswer(0)">정답 확인</button><div class="feedback" id="feedback0" aria-live="polite"></div><div class="note">정답을 맞히면 다음 STEP이 열립니다.</div></div><div class="nextrow"><button class="ghost" onclick="go(-1)" disabled>이전 단계</button><button class="action" id="next0" onclick="go(1)" disabled>다음 단계 →</button></div></article><article class="step" id="step1" hidden><div class="eyebrow">STEP 02 / 10</div><h2>설치와 최소 생성</h2><div class="desc">LangChain 1.x 기준입니다. OpenAI 사용 시 langchain-openai가 필요하며 OPENAI_API_KEY를 환경변수로 설정합니다.</div><h3>따라하기 코드</h3><div class="codebar"><span>Python · 복사 후 실행</span><button class="copy" onclick="copyCode(1)">코드 복사</button></div><pre><code id="code1"># 터미널에서 한 번 실행
+# pip install -U langchain langchain-openai
+
+from langchain.agents import create_agent
+
+agent = create_agent(
+    model=&quot;openai:gpt-4.1-mini&quot;,
+    tools=[]
+)
+# 아직 LLM을 호출하지 않았습니다.</code></pre><div class="quiz"><strong>이해도 확인 02</strong><p>tools=[]이면?</p><label class="choice"><input type="radio" name="q1" value="0"> ① 에이전트를 만들 수 없다</label><label class="choice"><input type="radio" name="q1" value="1"> ② 도구 없이 모델만 사용하는 에이전트가 된다</label><label class="choice"><input type="radio" name="q1" value="2"> ③ 자동으로 검색 도구가 추가된다</label><button class="action" onclick="checkAnswer(1)">정답 확인</button><div class="feedback" id="feedback1" aria-live="polite"></div><div class="note">정답을 맞히면 다음 STEP이 열립니다.</div></div><div class="nextrow"><button class="ghost" onclick="go(0)" >이전 단계</button><button class="action" id="next1" onclick="go(2)" disabled>다음 단계 →</button></div></article><article class="step" id="step2" hidden><div class="eyebrow">STEP 03 / 10</div><h2>첫 질문: invoke()</h2><div class="desc">입력은 {&quot;messages&quot;: [...]} 딕셔너리 형식입니다. 결과 역시 messages 목록을 포함한 상태입니다.</div><h3>따라하기 코드</h3><div class="codebar"><span>Python · 복사 후 실행</span><button class="copy" onclick="copyCode(2)">코드 복사</button></div><pre><code id="code2">from langchain.agents import create_agent
+
+agent = create_agent(&quot;openai:gpt-4.1-mini&quot;, tools=[])
+
+result = agent.invoke({
+    &quot;messages&quot;: [
+        {&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;파이썬을 한 문장으로 설명해줘&quot;}
+    ]
+})
+print(result[&quot;messages&quot;][-1].content)
+# API 키와 네트워크 연결이 필요합니다.</code></pre><div class="quiz"><strong>이해도 확인 03</strong><p>최종 답변 텍스트를 보려면?</p><label class="choice"><input type="radio" name="q2" value="0"> ① result[&quot;messages&quot;][-1].content</label><label class="choice"><input type="radio" name="q2" value="1"> ② result[&quot;answer&quot;]</label><label class="choice"><input type="radio" name="q2" value="2"> ③ result[&quot;content&quot;][0]</label><button class="action" onclick="checkAnswer(2)">정답 확인</button><div class="feedback" id="feedback2" aria-live="polite"></div><div class="note">정답을 맞히면 다음 STEP이 열립니다.</div></div><div class="nextrow"><button class="ghost" onclick="go(1)" >이전 단계</button><button class="action" id="next2" onclick="go(3)" disabled>다음 단계 →</button></div></article><article class="step" id="step3" hidden><div class="eyebrow">STEP 04 / 10</div><h2>@tool 선언과 tools 연결</h2><div class="desc">도구는 @tool 함수로 만들거나 적절한 시그니처와 설명을 갖춘 함수를 직접 전달할 수 있습니다.</div><h3>따라하기 코드</h3><div class="codebar"><span>Python · 복사 후 실행</span><button class="copy" onclick="copyCode(3)">코드 복사</button></div><pre><code id="code3">from langchain.agents import create_agent
+from langchain.tools import tool
+
+@tool
+def multiply(a: int, b: int) -&gt; int:
+    &quot;&quot;&quot;두 정수를 곱한 값을 반환한다.&quot;&quot;&quot;
+    return a * b
+
+agent = create_agent(
+    model=&quot;openai:gpt-4.1-mini&quot;,
+    tools=[multiply]
+)
+
+result = agent.invoke({&quot;messages&quot;: [
+    {&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;13 곱하기 7은? 계산 도구를 사용해줘.&quot;}
+]})
+print(result[&quot;messages&quot;][-1].content)
+# 모델이 도구 호출 여부를 결정합니다.</code></pre><div class="quiz"><strong>이해도 확인 04</strong><p>tools=[multiply]의 의미는?</p><label class="choice"><input type="radio" name="q3" value="0"> ① 함수를 즉시 한 번 실행</label><label class="choice"><input type="radio" name="q3" value="1"> ② 모델이 사용할 수 있는 도구 목록에 등록</label><label class="choice"><input type="radio" name="q3" value="2"> ③ 함수를 문자열로 변경</label><button class="action" onclick="checkAnswer(3)">정답 확인</button><div class="feedback" id="feedback3" aria-live="polite"></div><div class="note">정답을 맞히면 다음 STEP이 열립니다.</div></div><div class="nextrow"><button class="ghost" onclick="go(2)" >이전 단계</button><button class="action" id="next3" onclick="go(4)" disabled>다음 단계 →</button></div></article><article class="step" id="step4" hidden><div class="eyebrow">STEP 05 / 10</div><h2>system_prompt</h2><div class="desc">system_prompt는 에이전트의 역할이나 답변 방식을 지정합니다. 사용자 메시지와 구분됩니다.</div><h3>따라하기 코드</h3><div class="codebar"><span>Python · 복사 후 실행</span><button class="copy" onclick="copyCode(4)">코드 복사</button></div><pre><code id="code4">from langchain.agents import create_agent
+
+agent = create_agent(
+    model=&quot;openai:gpt-4.1-mini&quot;,
+    tools=[],
+    system_prompt=&quot;너는 초급 파이썬 강사다. 한국어로 짧고 쉽게 설명하라.&quot;
+)
+
+result = agent.invoke({&quot;messages&quot;: [
+    {&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;리스트가 뭐야?&quot;}
+]})
+print(result[&quot;messages&quot;][-1].content)</code></pre><div class="quiz"><strong>이해도 확인 05</strong><p>system_prompt의 역할은?</p><label class="choice"><input type="radio" name="q4" value="0"> ① 도구 정의 삭제</label><label class="choice"><input type="radio" name="q4" value="1"> ② 모델에게 역할과 응답 지침 전달</label><label class="choice"><input type="radio" name="q4" value="2"> ③ 항상 마지막 메시지 덮어쓰기</label><button class="action" onclick="checkAnswer(4)">정답 확인</button><div class="feedback" id="feedback4" aria-live="polite"></div><div class="note">정답을 맞히면 다음 STEP이 열립니다.</div></div><div class="nextrow"><button class="ghost" onclick="go(3)" >이전 단계</button><button class="action" id="next4" onclick="go(5)" disabled>다음 단계 →</button></div></article><article class="step" id="step5" hidden><div class="eyebrow">STEP 06 / 10</div><h2>messages와 HumanMessage</h2><div class="desc">입력은 메시지 딕셔너리 또는 HumanMessage 객체로 전달할 수 있습니다. 응답에는 AIMessage와 도구 실행 시 ToolMessage가 포함될 수 있습니다.</div><h3>따라하기 코드</h3><div class="codebar"><span>Python · 복사 후 실행</span><button class="copy" onclick="copyCode(5)">코드 복사</button></div><pre><code id="code5">from langchain.agents import create_agent
+from langchain_core.messages import HumanMessage
+
+agent = create_agent(&quot;openai:gpt-4.1-mini&quot;, tools=[])
+
+result = agent.invoke({
+    &quot;messages&quot;: [HumanMessage(content=&quot;RAG를 한 줄로 설명해줘&quot;)]
+})
+
+for msg in result[&quot;messages&quot;]:
+    print(type(msg).__name__, msg.content)</code></pre><div class="quiz"><strong>이해도 확인 06</strong><p>HumanMessage는 무엇을 나타낼까요?</p><label class="choice"><input type="radio" name="q5" value="0"> ① 사용자의 입력 메시지</label><label class="choice"><input type="radio" name="q5" value="1"> ② 도구의 출력 메시지</label><label class="choice"><input type="radio" name="q5" value="2"> ③ 에이전트의 실행 설정</label><button class="action" onclick="checkAnswer(5)">정답 확인</button><div class="feedback" id="feedback5" aria-live="polite"></div><div class="note">정답을 맞히면 다음 STEP이 열립니다.</div></div><div class="nextrow"><button class="ghost" onclick="go(4)" >이전 단계</button><button class="action" id="next5" onclick="go(6)" disabled>다음 단계 →</button></div></article><article class="step" id="step6" hidden><div class="eyebrow">STEP 07 / 10</div><h2>도구 호출 내부 흐름</h2><div class="desc">LLM이 tool_calls를 생성하면 에이전트가 도구를 실행하고 ToolMessage 결과를 다시 모델에 전달합니다. 모델이 더 이상 도구 호출을 요청하지 않을 때 종료합니다.</div><h3>따라하기 코드</h3><div class="codebar"><span>Python · 복사 후 실행</span><button class="copy" onclick="copyCode(6)">코드 복사</button></div><pre><code id="code6">from langchain.agents import create_agent
+from langchain.tools import tool
+
+@tool
+def get_policy(item: str) -&gt; str:
+    &quot;&quot;&quot;상품 종류별 환불 규정을 조회한다.&quot;&quot;&quot;
+    return &quot;냉장식품은 단순변심 반품 불가, 오배송은 접수 가능&quot;
+
+agent = create_agent(&quot;openai:gpt-4.1-mini&quot;, tools=[get_policy])
+result = agent.invoke({&quot;messages&quot;: [
+    {&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;냉장식품 오배송이면 반품할 수 있나요? 도구로 확인해줘.&quot;}
+]})
+
+for m in result[&quot;messages&quot;]:
+    print(type(m).__name__, m.content)
+# AIMessage(tool_calls) → ToolMessage → AIMessage 순서가 보일 수 있습니다.</code></pre><div class="quiz"><strong>이해도 확인 07</strong><p>도구 실행 결과를 담는 메시지는?</p><label class="choice"><input type="radio" name="q6" value="0"> ① HumanMessage</label><label class="choice"><input type="radio" name="q6" value="1"> ② ToolMessage</label><label class="choice"><input type="radio" name="q6" value="2"> ③ SystemMessage</label><button class="action" onclick="checkAnswer(6)">정답 확인</button><div class="feedback" id="feedback6" aria-live="polite"></div><div class="note">정답을 맞히면 다음 STEP이 열립니다.</div></div><div class="nextrow"><button class="ghost" onclick="go(5)" >이전 단계</button><button class="action" id="next6" onclick="go(7)" disabled>다음 단계 →</button></div></article><article class="step" id="step7" hidden><div class="eyebrow">STEP 08 / 10</div><h2>stream()으로 과정 관찰</h2><div class="desc">stream_mode=&quot;updates&quot;를 사용하면 모델/도구 노드별 상태 변화를 순차적으로 관찰할 수 있습니다.</div><h3>따라하기 코드</h3><div class="codebar"><span>Python · 복사 후 실행</span><button class="copy" onclick="copyCode(7)">코드 복사</button></div><pre><code id="code7">from langchain.agents import create_agent
+from langchain.tools import tool
+
+@tool
+def add(a: int, b: int) -&gt; int:
+    &quot;&quot;&quot;두 정수를 더한다.&quot;&quot;&quot;
+    return a + b
+
+agent = create_agent(&quot;openai:gpt-4.1-mini&quot;, tools=[add])
+
+for chunk in agent.stream(
+    {&quot;messages&quot;: [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;15와 27을 더해줘. 도구 사용.&quot;}]},
+    stream_mode=&quot;updates&quot;
+):
+    print(chunk)</code></pre><div class="quiz"><strong>이해도 확인 08</strong><p>stream_mode=&quot;updates&quot;의 목적은?</p><label class="choice"><input type="radio" name="q7" value="0"> ① 단계별 노드 업데이트 관찰</label><label class="choice"><input type="radio" name="q7" value="1"> ② 코드를 자동 저장</label><label class="choice"><input type="radio" name="q7" value="2"> ③ API 키를 암호화</label><button class="action" onclick="checkAnswer(7)">정답 확인</button><div class="feedback" id="feedback7" aria-live="polite"></div><div class="note">정답을 맞히면 다음 STEP이 열립니다.</div></div><div class="nextrow"><button class="ghost" onclick="go(6)" >이전 단계</button><button class="action" id="next7" onclick="go(8)" disabled>다음 단계 →</button></div></article><article class="step" id="step8" hidden><div class="eyebrow">STEP 09 / 10</div><h2>체크포인터와 대화 기억</h2><div class="desc">checkpointer를 사용하고 같은 thread_id로 실행하면 이전 상태를 이어갈 수 있습니다. InMemorySaver는 실습용이며 프로세스를 종료하면 사라집니다.</div><h3>따라하기 코드</h3><div class="codebar"><span>Python · 복사 후 실행</span><button class="copy" onclick="copyCode(8)">코드 복사</button></div><pre><code id="code8">from langchain.agents import create_agent
+from langgraph.checkpoint.memory import InMemorySaver
+
+agent = create_agent(
+    model=&quot;openai:gpt-4.1-mini&quot;,
+    tools=[],
+    checkpointer=InMemorySaver()
+)
+config = {&quot;configurable&quot;: {&quot;thread_id&quot;: &quot;student-01&quot;}}
+
+agent.invoke({&quot;messages&quot;: [
+    {&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;내가 좋아하는 언어는 파이썬이야.&quot;}
+]}, config=config)
+
+result = agent.invoke({&quot;messages&quot;: [
+    {&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;내가 좋아하는 언어는?&quot;}
+]}, config=config)
+print(result[&quot;messages&quot;][-1].content)</code></pre><div class="quiz"><strong>이해도 확인 09</strong><p>같은 대화를 이어가려면 중요한 값은?</p><label class="choice"><input type="radio" name="q8" value="0"> ① thread_id</label><label class="choice"><input type="radio" name="q8" value="1"> ② tool 이름</label><label class="choice"><input type="radio" name="q8" value="2"> ③ 함수 파일명</label><button class="action" onclick="checkAnswer(8)">정답 확인</button><div class="feedback" id="feedback8" aria-live="polite"></div><div class="note">정답을 맞히면 다음 STEP이 열립니다.</div></div><div class="nextrow"><button class="ghost" onclick="go(7)" >이전 단계</button><button class="action" id="next8" onclick="go(9)" disabled>다음 단계 →</button></div></article><article class="step" id="step9" hidden><div class="eyebrow">STEP 10 / 10</div><h2>종합 실습: 쇼핑몰 FAQ 에이전트</h2><div class="desc">@tool, create_agent, system_prompt, invoke를 하나로 합칩니다. 실제 서비스에서는 FAQ 데이터 조회나 DB 검색으로 교체할 수 있습니다.</div><h3>따라하기 코드</h3><div class="codebar"><span>Python · 복사 후 실행</span><button class="copy" onclick="copyCode(9)">코드 복사</button></div><pre><code id="code9">from langchain.agents import create_agent
+from langchain.tools import tool
+
+FAQ = {
+    &quot;배송&quot;: &quot;일반 배송은 결제 후 2~3영업일입니다.&quot;,
+    &quot;환불&quot;: &quot;일반 상품은 수령 후 7일 이내 신청 가능합니다.&quot;,
+}
+
+@tool
+def search_faq(category: str) -&gt; str:
+    &quot;&quot;&quot;쇼핑몰 FAQ를 카테고리(배송/환불)로 조회한다.&quot;&quot;&quot;
+    return FAQ.get(category, &quot;해당 FAQ가 없습니다.&quot;)
+
+agent = create_agent(
+    model=&quot;openai:gpt-4.1-mini&quot;,
+    tools=[search_faq],
+    system_prompt=&quot;쇼핑몰 상담원이다. 정책 질문은 search_faq로 확인하고, 근거 없는 답은 만들지 마라.&quot;
+)
+
+result = agent.invoke({&quot;messages&quot;: [
+    {&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;일반 상품 환불 신청 기간이 며칠인가요? FAQ를 조회해줘.&quot;}
+]})
+print(result[&quot;messages&quot;][-1].content)
+# 심화: print([type(m).__name__ for m in result[&quot;messages&quot;]])</code></pre><div class="quiz"><strong>이해도 확인 10</strong><p>이 예제에서 FAQ 조회를 수행하는 것은?</p><label class="choice"><input type="radio" name="q9" value="0"> ① system_prompt</label><label class="choice"><input type="radio" name="q9" value="1"> ② search_faq 도구</label><label class="choice"><input type="radio" name="q9" value="2"> ③ HumanMessage 클래스</label><button class="action" onclick="checkAnswer(9)">정답 확인</button><div class="feedback" id="feedback9" aria-live="polite"></div><div class="note">정답을 맞히면 다음 STEP이 열립니다.</div></div><div class="nextrow"><button class="ghost" onclick="go(8)" >이전 단계</button><button class="action" id="next9" onclick="go(10)" disabled>학습 완료</button></div></article></section><aside class="nav" aria-label="단계 탭"><div style="padding:8px;font-weight:bold">학습 단계</div><div id="tabs"></div><div class="note" style="padding:8px">각 탭은 독립적으로 표시됩니다.<br>완료 단계는 다시 볼 수 있습니다.</div></aside></div><p class="note">실습 환경: LangChain 1.x · Python 3.10+ · OpenAI API 키 필요. 코드의 모델명은 계정에서 사용 가능한 모델로 변경할 수 있습니다.</p></main><footer>© 부성순 · 참고: <a href="https://docs.langchain.com/oss/python/langchain/agents" target="_blank" rel="noopener">LangChain Agents 공식 문서</a> · <a href="https://reference.langchain.com/python/langchain/agents/factory/create_agent" target="_blank" rel="noopener">create_agent API</a></footer><script>const info=[{"num": "01", "title": "create_agent란?", "correct": 0, "why": "create_agent는 모델과 도구를 연결한 실행 가능한 에이전트 그래프를 만듭니다."}, {"num": "02", "title": "설치와 최소 생성", "correct": 1, "why": "빈 tools 목록은 허용됩니다. 실행하면 모델 응답을 생성하지만 도구 호출 루프는 없습니다."}, {"num": "03", "title": "첫 질문: invoke()", "correct": 0, "why": "마지막 메시지가 보통 최종 AIMessage이며 .content에서 내용을 확인합니다."}, {"num": "04", "title": "@tool 선언과 tools 연결", "correct": 1, "why": "tools는 모델에 제공할 도구 목록입니다. 등록 자체는 호출이 아닙니다."}, {"num": "05", "title": "system_prompt", "correct": 1, "why": "system_prompt는 모델 호출 시 시스템 지침으로 제공됩니다."}, {"num": "06", "title": "messages와 HumanMessage", "correct": 0, "why": "HumanMessage는 사용자 역할 메시지입니다."}, {"num": "07", "title": "도구 호출 내부 흐름", "correct": 1, "why": "도구 실행 결과는 ToolMessage로 대화 상태에 추가됩니다."}, {"num": "08", "title": "stream()으로 과정 관찰", "correct": 0, "why": "updates는 에이전트가 수행한 노드 업데이트를 보여줍니다."}, {"num": "09", "title": "체크포인터와 대화 기억", "correct": 0, "why": "같은 체크포인터와 thread_id를 사용하여 대화 상태를 이어갑니다."}, {"num": "10", "title": "종합 실습: 쇼핑몰 FAQ 에이전트", "correct": 1, "why": "모델이 search_faq 도구를 호출하면 도구 함수가 FAQ 자료를 조회합니다."}];let unlocked=0,current=0;try{unlocked=Math.max(0,Math.min(9,Number(localStorage.getItem('createAgentUnlocked')||0)))}catch(e){}function renderTabs(){const parent=document.getElementById('tabs');parent.innerHTML='';info.forEach((it,i)=>{let b=document.createElement('button');b.textContent=it.num+' · '+it.title;b.disabled=i>unlocked;b.className=i===current?'current':'';b.onclick=()=>go(i);parent.appendChild(b)});document.getElementById('progress').style.width=((unlocked+1)/10*100)+'%'}function go(i){if(i<0||i>unlocked||i>9)return;current=i;document.querySelectorAll('.step').forEach((s,k)=>s.hidden=k!==i);renderTabs();document.getElementById('next'+i).disabled=i>=unlocked;window.scrollTo({top:0,behavior:'smooth'})}function checkAnswer(i){const selected=document.querySelector('input[name="q'+i+'"]:checked');const feedback=document.getElementById('feedback'+i);if(!selected){feedback.textContent='선택지를 하나 고르세요.';feedback.style.color='#b45309';return}if(Number(selected.value)===info[i].correct){feedback.textContent='정답입니다! '+info[i].why;feedback.style.color='#15803d';if(i===unlocked&&i<9){unlocked=i+1;try{localStorage.setItem('createAgentUnlocked',String(unlocked))}catch(e){}}document.getElementById('next'+i).disabled=i===9;renderTabs();if(i===9){feedback.textContent+=' · 모든 과정을 완료했습니다!'}}else{feedback.textContent='아직 정답이 아닙니다. 위 코드를 다시 확인해 보세요.';feedback.style.color='#dc2626'}}async function copyCode(i){let content=document.getElementById('code'+i).innerText;try{await navigator.clipboard.writeText(content);alert('코드가 복사되었습니다.')}catch(e){let ta=document.createElement('textarea');ta.value=content;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();alert('코드를 복사했습니다.')}}go(0);</script></body></html>

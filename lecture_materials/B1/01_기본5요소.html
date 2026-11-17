@@ -1,0 +1,1432 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>01 기본 5요소 · LangChain 문법</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{word-break:keep-all;overflow-wrap:break-word;font-family:var(--body)}
+
+/* Layout: 왼쪽 고정 사이드바(단원 목차) + 오른쪽 본문 패널. 휴대폰 폭에서는 사이드바가 상단 가로 스크롤 바로 바뀜 */
+:root{
+  --bg:#f6f7fb; --paper:#ffffff; --ink:#1b2236; --muted:#5a6380; --line:#d9deeb;
+  --node:#24305e; --nodeText:#ffffff; --edge:#9aa4c2;
+  --teal:#0f8f83; --amber:#d98a1f; --coral:#d4553f; --violet:#6b5bd2;
+  --soft:#eef1f9; --tealSoft:#e2f4f1; --amberSoft:#fbf0dd; --coralSoft:#fbe7e3;
+  --code:#ffffff; --codeLine:#c9d0e2; --codeCmt:#6a7697; --outBg:#f4fbfa; --shadow:rgba(27,34,54,.08);
+  --kw:#6b5bd2; --str:#0f7d73; --fn:#b4561f;
+  --display:"Do Hyeon","IBM Plex Sans KR","Malgun Gothic",sans-serif;
+  --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12151f; --paper:#1a1e2b; --ink:#e7eaf4; --muted:#a2aac2; --line:#2e3447;
+  --node:#8f9cf0; --nodeText:#10131c; --edge:#5b6584;
+  --teal:#3cc4b5; --amber:#f0b04f; --coral:#f07a63; --violet:#a597ff;
+  --soft:#222839; --tealSoft:#163331; --amberSoft:#3a2e17; --coralSoft:#3d211c; --code:#0d1017; --codeLine:#3a4157; --codeCmt:#8d97b5; --outBg:#10201f; --shadow:rgba(0,0,0,.3);
+  --kw:#b3a8ff; --str:#5fd3c4; --fn:#f0a36a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12151f; --paper:#1a1e2b; --ink:#e7eaf4; --muted:#a2aac2; --line:#2e3447;
+  --node:#8f9cf0; --nodeText:#10131c; --edge:#5b6584;
+  --teal:#3cc4b5; --amber:#f0b04f; --coral:#f07a63; --violet:#a597ff;
+  --soft:#222839; --tealSoft:#163331; --amberSoft:#3a2e17; --coralSoft:#3d211c; --code:#0d1017; --codeLine:#3a4157; --codeCmt:#8d97b5; --outBg:#10201f; --shadow:rgba(0,0,0,.3);
+  --kw:#b3a8ff; --str:#5fd3c4; --fn:#f0a36a; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:16px/1.75 var(--body);margin:0;word-break:keep-all;overflow-wrap:break-word}
+.panel{margin-top:30px;padding-top:24px;border-top:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+.layout{max-width:1220px;margin:0 auto;display:grid;grid-template-columns:252px minmax(0,1fr);gap:40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{min-width:0;padding-block:28px 64px;max-width:900px}
+h1,h2,h3{text-wrap:balance}
+h1{font:400 clamp(30px,5vw,44px)/1.2 var(--display);margin:6px 0 10px;letter-spacing:.5px}
+h2{font:400 28px/1.3 var(--display);margin:0 0 6px;display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+h2 .no{font:inherit;color:var(--teal)}
+h3{font-size:18px;margin:26px 0 6px}
+h4{font-size:16px;margin:18px 0 4px}
+p{margin:8px 0;max-width:72ch}
+ol,ul{padding-left:22px;margin:8px 0}
+li{margin:4px 0}
+.lead{color:var(--muted);font-size:17px}
+.kicker{font:600 12px var(--mono);letter-spacing:2px;color:var(--teal);text-transform:uppercase}
+.byline{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.6}
+section{margin-top:40px}
+.panel > section:first-child{margin-top:8px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.card h4{margin-top:0}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+code,.mono{font-family:var(--mono);font-size:.9em}
+code{background:var(--soft);padding:1px 6px;border-radius:5px;word-break:break-word}
+pre{background:var(--code);border:1px solid var(--codeLine);box-shadow:0 1px 3px var(--shadow);border-radius:10px;padding:14px 16px;overflow-x:auto;font:13.5px/1.6 var(--mono);margin:8px 0;color:var(--ink);tab-size:4}
+pre .c{color:var(--codeCmt);font-style:italic}
+pre .s{color:var(--str)}
+pre .k{color:var(--kw);font-weight:600}
+pre.out{background:var(--outBg);border-style:dashed;box-shadow:none;white-space:pre-wrap;word-break:break-word;font-size:13px}
+pre.out::before{content:"출력";display:block;font:600 11px var(--mono);letter-spacing:1.5px;color:var(--teal);margin-bottom:4px}
+pre.out.ex::before{content:"출력 예시 · 모델 답변은 실행마다 달라짐"}
+pre.err{background:var(--coralSoft);border-color:var(--coral);box-shadow:none;white-space:pre-wrap;word-break:break-word;font-size:13px}
+pre.err::before{content:"에러";display:block;font:600 11px var(--mono);letter-spacing:1.5px;color:var(--coral);margin-bottom:4px}
+.codehead{display:flex;justify-content:space-between;align-items:center;gap:8px;font:600 12px var(--mono);color:var(--muted);margin:16px 0 -4px;flex-wrap:wrap}
+.copy{font:500 12px var(--body);border:1px solid var(--line);background:var(--paper);color:var(--muted);border-radius:6px;padding:2px 10px;cursor:pointer}
+.copy:hover{color:var(--ink)}
+.tw{overflow-x:auto;margin:10px 0}
+table{border-collapse:collapse;font-size:14px;min-width:100%}
+th,td{border-bottom:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+th{background:var(--soft);font-weight:600;white-space:nowrap}
+td code{white-space:nowrap}
+.note{background:var(--amberSoft);border-radius:10px;padding:12px 14px;font-size:15px;margin-top:12px}
+.note b{color:var(--amber)}
+.ragbox{background:var(--tealSoft);border-left:4px solid var(--teal);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:15px}
+.ragbox b{color:var(--teal)}
+.warn{background:var(--coralSoft);border-left:4px solid var(--coral);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:15px}
+.warn b{color:var(--coral)}
+.fix{background:var(--soft);border-left:4px solid var(--violet);border-radius:8px;padding:10px 14px;margin-top:12px;font-size:15px}
+.fix b{color:var(--violet)}
+.note p,.ragbox p,.warn p,.fix p{margin:4px 0}
+.note ul,.ragbox ul,.warn ul,.fix ul{margin:4px 0}
+.fig{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px;overflow-x:auto;margin-top:12px}
+.fig svg{display:block;width:100%;height:auto;min-width:560px}
+svg text{font-family:var(--body)}
+.cap{font-size:13px;color:var(--muted);margin:6px 4px 0}
+.chip{display:inline-block;font:500 12px var(--body);padding:1px 10px;border-radius:999px;background:var(--soft);color:var(--muted);vertical-align:middle}
+.chip.ok{background:var(--tealSoft);color:var(--teal)}
+.chip.draft{background:var(--amberSoft);color:var(--amber)}
+.chip.ai{background:var(--coralSoft);color:var(--coral)}
+a{color:var(--teal)}
+.example{background:var(--soft);border-radius:10px;padding:12px 16px;margin:10px 0;font-size:15.5px}
+.example b{color:var(--node)}
+.steps{list-style:none;padding:0;margin:10px 0 0;counter-reset:st}
+.steps>li{counter-increment:st;padding:10px 0;border-top:1px dashed var(--line);margin:0}
+.steps>li::before{content:counter(st) ". ";font:600 14px var(--mono);color:var(--teal)}
+.steps>li:first-child{border-top:0}
+.steps .lbl{font-weight:700;color:var(--node)}
+.think{margin-top:8px;font-size:14.5px;color:var(--muted)}
+.think-h{display:inline-block;font:600 12px var(--body);color:var(--muted);margin-right:6px}
+mark{background:var(--amberSoft);color:inherit;border-bottom:2px solid var(--amber);padding:0 1px}
+details{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-top:8px}
+details summary{cursor:pointer;font-weight:600}
+details[open] summary{margin-bottom:6px}
+.flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:500 13.5px var(--mono);margin:10px 0}
+.flow span{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:4px 10px}
+.flow span.n{background:var(--node);color:var(--nodeText);border-color:var(--node)}
+.flow i{font-style:normal;color:var(--edge)}
+
+/* sidebar */
+.side{position:sticky;top:env(safe-area-inset-top,0px);align-self:start;max-height:100vh;overflow-y:auto;padding-block:28px 28px;scrollbar-width:thin}
+.side .brand{font:400 22px/1.2 var(--display);margin-bottom:2px}
+.side .brand-sub{font-size:12.5px;color:var(--muted);margin-bottom:14px}
+.prog{height:6px;background:var(--soft);border-radius:999px;overflow:hidden;margin:0 0 4px}
+.prog i{display:block;height:100%;width:0;background:var(--teal);transition:width .3s}
+.prog-t{font:500 12px var(--mono);color:var(--muted);margin-bottom:14px}
+.grp{font:600 11px var(--mono);letter-spacing:1.6px;color:var(--teal);text-transform:uppercase;margin:16px 0 6px}
+.navlist{display:flex;flex-direction:column;gap:2px}
+.navlist button{display:grid;grid-template-columns:28px minmax(0,1fr) 16px;align-items:center;gap:4px;width:100%;text-align:left;font:500 14px/1.35 var(--body);border:0;background:transparent;color:var(--ink);border-radius:8px;padding:7px 8px;cursor:pointer}
+.navlist button .n{font:600 12px var(--mono);color:var(--muted)}
+.navlist button .d{font-size:12px;color:var(--teal);visibility:hidden}
+.navlist button.done .d{visibility:visible}
+.navlist button:hover{background:var(--soft)}
+.navlist button[aria-selected="true"]{background:var(--node);color:var(--nodeText)}
+.navlist button[aria-selected="true"] .n,.navlist button[aria-selected="true"] .d{color:var(--nodeText)}
+.navlist button:focus-visible,.pager button:focus-visible,.copy:focus-visible,.donebtn:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+
+/* panel footer */
+.pfoot{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center}
+.donebtn{font:600 14px var(--body);border:2px solid var(--teal);background:var(--paper);color:var(--teal);border-radius:999px;padding:6px 16px;cursor:pointer}
+.donebtn[aria-pressed="true"]{background:var(--teal);color:var(--paper)}
+.pager{display:flex;gap:8px;flex-wrap:wrap}
+.pager button{font:500 14px var(--body);border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:6px 14px;cursor:pointer;max-width:100%}
+.pager button[disabled]{opacity:.4;cursor:default}
+footer{margin-top:50px;font-size:13px;color:var(--muted)}
+
+@media (max-width:900px){
+  .layout{grid-template-columns:minmax(0,1fr);gap:0}
+  .side{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);max-height:none;overflow:visible;padding-block:10px;border-bottom:1px solid var(--line);margin:0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .side .brand,.side .brand-sub,.grp,.prog,.prog-t{display:none}
+  .navwrap{display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin;padding-bottom:2px}
+  .navlist{flex-direction:row;gap:6px}
+  .navlist button{display:flex;flex:0 0 auto;width:auto;white-space:nowrap;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13.5px}
+  .navlist button .d{display:none}
+  .navlist button.done .n{color:var(--teal)}
+  main{padding-top:18px}
+}
+@media (max-width:600px){h2{font-size:24px} pre{font-size:12.5px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+.tg{display:inline-block;font:600 11.5px/1.5 var(--body);border-radius:5px;padding:1px 7px;margin-left:6px;vertical-align:middle;white-space:nowrap;letter-spacing:.2px}
+.tg.rag{background:var(--tealSoft);color:var(--teal);border:1px solid var(--teal)}
+.tg.lg1{background:var(--violet);color:var(--paper);border:1px solid var(--violet)}
+.tg.ag{background:var(--amberSoft);color:var(--amber);border:1px solid var(--amber)}
+.sm.ag{background:var(--amber);border-radius:2px}
+.tg.lg2{background:transparent;color:var(--violet);border:1px dashed var(--violet)}
+h2 .tg{font-size:12px;position:relative;top:-3px}
+.mhead .tgs{display:inline-flex;gap:0}
+.mhead .tgs .tg:first-child{margin-left:0}
+.sm{display:inline-block;width:8px;height:8px;border-radius:50%;margin-left:6px;vertical-align:middle}
+.sm.rag{background:var(--teal)}
+.sm.lg1{background:var(--violet)}
+.sm.lg2{border:1.5px solid var(--violet)}
+.mhead .tgs:empty{display:none}
+.navlist a[aria-current="page"] .sm{box-shadow:0 0 0 1.5px var(--nodeText)}
+.bridge{display:grid;gap:6px;margin-top:14px}
+.bridge div{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:baseline;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14.5px;line-height:1.6}
+.bridge .tg{margin-left:0}
+.legend2{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:13px;color:var(--muted);margin-top:8px}
+.legend2 .tg{margin-left:0}
+.path{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin-top:10px}
+.path .card h4{margin:0 0 6px}
+.path ol{margin:4px 0 0}
+.ucard .tgrow{display:flex;flex-wrap:wrap;gap:4px}
+.ucard .tgrow .tg{margin-left:0}
+
+.copyright{font-size:14px;color:var(--muted);line-height:1.6;margin-top:8px}
+/* 탭: 모든 화면 폭에서 왼쪽 세로 배치 */
+@media (max-width:900px){
+  .layout{grid-template-columns:200px minmax(0,1fr) !important;gap:22px !important}
+  .side{position:sticky !important;top:env(safe-area-inset-top,0px) !important;max-height:100vh !important;overflow-y:auto !important;border-bottom:0 !important;margin:0 !important;padding:22px 0 !important;background:transparent !important}
+  .side .brand,.side .brand-sub{display:block !important}
+  .navwrap{display:block !important;overflow:visible !important}
+  .navlist{flex-direction:column !important;gap:2px !important}
+  .navlist button{display:grid !important;grid-template-columns:26px minmax(0,1fr) auto !important;width:100% !important;white-space:normal !important;border:0 !important;background:transparent !important;border-radius:8px !important;padding:7px 6px !important;font-size:14px !important}
+  .navlist button[aria-selected="true"]{background:var(--node) !important}
+  .navlist button .sm{display:inline-block !important}
+  main{padding-top:24px !important}
+}
+@media (max-width:600px){
+  .layout{grid-template-columns:112px minmax(0,1fr) !important;gap:12px !important}
+  .navlist button{grid-template-columns:minmax(0,1fr) auto !important;font-size:13px !important;padding:6px 5px !important}
+  .navlist button .n,.navlist button .sm,.side .brand-sub{display:none !important}
+  .side .brand{font-size:15px !important}
+}
+.view{margin-top:26px;background:var(--paper);border:1px solid var(--line);border-left:5px solid var(--violet);border-radius:12px;padding:14px 18px 10px}
+.view-h{font:700 15px var(--body);color:var(--violet);letter-spacing:.3px;margin-bottom:4px}
+.view ul{margin:4px 0 0;padding-left:20px}
+.view li{margin:10px 0;line-height:1.8}
+.view li b{color:var(--ink)}
+/* 가독성: 글꼴 크기 */
+body{font-size:17.5px;line-height:1.85}
+p{max-width:78ch}
+h1{font-size:clamp(32px,5vw,46px)}
+h2{font-size:31px}
+h3{font-size:20.5px;margin-top:30px}
+h4{font-size:17.5px}
+pre{font-size:15px;line-height:1.7}
+pre.out,pre.err{font-size:14.5px}
+table{font-size:15.5px}
+th,td{padding:9px 12px}
+.cap{font-size:14.5px}
+.note,.warn,.ragbox,.fix{font-size:16px}
+.goal{font-size:16.5px}
+.navlist button{font-size:15.5px !important}
+.side .brand-sub{font-size:13.5px}
+.checks li{font-size:16px}
+.mhead h3{font-size:19.5px}
+.lv{font-size:13px}
+.tg{font-size:12.5px}
+.bridge div{font-size:15.5px}
+.legend2{font-size:14px}
+@media (max-width:600px){body{font-size:17px} pre{font-size:13.5px} h2{font-size:26px} table{font-size:14.5px}}
+
+.solo{max-width:1100px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.solo main{max-width:none}
+.navlist button{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:start;gap:4px;width:100%;text-align:left;font:500 14px/1.4 var(--body);border:0;background:transparent;color:var(--ink);border-radius:8px;padding:8px 8px;cursor:pointer}
+.navlist button .n{font:600 12px/1.6 var(--mono);color:var(--muted)}
+.navlist button .mc{font:500 11px var(--mono);color:var(--muted)}
+.navlist button:hover{background:var(--soft)}
+.navlist button[aria-selected="true"]{background:var(--node);color:var(--nodeText)}
+.navlist button[aria-selected="true"] .n,.navlist button[aria-selected="true"] .mc{color:var(--nodeText)}
+.navlist button[aria-selected="true"] .sm{box-shadow:0 0 0 1.5px var(--nodeText)}
+.navlist button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.side .brand{font:400 24px/1.25 var(--display);margin-bottom:4px}
+.uhead{padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:22px}
+.uhead h1{margin-bottom:0}
+.pane > section{margin-top:0}
+.pane #missions{margin-top:0;padding-top:0;border-top:0}
+.pane > section > h2{margin-bottom:12px}
+@media (max-width:900px){
+  .navlist button{display:flex;flex:0 0 auto;width:auto;white-space:nowrap;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13.5px;gap:6px}
+  .navlist button .sm{display:none}
+  .side .brand{font-size:18px}
+}
+
+.time{font:600 14px var(--body);color:var(--ink);margin-top:2px}
+.time span{font-weight:400;color:var(--muted)}
+.goal{background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--node);border-radius:10px;padding:10px 14px;margin-top:12px;font-size:15px}
+.goal b{color:var(--node)}
+.goal ul{margin:4px 0 0}
+.sumlist{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 18px 14px 36px;margin-top:10px}
+.sumlist li{margin:6px 0}
+.ucard .tm{font:500 12px var(--mono);color:var(--muted)}
+
+.navlist a{display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:4px;width:100%;font:500 14px/1.35 var(--body);color:var(--ink);text-decoration:none;border-radius:8px;padding:7px 8px}
+.navlist a .n{font:600 12px var(--mono);color:var(--muted)}
+.navlist a .mc{font:500 11px var(--mono);color:var(--muted)}
+.navlist a.full .mc{color:var(--teal);font-weight:600}
+.navlist a:hover{background:var(--soft)}
+.navlist a[aria-current="page"]{background:var(--node);color:var(--nodeText)}
+.navlist a[aria-current="page"] .n,.navlist a[aria-current="page"] .mc{color:var(--nodeText)}
+.navlist a:focus-visible,.pager a:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.side .brand a{color:inherit;text-decoration:none}
+.unit-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+.unit-meta a.go{font:600 13px var(--body);background:var(--teal);color:var(--paper);text-decoration:none;border-radius:999px;padding:4px 14px}
+.unit-panel{margin-top:30px;padding-top:24px;border-top:1px solid var(--line)}
+.unit-panel > section:first-child{margin-top:0}
+/* missions */
+#missions{scroll-margin-top:72px;margin-top:56px;padding-top:28px;border-top:3px double var(--line)}
+.mlegend{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 6px}
+.mprog{font:500 13px var(--mono);color:var(--muted)}
+.mission{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-top:16px;scroll-margin-top:70px}
+.mission.is-done{border-color:var(--teal);background:linear-gradient(var(--outBg),var(--outBg))}
+.mhead{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.mhead h3{margin:0;font-size:18px;flex:1 1 220px;min-width:0}
+.lv{font:600 12px var(--body);border-radius:6px;padding:2px 9px;white-space:nowrap}
+.lv1{background:var(--tealSoft);color:var(--teal)}
+.lv2{background:var(--amberSoft);color:var(--amber)}
+.lv3{background:var(--coralSoft);color:var(--coral)}
+.mdone{display:inline-flex;align-items:center;gap:6px;font:600 13px var(--body);color:var(--muted);cursor:pointer;border:1px solid var(--line);border-radius:999px;padding:3px 12px;background:var(--bg)}
+.mdone input{accent-color:var(--teal);width:16px;height:16px;margin:0}
+.mission.is-done .mdone{color:var(--teal);border-color:var(--teal)}
+.mlabel{font:600 11px var(--mono);letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin:14px 0 2px}
+.checks{list-style:none;padding:0;margin:4px 0 0}
+.checks li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:6px;align-items:start;margin:3px 0;font-size:15px}
+.checks input{accent-color:var(--teal);width:16px;height:16px;margin:5px 0 0}
+.checks label{cursor:pointer}
+.mission details{margin-top:10px}
+.mission details.ans summary{color:var(--violet)}
+.mission details.hint summary{color:var(--amber)}
+.mission .note{margin-top:10px}
+.pager{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;width:100%}
+.pager a{font:500 14px var(--body);border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:8px;padding:8px 14px;text-decoration:none;max-width:100%}
+.pager a:hover{border-color:var(--teal)}
+.pager .sp{flex:1}
+@media (max-width:900px){
+  .navlist a{display:flex;flex:0 0 auto;width:auto;white-space:nowrap;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:5px 12px;font-size:13.5px;gap:6px}
+  .navlist a .mc{display:none}
+  .navlist a.full .n{color:var(--teal)}
+}
+/* index */
+.ucards{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));margin-top:10px}
+.ucard{display:flex;flex-direction:column;gap:6px;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-decoration:none;color:var(--ink);min-width:0}
+.ucard:hover{border-color:var(--teal)}
+.ucard .n{font:600 12px var(--mono);color:var(--teal)}
+.ucard b{font-size:16px}
+.ucard .d{font-size:13.5px;color:var(--muted);line-height:1.55}
+.ucard .bar{height:5px;background:var(--soft);border-radius:999px;overflow:hidden;margin-top:auto}
+.ucard .bar i{display:block;height:100%;width:0;background:var(--teal)}
+.ucard .mc{font:500 12px var(--mono);color:var(--muted)}
+</style>
+</head>
+<body data-unit="basic">
+<div class="layout">
+<aside class="side" aria-label="소단원">
+<div class="brand">01 기본 5요소</div>
+<div class="brand-sub">LangChain 문법 교안</div>
+<nav class="navwrap" role="tablist" aria-label="소단원" aria-orientation="vertical"><div class="navlist">
+<button type="button" role="tab" id="tab-intro" aria-controls="pane-intro" data-t="intro"><span class="n"></span><span>개요</span></button>
+<button type="button" role="tab" id="tab-s1" aria-controls="pane-s1" data-t="s1"><span class="n"></span><span>5요소 한눈에 보기</span></button>
+<button type="button" role="tab" id="tab-s2" aria-controls="pane-s2" data-t="s2"><span class="n"></span><span>전체 코드와 실행 결과</span></button>
+<button type="button" role="tab" id="tab-s3" aria-controls="pane-s3" data-t="s3"><span class="n">0</span><span>준비: 설치와 API 키</span></button>
+<button type="button" role="tab" id="tab-s4" aria-controls="pane-s4" data-t="s4"><span class="n">1</span><span>모델: ChatOpenAI<i class="sm rag" title="RAG"></i><i class="sm lg2" title="LangGraph 참고"></i></span></button>
+<button type="button" role="tab" id="tab-s5" aria-controls="pane-s5" data-t="s5"><span class="n">2</span><span>프롬프트: ChatPromptTemplate<i class="sm rag" title="RAG"></i></span></button>
+<button type="button" role="tab" id="tab-s6" aria-controls="pane-s6" data-t="s6"><span class="n">3</span><span>출력 파서: StrOutputParser<i class="sm rag" title="RAG"></i></span></button>
+<button type="button" role="tab" id="tab-s7" aria-controls="pane-s7" data-t="s7"><span class="n">3-1</span><span>기본 파서로 Text-to-SQL</span></button>
+<button type="button" role="tab" id="tab-s8" aria-controls="pane-s8" data-t="s8"><span class="n">3-2</span><span>JSON 파서로 판정 → 분기</span></button>
+<button type="button" role="tab" id="tab-s9" aria-controls="pane-s9" data-t="s9"><span class="n">3-3</span><span>체인 밖 함수: 개인정보 마스킹 + Gradio</span></button>
+<button type="button" role="tab" id="tab-s10" aria-controls="pane-s10" data-t="s10"><span class="n">4</span><span>체인: 파이프 | 로 연결<i class="sm rag" title="RAG"></i><i class="sm lg1" title="LangGraph 필수"></i></span></button>
+<button type="button" role="tab" id="tab-s11" aria-controls="pane-s11" data-t="s11"><span class="n">5</span><span>실행: invoke · stream · batch<i class="sm rag" title="RAG"></i><i class="sm lg2" title="LangGraph 참고"></i></span></button>
+<button type="button" role="tab" id="tab-s12" aria-controls="pane-s12" data-t="s12"><span class="n"></span><span>자주 묻는 질문</span></button>
+<button type="button" role="tab" id="tab-s13" aria-controls="pane-s13" data-t="s13"><span class="n"></span><span>자주 나는 에러</span></button>
+<button type="button" role="tab" id="tab-summary" aria-controls="pane-summary" data-t="summary"><span class="n"></span><span>정리</span></button>
+<button type="button" role="tab" id="tab-missions" aria-controls="pane-missions" data-t="missions"><span class="n"></span><span>미션</span><span class="mc" id="mcount">0/10</span></button>
+</div></nav></aside>
+<main>
+<header class="uhead"><div class="kicker">LangChain 문법 교안 · 01</div><h1>기본 5요소</h1><div class="copyright">© 2026 부성순 · AI·클라우드 실무 과정<br>부성순 (bakpak@empas.com)</div></header>
+<div class="pane" role="tabpanel" id="pane-intro" aria-labelledby="tab-intro"><section><h2>개요</h2><div class="goal"><b>학습 목표</b><ul><li>모델 · 프롬프트 · 파서 · 체인 · 실행의 5단계로 기본 체인을 작성할 수 있다.</li><li>체인 각 단계의 입출력 타입(dict → ChatPromptValue → AIMessage → str)을 설명할 수 있다.</li><li>f-string 대신 ChatPromptTemplate을, 한 문장 대신 system/human 분리를 쓰는 이유를 설명할 수 있다.</li><li>invoke · stream · batch를 상황에 맞게 고를 수 있다.</li></ul></div><div class="bridge"><div><span class="tg rag">RAG</span><span>모든 RAG 체인의 바탕입니다.</span></div><div><span class="tg lg1">LangGraph 필수</span><span>LangGraph 상태의 기본 단위가 메시지(HumanMessage·AIMessage·ToolMessage)입니다. 단계별 타입 추적이 곧 노드 입출력 추적입니다.</span></div><div><span class="tg ag">MCP·에이전트</span><span>도구 실행 결과는 ToolMessage로 돌아옵니다. 메시지 타입 구분이 에이전트 디버깅의 기본입니다.</span></div></div><div class="legend2"><span class="tg rag">RAG</span> 1순위 RAG 완성에 필요<span class="tg lg1">LangGraph 필수</span><span class="tg lg2">LangGraph 참고</span> 2순위<span class="tg ag">MCP·에이전트</span> 3순위</div><div class="unit-meta"><span>미션</span><span class="lv lv1">기본 3</span><span class="lv lv2">응용 5</span><span class="lv lv3">도전 2</span></div></section></div>
+<div class="pane" role="tabpanel" id="pane-s1" aria-labelledby="tab-s1"><section>
+  <h2>5요소 한눈에 보기</h2>
+  <p>LangChain으로 LLM을 호출하는 코드는 항상 다섯 가지 요소로 이루어집니다. 이 단원은 아래 표의 다섯 줄을 하나씩 설명합니다.</p>
+  <div class="tw"><table>
+    <tr><th>순서</th><th>요소</th><th>하는 일</th></tr>
+    <tr><td>1</td><td><b>모델</b> (Model)</td><td>어떤 LLM을 어떤 설정으로 쓸지 정한다</td></tr>
+    <tr><td>2</td><td><b>프롬프트</b> (Prompt)</td><td>모델에 보낼 질문의 틀을 만든다. <code>{ }</code>는 나중에 채울 빈칸</td></tr>
+    <tr><td>3</td><td><b>출력 파서</b> (Output Parser)</td><td>모델의 답을 원하는 형태(문자열 등)로 꺼낸다</td></tr>
+    <tr><td>4</td><td><b>체인</b> (Chain)</td><td>1~3을 파이프 <code>|</code>로 연결해 하나의 실행 단위로 만든다</td></tr>
+    <tr><td>5</td><td><b>실행</b> (Invoke)</td><td>빈칸에 값을 넣어 체인을 실행한다</td></tr>
+  </table></div>
+<pre class="py"># 1 모델
+llm    = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+# 2 프롬프트
+prompt = ChatPromptTemplate.from_template("당신은 {role} 전문가입니다. {question}")
+# 3 파서
+parser = StrOutputParser()
+# 4 체인
+chain  = prompt | llm | parser
+# 5 실행
+result = chain.invoke({"role": "건강", "question": "여름철식중독"})</pre>
+
+  <h3>왜 이렇게 다섯 개로 나누나</h3>
+  <p>OpenAI SDK로도 질문 한 번은 보낼 수 있습니다. 그런데 하나의 코드 덩어리로 짜면 모델을 바꾸거나, 질문 틀을 고치거나, 답을 JSON으로 받거나, 검색 결과를 끼워 넣을 때마다 코드 전체를 손봐야 합니다. 다섯 요소로 나누면 <b>바꾸고 싶은 부분 하나만</b> 갈아 끼우면 됩니다.</p>
+  <div class="tw"><table>
+    <tr><th>바꾸고 싶은 것</th><th>바꾸는 곳</th><th>나머지</th></tr>
+    <tr><td>GPT → 클로드</td><td>1 모델 한 줄</td><td>그대로</td></tr>
+    <tr><td>질문 문장·역할</td><td>2 프롬프트</td><td>그대로</td></tr>
+    <tr><td>문자열 → JSON으로 받기</td><td>3 파서</td><td>그대로</td></tr>
+    <tr><td>검색 결과를 끼워 넣기(RAG)</td><td>4 체인 앞에 부품 추가</td><td>그대로</td></tr>
+    <tr><td>한 번 → 여러 개 동시 / 실시간 출력</td><td>5 실행 메서드만</td><td>그대로</td></tr>
+  </table></div>
+
+  <h3>데이터가 흘러가는 순서</h3>
+  <div class="fig">
+    <svg viewBox="0 0 760 170" role="img" aria-label="입력 딕셔너리가 프롬프트를 거쳐 ChatPromptValue가 되고, 모델을 거쳐 AIMessage가 되고, 파서를 거쳐 문자열이 된다.">
+      <defs><marker id="b1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--edge)"/></marker></defs>
+      <g stroke="var(--edge)" stroke-width="2" fill="none" marker-end="url(#b1)">
+        <path d="M130 55 H158"/><path d="M278 55 H306"/><path d="M426 55 H454"/><path d="M574 55 H602"/>
+      </g>
+      <g font-size="15" text-anchor="middle" dominant-baseline="central">
+        <rect x="10" y="30" width="120" height="50" rx="8" fill="var(--soft)" stroke="var(--line)"/><text x="70" y="55" fill="var(--ink)">입력</text>
+        <rect x="158" y="30" width="120" height="50" rx="8" fill="var(--node)"/><text x="218" y="55" fill="var(--nodeText)" font-weight="700">② 프롬프트</text>
+        <rect x="306" y="30" width="120" height="50" rx="8" fill="var(--node)"/><text x="366" y="55" fill="var(--nodeText)" font-weight="700">① 모델</text>
+        <rect x="454" y="30" width="120" height="50" rx="8" fill="var(--node)"/><text x="514" y="55" fill="var(--nodeText)" font-weight="700">③ 파서</text>
+        <rect x="602" y="30" width="148" height="50" rx="20" fill="var(--tealSoft)" stroke="var(--teal)"/><text x="676" y="55" fill="var(--ink)">결과</text>
+        <g font-family="var(--mono)" font-size="13.5" fill="var(--teal)" font-weight="600">
+          <text x="70" y="108">dict</text><text x="218" y="108">ChatPromptValue</text><text x="366" y="108">AIMessage</text><text x="514" y="108">str</text><text x="676" y="108">str</text>
+        </g>
+        <g font-size="13" fill="var(--muted)">
+          <text x="70" y="136">빈칸에 넣을 값</text><text x="218" y="136">빈칸이 채워진 질문</text><text x="366" y="136">답 + 부가정보</text><text x="514" y="136">답 글자만</text><text x="676" y="136">print 가능</text>
+        </g>
+      </g>
+    </svg>
+  </div>
+  <p class="cap">코드에서 정의하는 순서(모델 → 프롬프트 → 파서)와 데이터가 지나가는 순서(프롬프트 → 모델 → 파서)는 다릅니다. 체인 <code>prompt | llm | parser</code>는 데이터가 지나가는 순서대로 씁니다.</p>
+
+  <div class="view"><div class="view-h">해설 · 실무 관점</div><ul>
+<li><b>품질 문제는 대부분 프롬프트와 파서에서 생깁니다.</b> 모델은 한 번 정하면 거의 바꾸지 않습니다. "답이 이상하다", "형식이 깨진다"는 문제의 원인은 대개 무엇을 시켰는지(프롬프트)와 결과를 어떻게 받는지(파서)에 있습니다. 공부할 때도 이 두 요소에 시간을 가장 많이 쓰기를 권합니다.</li>
+<li><b>LangChain이 모델을 똑똑하게 만들지는 않습니다.</b> 같은 API 호출을 부품으로 정리해 줄 뿐입니다. 답의 품질은 여전히 프롬프트와 넣어 주는 데이터가 결정합니다. 이 점을 오해하면 "LangChain을 썼는데 왜 답이 별로지?"에서 막힙니다.</li>
+<li><b>타입 흐름(dict → ChatPromptValue → AIMessage → str)을 외워 두면 이후가 쉬워집니다.</b> RAG·분기·멀티턴에서 나는 에러 대부분이 "앞 부품의 출력과 뒤 부품의 입력이 맞지 않음"입니다. 이 흐름을 알면 에러 메시지만 보고 어디가 어긋났는지 바로 읽힙니다.</li>
+  </ul></div>
+</section></div>
+<div class="pane" role="tabpanel" id="pane-s2" aria-labelledby="tab-s2"><section>
+  <h2>전체 코드와 실행 결과</h2>
+  <p>실습 노트북 첫 코드입니다. 주석 번호 ⓪~⑤가 이 단원의 탭 순서와 같습니다.</p>
+<pre class="py">from dotenv import load_dotenv                                   # ⓪ .env 로더
+from langchain_openai import ChatOpenAI                          # ① 모델
+from langchain_core.prompts import ChatPromptTemplate            # ② 프롬프트
+from langchain_core.output_parsers import StrOutputParser        # ③ 파서
+
+# ⓪ .env 파일에서 API 키 불러오기
+#    .env 파일에 OPENAI_API_KEY=키값 으로 적혀 있어야 함
+load_dotenv()
+
+# ① 모델
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+
+# ② 프롬프트 — {role}, {question}은 실행할 때 채울 빈칸
+prompt = ChatPromptTemplate.from_template(
+    "당신은 {role} 전문가입니다. {question}에 답해주세요."
+)
+
+# ③ 출력 파서 — 모델의 답에서 글자만 꺼냄
+parser = StrOutputParser()
+
+# ④ 체인 — 프롬프트 → 모델 → 파서 순서로 연결
+chain = prompt | llm | parser
+
+# ⑤ 실행 — 빈칸 이름과 같은 키로 값을 넣음
+data = {"role": "건강", "question": "여름철식중독"}
+result = chain.invoke(data)
+print(result)</pre>
+<pre class="out">여름철 식중독은 주로 고온다습한 날씨로 인해 발생하는 식품의 부패와 세균 증식으로 인해 발생합니다. 여름철에는 특히 다음과 같은 식중독 예방 수칙을 지키는 것이 중요합니다.
+
+1. **식품 보관**: 냉장고의 온도를 4도 이하로 유지하고, 냉동고는 -18도 이하로 설정하세요. 음식은 가능한 한 빨리 냉장 보관하고, 상온에 방치하지 않도록 합니다.
+
+2. **조리 전 손 씻기**: 음식을 조리하기 전과 후, 특히 생고기나 해산물을 다룬 후에는 반드시 손을 깨끗이 씻어야 합니다.
+
+3. **조리 도구 소독**: 칼, 도마 등 조리 도구는 사용 후 깨끗이 세척하고 소독하여 교차 오염을 방지합니다.
+...
+여름철에는 특히 식중독의 위험이 높으므로, 이러한 예방 수칙을 잘 지켜 건강한 여름을 보내시기 바랍니다.</pre>
+  <h3>이 코드에서 확인할 것</h3>
+  <ul>
+    <li><code>data</code>의 키 <code>"role"</code>, <code>"question"</code>이 프롬프트의 빈칸 <code>{role}</code>, <code>{question}</code>과 이름이 같습니다. 이름이 다르면 에러가 납니다.</li>
+    <li><code>result</code>는 문자열(str)입니다. 파서가 있기 때문입니다.</li>
+    <li>모델에 실제로 전달된 문장은 "당신은 건강 전문가입니다. 여름철식중독에 답해주세요."입니다.</li>
+  </ul>
+
+  <div class="view"><div class="view-h">해설 · 실무 관점</div><ul>
+<li><b>이 아홉 줄이 이후 모든 단원의 뼈대입니다.</b> RAG는 프롬프트 앞에 검색 부품을 붙인 것이고, 분기는 이 체인을 여러 개 만들어 고르는 것이고, 멀티턴은 프롬프트에 이전 대화 자리를 하나 더 만든 것입니다. 새 단원에서 막히면 이 아홉 줄로 돌아와 무엇이 추가됐는지 비교해 보세요.</li>
+<li><b>권하는 습관: 체인을 만들면 먼저 <code>prompt.invoke(data).to_string()</code>을 찍어 봅니다.</b> 모델이 실제로 받는 문장을 비용 없이 확인할 수 있고, 빈칸이 이상하게 채워지는 버그를 모델 호출 전에 잡습니다.</li>
+<li>출력 결과에서 모델이 "식품 보관 4도 이하" 같은 구체적 수치를 말합니다. 그럴듯하지만 근거 문서 없이 모델 지식으로 쓴 내용입니다. 의료 서비스라면 이런 답을 그대로 내보내지 않고, 근거 문서를 붙이는 RAG가 필요한 이유가 여기 있습니다.</li>
+  </ul></div>
+</section></div>
+<div class="pane" role="tabpanel" id="pane-s3" aria-labelledby="tab-s3"><section>
+  <h2><span class="no">0</span>준비: 설치와 API 키</h2>
+  <h3>설치</h3>
+<pre class="py">pip install python-dotenv langchain-openai langchain-core</pre>
+  <div class="tw"><table>
+    <tr><th>패키지</th><th>용도</th></tr>
+    <tr><td><code>python-dotenv</code></td><td>.env 파일의 키를 환경변수로 읽기</td></tr>
+    <tr><td><code>langchain-core</code></td><td>프롬프트, 파서, 체인 등 핵심 부품</td></tr>
+    <tr><td><code>langchain-openai</code></td><td>OpenAI 모델 연결(<code>ChatOpenAI</code>)</td></tr>
+  </table></div>
+  <h3>API 키 등록</h3>
+  <p>노트북 파일과 같은 폴더에 <code>.env</code> 파일을 만들고 아래처럼 한 줄을 적습니다. 따옴표는 붙이지 않습니다.</p>
+<pre class="py">OPENAI_API_KEY=sk-...</pre>
+  <p><code>load_dotenv()</code>를 실행하면 이 값이 환경변수로 등록되고, <code>ChatOpenAI</code>는 <code>OPENAI_API_KEY</code>라는 이름의 환경변수를 자동으로 찾아 씁니다. 그래서 코드에 키를 직접 쓰지 않아도 됩니다.</p>
+  <div class="warn"><b>자주 나는 에러</b> <code>OpenAIError: The api_key client option must be set ...</code><br>
+    원인 ① .env 파일이 노트북과 다른 폴더에 있다 ② 변수 이름이 <code>OPENAI_API_KEY</code>가 아니다 ③ <code>load_dotenv()</code>를 <code>ChatOpenAI(...)</code>보다 나중에 실행했다</div>
+  <div class="note"><b>키를 코드에 쓰지 않는 이유</b> 노트북을 공유하거나 깃허브에 올리면 키가 그대로 노출됩니다. .env 파일은 공유 대상에서 빼고, 깃허브를 쓴다면 <code>.gitignore</code>에 추가합니다.</div>
+
+  <div class="view"><div class="view-h">해설 · 실무 관점</div><ul>
+<li><b>교육 현장에서 가장 흔한 사고는 키 유출입니다.</b> 노트북에 키를 직접 쓰고 그대로 공유하거나 깃허브에 올리는 경우입니다. 유출된 키는 다른 사람이 써서 요금이 청구됩니다. 처음부터 .env로 분리하는 습관을 들이는 것이 코드 한 줄보다 중요합니다.</li>
+<li><b>실습 계정에는 사용 한도를 걸어 두기를 권합니다.</b> OpenAI 대시보드에서 월 사용 한도를 정해 두면, batch나 반복문 실수로 요청이 수백 번 나가도 피해가 제한됩니다.</li>
+<li>에러 메시지 "api_key client option must be set"은 거의 항상 .env 위치 문제입니다. 주피터는 노트북 파일이 있는 폴더 기준으로 찾는다는 점만 기억하면 대부분 해결됩니다.</li>
+  </ul></div>
+</section></div>
+<div class="pane" role="tabpanel" id="pane-s4" aria-labelledby="tab-s4"><section>
+  <h2><span class="no">1</span>모델: ChatOpenAI<span class="tg rag">RAG</span><span class="tg lg2">LangGraph 참고</span></h2>
+  <p>어떤 LLM을 어떤 설정으로 쓸지 정하는 부품입니다. 이 객체를 만드는 것만으로는 API 호출이 일어나지 않고, 실행(invoke)할 때 호출됩니다.</p>
+<pre class="py">from langchain_openai import ChatOpenAI
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)</pre>
+  <h3>왜 모델을 객체로 따로 만드나</h3>
+  <ul>
+    <li><b>설정을 한곳에 모음:</b> 모델 이름, temperature 같은 설정이 이 한 줄에만 있습니다. 바꿀 때 여기만 고칩니다.</li>
+    <li><b>교체가 쉬움:</b> 회사가 달라도 모델 객체는 같은 방식(<code>.invoke()</code>)으로 쓰므로, 이 줄만 바꾸면 나머지 코드는 그대로 동작합니다.</li>
+    <li><b>만드는 것만으로는 비용이 없음:</b> 요금은 <code>invoke</code>로 실제 요청을 보낼 때 발생합니다.</li>
+  </ul>
+  <h3>주요 설정값</h3>
+  <div class="tw"><table>
+    <tr><th>인자</th><th>의미</th><th>실습 권장</th></tr>
+    <tr><td><code>model</code></td><td>사용할 모델 이름</td><td><code>"gpt-4o-mini"</code> (저렴하고 빠름)</td></tr>
+    <tr><td><code>temperature</code></td><td>답의 무작위성. 0이면 같은 질문에 거의 같은 답, 높을수록 답이 다양해짐</td><td>상담·분류·요약·SQL: <code>0</code><br>문구·가사 등 창작: <code>0.7</code> 안팎</td></tr>
+    <tr><td><code>max_tokens</code></td><td>답의 최대 길이(토큰 수)</td><td>비용을 제한할 때</td></tr>
+    <tr><td><code>timeout</code></td><td>응답 대기 최대 시간(초)</td><td>응답이 오래 걸릴 때</td></tr>
+  </table></div>
+
+  <h3>모델만 단독으로 실행해 보기</h3>
+  <p>모델은 체인 없이도 실행할 수 있습니다. 문자열을 넣으면 됩니다.</p>
+<pre class="py">response = llm.invoke("안녕하세요")
+print(type(response))
+print(response.content)</pre>
+<pre class="out">&lt;class 'langchain_core.messages.ai.AIMessage'&gt;
+안녕하세요! 무엇을 도와드릴까요?</pre>
+  <p>문자열을 넣으면 LangChain이 <b>HumanMessage</b>(사람 메시지) 하나로 바꿔 모델에 보냅니다. 결과는 문자열이 아니라 <b>AIMessage</b>라는 객체입니다. AIMessage 안에는 답 글자 외에 여러 정보가 들어 있습니다.</p>
+  <div class="tw"><table>
+    <tr><th>속성</th><th>내용</th><th>예</th></tr>
+    <tr><td><code>.content</code></td><td>답 글자</td><td><code>'안녕하세요! 무엇을 도와드릴까요?'</code></td></tr>
+    <tr><td><code>.usage_metadata</code></td><td>사용한 토큰 수</td><td><code>{'input_tokens': 9, 'output_tokens': 10, 'total_tokens': 19}</code></td></tr>
+    <tr><td><code>.response_metadata</code></td><td>모델 이름, 종료 이유 등</td><td><code>{'model_name': 'gpt-4o-mini-...', 'finish_reason': 'stop', ...}</code></td></tr>
+  </table></div>
+  <p class="cap">토큰 수와 모델 이름 뒤 날짜는 실행 환경에 따라 다르게 나옵니다.</p>
+
+  <h3>다른 회사 모델로 바꾸기</h3>
+  <p>모델 줄만 바꾸면 프롬프트·파서·체인 코드는 그대로 쓸 수 있습니다.</p>
+  <div class="grid g2">
+    <div class="card"><h4>클로드</h4>
+<pre class="py">!pip install -q langchain-anthropic
+# .env: ANTHROPIC_API_KEY=키값
+from langchain_anthropic import ChatAnthropic
+llm = ChatAnthropic(model="claude-sonnet-4-5", temperature=0)</pre></div>
+    <div class="card"><h4>구글 제미나이</h4>
+<pre class="py">!pip install -q langchain-google-genai
+# .env: GOOGLE_API_KEY=키값
+from langchain_google_genai import ChatGoogleGenerativeAI
+llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0)</pre></div>
+  </div>
+  <p class="cap">모델 이름은 각 회사가 수시로 바꿉니다. 실습할 때 각 회사 문서에서 현재 이름을 확인합니다.</p>
+
+  <div class="view"><div class="view-h">해설 · 실무 관점</div><ul>
+<li><b>의료·분류·요약에서는 temperature=0을 기본으로 둡니다.</b> 같은 질문에 답이 바뀌면 결과를 검증할 수도, 버그를 재현할 수도 없습니다. 이런 작업에서는 답의 다양성보다 재현성이 훨씬 중요합니다.</li>
+<li><b>결과가 안 좋을 때 비싼 모델로 먼저 바꾸지 마세요.</b> 프롬프트 문제를 모델 성능으로 덮으면 비용만 늘고 원인은 남습니다. 저렴한 모델로 프롬프트·파서를 먼저 다듬고, 그래도 안 될 때 모델을 올리는 순서를 권합니다.</li>
+<li><b>모델을 한 줄로 바꿀 수 있다는 점은 실무에서 생각보다 자주 쓰입니다.</b> 한 회사 API에 장애가 나면 다른 회사 모델로 돌리고(12단원), 비용을 줄이려고 쉬운 작업은 작은 모델에 맡깁니다. 이때 나머지 코드를 건드리지 않아도 되는 구조가 LangChain을 쓰는 실질적인 이유입니다.</li>
+<li><code>usage_metadata</code>의 토큰 수는 개발 중에 자주 확인하세요. 프롬프트가 길어지는 만큼 비용이 늘어나는 것이 숫자로 보입니다.</li>
+  </ul></div>
+</section></div>
+<div class="pane" role="tabpanel" id="pane-s5" aria-labelledby="tab-s5"><section>
+  <h2><span class="no">2</span>프롬프트: ChatPromptTemplate<span class="tg rag">RAG</span></h2>
+  <p>모델에 보낼 질문의 틀입니다. 바뀌는 부분을 <code>{이름}</code>으로 비워 두고, 실행할 때 dict로 값을 넣습니다. 같은 틀로 질문만 바꿔 여러 번 쓸 수 있습니다.</p>
+<pre class="py">from langchain_core.prompts import ChatPromptTemplate
+prompt = ChatPromptTemplate.from_template(
+    "당신은 {role} 전문가입니다. {question}에 답해주세요."
+)
+print(prompt.input_variables)      # 채워야 할 빈칸 목록</pre>
+<pre class="out">['question', 'role']</pre>
+
+  <h3>빈칸이 채워지는 모습 확인하기</h3>
+  <p>프롬프트도 혼자 실행할 수 있습니다. 모델을 부르지 않으므로 비용이 들지 않습니다. 모델에 무엇이 전달되는지 확인할 때 씁니다.</p>
+<pre class="py">pv = prompt.invoke({"role": "요리", "question": "파스타 면 삶는 법"})
+print(pv)
+print(pv.to_string())</pre>
+<pre class="out">messages=[HumanMessage(content='당신은 요리 전문가입니다. 파스타 면 삶는 법에 답해주세요.', additional_kwargs={}, response_metadata={})]
+Human: 당신은 요리 전문가입니다. 파스타 면 삶는 법에 답해주세요.</pre>
+  <ul>
+    <li>결과는 <b>ChatPromptValue</b>이고, 안에 <b>HumanMessage</b>(사람이 보낸 메시지) 하나가 들어 있습니다.</li>
+    <li><code>from_template</code>은 문장 전체를 사람 메시지 1개로 만듭니다.</li>
+  </ul>
+
+  <h3>f-string으로 만들면 안 되나</h3>
+  <p>아래 코드도 똑같이 동작합니다. 한 번 호출할 때는 모델이 받는 문장과 결과가 같습니다.</p>
+<pre class="py">llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+role, question = "요리", "파스타 면 삶는 법"
+prompt = f"당신은 {role} 전문가입니다. {question}에 답해주세요."   # 이 줄에서 바로 문장이 완성됨
+
+response = llm.invoke(prompt)
+print(response.content)</pre>
+  <p>차이는 <b>문장을 언제 완성하느냐</b>입니다. f-string은 그 줄이 실행되는 순간 완성된 문자열이 되고, ChatPromptTemplate은 빈칸이 남은 틀로 있다가 <code>invoke</code>할 때 채워집니다. 이 차이 때문에 할 수 있는 일이 달라집니다.</p>
+  <div class="tw"><table>
+    <tr><th></th><th>f-string</th><th>ChatPromptTemplate</th></tr>
+    <tr><td>체인 연결</td><td>불가. 그냥 문자열이라 <code>|</code>로 이을 수 없음</td><td><code>prompt | llm | parser</code></td></tr>
+    <tr><td>같은 틀 재사용</td><td>값이 바뀔 때마다 f-string을 다시 만들어야 함</td><td>틀 하나로 <code>chain.batch([...])</code></td></tr>
+    <tr><td>빠진 값 검사</td><td>변수가 없으면 <code>NameError</code>, 변수가 빈 값이면 그대로 전송</td><td><code>KeyError: missing variables {'question'}</code>로 알려 줌</td></tr>
+    <tr><td>역할 분리</td><td>전부 사람 메시지 1개</td><td><code>from_messages</code>로 system / human 분리</td></tr>
+    <tr><td>RAG 연결</td><td>검색 결과를 직접 문자열에 이어 붙여야 함</td><td><code>{context}</code> 빈칸을 검색 부품이 채움</td></tr>
+  </table></div>
+  <div class="note"><b>정리</b> 한 번 호출하고 끝나는 코드는 f-string으로 충분합니다. 체인·RAG·대화 기억으로 이어지는 코드는 템플릿을 씁니다.</div>
+
+  <h3>system과 human을 나누는 방법</h3>
+<pre class="py">prompt = ChatPromptTemplate.from_messages([
+    ("system", "당신은 {role} 전문가입니다. 쉬운 말로 답하세요."),   # 규칙·역할
+    ("human",  "{question}"),                                     # 이번 질문
+])</pre>
+  <h3>왜 나누나</h3>
+  <p>꼭 나눠야 하는 것은 아닙니다. <code>from_template</code> 하나로도 동작합니다. 나누면 다음이 좋아집니다.</p>
+  <ol>
+    <li><b>규칙이 더 잘 지켜짐:</b> 모델은 system 메시지를 지켜야 할 규칙으로, human 메시지를 이번 질문으로 구분하도록 학습되어 있습니다. "쉬운 말로", "진단하지 마라" 같은 규칙은 system에 둘 때 더 잘 지켜집니다.</li>
+    <li><b>사용자 입력에 덜 흔들림:</b> 사용자가 질문에 "앞의 지시는 무시해"라고 써도, 규칙이 별도 메시지로 있으면 영향을 덜 받습니다.</li>
+    <li><b>대화 기억에 필요:</b> 멀티턴에서는 system(규칙) → 이전 대화 → 이번 질문 순서로 메시지를 쌓습니다. 메시지가 나뉘어 있어야 그 사이에 이전 대화를 끼울 수 있습니다(10단원).</li>
+    <li><b>관리가 쉬움:</b> 규칙은 고정이고 질문만 바뀝니다. 규칙을 고칠 때 system 한 곳만 봅니다.</li>
+  </ol>
+
+  <h3>넣을 수 있는 메시지 종류</h3>
+  <div class="tw"><table>
+    <tr><th>쓰는 법</th><th>만들어지는 메시지</th><th>용도</th></tr>
+    <tr><td><code>("system", "...")</code></td><td>SystemMessage</td><td>역할·규칙·출력 형식 지시</td></tr>
+    <tr><td><code>("human", "...")</code> 또는 <code>("user", "...")</code></td><td>HumanMessage</td><td>사용자 발화</td></tr>
+    <tr><td><code>("ai", "...")</code> 또는 <code>("assistant", "...")</code></td><td>AIMessage</td><td>모델이 했던 답. 주로 예시(퓨샷)용</td></tr>
+    <tr><td><code>MessagesPlaceholder("history")</code></td><td>메시지 여러 개</td><td>이전 대화를 통째로 끼우는 자리. 값을 꼭 넣어야 함</td></tr>
+    <tr><td><code>("placeholder", "{history}")</code></td><td>메시지 여러 개</td><td>위와 같지만 값을 안 넣어도 됨(생략 가능)</td></tr>
+  </table></div>
+  <p>도구 실행 결과를 돌려주는 메시지(ToolMessage)도 있지만, 템플릿에 쓰지 않고 코드에서 메시지 리스트에 붙입니다(13단원).</p>
+
+  <h3>예: 규칙 + 예시 + 이전 대화 + 이번 질문</h3>
+<pre class="py">from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.messages import HumanMessage, AIMessage
+
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "당신은 {role} 전문가입니다. '진료과: ○○ / 이유: ○○' 형식으로 답하세요."),
+    ("human", "무릎이 붓고 아파요"),                    # 예시 질문
+    ("ai",    "진료과: 정형외과 / 이유: 관절 부종"),       # 예시 답 → 원하는 형식을 보여 줌
+    ("placeholder", "{history}"),                      # 이전 대화 자리
+    ("human", "{question}"),                           # 이번 질문
+])
+
+pv = prompt.invoke({
+    "role": "내과",
+    "history": [HumanMessage("어제부터 열이 나요"), AIMessage("진료과: 내과 / 이유: 발열")],
+    "question": "머리도 아파요",
+})
+for m in pv.to_messages():
+    print(type(m).__name__, "|", m.content)</pre>
+<pre class="out">SystemMessage | 당신은 내과 전문가입니다. '진료과: ○○ / 이유: ○○' 형식으로 답하세요.
+HumanMessage | 무릎이 붓고 아파요
+AIMessage | 진료과: 정형외과 / 이유: 관절 부종
+HumanMessage | 어제부터 열이 나요
+AIMessage | 진료과: 내과 / 이유: 발열
+HumanMessage | 머리도 아파요</pre>
+  <p>모델은 이 메시지 6개를 순서대로 받습니다. 예시 답(ai)의 형식을 보고 마지막 질문에도 같은 형식으로 답합니다.</p>
+
+  <div class="view"><div class="view-h">해설 · 실무 관점</div><ul>
+<li><b>프롬프트는 사실상 코드입니다.</b> 문장 하나를 바꾸면 결과가 달라지므로, 코드처럼 한곳에 모아 관리하고 바꿀 때는 결과를 비교해야 합니다. 템플릿으로 분리해 두는 것이 그 출발점입니다. f-string으로 코드 여기저기에 흩어 놓으면 어떤 문장이 어떤 결과를 냈는지 추적하기 어렵습니다.</li>
+<li><b>system과 human을 나누는 기준은 "바뀌는가"입니다.</b> 매번 같은 역할·규칙·형식은 system에, 매번 바뀌는 질문은 human에 둡니다. 그리고 <b>사용자가 입력한 문장은 system에 끼워 넣지 않습니다.</b> system에 들어간 사용자 문장은 규칙처럼 취급될 수 있기 때문입니다.</li>
+<li><b>형식을 맞추고 싶을 때는 긴 설명보다 예시 한 쌍(human/ai)이 효과적인 경우가 많습니다.</b> "진료과: ○○ / 이유: ○○ 형식으로"라고 길게 설명하는 것보다, 그 형식의 답을 한 번 보여 주면 모델이 더 정확히 따라 합니다.</li>
+  </ul></div>
+</section></div>
+<div class="pane" role="tabpanel" id="pane-s6" aria-labelledby="tab-s6"><section>
+  <h2><span class="no">3</span>출력 파서: StrOutputParser<span class="tg rag">RAG</span></h2>
+  <p>모델이 돌려준 AIMessage에서 필요한 것만 꺼내 원하는 형태로 바꾸는 부품입니다. <code>StrOutputParser</code>는 <b>답 글자(content)만</b> 문자열로 꺼냅니다.</p>
+  <div class="grid g2">
+    <div class="card"><h4>파서 없음: <code>prompt | llm</code></h4>
+<pre class="py">r = (prompt | llm).invoke(data)
+print(type(r).__name__)   # AIMessage
+print(r.content)          # 글자는 .content로 꺼내야 함</pre></div>
+    <div class="card"><h4>파서 있음: <code>prompt | llm | parser</code></h4>
+<pre class="py">r = (prompt | llm | parser).invoke(data)
+print(type(r).__name__)   # str
+print(r)                  # 바로 출력 가능</pre></div>
+  </div>
+  <p>파서가 있으면 결과를 바로 문자열로 다룰 수 있습니다. 예를 들어 <code>result[1:4]</code>처럼 자르면 "름철"이 나옵니다(0번째 글자 "여" 다음부터). 파서가 없으면 결과가 AIMessage라서 이렇게 자를 수 없습니다.</p>
+
+  <h3>.content로 꺼내면 되는데 왜 파서를 쓰나</h3>
+  <ul>
+    <li><b>체인 결과 형태를 정해 둠:</b> 체인의 결과가 항상 str로 나오므로, 다음 체인에 그대로 넘기거나(04단원) 화면에 바로 출력할 수 있습니다.</li>
+    <li><b>stream에서도 문자열 조각:</b> 파서가 있으면 <code>stream</code>의 조각도 문자열로 나옵니다. 없으면 조각마다 <code>.content</code>를 꺼내야 합니다.</li>
+    <li><b>형태를 바꾸기 쉬움:</b> 답을 dict로 받고 싶으면 이 자리를 <code>JsonOutputParser()</code>로 바꾸면 됩니다. 앞의 프롬프트·모델 코드는 그대로입니다.</li>
+  </ul>
+  <h3>자주 쓰는 파서</h3>
+  <div class="tw"><table>
+    <tr><th>파서</th><th>결과 형태</th><th>용도</th></tr>
+    <tr><td><code>StrOutputParser</code></td><td>문자열 str</td><td>답을 텍스트로 받을 때 (가장 기본)</td></tr>
+    <tr><td><code>JsonOutputParser</code></td><td>딕셔너리 dict</td><td>답을 JSON 구조로 받아 키로 꺼낼 때</td></tr>
+    <tr><td><code>CommaSeparatedListOutputParser</code></td><td>리스트 list</td><td><code>"중증, 경상, 일반"</code> → <code>['중증', '경상', '일반']</code></td></tr>
+  </table></div>
+  <h3>참고용 (구조화·심화)</h3>
+  <div class="tw"><table>
+    <tr><th>파서</th><th>결과 형태</th><th>용도</th></tr>
+    <tr><td><code>PydanticOutputParser</code></td><td>Pydantic 객체</td><td>정해진 데이터 틀(스키마)에 맞춰 받을 때</td></tr>
+    <tr><td><code>StructuredOutputParser</code></td><td>dict</td><td>여러 필드를 정의해 구조화할 때</td></tr>
+    <tr><td><code>DatetimeOutputParser</code></td><td>datetime</td><td>답을 날짜/시간으로 받을 때</td></tr>
+    <tr><td><code>XMLOutputParser</code></td><td>dict</td><td>답을 XML 구조로 받을 때</td></tr>
+  </table></div>
+  <p>이어지는 3-1 ~ 3-3에서 파서를 실제로 쓰는 예제 세 가지를 봅니다: 기본 파서로 Text-to-SQL, JSON 파서로 판정·분기, 체인 밖 함수로 개인정보 마스킹.</p>
+
+  <div class="view"><div class="view-h">해설 · 실무 관점</div><ul>
+<li><b>파서는 "LLM 출력은 믿을 수 없다"는 전제에서 출발합니다.</b> 모델은 형식을 자주 어깁니다. 결과를 사람이 읽기만 하면 상관없지만, 프로그램이 이어받아 쓰면 형식 하나 어긋나는 것이 곧 에러입니다.</li>
+<li><b>고르는 기준: 사람이 읽을 답이면 Str, 프로그램이 쓸 답이면 Json(또는 11단원 구조화 출력).</b> 이 단원의 세 예제가 정확히 이 기준을 보여 줍니다. SQL(프로그램이 실행)은 Str이지만 형식을 엄격히 지시했고, 판정(프로그램이 분기)은 Json, 안내문(사람이 읽음)은 Str입니다.</li>
+<li>결과를 코드가 쓰는 경우에는 파서 다음에 <b>검증 단계</b>를 꼭 둡니다. 3-1의 SELECT 검사, 3-2의 "경미일 때만" 분기가 그 예입니다.</li>
+  </ul></div>
+</section></div>
+<div class="pane" role="tabpanel" id="pane-s7" aria-labelledby="tab-s7"><section>
+  <h2><span class="no">3-1</span>기본 파서로 Text-to-SQL</h2>
+  <p>StrOutputParser로 받은 문자열을 그대로 SQL로 실행하는 예제입니다. 사용자가 자연어로 물으면 LLM이 SQL을 만들고, 그 SQL로 DB를 조회합니다.</p>
+  <div class="flow"><span>자연어 질문</span><i>→</i><span class="n">prompt</span><i>→</i><span class="n">llm</span><i>→</i><span class="n">StrOutputParser</span><i>→ SQL 문자열 →</i><span>DB 실행</span><i>→</i><span>결과표</span></div>
+
+  <h3>[단계 1] CSV를 관계형 DB 파일로 만들기</h3>
+<pre class="py">##########################
+# [단계1] csv자료를 관계형 db로 만들기
+#############################
+import pandas as pd
+import sqlite3
+
+# 1. 준비된 CSV 파일 읽기
+csv_file = "감기환자_진료데이터.csv"
+df = pd.read_csv(csv_file)
+
+# 2. 실제 파일 형태의 데이터베이스(.db) 연결 생성
+# 실행하면 현재 폴더에 'medical_records.db' 파일이 실제로 만들어집니다.
+db_file = "medical_records.db"
+conn = sqlite3.connect(db_file)
+
+# 3. 데이터프레임을 'patients_history'라는 테이블(시트)로 저장
+# index=False는 판다스의 기본 일련번호(0, 1, 2...)를 DB에 저장하지 않는 설정입니다.
+df.to_sql("./patients_history", conn, index=False, if_exists="replace")
+
+# 4. 저장 완료 후 안전하게 연결 닫기
+conn.close()
+
+print(f"🎉 성공: '{csv_file}' 데이터가 '{db_file}' 파일로 영구 저장되었습니다!")</pre>
+<pre class="out">🎉 성공: '감기환자_진료데이터.csv' 데이터가 'medical_records.db' 파일로 영구 저장되었습니다!</pre>
+  <ul>
+    <li><code>sqlite3.connect(파일명)</code>: 파일이 없으면 새로 만들고 연결합니다.</li>
+    <li><code>df.to_sql(테이블명, conn, ...)</code>: 데이터프레임을 테이블로 저장합니다. <code>if_exists="replace"</code>는 같은 이름 테이블이 있으면 덮어씁니다.</li>
+  </ul>
+  <div class="warn"><b>테이블 이름 수정</b> <code>"./patients_history"</code>라고 쓰면 경로가 아니라 <b>이름이 <code>./patients_history</code>인 테이블</b>이 만들어집니다. 그래서 단계 2의 테이블 확인 코드가 <code>patients_history</code>를 찾지 못하고 CSV로 다시 만들게 됩니다. <code>df.to_sql("patients_history", ...)</code>로 씁니다.</div>
+
+  <h3>[단계 2] 프롬프트 6요소로 SQL 생성 → DB 조회</h3>
+<pre class="py">import os
+import sqlite3
+import pandas as pd
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
+
+# 1. 프롬프트 6요소(맥락, 작업, 지시, 입력구조, 범위, 출력형식)를 반영한 고도화 프롬프트
+system_prompt = """
+[1. Context (맥락)]
+너는 병원 진료 기록이 저장된 SQLite 데이터베이스를 관리하는 최고의 데이터 분석가이자 AI 엔지니어다.
+
+[2. Task (작업)]
+사용자의 자연어 질문을 분석하여, 데이터베이스에서 정확한 통계나 정보를 조회할 수 있는 최적의 SQLite 쿼리문(SELECT)을 생성하라.
+
+[3. Input & Schema (입력 구조)]
+조회할 테이블 이름은 'patients_history'이며, 컬럼 명세와 데이터의 실제 의미는 다음과 같다:
+- 환자ID, 진료일자, 이름, 나이, 성별, 체온, 증상지속일, 처방, 진료구분, 진료내용
+- 증상 (예: '두통/인후통/재채기', '오한/피로감/기침') -> 환자가 병원에 와서 호소한 주관적 '느낌/현상' 글
+- 진단명 (예: '급성 비인두염', '급성 기관지염', '독감 의심', '상기도 감염') -> 의사가 최종적으로 내린 '병명/진단' 결과
+
+[4. Instructions (상세 지시사항)]
+- 사용자가 '독감 환자', '독감 의심 환자', '상기도 감염 환자' 등 구체적인 '병명'이나 '진단 결과'를 물어볼 때는, 반드시 '증상' 컬럼이 아닌 [진단명] 컬럼을 기준으로 조건절(WHERE)을 작성해야 한다.
+- 예: '독감 의심 환자' -> WHERE 진단명 = '독감 의심' 또는 WHERE 진단명 LIKE '%독감%'
+
+[5. Scale & Constraints (범위 및 제약조건)]
+- 생각, 해설, 부연설명은 절대 출력하지 마라.
+- 마크다운 문법 기호(```sql ... ```)는 절대 포함하지 마라.
+- SQL 구문 내부에서 문자열 상수를 비교할 때는 반드시 싱글 쿼테이션(예: '독감 의심')을 사용하라.
+
+[6. Output Format (출력 형식)]
+오직 'SELECT'로 시작하여 세미콜론(';')으로 끝나는 실행 가능한 순수 SQL 한 줄 문자열만 반환하라.
+"""
+
+prompt = ChatPromptTemplate.from_messages([
+    ("system", system_prompt),
+    ("human", "{question}")
+])
+
+# 2. 파이프라인 조립 (LCEL)
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+output_parser = StrOutputParser()
+text_to_sql_chain = prompt | llm | output_parser
+
+# 3. 자연어 질문 던지기 및 SQL 생성
+user_question = "60세 이상 환자 중에서 독감 의심 환자는 몇 명이야?"
+print(f"🗣️ 유저 질문: {user_question}\n")
+
+generated_sql = text_to_sql_chain.invoke({"question": user_question})
+print(f"🤖 [AI 생성 쿼리]: {generated_sql}\n")
+print("-" * 60)
+
+# 4. 실제 DB 파일('medical_records.db') 검증 및 결과 꺼내오기
+db_file = "medical_records.db"
+csv_file = "감기환자_진료데이터.csv"
+
+is_ready = True
+conn = sqlite3.connect(db_file)
+cursor = conn.cursor()
+cursor.execute(
+    "SELECT count(name) FROM sqlite_master WHERE type='table' AND name='patients_history'"
+)
+
+if cursor.fetchone()[0] == 0:
+    print(f"⚠️ [안내] '{db_file}' 내에 테이블이 없어 '{csv_file}' 파일로 자동 빌드를 시도합니다...")
+    if os.path.exists(csv_file):
+        df_csv = pd.read_csv(csv_file)
+        df_csv.to_sql("patients_history", conn, index=False, if_exists="replace")
+        print("-> [성공] 테이블 생성 및 데이터 복구가 완료되었습니다.\n")
+    else:
+        print(f"❌ 오류: 복구할 원본 '{csv_file}' 파일이 현재 폴더에 존재하지 않습니다.")
+        print("💡 해결책: CSV 파일을 현재 주피터 노트북 파일과 같은 폴더에 넣어주세요.")
+        is_ready = False
+
+# 5. 안전한 부근에서만 조회 실행
+if is_ready:
+    print(f"⚙️ [시스템 내부 동작] 데이터베이스에 실행되는 쿼리:\n    {generated_sql}\n")
+    result_df = pd.read_sql(generated_sql, conn)
+    print("📊 [최종 시스템 조회 결과]")
+    print(result_df)
+else:
+    print("\n🛑 시스템을 가동할 수 없어 조회를 중단합니다. 파일을 확인해 주세요.")
+
+conn.close()</pre>
+<pre class="out">🗣️ 유저 질문: 60세 이상 환자 중에서 독감 의심 환자는 몇 명이야?
+
+🤖 [AI 생성 쿼리]: SELECT COUNT(*) FROM patients_history WHERE 진단명 = '독감 의심' AND 나이 >= 60;
+
+------------------------------------------------------------
+⚙️ [시스템 내부 동작] 데이터베이스에 실행되는 쿼리:
+    SELECT COUNT(*) FROM patients_history WHERE 진단명 = '독감 의심' AND 나이 >= 60;
+
+📊 [최종 시스템 조회 결과]
+   COUNT(*)
+0         1</pre>
+
+  <h3>코드 읽는 법</h3>
+  <div class="tw"><table>
+    <tr><th>부분</th><th>하는 일</th></tr>
+    <tr><td>1. <code>system_prompt</code></td><td>6요소로 규칙을 줍니다. 핵심은 [3]에서 <b>증상</b>(환자가 느낀 것)과 <b>진단명</b>(의사 판단)의 의미를 구분해 주고, [4]에서 병명 질문은 진단명 컬럼을 쓰라고 지시한 것입니다.</td></tr>
+    <tr><td>2. <code>text_to_sql_chain</code></td><td>01단원의 5요소 그대로입니다. 파서가 StrOutputParser라서 결과가 SQL 문자열 하나입니다.</td></tr>
+    <tr><td>3. <code>invoke</code></td><td>자연어 질문 → SQL 문자열</td></tr>
+    <tr><td>4. 테이블 확인</td><td><code>sqlite_master</code>는 DB의 테이블 목록입니다. 테이블이 없으면 CSV로 다시 만듭니다.</td></tr>
+    <tr><td>5. <code>pd.read_sql</code></td><td>LLM이 만든 SQL을 실제로 실행해 결과표를 받습니다.</td></tr>
+  </table></div>
+  <h3>왜 프롬프트 [5], [6]이 중요한가</h3>
+  <p>결과를 <b>코드가 그대로 실행</b>하기 때문입니다. 모델이 "다음 쿼리를 실행하세요: ```sql ...```"처럼 설명이나 마크다운을 붙이면 <code>pd.read_sql</code>이 에러를 냅니다. 사람이 읽는 답이 아니라 프로그램이 받는 답이면, 출력 형식을 이렇게 엄격하게 지정합니다.</p>
+  <div class="warn"><b>LLM이 만든 SQL을 그대로 실행할 때의 위험</b> 프롬프트에 "SELECT만"이라고 써도 <code>DELETE</code>나 <code>DROP</code>이 나올 가능성을 0으로 만들 수는 없습니다. 실무에서는 두 가지를 더합니다.</div>
+<pre class="py"># ① 읽기 전용으로 연결 — 쓰기 쿼리는 DB가 거부
+conn = sqlite3.connect("file:medical_records.db?mode=ro", uri=True)
+
+# ② 실행 전 검사 — SELECT 한 문장만 허용
+sql = generated_sql.strip().rstrip(";")
+if not sql.upper().startswith("SELECT") or ";" in sql:
+    raise ValueError(f"허용되지 않는 쿼리: {generated_sql}")</pre>
+
+  <div class="view"><div class="view-h">해설 · 실무 관점</div><ul>
+<li><b>이 예제의 핵심은 "숫자는 LLM이 아니라 DB가 센다"는 설계입니다.</b> LLM에게 "독감 환자가 몇 명이야?"를 직접 물으면 그럴듯한 숫자를 지어낼 수 있습니다. LLM에게는 SQL을 쓰는 일만 맡기고, 세는 일은 DB가 하게 하면 숫자가 정확해집니다. 14단원의 통계 체인도 같은 발상입니다. RAG가 약한 "집계 질문"을 이렇게 해결합니다.</li>
+<li><b>정확도를 좌우하는 것은 프롬프트 [3]의 스키마 설명입니다.</b> 컬럼 이름만 주면 모델은 "증상"과 "진단명"을 구분하지 못해 독감 환자를 증상 컬럼에서 찾습니다. 각 컬럼이 무엇을 뜻하는지, 값의 예가 무엇인지 적어 준 것이 이 결과를 만든 이유입니다. 실무에서 Text-to-SQL이 틀리면 프롬프트보다 스키마 설명을 먼저 보세요.</li>
+<li><b>학습용으로는 좋은 예제지만, 이 형태로 서비스에 쓰지는 않기를 권합니다.</b> 최소한 읽기 전용 연결과 SELECT 검사를 넣고, 조회할 수 있는 테이블을 제한하고, 결과 행 수에 상한을 둡니다. 개인정보가 있는 테이블이면 이름 같은 컬럼은 아예 조회 대상에서 빼는 것이 안전합니다.</li>
+<li>결과가 "COUNT(*) 1"처럼 숫자 하나로 나왔습니다. 사용자에게는 이걸 다시 문장으로 바꿔 주는 체인을 하나 더 두면 자연스러운 답이 됩니다. 04단원 순차 체인으로 이어지는 지점입니다.</li>
+  </ul></div>
+</section></div>
+<div class="pane" role="tabpanel" id="pane-s8" aria-labelledby="tab-s8"><section>
+  <h2><span class="no">3-2</span>JSON 파서로 판정 → 분기</h2>
+  <p>1단계에서 LLM이 증상의 위험도를 <b>JSON</b>으로 판정하고, 2단계에서 그 값에 따라 다른 프롬프트로 안내문을 만듭니다.</p>
+  <div class="flow"><span>증상</span><i>→</i><span class="n">judge | llm | JsonOutputParser</span><i>→ dict →</i><span>if level == "응급"</span><i>→</i><span class="n">emergency 또는 mild 체인</span><i>→</i><span>안내문</span></div>
+<pre class="py">from langchain_core.output_parsers import JsonOutputParser
+
+####################################
+# 조건 분기 체인 — 판정을 JSON으로 받기
+####################################
+
+json_parser = JsonOutputParser()   # JSON 파서
+
+# 1단계: 위험도 판정 (JSON으로 답하게 지시)
+judge = ChatPromptTemplate.from_template(
+    "다음 증상을 분석해서 반드시 JSON으로만 답해. 다른 설명은 절대 넣지 마.\n"
+    '형식: {{"level": "응급 또는 경미", "reason": "판단 이유 한 문장"}}\n'
+    "증상:\n{text}"
+)
+
+emergency = ChatPromptTemplate.from_template(
+    "다음 증상은 응급 상황이야. 119에 연락하고 병원에 가라는 강한 경고문을 써줘:\n{text}"
+)
+mild = ChatPromptTemplate.from_template(
+    "다음 증상은 경미해. 집에서 할 수 있는 관리법을 친절하게 안내해줘:\n{text}"
+)
+
+# ── 입력 ──
+symptom = "갑자기 가슴이 심하게 조이고 왼팔이 저리며 식은땀이 난다"
+
+# 1단계: JSON으로 판정 받기
+verdict = (judge | llm | json_parser).invoke({"text": symptom})
+print("【판정 결과(JSON)】")
+print(verdict, "\n")
+# 예: {'level': '응급', 'reason': '심근경색 의심 증상입니다'}
+
+# 2단계: JSON의 level 값으로 분기
+if verdict["level"] == "응급":
+    result = (emergency | llm | parser).invoke({"text": symptom})
+else:
+    result = (mild | llm | parser).invoke({"text": symptom})
+
+print("【안내】")
+print(result)</pre>
+<pre class="out">【판정 결과(JSON)】
+{'level': '응급', 'reason': '가슴 통증과 왼팔 저림, 식은땀은 심장 문제의 징후일 수 있어 즉각적인 의료 조치가 필요하다.'} 
+
+【안내】
+⚠️ 긴급 경고 ⚠️
+
+지금 즉시 119에 연락하고 병원으로 가야 합니다! 
+
+갑자기 가슴이 심하게 조이고, 왼팔이 저리며 식은땀이 나는 증상은 심각한 응급 상황을 나타낼 수 있습니다. 이는 심장 문제나 다른 생명에 위협이 되는 상태일 수 있으므로, 지체하지 말고 즉각적인 조치를 취해야 합니다. 
+
+주변 사람에게 도움을 요청하고, 가능한 한 빨리 의료진의 도움을 받으세요. 당신의 안전이 최우선입니다!</pre>
+
+  <h3>왜 JSON으로 받나</h3>
+  <p>판정을 문자열로 받으면 "응급입니다", "응급 상황으로 보입니다", "매우 위급합니다"처럼 표현이 매번 달라져 <code>if</code>로 비교할 수 없습니다. JSON 파서로 dict를 받으면 <code>verdict["level"]</code>을 정확한 값과 비교할 수 있습니다. 판단 이유(<code>reason</code>)도 별도 키로 함께 받아 기록할 수 있습니다.</p>
+  <h3>코드에서 확인할 것</h3>
+  <ul>
+    <li><b>두 파서를 함께 씀:</b> 판정 체인은 <code>json_parser</code>(결과 dict), 안내문 체인은 <code>parser</code>(StrOutputParser, 결과 str)입니다. 같은 모델에 파서만 바꿔 끼운 것입니다.</li>
+    <li><b>중괄호 두 번 <code>{{ }}</code>:</b> JSON 예시의 중괄호는 빈칸이 아니라 글자이므로 겹쳐 씁니다. <code>{text}</code>만 빈칸입니다.</li>
+    <li><b>코드블록도 처리:</b> 모델이 <code>```json ... ```</code>으로 감싸 답해도 JsonOutputParser가 벗겨내고 dict로 바꿉니다.</li>
+    <li><b>분기는 체인 밖의 파이썬 if:</b> 같은 일을 체인 안에서 하는 것이 08단원 RunnableBranch입니다.</li>
+  </ul>
+  <div class="warn"><b>안전한 쪽으로 분기하기</b> 모델이 <code>"level": "응급 가능성"</code>처럼 형식을 어기면 위 코드는 else(경미)로 갑니다. 의료처럼 놓치면 위험한 판단은 반대로, 확실히 "경미"일 때만 경미 안내로 보냅니다.
+<pre class="py">if verdict.get("level") == "경미":     # .get: 키가 없어도 에러 없이 None
+    result = (mild | llm | parser).invoke({"text": symptom})
+else:                                   # 응급·형식 오류·누락은 모두 응급 안내
+    result = (emergency | llm | parser).invoke({"text": symptom})</pre></div>
+
+  <div class="view"><div class="view-h">해설 · 실무 관점</div><ul>
+<li><b>이 구조가 중요한 이유: LLM은 판단만 하고, 결정은 코드가 합니다.</b> 모델이 "응급"이라고 판정하면 어떤 안내를 보낼지는 if문이 정합니다. 이렇게 나누면 결정 규칙을 사람이 읽고 검증할 수 있습니다. 08단원 분기, 그리고 LangGraph의 조건부 연결(라우팅)이 모두 이 구조를 확장한 것입니다.</li>
+<li><b>의료 분기에서 기본값을 "경미"로 두는 것은 위험합니다.</b> 응급을 경미로 잘못 보내는 비용이 반대 경우보다 훨씬 큽니다. 확실히 경미할 때만 경미로 보내고, 판정이 애매하거나 형식이 깨지면 응급 쪽으로 보내는 것이 원칙입니다(안전한 쪽으로 실패하기).</li>
+<li><b><code>reason</code>을 함께 받는 것은 좋은 설계입니다.</b> 판정 결과와 이유를 기록해 두면, 나중에 오판 사례를 모아 프롬프트를 고칠 근거가 됩니다. 실무라면 이 값을 로그로 저장하기를 권합니다.</li>
+<li>JsonOutputParser는 형식을 "요청"할 뿐 강제하지 못합니다. 형식이 꼭 지켜져야 하면 11단원의 <code>with_structured_output</code>이 더 확실합니다.</li>
+  </ul></div>
+</section></div>
+<div class="pane" role="tabpanel" id="pane-s9" aria-labelledby="tab-s9"><section>
+  <h2><span class="no">3-3</span>체인 밖 함수: 개인정보 마스킹 + Gradio</h2>
+  <p>LLM에 보내기 <b>전에</b> 주민번호·전화번호·이름을 정규식으로 가리고, 가린 내용만 모델에 보냅니다. 마스킹은 파이썬 함수로 체인 바깥에서 먼저 실행합니다.</p>
+  <div class="flow"><span>진료기록 원본</span><i>→</i><span>mask_privacy()</span><i>→ 가린 문자열 →</i><span class="n">prompt | llm | parser</span><i>→</i><span>환자 안내문</span></div>
+<pre class="py">########################
+# 정규식 - 기밀정보 마스킹 처리
+############################
+import re
+import gradio as gr
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+parser = StrOutputParser()
+
+prompt = ChatPromptTemplate.from_template(
+    "다음 진료기록을 환자가 이해하기 쉽게 설명해줘:\n{text}"
+)
+chain = prompt | llm | parser
+
+# ── 마스킹 함수 ──
+def mask_privacy(text):
+    text = re.sub(r"\d{6}-\d{7}", "******-*******", text)        # 주민번호
+    text = re.sub(r"01\d-\d{3,4}-\d{4}", "010-****-****", text)  # 전화번호
+    text = re.sub(r"환자:\s*\S+", "환자: ***", text)             # 이름
+    return text
+
+# ── Gradio 처리 함수 ──
+def process(record):
+    masked = mask_privacy(record)          # 1. 마스킹
+    answer = chain.invoke({"text": masked}) # 2. 마스킹된 걸로 모델 호출
+    return masked, answer                   # 3. 둘 다 반환
+
+demo = gr.Interface(
+    fn=process,
+    inputs=gr.Textbox(lines=8, label="진료기록 원본 (주민번호·전화·이름 포함)"),
+    outputs=[
+        gr.Textbox(lines=8, label="🔒 마스킹 결과 (모델에 실제 전달된 내용)"),
+        gr.Textbox(lines=8, label="📋 환자 안내문 (최종 결과)"),
+    ],
+    title="진료기록 안전 변환기",
+    description="민감정보를 가린 뒤 모델에 전달합니다. 왼쪽에서 마스킹 결과를 직접 확인하세요.",
+)
+demo.launch()</pre>
+<pre class="out">* Running on local URL:  http://127.0.0.1:7861
+* To create a public link, set `share=True` in `launch()`.</pre>
+  <div class="example"><b>테스트 입력</b><br>환자: 김민수 (50세 남성)<br>주민등록번호: 750312-1234567<br>연락처: 010-1234-5678<br>진단: 급성 위염</div>
+  <div class="example"><b>마스킹 결과 (모델에 전달되는 내용)</b><br>환자: *** (50세 남성)<br>주민등록번호: ******-*******<br>연락처: 010-****-****<br>진단: 급성 위염</div>
+
+  <h3>정규식 읽는 법</h3>
+  <div class="tw"><table>
+    <tr><th>패턴</th><th>뜻</th><th>잡는 것</th></tr>
+    <tr><td><code>\d{6}-\d{7}</code></td><td>숫자 6개, 하이픈, 숫자 7개</td><td>750312-1234567</td></tr>
+    <tr><td><code>01\d-\d{3,4}-\d{4}</code></td><td>01 + 숫자 1개, 하이픈, 숫자 3~4개, 하이픈, 숫자 4개</td><td>010-1234-5678, 011-123-4567</td></tr>
+    <tr><td><code>환자:\s*\S+</code></td><td>"환자:" 뒤 공백 0개 이상, 공백 아닌 글자 덩어리</td><td>환자: 김민수</td></tr>
+  </table></div>
+  <h3>왜 LLM에 보내기 전에 가리나</h3>
+  <p>모델에 보낸 문장은 외부 서버로 전송됩니다. 답변에서 가리는 것으로는 이미 보낸 정보를 되돌릴 수 없으므로, 민감정보는 <b>보내기 전에</b> 지웁니다. Gradio 화면 왼쪽에 마스킹 결과를 보여 주는 이유도 "모델에 실제로 무엇이 갔는지" 사람이 확인하기 위해서입니다.</p>
+  <h3>이 정규식이 놓치는 것</h3>
+  <ul>
+    <li>하이픈 없는 번호: <code>7503121234567</code>, <code>01012345678</code></li>
+    <li>콜론 없는 이름: "환자 김민수", 본문 중간의 "김민수 님"</li>
+    <li>이메일, 주소</li>
+  </ul>
+  <p>정규식 마스킹은 형식이 정해진 정보(번호류)에는 강하고, 이름처럼 형식이 없는 정보에는 약합니다. 확장 방법은 이 단원의 미션에서 다룹니다.</p>
+  <div class="note"><b>다음 단계</b> 지금은 <code>process</code> 함수가 마스킹을 먼저 부르는 방식이라, 누군가 <code>chain.invoke</code>를 직접 부르면 마스킹 없이 원본이 전송됩니다. 마스킹 함수를 체인 안으로 넣어 항상 실행되게 만드는 방법이 05단원 RunnableLambda입니다.</div>
+
+  <div class="view"><div class="view-h">해설 · 실무 관점</div><ul>
+<li><b>의료 데이터를 다룬다면 이 예제가 이 단원에서 가장 중요할 수 있습니다.</b> 외부 API로 보낸 문장은 되돌릴 수 없습니다. 개인정보는 "모델에 보내기 전에" 처리한다는 원칙을 처음부터 몸에 익혀야 합니다.</li>
+<li><b>정규식은 1차 방어선일 뿐입니다.</b> 번호류는 잘 잡지만 이름·주소·병원명처럼 형식이 없는 정보는 놓칩니다. 실무에서는 더 근본적으로, 애초에 이름 같은 식별 정보 칸을 LLM에 보내는 데이터에서 빼는 방식으로 설계합니다. 마스킹보다 "안 보내기"가 더 안전합니다.</li>
+<li><b>Gradio 화면 왼쪽에 마스킹 결과를 보여 준 것은 좋은 설계입니다.</b> 사람이 "모델에 실제로 무엇이 갔는지" 눈으로 확인할 수 있기 때문입니다. 보안 장치는 동작하는지 확인할 수 있어야 의미가 있습니다.</li>
+<li>이 코드의 약점은 마스킹이 <code>process</code> 함수에만 있다는 점입니다. 누군가 <code>chain.invoke</code>를 직접 부르면 원본이 그대로 나갑니다. 보안 처리는 "부르는 쪽이 잊지 않기"에 맡기지 말고 체인 구조에 넣어야 합니다(05단원).</li>
+  </ul></div>
+</section></div>
+<div class="pane" role="tabpanel" id="pane-s10" aria-labelledby="tab-s10"><section>
+  <h2><span class="no">4</span>체인: 파이프 | 로 연결<span class="tg rag">RAG</span><span class="tg lg1">LangGraph 필수</span></h2>
+  <p><code>|</code>(파이프)는 왼쪽 부품의 출력을 오른쪽 부품의 입력으로 넘깁니다. 이렇게 연결한 것을 체인이라고 하고, 이 문법을 <b>LCEL</b>(LangChain Expression Language)이라고 부릅니다.</p>
+<pre class="py">chain = prompt | llm | parser</pre>
+  <h3>각 단계의 입력과 출력</h3>
+  <div class="tw"><table>
+    <tr><th>단계</th><th>받는 것 (입력)</th><th>내보내는 것 (출력)</th></tr>
+    <tr><td><code>prompt</code></td><td>dict <code>{"role": ..., "question": ...}</code></td><td>ChatPromptValue (빈칸이 채워진 메시지)</td></tr>
+    <tr><td><code>llm</code></td><td>ChatPromptValue (또는 문자열·메시지 리스트)</td><td>AIMessage</td></tr>
+    <tr><td><code>parser</code></td><td>AIMessage</td><td>str</td></tr>
+  </table></div>
+  <p><b>규칙: 앞 부품의 출력이 뒤 부품이 받을 수 있는 형태여야 합니다.</b> 개수 제한은 없지만 이 규칙이 깨지면 에러가 납니다.</p>
+
+  <h3>체인을 단계별로 쪼개 실행하기</h3>
+  <p>체인 결과가 이상할 때는 한 단계씩 실행해 어디서 문제가 생겼는지 찾습니다.</p>
+<pre class="py">data = {"role": "건강", "question": "여름철식중독"}
+step1 = prompt.invoke(data);   print(type(step1).__name__)   # ChatPromptValue
+step2 = llm.invoke(step1);     print(type(step2).__name__)   # AIMessage
+step3 = parser.invoke(step2);  print(type(step3).__name__)   # str
+# chain.invoke(data)는 위 세 줄을 한 번에 실행한 것과 같다</pre>
+
+  <h3>한 줄씩 invoke하면 되는데 왜 체인으로 묶나</h3>
+  <p>위처럼 세 줄로 실행해도 결과는 같습니다. 체인으로 묶으면 다음이 가능해집니다.</p>
+  <ul>
+    <li><b>전체를 한 번에 stream · batch:</b> <code>chain.stream()</code>, <code>chain.batch()</code>가 프롬프트부터 파서까지 한꺼번에 적용됩니다. 세 줄 방식으로는 직접 반복문을 짜야 합니다.</li>
+    <li><b>더 큰 체인의 부품이 됨:</b> 이 체인 자체를 다른 체인에 <code>|</code>로 이을 수 있습니다. RAG(07단원)와 분기(08단원)가 이렇게 만들어집니다.</li>
+    <li><b>안전장치를 한 번에 씌움:</b> 재시도·대체 모델(12단원)을 체인 전체에 적용할 수 있습니다.</li>
+  </ul>
+  <h3>순서를 잘못 연결하면</h3>
+<pre class="py">wrong = llm | prompt          # 모델 출력(AIMessage)을 프롬프트에 넣으려 함
+wrong.invoke("안녕")</pre>
+<pre class="err">TypeError: Expected mapping type as input to ChatPromptTemplate. Received &lt;class 'langchain_core.messages.ai.AIMessage'&gt;.</pre>
+  <p>에러 메시지 해석: "ChatPromptTemplate은 mapping(dict)을 기대했는데 AIMessage를 받았다." 프롬프트는 dict만 받기 때문입니다.</p>
+
+  <div class="note"><b>구버전 문법 주의</b> 인터넷 자료에서 <code>LLMChain(llm=llm, prompt=prompt)</code>, <code>chain.run(...)</code>을 보면 구버전입니다. 현재는 <code>prompt | llm | parser</code>와 <code>.invoke()</code>를 씁니다.</div>
+
+  <div class="view"><div class="view-h">해설 · 실무 관점</div><ul>
+<li><b><code>|</code>는 처음에 마법처럼 보이지만, 실체는 "앞 결과를 뒤에 넣기"입니다.</b> 이 점만 확실하면 RAG 체인처럼 길어 보이는 코드도 왼쪽부터 한 칸씩 따라가며 읽을 수 있습니다.</li>
+<li><b>디버깅은 항상 체인을 쪼개서 합니다.</b> 체인 전체 결과가 이상하면 앞에서부터 한 단계씩 invoke해 어디서 값이 틀어지는지 찾습니다. LangGraph에서도 노드를 하나씩 실행해 보는 방식이 같으므로, 지금 이 습관을 들여 두면 그대로 쓰입니다.</li>
+<li><b>긴 체인을 한 줄에 몰아 쓰기보다 의미 단위로 나눠 변수에 담기를 권합니다.</b> 예: <code>sql_chain = ...</code>, <code>answer_chain = ...</code>, <code>full = sql_chain | answer_chain</code>. 각 조각을 따로 테스트할 수 있고 재사용도 쉽습니다.</li>
+  </ul></div>
+</section></div>
+<div class="pane" role="tabpanel" id="pane-s11" aria-labelledby="tab-s11"><section>
+  <h2><span class="no">5</span>실행: invoke · stream · batch<span class="tg rag">RAG</span><span class="tg lg2">LangGraph 참고</span></h2>
+  <p>완성된 체인을 실행하는 방법은 세 가지이고, 모든 체인에서 똑같이 쓸 수 있습니다.</p>
+  <div class="tw"><table>
+    <tr><th>명령</th><th>하는 일</th><th>입력</th><th>출력</th><th>언제 쓰나</th></tr>
+    <tr><td><code>.invoke()</code></td><td>한 번 실행</td><td>입력 1개</td><td>결과 1개</td><td>가장 기본. 질문 하나 → 답 하나</td></tr>
+    <tr><td><code>.stream()</code></td><td>답을 조각 단위로 실시간 출력</td><td>입력 1개</td><td>조각들(반복)</td><td>ChatGPT처럼 글자가 차례로 나오게</td></tr>
+    <tr><td><code>.batch()</code></td><td>여러 개를 한꺼번에</td><td>입력 리스트</td><td>결과 리스트</td><td>질문 여러 개를 빠르게 동시 처리</td></tr>
+  </table></div>
+
+  <h3>invoke</h3>
+<pre class="py">result = chain.invoke({"role": "요리", "question": "파스타 면 삶는 법"})
+print(result)</pre>
+  <p>답이 다 만들어질 때까지 기다렸다가 한 번에 돌려줍니다.</p>
+
+  <h3>stream</h3>
+<pre class="py">for chunk in chain.stream({"role": "요리", "question": "파스타 면 삶는 법"}):
+    print(chunk, end="", flush=True)</pre>
+  <ul>
+    <li>답이 만들어지는 대로 조각(chunk)을 하나씩 받습니다. 조각은 몇 글자 단위의 문자열입니다.</li>
+    <li><code>end=""</code>: 조각마다 줄을 바꾸지 않고 이어 붙입니다.</li>
+    <li><code>flush=True</code>: 받은 즉시 화면에 표시합니다.</li>
+    <li>전체 시간은 invoke와 비슷하지만, 첫 글자가 바로 나와 사용자가 덜 기다린다고 느낍니다.</li>
+  </ul>
+
+  <h3>batch</h3>
+<pre class="py">results = chain.batch([
+    {"role": "요리", "question": "파스타 면 삶는 법"},
+    {"role": "건강", "question": "여름철식중독"},
+    {"role": "운동", "question": "허리 스트레칭"},
+])
+for r in results:
+    print(r[:40], "...")</pre>
+  <ul>
+    <li>입력 리스트를 넣으면 결과 리스트가 <b>입력과 같은 순서로</b> 나옵니다.</li>
+    <li>내부에서 동시에 요청을 보내므로 for문으로 invoke를 세 번 하는 것보다 빠릅니다.</li>
+    <li>요청이 너무 많아 에러(429)가 나면 동시 요청 수를 줄입니다: <code>chain.batch(inputs, config={"max_concurrency": 2})</code></li>
+  </ul>
+  <div class="note"><b>비용</b> invoke · stream · batch 모두 요청 1건당 쓰는 토큰은 같으므로 요금도 같습니다. batch는 빨라질 뿐 싸지지 않습니다. (OpenAI의 할인형 "Batch API"와는 다른 기능입니다.)</div>
+
+  <div class="view"><div class="view-h">해설 · 실무 관점</div><ul>
+<li><b>고르는 기준: 사용자 화면이면 stream, 데이터 일괄 처리면 batch, 개발·테스트는 invoke.</b> 챗봇에서 invoke를 쓰면 답이 완성될 때까지 화면이 멈춰 있어 사용자가 오류로 오해하기 쉽습니다.</li>
+<li><b>batch는 동시 요청 수를 작게 시작하세요.</b> 수십 건을 한 번에 보내면 요청 한도(429 에러)에 걸리기 쉽습니다. <code>max_concurrency</code>를 2~5 정도로 두고 늘려 가는 것을 권합니다.</li>
+<li>세 메서드가 어떤 체인에도 똑같이 붙는다는 점이 중요합니다. 지금 만든 세 부품짜리 체인이든, 나중에 만들 RAG·분기 체인이든 사용법이 같습니다. 새 기능을 배울 때마다 실행법을 다시 배울 필요가 없습니다.</li>
+  </ul></div>
+</section></div>
+<div class="pane" role="tabpanel" id="pane-s12" aria-labelledby="tab-s12"><section>
+  <h2>자주 묻는 질문</h2>
+  <h3>Q1. f-string으로 프롬프트를 만들면 안 되나요?</h3>
+  <p>한 번 호출하고 끝나는 코드면 괜찮습니다. 체인으로 연결하거나, 같은 틀을 여러 값으로 반복하거나, 검색 결과를 끼우려면 ChatPromptTemplate이 필요합니다. ('2 프롬프트' 탭의 비교표)</p>
+  <h3>Q2. system과 human을 꼭 나눠야 하나요?</h3>
+  <p>필수는 아닙니다. 규칙을 더 잘 지키게 하고, 대화 기억을 넣으려면 나눕니다.</p>
+  <h3>Q3. human 말고 어떤 메시지를 넣을 수 있나요?</h3>
+  <p>system, human(user), ai(assistant), 이전 대화 자리(MessagesPlaceholder / placeholder)입니다. ai 메시지는 원하는 답 형식을 예시로 보여 줄 때 씁니다.</p>
+  <h3>Q4. 파서 없이 <code>.content</code>로 꺼내면 안 되나요?</h3>
+  <p>단독 호출이면 같습니다. 체인 결과를 다음 체인에 넘기거나, stream으로 받거나, 나중에 JSON으로 바꿀 계획이면 파서를 둡니다.</p>
+  <h3>Q5. <code>prompt.invoke → llm.invoke → parser.invoke</code>를 차례로 하면 안 되나요?</h3>
+  <p>결과는 같습니다. 체인으로 묶어야 stream · batch를 전체에 한 번에 쓰고, 더 큰 체인(RAG·분기)의 부품으로 쓸 수 있습니다.</p>
+  <h3>Q6. temperature=0이면 항상 똑같은 답이 나오나요?</h3>
+  <p>거의 같지만 완전히 같다고 보장되지는 않습니다. 같은 답이 꼭 필요한 곳(정답 비교, 테스트)은 결과를 저장해 두고 비교합니다.</p>
+  <h3>Q7. <code>ChatOpenAI(...)</code>를 실행하면 요금이 나가나요?</h3>
+  <p>아닙니다. <code>invoke</code> · <code>stream</code> · <code>batch</code>로 실제 요청을 보낼 때 나갑니다.</p>
+  <h3>Q8. <code>llm.invoke("안녕")</code>처럼 문자열을 넣으면 내부에서 어떻게 되나요?</h3>
+  <p>HumanMessage 하나로 바뀌어 모델에 전달됩니다. 프롬프트 템플릿을 거친 것과 같은 형태입니다.</p>
+  <h3>Q9. batch를 쓰면 요금이 싸지나요?</h3>
+  <p>아닙니다. 요청 수와 토큰이 같으므로 요금도 같고, 동시에 보내서 빨라질 뿐입니다.</p>
+  <h3>Q10. 빈칸 이름은 아무거나 써도 되나요?</h3>
+  <p>파이썬 변수 이름처럼 영문·숫자·밑줄로 짓습니다. 실행할 때 넣는 dict의 키와 철자가 정확히 같아야 합니다. 글자 그대로의 중괄호가 필요하면 <code>{{ }}</code>로 씁니다(02단원).</p>
+</section></div>
+<div class="pane" role="tabpanel" id="pane-s13" aria-labelledby="tab-s13"><section>
+  <h2>자주 나는 에러</h2>
+  <p>01단원 코드에서 실제로 나는 에러 메시지입니다. 메시지의 <code>Expected</code>와 <code>Received</code>를 비교하면 원인이 보입니다.</p>
+  <div class="tw"><table>
+    <tr><th>실수한 코드</th><th>에러 메시지</th><th>해결</th></tr>
+    <tr><td><code>chain.invoke({"role": "건강"})</code><br>빈칸 하나를 빠뜨림</td><td><code>KeyError: Input to ChatPromptTemplate is missing variables {'question'}. Expected: ['question', 'role'] Received: ['role']</code></td><td>빈칸 이름 전부를 dict 키로 넣는다</td></tr>
+    <tr><td><code>chain.invoke({"role": "건강", "qestion": "식중독"})</code><br>키 오타</td><td><code>KeyError: ... missing variables {'question'}. Expected: ['question', 'role'] Received: ['role', 'qestion']</code></td><td>Received의 철자를 Expected와 비교한다</td></tr>
+    <tr><td><code>chain.invoke("여름철식중독")</code><br>dict 대신 문자열</td><td><code>TypeError: Expected mapping type as input to ChatPromptTemplate. Received &lt;class 'str'&gt;.</code></td><td>빈칸이 2개 이상이면 반드시 dict로 넣는다</td></tr>
+    <tr><td><code>llm | prompt</code><br>연결 순서 잘못</td><td><code>TypeError: Expected mapping type ... Received &lt;class '...AIMessage'&gt;.</code></td><td>데이터 순서대로 <code>prompt | llm | parser</code></td></tr>
+    <tr><td>.env 미로딩</td><td><code>OpenAIError: The api_key client option must be set ...</code></td><td>.env 위치·변수 이름 확인, <code>load_dotenv()</code> 먼저 실행</td></tr>
+  </table></div>
+</section></div>
+<div class="pane" role="tabpanel" id="pane-summary" aria-labelledby="tab-summary"><section><h2>정리</h2><ul class="sumlist"><li>기본 체인: <code>chain = prompt | llm | StrOutputParser()</code></li><li>타입 흐름: dict → ChatPromptValue → AIMessage → str</li><li>모델 줄만 바꾸면 다른 회사 모델로 교체된다.</li><li>f-string은 즉시 완성된 문자열, 템플릿은 invoke 때 채워지는 틀 → 체인·재사용·검사가 가능.</li><li>규칙은 system, 질문은 human. ai 메시지로 답 형식 예시를 줄 수 있다.</li><li>invoke(1개) · stream(조각) · batch(여러 개)</li></ul></section></div>
+<div class="pane" role="tabpanel" id="pane-missions" aria-labelledby="tab-missions"><section id="missions">
+<h2><span class="no">★</span>미션</h2>
+<p><b>기본</b>: 단원 코드를 바꿔 실행 · <b>응용</b>: 새 상황에 적용 · <b>도전</b>: 여러 단원을 엮어 설계. 예시 답안은 풀어 본 뒤에 확인합니다.</p>
+<div class="mlegend"><span class="lv lv1">★ 기본 3</span><span class="lv lv2">★★ 응용 5</span><span class="lv lv3">★★★ 도전 2</span><span class="mprog" id="mprog"></span></div>
+<p class="cap">완료 체크는 이 브라우저에만 저장됩니다. 모델을 호출하는 답안의 출력은 실행할 때마다 달라집니다.</p>
+<div class="mission" id="basic-m1" data-mid="basic-m1">
+<div class="mhead"><span class="lv lv1">★ 기본</span><span class="tgs"></span><h3>M1. 역할·질문 바꿔 실행하기</h3><label class="mdone"><input type="checkbox" id="basic-m1-done" data-done="basic-m1"> 완료</label></div>
+<p>기본 체인을 그대로 두고 입력 dict만 바꿔 3번 실행합니다. 체인 코드는 한 글자도 바꾸지 않는 것이 핵심입니다.</p>
+<div class="mlabel">시작 코드 · 조건</div><pre class="py">inputs = [
+    {&quot;role&quot;: &quot;영양사&quot;, &quot;question&quot;: &quot;당뇨 환자의 아침 식단&quot;},
+    {&quot;role&quot;: &quot;약사&quot;,   &quot;question&quot;: &quot;감기약과 해열제 같이 먹어도 되나&quot;},
+    {&quot;role&quot;: &quot;물리치료사&quot;, &quot;question&quot;: &quot;거북목 스트레칭&quot;},
+]
+# 여기서 chain.invoke를 반복 실행</pre>
+<div class="mlabel">체크포인트</div><ul class="checks">
+<li><input type="checkbox" id="basic-m1-c1" data-chk="basic-m1-c1"><label for="basic-m1-c1">3개 모두 답이 나왔다</label></li>
+<li><input type="checkbox" id="basic-m1-c2" data-chk="basic-m1-c2"><label for="basic-m1-c2">체인 정의 코드는 수정하지 않았다</label></li>
+<li><input type="checkbox" id="basic-m1-c3" data-chk="basic-m1-c3"><label for="basic-m1-c3">역할에 따라 말투·관점이 달라지는 것을 확인했다</label></li>
+</ul>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">for d in inputs:
+    print(f&quot;【{d[&#x27;role&#x27;]}】&quot;)
+    print(chain.invoke(d)[:200], &quot;...\n&quot;)</pre></details>
+</div>
+<div class="mission" id="basic-m2" data-mid="basic-m2">
+<div class="mhead"><span class="lv lv1">★ 기본</span><span class="tgs"><span class="tg rag">RAG</span><span class="tg lg1">LangGraph 필수</span></span><h3>M2. 단계별 타입 추적표 채우기</h3><label class="mdone"><input type="checkbox" id="basic-m2-done" data-done="basic-m2"> 완료</label></div>
+<p>prompt, llm, parser를 하나씩 떼어 실행하고 <code>type()</code>을 출력해 아래 표를 채웁니다.</p>
+<div class="mlabel">시작 코드 · 조건</div><pre class="py"># | 단계            | 입력 타입 | 출력 타입 |
+# | prompt         |   ?      |    ?     |
+# | llm            |   ?      |    ?     |
+# | parser         |   ?      |    ?     |</pre>
+<div class="mlabel">체크포인트</div><ul class="checks">
+<li><input type="checkbox" id="basic-m2-c1" data-chk="basic-m2-c1"><label for="basic-m2-c1">prompt 출력 = ChatPromptValue</label></li>
+<li><input type="checkbox" id="basic-m2-c2" data-chk="basic-m2-c2"><label for="basic-m2-c2">llm 출력 = AIMessage</label></li>
+<li><input type="checkbox" id="basic-m2-c3" data-chk="basic-m2-c3"><label for="basic-m2-c3">parser 출력 = str</label></li>
+<li><input type="checkbox" id="basic-m2-c4" data-chk="basic-m2-c4"><label for="basic-m2-c4">파서 없이 슬라이싱 result[1:4]를 하면 왜 안 되는지 설명할 수 있다</label></li>
+</ul>
+<details class="hint"><summary>힌트 보기</summary><p><code>pv = prompt.invoke(data)</code> → <code>msg = llm.invoke(pv)</code> → <code>text = parser.invoke(msg)</code> 순서로 실행하며 각각 type을 찍습니다.</p></details>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">data = {&quot;role&quot;: &quot;건강&quot;, &quot;question&quot;: &quot;여름철식중독&quot;}
+pv = prompt.invoke(data);   print(type(data).__name__, &quot;→&quot;, type(pv).__name__)
+msg = llm.invoke(pv);       print(type(pv).__name__,   &quot;→&quot;, type(msg).__name__)
+text = parser.invoke(msg);  print(type(msg).__name__,  &quot;→&quot;, type(text).__name__)
+# dict → ChatPromptValue → AIMessage → str</pre></details>
+</div>
+<div class="mission" id="basic-m3" data-mid="basic-m3">
+<div class="mhead"><span class="lv lv1">★ 기본</span><span class="tgs"></span><h3>M3. temperature 비교 실험</h3><label class="mdone"><input type="checkbox" id="basic-m3-done" data-done="basic-m3"> 완료</label></div>
+<p>같은 질문을 temperature 0과 1.0으로 각각 3번씩 실행해 답이 얼마나 달라지는지 봅니다.</p>
+<div class="mlabel">체크포인트</div><ul class="checks">
+<li><input type="checkbox" id="basic-m3-c1" data-chk="basic-m3-c1"><label for="basic-m3-c1">temperature=0의 3개 답이 거의 같다</label></li>
+<li><input type="checkbox" id="basic-m3-c2" data-chk="basic-m3-c2"><label for="basic-m3-c2">temperature=1.0의 3개 답이 눈에 띄게 다르다</label></li>
+<li><input type="checkbox" id="basic-m3-c3" data-chk="basic-m3-c3"><label for="basic-m3-c3">진료 상담에 어느 값을 쓸지 이유와 함께 한 줄로 적었다</label></li>
+</ul>
+<details class="hint"><summary>힌트 보기</summary><p>체인을 함수로 만들면 편합니다: <code>def make_chain(t): return prompt | ChatOpenAI(model=..., temperature=t) | parser</code></p></details>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">def make_chain(t):
+    return prompt | ChatOpenAI(model=&quot;gpt-4o-mini&quot;, temperature=t) | parser
+
+q = {&quot;role&quot;: &quot;카피라이터&quot;, &quot;question&quot;: &quot;손씻기 캠페인 한 줄 문구&quot;}
+for t in [0, 1.0]:
+    print(f&quot;── temperature={t}&quot;)
+    for _ in range(3):
+        print(&quot;  &quot;, make_chain(t).invoke(q)[:60])</pre></details>
+</div>
+<div class="mission" id="basic-m4" data-mid="basic-m4">
+<div class="mhead"><span class="lv lv2">★★ 응용</span><span class="tgs"><span class="tg lg2">LangGraph 참고</span></span><h3>M4. 토큰 사용량 읽기</h3><label class="mdone"><input type="checkbox" id="basic-m4-done" data-done="basic-m4"> 완료</label></div>
+<p>파서를 붙이기 전의 AIMessage에는 토큰 사용량이 들어 있습니다. 질문 길이를 바꿔 가며 입력·출력 토큰이 어떻게 변하는지 기록합니다.</p>
+<div class="mlabel">체크포인트</div><ul class="checks">
+<li><input type="checkbox" id="basic-m4-c1" data-chk="basic-m4-c1"><label for="basic-m4-c1">usage_metadata에서 input_tokens, output_tokens를 꺼냈다</label></li>
+<li><input type="checkbox" id="basic-m4-c2" data-chk="basic-m4-c2"><label for="basic-m4-c2">프롬프트가 길어지면 input_tokens가 늘어나는 것을 확인했다</label></li>
+<li><input type="checkbox" id="basic-m4-c3" data-chk="basic-m4-c3"><label for="basic-m4-c3">답 길이를 &#x27;한 문장으로&#x27;라고 제한하면 output_tokens가 줄어드는 것을 확인했다</label></li>
+</ul>
+<details class="hint"><summary>힌트 보기</summary><p><code>msg = (prompt | llm).invoke(data)</code> 후 <code>msg.usage_metadata</code>를 출력해 보세요.</p></details>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">raw_chain = prompt | llm          # 파서 없이 AIMessage 받기
+for q in [&quot;감기&quot;, &quot;감기에 대해 한 문장으로&quot;, &quot;감기의 원인, 증상, 치료, 예방을 자세히&quot;]:
+    msg = raw_chain.invoke({&quot;role&quot;: &quot;내과&quot;, &quot;question&quot;: q})
+    u = msg.usage_metadata
+    print(f&quot;{q[:20]:&lt;22} 입력 {u[&#x27;input_tokens&#x27;]:&gt;4}  출력 {u[&#x27;output_tokens&#x27;]:&gt;4}&quot;)</pre></details>
+</div>
+<div class="mission" id="basic-m5" data-mid="basic-m5">
+<div class="mhead"><span class="lv lv2">★★ 응용</span><span class="tgs"></span><h3>M5. invoke 반복 vs batch 시간 재기</h3><label class="mdone"><input type="checkbox" id="basic-m5-done" data-done="basic-m5"> 완료</label></div>
+<p>질문 5개를 for문 invoke로 한 번, batch로 한 번 처리하고 걸린 시간을 비교합니다.</p>
+<div class="mlabel">체크포인트</div><ul class="checks">
+<li><input type="checkbox" id="basic-m5-c1" data-chk="basic-m5-c1"><label for="basic-m5-c1">두 방식의 결과 개수가 5개로 같다</label></li>
+<li><input type="checkbox" id="basic-m5-c2" data-chk="basic-m5-c2"><label for="basic-m5-c2">batch가 더 빠르다는 것을 숫자로 확인했다</label></li>
+<li><input type="checkbox" id="basic-m5-c3" data-chk="basic-m5-c3"><label for="basic-m5-c3">batch 결과의 순서가 입력 순서와 같다</label></li>
+</ul>
+<details class="hint"><summary>힌트 보기</summary><p><code>import time; t = time.perf_counter(); ...; print(time.perf_counter() - t)</code></p></details>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">import time
+qs = [{&quot;role&quot;: &quot;건강&quot;, &quot;question&quot;: q} for q in [&quot;감기&quot;, &quot;독감&quot;, &quot;식중독&quot;, &quot;장염&quot;, &quot;두통&quot;]]
+
+t = time.perf_counter()
+r1 = [chain.invoke(q) for q in qs]
+print(&quot;for invoke:&quot;, round(time.perf_counter() - t, 1), &quot;초&quot;)
+
+t = time.perf_counter()
+r2 = chain.batch(qs)
+print(&quot;batch     :&quot;, round(time.perf_counter() - t, 1), &quot;초&quot;)</pre></details>
+</div>
+<div class="mission" id="basic-m6" data-mid="basic-m6">
+<div class="mhead"><span class="lv lv2">★★ 응용</span><span class="tgs"><span class="tg rag">RAG</span><span class="tg lg2">LangGraph 참고</span></span><h3>M6. stream으로 타자 효과 보기</h3><label class="mdone"><input type="checkbox" id="basic-m6-done" data-done="basic-m6"> 완료</label></div>
+<p>긴 답이 나오는 질문을 stream으로 출력하고, 받은 조각 수와 첫 조각이 도착하기까지의 시간을 잽니다.</p>
+<div class="mlabel">체크포인트</div><ul class="checks">
+<li><input type="checkbox" id="basic-m6-c1" data-chk="basic-m6-c1"><label for="basic-m6-c1">글자가 흐르듯 출력된다</label></li>
+<li><input type="checkbox" id="basic-m6-c2" data-chk="basic-m6-c2"><label for="basic-m6-c2">조각(chunk) 개수를 셌다</label></li>
+<li><input type="checkbox" id="basic-m6-c3" data-chk="basic-m6-c3"><label for="basic-m6-c3">invoke 전체 시간보다 첫 조각 도착 시간이 짧다</label></li>
+</ul>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">import time
+t = time.perf_counter(); first = None; n = 0
+for chunk in chain.stream({&quot;role&quot;: &quot;건강&quot;, &quot;question&quot;: &quot;고혈압 생활습관 관리 자세히&quot;}):
+    if first is None:
+        first = time.perf_counter() - t
+    n += 1
+    print(chunk, end=&quot;&quot;, flush=True)
+print(f&quot;\n\n조각 {n}개 / 첫 조각까지 {first:.2f}초 / 전체 {time.perf_counter()-t:.2f}초&quot;)</pre></details>
+</div>
+<div class="mission" id="basic-m7" data-mid="basic-m7">
+<div class="mhead"><span class="lv lv3">★★★ 도전</span><span class="tgs"><span class="tg rag">RAG</span></span><h3>M7. 모델만 바꿔서 같은 체인 돌리기</h3><label class="mdone"><input type="checkbox" id="basic-m7-done" data-done="basic-m7"> 완료</label></div>
+<p>②③④(프롬프트·파서·체인 구조)는 그대로 두고 모델 줄만 바꿔 결과를 비교합니다. 다른 회사 키가 없다면 <code>gpt-4o</code>와 <code>gpt-4o-mini</code>로 비교해도 됩니다.</p>
+<div class="mlabel">체크포인트</div><ul class="checks">
+<li><input type="checkbox" id="basic-m7-c1" data-chk="basic-m7-c1"><label for="basic-m7-c1">모델 객체만 바꿨고 나머지 코드는 동일하다</label></li>
+<li><input type="checkbox" id="basic-m7-c2" data-chk="basic-m7-c2"><label for="basic-m7-c2">두 모델의 답 길이·스타일 차이를 2줄로 정리했다</label></li>
+<li><input type="checkbox" id="basic-m7-c3" data-chk="basic-m7-c3"><label for="basic-m7-c3">두 모델의 토큰 사용량도 비교했다</label></li>
+</ul>
+<details class="hint"><summary>힌트 보기</summary><p>모델 리스트를 만들고 <code>for m in models: (prompt | m | parser).invoke(data)</code></p></details>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">models = {
+    &quot;gpt-4o-mini&quot;: ChatOpenAI(model=&quot;gpt-4o-mini&quot;, temperature=0),
+    &quot;gpt-4o&quot;:      ChatOpenAI(model=&quot;gpt-4o&quot;, temperature=0),
+    # &quot;claude&quot;:    ChatAnthropic(model=&quot;claude-sonnet-4-5&quot;, temperature=0),
+}
+data = {&quot;role&quot;: &quot;건강&quot;, &quot;question&quot;: &quot;여름철식중독&quot;}
+for name, m in models.items():
+    out = (prompt | m | parser).invoke(data)
+    print(f&quot;【{name}】 {len(out)}자\n{out[:150]}...\n&quot;)</pre></details>
+</div>
+<div class="mission" id="basic-m8" data-mid="basic-m8">
+<div class="mhead"><span class="lv lv2">★★ 응용</span><span class="tgs"></span><h3>M8. 응급 분기를 안전한 쪽으로 고치기</h3><label class="mdone"><input type="checkbox" id="basic-m8-done" data-done="basic-m8"> 완료</label></div>
+<p>3-2 예제는 형식이 어긋나면 '경미'로 빠집니다. <b>확실히 '경미'일 때만 경미 안내</b>를 하고 나머지는 모두 응급 안내로 가도록 고친 뒤, 일부러 이상한 판정값을 넣어 테스트하세요.</p>
+<div class="mlabel">시작 코드 · 조건</div><pre class="py">def route(verdict: dict, symptom: str) -&gt; str:
+    # 여기를 완성
+    ...
+
+# 테스트: LLM 없이 판정 dict를 직접 넣어 본다
+for v in [{&quot;level&quot;: &quot;경미&quot;}, {&quot;level&quot;: &quot;응급&quot;}, {&quot;level&quot;: &quot;모름&quot;}, {}]:
+    print(v, &quot;→&quot;, &quot;응급 안내&quot; if ... else &quot;경미 안내&quot;)</pre>
+<div class="mlabel">체크포인트</div><ul class="checks">
+<li><input type="checkbox" id="basic-m8-c1" data-chk="basic-m8-c1"><label for="basic-m8-c1">{&#x27;level&#x27;: &#x27;모름&#x27;}과 빈 dict {}가 응급 쪽으로 간다</label></li>
+<li><input type="checkbox" id="basic-m8-c2" data-chk="basic-m8-c2"><label for="basic-m8-c2">KeyError가 나지 않는다(.get 사용)</label></li>
+<li><input type="checkbox" id="basic-m8-c3" data-chk="basic-m8-c3"><label for="basic-m8-c3">왜 의료 분기에서 이 방향이 안전한지 한 줄로 적었다</label></li>
+</ul>
+<details class="hint"><summary>힌트 보기</summary><p><code>verdict.get("level") == "경미"</code></p></details>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">def route(verdict: dict, symptom: str) -&gt; str:
+    if verdict.get(&quot;level&quot;) == &quot;경미&quot;:                  # 확실할 때만 경미
+        return (mild | llm | parser).invoke({&quot;text&quot;: symptom})
+    return (emergency | llm | parser).invoke({&quot;text&quot;: symptom})   # 나머지는 전부 응급
+
+for v in [{&quot;level&quot;: &quot;경미&quot;}, {&quot;level&quot;: &quot;응급&quot;}, {&quot;level&quot;: &quot;모름&quot;}, {}]:
+    print(v, &quot;→&quot;, &quot;경미 안내&quot; if v.get(&quot;level&quot;) == &quot;경미&quot; else &quot;응급 안내&quot;)</pre></details>
+</div>
+<div class="mission" id="basic-m9" data-mid="basic-m9">
+<div class="mhead"><span class="lv lv2">★★ 응용</span><span class="tgs"></span><h3>M9. Text-to-SQL 버그 고치고 안전장치 달기</h3><label class="mdone"><input type="checkbox" id="basic-m9-done" data-done="basic-m9"> 완료</label></div>
+<p>① <code>to_sql</code>의 테이블 이름 버그를 고치고 ② 읽기 전용 연결 ③ SELECT 검사 함수 <code>safe_query(sql)</code>를 만드세요. 마지막에 <code>DELETE</code> 문을 넣어 막히는지 확인합니다.</p>
+<div class="mlabel">체크포인트</div><ul class="checks">
+<li><input type="checkbox" id="basic-m9-c1" data-chk="basic-m9-c1"><label for="basic-m9-c1">sqlite_master에서 테이블 이름이 &#x27;patients_history&#x27;로 보인다</label></li>
+<li><input type="checkbox" id="basic-m9-c2" data-chk="basic-m9-c2"><label for="basic-m9-c2">safe_query(&#x27;DELETE FROM patients_history;&#x27;)가 ValueError</label></li>
+<li><input type="checkbox" id="basic-m9-c3" data-chk="basic-m9-c3"><label for="basic-m9-c3">safe_query(&#x27;SELECT 1; DROP TABLE x;&#x27;)도 막힌다</label></li>
+<li><input type="checkbox" id="basic-m9-c4" data-chk="basic-m9-c4"><label for="basic-m9-c4">정상 SELECT는 DataFrame을 돌려준다</label></li>
+</ul>
+<details class="hint"><summary>힌트 보기</summary><p>세미콜론으로 여러 문장을 이어 붙이는 공격도 생각하세요. 끝의 세미콜론 하나는 제거하고, 그 뒤에 남은 세미콜론이 있으면 거부합니다.</p></details>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">import sqlite3, pandas as pd
+
+# ① 버그 수정
+df = pd.read_csv(&quot;감기환자_진료데이터.csv&quot;)
+with sqlite3.connect(&quot;medical_records.db&quot;) as c:
+    df.to_sql(&quot;patients_history&quot;, c, index=False, if_exists=&quot;replace&quot;)
+    print(c.execute(&quot;SELECT name FROM sqlite_master WHERE type=&#x27;table&#x27;&quot;).fetchall())
+
+# ②③ 안전 실행
+def safe_query(sql: str) -&gt; pd.DataFrame:
+    s = sql.strip().rstrip(&quot;;&quot;).strip()
+    if not s.upper().startswith(&quot;SELECT&quot;) or &quot;;&quot; in s:
+        raise ValueError(f&quot;허용되지 않는 쿼리: {sql}&quot;)
+    conn = sqlite3.connect(&quot;file:medical_records.db?mode=ro&quot;, uri=True)   # 읽기 전용
+    try:
+        return pd.read_sql(s, conn)
+    finally:
+        conn.close()
+
+for q in [&quot;SELECT COUNT(*) FROM patients_history;&quot;, &quot;DELETE FROM patients_history;&quot;, &quot;SELECT 1; DROP TABLE x;&quot;]:
+    try:
+        print(safe_query(q))
+    except ValueError as e:
+        print(&quot;차단:&quot;, e)</pre></details>
+</div>
+<div class="mission" id="basic-m10" data-mid="basic-m10">
+<div class="mhead"><span class="lv lv3">★★★ 도전</span><span class="tgs"></span><h3>M10. 마스킹 정규식 확장</h3><label class="mdone"><input type="checkbox" id="basic-m10-done" data-done="basic-m10"> 완료</label></div>
+<p>3-3의 마스킹 함수는 아래 입력에서 많은 정보를 놓칩니다. 모두 가리도록 정규식을 확장하세요.</p>
+<div class="mlabel">시작 코드 · 조건</div><pre class="py">test = &quot;환자 김민수 7503121234567, 01012345678, minsu.kim@test.com / 환자: 이영희 연락처 010-9876-5432&quot;
+# 목표 출력:
+# 환자 *** ******-*******, 010-****-****, ***@*** / 환자 *** 연락처 010-****-****</pre>
+<div class="mlabel">체크포인트</div><ul class="checks">
+<li><input type="checkbox" id="basic-m10-c1" data-chk="basic-m10-c1"><label for="basic-m10-c1">하이픈 없는 주민번호 13자리를 가린다</label></li>
+<li><input type="checkbox" id="basic-m10-c2" data-chk="basic-m10-c2"><label for="basic-m10-c2">하이픈 없는 휴대폰 번호를 가린다</label></li>
+<li><input type="checkbox" id="basic-m10-c3" data-chk="basic-m10-c3"><label for="basic-m10-c3">이메일을 가린다</label></li>
+<li><input type="checkbox" id="basic-m10-c4" data-chk="basic-m10-c4"><label for="basic-m10-c4">&#x27;환자 김민수&#x27;(콜론 없음)와 &#x27;환자: 이영희&#x27; 둘 다 가린다</label></li>
+<li><input type="checkbox" id="basic-m10-c5" data-chk="basic-m10-c5"><label for="basic-m10-c5">원래 예제 입력도 여전히 잘 가린다</label></li>
+</ul>
+<details class="hint"><summary>힌트 보기</summary><p>하이픈을 선택으로: <code>-?</code> / 콜론을 선택으로: <code>:?</code> / 한글 이름: <code>[가-힣]{2,4}</code></p></details>
+<details class="ans"><summary>예시 답안 보기</summary><pre class="py">import re
+def mask_privacy(t: str) -&gt; str:
+    t = re.sub(r&quot;\d{6}-?\d{7}&quot;, &quot;******-*******&quot;, t)            # 주민번호(하이픈 선택)
+    t = re.sub(r&quot;01\d-?\d{3,4}-?\d{4}&quot;, &quot;010-****-****&quot;, t)     # 휴대폰(하이픈 선택)
+    t = re.sub(r&quot;[\w.+-]+@[\w-]+\.[\w.]+&quot;, &quot;***@***&quot;, t)         # 이메일
+    t = re.sub(r&quot;환자\s*:?\s*[가-힣]{2,4}&quot;, &quot;환자 ***&quot;, t)           # 환자 이름(콜론 선택)
+    return t
+print(mask_privacy(test))</pre></details>
+<div class="note"><b>메모</b> 주민번호를 전화번호보다 <b>먼저</b> 처리해야 합니다. 순서를 바꾸면 결과가 어떻게 달라지는지 확인해 보세요.</div>
+</div>
+</section></div>
+<footer>LangChain 문법 교안 · 예제의 병원·환자 정보는 모두 교육용 가상 데이터입니다.</footer>
+</main>
+</div>
+
+<script>
+(function(){
+  const UNITS = {"map": ["map-m1", "map-m2", "map-m3", "map-m4", "map-m5"], "basic": ["basic-m1", "basic-m2", "basic-m3", "basic-m4", "basic-m5", "basic-m6", "basic-m7", "basic-m8", "basic-m9", "basic-m10"], "prompt": ["prompt-m1", "prompt-m2", "prompt-m3", "prompt-m4", "prompt-m5", "prompt-m6"], "parser": ["parser-m1", "parser-m2", "parser-m3", "parser-m4", "parser-m5", "parser-m6"], "seq": ["seq-m1", "seq-m2", "seq-m3", "seq-m4", "seq-m5"], "lambda": ["lambda-m1", "lambda-m2", "lambda-m3", "lambda-m4", "lambda-m5", "lambda-m6"], "pass": ["pass-m1", "pass-m2", "pass-m3", "pass-m4", "pass-m5"], "parallel": ["parallel-m1", "parallel-m2", "parallel-m3", "parallel-m4", "parallel-m5", "parallel-m6"], "branch": ["branch-m1", "branch-m2", "branch-m3", "branch-m4", "branch-m5"], "sequence": ["sequence-m1", "sequence-m2", "sequence-m3", "sequence-m4", "sequence-m5"], "memory": ["memory-m1", "memory-m2", "memory-m3", "memory-m4", "memory-m5"], "structured": ["structured-m1", "structured-m2", "structured-m3", "structured-m4", "structured-m5"], "robust": ["robust-m1", "robust-m2", "robust-m3", "robust-m4", "robust-m5"], "tool": ["tool-m1", "tool-m2", "tool-m3", "tool-m4", "tool-m5"], "final": ["final-m1", "final-m2", "final-m3", "final-m4", "final-m5", "final-m6", "final-m7"], "cheat": ["cheat-m1", "cheat-m2", "cheat-m3", "cheat-m4", "cheat-m5"]};
+  const KEY = 'lc-missions-v1';
+  let st = {};
+  try { st = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch(e) { st = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch(e) {} };
+
+  // 코드 하이라이트 + 복사
+  const KW = /^(from|import|def|return|for|in|if|elif|else|not|and|or|with|as|class|lambda|True|False|None|try|except|finally|await|yield|is|raise|continue|print)$/;
+  const RE = /("""[\s\S]*?"""|f?"(?:[^"\\\n]|\\.)*"|f?'(?:[^'\\\n]|\\.)*'|#[^\n]*|\b[A-Za-z_]+\b)/g;
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  function selectText(el){ const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+  document.querySelectorAll('pre.py').forEach(pre => {
+    const src = pre.textContent; let out = '', last = 0, m; RE.lastIndex = 0;
+    while ((m = RE.exec(src))) {
+      out += esc(src.slice(last, m.index)); const t = m[0];
+      if (t[0] === '#') out += '<span class="c">' + esc(t) + '</span>';
+      else if (t[0] === '"' || t[0] === "'" || (t[0] === 'f' && (t[1] === '"' || t[1] === "'"))) out += '<span class="s">' + esc(t) + '</span>';
+      else if (KW.test(t)) out += '<span class="k">' + t + '</span>';
+      else out += esc(t);
+      last = m.index + t.length;
+    }
+    pre.innerHTML = out + esc(src.slice(last));
+    const wrap = document.createElement('div'); wrap.style.position = 'relative';
+    pre.parentNode.insertBefore(wrap, pre); wrap.appendChild(pre);
+    const b = document.createElement('button'); b.className = 'copy'; b.type = 'button'; b.textContent = '복사';
+    b.style.cssText = 'position:absolute;top:8px;right:8px';
+    b.addEventListener('click', () => {
+      const ok = () => { b.textContent = '복사됨'; setTimeout(() => b.textContent = '복사', 1400); };
+      const fail = () => { selectText(pre); b.textContent = '선택됨'; };
+      try { navigator.clipboard.writeText(src).then(ok, fail); } catch(e) { fail(); }
+    });
+    wrap.appendChild(b);
+  });
+
+  // 미션 체크 상태
+  document.querySelectorAll('input[data-done],input[data-chk]').forEach(inp => {
+    const k = inp.dataset.done || inp.dataset.chk;
+    inp.checked = !!st[k];
+    inp.addEventListener('change', () => { st[k] = inp.checked; save(); paint(); });
+  });
+  function paint(){
+    document.querySelectorAll('.mission').forEach(m => m.classList.toggle('is-done', !!st[m.dataset.mid]));
+    let total = 0, done = 0;
+    Object.keys(UNITS).forEach(u => {
+      const ids = UNITS[u]; const d = ids.filter(id => st[id]).length;
+      total += ids.length; done += d;
+      document.querySelectorAll('[data-mc="' + u + '"]').forEach(el => el.textContent = d + '/' + ids.length);
+      document.querySelectorAll('[data-u="' + u + '"]').forEach(el => el.classList.toggle('full', d === ids.length));
+      document.querySelectorAll('[data-bar="' + u + '"]').forEach(el => el.style.width = (d / ids.length * 100) + '%');
+    });
+    const pb = document.getElementById('progbar'); if (pb) pb.style.width = (done / total * 100) + '%';
+    const pt = document.getElementById('progtext'); if (pt) pt.textContent = '미션 ' + done + ' / ' + total + ' 완료';
+    const mp = document.getElementById('mprog'); const cur = document.body.dataset.unit;
+    if (mp && cur) { const ids = UNITS[cur]; mp.textContent = '· 완료 ' + ids.filter(id => st[id]).length + ' / ' + ids.length; }
+    const mc = document.getElementById('mcount'); if (mc && cur) { const ids = UNITS[cur]; mc.textContent = ids.filter(id => st[id]).length + '/' + ids.length; }
+  }
+  paint();
+})();
+</script>
+
+<script>
+(function(){
+  const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+  if (!tabs.length) return;
+  const ids = tabs.map(t => t.dataset.t);
+  function show(id, push){
+    tabs.forEach(t => { const on = t.dataset.t === id; t.setAttribute('aria-selected', on ? 'true' : 'false'); t.tabIndex = on ? 0 : -1;
+      if (on) t.scrollIntoView({block:'nearest', inline:'nearest'}); });
+    document.querySelectorAll('[role="tabpanel"]').forEach(p => p.hidden = p.id !== 'pane-' + id);
+    if (push) { try { history.replaceState(null, '', '#' + id); } catch(e){} window.scrollTo({top: 0}); }
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => show(t.dataset.t, true));
+    t.addEventListener('keydown', e => {
+      const f = e.key === 'ArrowDown' || e.key === 'ArrowRight', b = e.key === 'ArrowUp' || e.key === 'ArrowLeft';
+      if (!f && !b) return; e.preventDefault();
+      const n = tabs[(i + (f ? 1 : tabs.length - 1)) % tabs.length]; n.focus(); show(n.dataset.t, true);
+    });
+  });
+  const h = location.hash.slice(1);
+  show(ids.includes(h) ? h : 'intro', false);
+  window.addEventListener('hashchange', () => { const x = location.hash.slice(1); if (ids.includes(x)) show(x, false); });
+})();
+</script>
+</body>
+</html>
