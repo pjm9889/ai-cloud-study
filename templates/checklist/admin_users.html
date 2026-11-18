@@ -23,7 +23,7 @@
     <h2>등록된 학생 {{ users|length }}명</h2>
     <div class="ck-tablewrap">
     <table class="ck-table">
-      <thead><tr><th>조</th><th>이름</th><th>역할</th><th>비밀번호</th><th>마지막 로그인</th><th></th></tr></thead>
+      <thead><tr><th>조</th><th>이름</th><th>역할</th><th>비밀번호</th><th>점검 날짜 수</th><th>마지막 점검</th><th>마지막 로그인</th><th></th></tr></thead>
       <tbody>
       {% for u in users %}
         <tr>
@@ -31,6 +31,8 @@
           <td class="nowrap"><b>{{ u.name }}</b></td>
           <td class="nowrap">{{ roles.get(u.role, '-') }}</td>
           <td>{% if u.pw_hash %}설정됨{% else %}<span class="muted">첫 로그인 전</span>{% endif %}</td>
+          <td class="num">{{ u.n_dates }}</td>
+          <td class="muted nowrap">{{ u.last_date or '-' }}</td>
           <td class="muted nowrap">{{ u.last_login or '-' }}</td>
           <td class="nowrap">
             <form method="post" action="{{ P }}/admin/users/{{ u.id }}/reset" class="ck-inline" onsubmit="return confirm('{{ u.name }}님의 비밀번호를 초기화할까요? 체크 기록은 남습니다.')">
@@ -40,7 +42,7 @@
           </td>
         </tr>
       {% else %}
-        <tr><td colspan="6" class="ck-empty">아직 등록된 학생이 없습니다.</td></tr>
+        <tr><td colspan="8" class="ck-empty">아직 등록된 학생이 없습니다.</td></tr>
       {% endfor %}
       </tbody>
     </table>

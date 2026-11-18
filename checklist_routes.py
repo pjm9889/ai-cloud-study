@@ -2,10 +2,12 @@
 자가진단 체크리스트 (/checklist)
 
 Day별 작업이 끝날 때마다 "GPT(LLM) 도움 없이 이 정도는 할 수 있다"를 개인별로 체크하고,
-과정 전체(역량 영역별)로 쌓아 보는 기능입니다.
+같은 항목을 날짜를 바꿔 다시 점검하며, 과정 전체(역량 영역별)로 쌓아 보는 기능입니다.
 
 - 학생: 강사가 등록한 이름으로 로그인, 첫 로그인 때 자기 비밀번호를 정함
-- 강사: ADMIN_PASSWORD 환경변수로 로그인 (main.py와 같은 값)
+- 점검 기록: (학생, 항목, 점검 날짜)마다 한 줄. 가장 최근 날짜의 값이 '현재 상태'
+- 다시 점검: 전체 / 🟡·⬜만 / ⬜만 / 미응답만 골라서 다시 체크
+- 강사: ADMIN_PASSWORD 환경변수로 로그인 (main.py와 같은 값). 기준 날짜를 바꿔 그날까지의 상태를 볼 수 있음
 - 데이터: data/checklist.db (SQLite), 항목: data/checklist_items.yaml
 
 main.py에 두 줄만 추가하면 됩니다.
@@ -30,7 +32,7 @@ import sqlite3
 import time
 from collections import OrderedDict, defaultdict
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 from urllib.parse import parse_qs, urlencode
@@ -46,21 +48,26 @@ ITEMS_PATH = Path(os.getenv("CHECKLIST_ITEMS", str(BASE / "data" / "checklist_it
 SECRET_FILE = BASE / "data" / ".checklist_secret"
 COOKIE_SECURE = os.getenv("CHECKLIST_COOKIE_SECURE", "0") == "1"
 P = "/checklist"
-SESSION_SEC = 60 * 60 * 24 * 14
+SESSION_SEC = 60 * 60 * 24 * 30
 ADMIN_SEC = 60 * 60 * 12
 MIN_PW = 4
+KST = timezone(timedelta(hours=9))
 
 ROLES = {"rec": "🔍 기록 담당", "doc": "📘 문서 담당"}
 ROLE_ALIASES = {"rec": "rec", "기록": "rec", "기록담당": "rec", "🔍": "rec",
                 "doc": "doc", "문서": "doc", "문서담당": "doc", "📘": "doc"}
 SCOPES = {"common": "👥 공통", "rec": "🔍 기록 담당", "doc": "📘 문서 담당", "peer": "🔁 상대 영역"}
 STATUS = {2: "혼자 할 수 있다", 1: "자료를 보면 할 수 있다", 0: "아직 어렵다"}
+ICON = {2: "✅", 1: "🟡", 0: "⬜", None: "·"}
+MODES = OrderedDict([("all", "전체 다시 확인"), ("review", "🟡·⬜ 다시 보기"),
+                     ("hard", "⬜ 아직만"), ("blank", "미응답만")])
 
 router = APIRouter(prefix=P, include_in_schema=False)
 templates = Jinja2Templates(directory=str(BASE / "templates"))
 
-DAYS: "OrderedDict[int, str]" = OrderedDict()
-AREAS: "OrderedDict[str, dict]" = OrderedDict()   # 이름 -> {name, course, desc}
+DAYS: "OrderedDict[int, str]" = OrderedDict()      # day -> 제목
+DAY_DATES: "dict[int, str]" = {}                    # day -> 수업 날짜 (선택)
+AREAS: "OrderedDict[str, dict]" = OrderedDict()     # 이름 -> {name, course, desc}
 
 
 # ================================================================ DB
@@ -98,18 +105,23 @@ CREATE TABLE IF NOT EXISTS ck_items (
   ord           INTEGER NOT NULL,
   active        INTEGER NOT NULL DEFAULT 1
 );
-CREATE TABLE IF NOT EXISTS ck_checks (
+-- (학생, 항목, 점검 날짜)마다 한 줄. 같은 날 다시 누르면 그 날짜 값이 바뀐다.
+CREATE TABLE IF NOT EXISTS ck_entries (
   user_id    INTEGER NOT NULL REFERENCES ck_users(id) ON DELETE CASCADE,
   item_id    TEXT NOT NULL REFERENCES ck_items(id),
+  check_date TEXT NOT NULL,
   status     INTEGER,
   note       TEXT,
   updated_at TEXT NOT NULL,
-  PRIMARY KEY (user_id, item_id)
+  PRIMARY KEY (user_id, item_id, check_date)
 );
+CREATE INDEX IF NOT EXISTS idx_ck_entries_date ON ck_entries(check_date);
+-- 모든 변경 기록 (같은 날짜 안에서 바꾼 것까지)
 CREATE TABLE IF NOT EXISTS ck_log (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id    INTEGER NOT NULL REFERENCES ck_users(id) ON DELETE CASCADE,
   item_id    TEXT NOT NULL,
+  check_date TEXT,
   old_status INTEGER,
   new_status INTEGER,
   note       TEXT,
@@ -119,23 +131,39 @@ CREATE TABLE IF NOT EXISTS ck_log (
 
 
 def now() -> str:
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return datetime.now(KST).strftime("%Y-%m-%d %H:%M:%S")
+
+
+def today() -> str:
+    return datetime.now(KST).date().isoformat()
+
+
+def valid_date(s: Optional[str]) -> Optional[str]:
+    try:
+        d = date.fromisoformat((s or "").strip())
+    except ValueError:
+        return None
+    if d.year < 2020 or d.isoformat() > today():
+        return None
+    return d.isoformat()
 
 
 def load_items(c: sqlite3.Connection) -> int:
     """yaml의 항목을 DB와 맞춘다. yaml에서 빠진 항목은 숨김(active=0). 체크 기록은 남는다."""
     data = yaml.safe_load(ITEMS_PATH.read_text(encoding="utf-8"))
-    days, areas = OrderedDict(), OrderedDict()
+    days, ddates, areas = OrderedDict(), {}, OrderedDict()
     for a in data.get("areas") or []:
         areas[a["name"]] = {"name": a["name"], "course": a.get("course", ""), "desc": a.get("desc", "")}
     rows, seen, ord_ = [], set(), 0
     for d in data["days"]:
         day = int(d["day"])
         days[day] = d.get("title", f"Day {day}")
-        for s in d["sections"]:
+        if d.get("date"):
+            ddates[day] = str(d["date"])
+        for s in d.get("sections") or []:
             if s["scope"] not in SCOPES:
                 raise ValueError(f"알 수 없는 scope: {s['scope']}")
-            for it in s["items"]:
+            for it in s.get("items") or []:
                 ord_ += 1
                 iid = str(it["id"])
                 if iid in seen:
@@ -153,6 +181,7 @@ def load_items(c: sqlite3.Connection) -> int:
     if seen:
         c.execute(f"UPDATE ck_items SET active=0 WHERE id NOT IN ({','.join('?' * len(seen))})", tuple(seen))
     DAYS.clear(); DAYS.update(days)
+    DAY_DATES.clear(); DAY_DATES.update(ddates)
     AREAS.clear(); AREAS.update(areas)
     return len(seen)
 
@@ -161,6 +190,14 @@ def init() -> None:
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     with db() as c:
         c.executescript(SCHEMA)
+        cols = [r[1] for r in c.execute("PRAGMA table_info(ck_log)")]
+        if "check_date" not in cols:
+            c.execute("ALTER TABLE ck_log ADD COLUMN check_date TEXT")
+        # 이전 버전(날짜 없는 ck_checks) 기록 옮기기
+        if c.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='ck_checks'").fetchone():
+            c.execute("""INSERT OR IGNORE INTO ck_entries (user_id, item_id, check_date, status, note, updated_at)
+                         SELECT user_id, item_id, substr(updated_at, 1, 10), status, note, updated_at FROM ck_checks""")
+            c.execute("ALTER TABLE ck_checks RENAME TO ck_checks_old")
         load_items(c)
 
 
@@ -277,9 +314,14 @@ def set_cookie(resp: Response, name: str, value: str, max_age: int) -> None:
                     secure=COOKIE_SECURE, path=P)
 
 
+def mmdd(d: Optional[str]) -> str:
+    return f"{int(d[5:7])}/{int(d[8:10])}" if d and len(d) >= 10 else ""
+
+
 def page(request: Request, name: str, kind: str = "user", **ctx):
     ctx.update(request=request, P=P, csrf=csrf(request, kind), roles=ROLES, scopes=SCOPES,
-               status=STATUS, days=DAYS, msg=request.query_params.get("msg", ""),
+               status=STATUS, icon=ICON, days=DAYS, day_dates=DAY_DATES, modes=MODES, mmdd=mmdd,
+               today=today(), msg=request.query_params.get("msg", ""),
                err=request.query_params.get("err", ""))
     return templates.TemplateResponse(request=request, name=f"checklist/{name}", context=ctx)
 
@@ -308,53 +350,104 @@ def visible_scopes(role: Optional[str]) -> tuple:
     return ("common", role, "peer") if role in ROLES else tuple(SCOPES)
 
 
-def pick_day(request: Request) -> int:
+def pick_day(request: Request, allow_all: bool = True) -> int:
+    """0 = 전체 Day"""
+    raw = request.query_params.get("day")
     try:
-        d = int(request.query_params.get("day", "0"))
+        d = int(raw) if raw is not None else -1
     except ValueError:
-        d = 0
-    return d if d in DAYS else (next(iter(DAYS)) if DAYS else 1)
+        d = -1
+    if d == 0 and allow_all:
+        return 0
+    if d in DAYS:
+        return d
+    return next(iter(DAYS)) if DAYS else 1
 
 
-def user_items(c, day: int, role):
+# ================================================================ 상태 계산
+
+def items_for(c, day: int, role) -> list:
     sc = visible_scopes(role)
-    return c.execute(f"SELECT * FROM ck_items WHERE active=1 AND day=? AND scope IN ({','.join('?' * len(sc))}) ORDER BY ord",
-                     (day, *sc)).fetchall()
+    q = f"SELECT * FROM ck_items WHERE active=1 AND scope IN ({','.join('?' * len(sc))})"
+    args: tuple = sc
+    if day:
+        q += " AND day=?"
+        args = (*sc, day)
+    return c.execute(q + " ORDER BY ord", args).fetchall()
 
 
-def progress(c, uid: int, items) -> dict:
+def latest_map(c, uid: int, as_of: Optional[str] = None) -> dict:
+    """항목별 가장 최근(as_of 이하) 점검 기록. 상태가 비어 있는 날(메모만)은 건너뛴다."""
+    rows = c.execute("""SELECT * FROM ck_entries WHERE user_id=? AND status IS NOT NULL AND check_date<=?
+                        ORDER BY check_date, updated_at""", (uid, as_of or "9999-12-31")).fetchall()
+    out = {}
+    for r in rows:
+        out[r["item_id"]] = r
+    return out
+
+
+def latest_all(c, as_of: str) -> dict:
+    """(user_id, item_id) -> 최근 기록 (강사 화면용)"""
+    out = {}
+    for r in c.execute("""SELECT * FROM ck_entries WHERE status IS NOT NULL AND check_date<=?
+                          ORDER BY check_date, updated_at""", (as_of,)):
+        out[(r["user_id"], r["item_id"])] = r
+    return out
+
+
+def history_map(c, uid: int) -> dict:
+    out = defaultdict(list)
+    for r in c.execute("SELECT * FROM ck_entries WHERE user_id=? ORDER BY check_date", (uid,)):
+        out[r["item_id"]].append(r)
+    return out
+
+
+def hist_json(rows) -> list:
+    return [{"d": r["check_date"], "md": mmdd(r["check_date"]), "s": r["status"], "n": r["note"] or ""} for r in rows]
+
+
+def progress(items, lat: dict) -> dict:
     p = {"total": len(items), 2: 0, 1: 0, 0: 0}
-    if items:
-        ids = [i["id"] for i in items]
-        for r in c.execute(f"SELECT status FROM ck_checks WHERE user_id=? AND item_id IN ({','.join('?' * len(ids))})",
-                           (uid, *ids)):
-            if r["status"] in (0, 1, 2):
-                p[r["status"]] += 1
+    for it in items:
+        r = lat.get(it["id"])
+        if r is not None and r["status"] in (0, 1, 2):
+            p[r["status"]] += 1
     return p
 
 
-def area_summary(c, uid: int, role) -> list:
-    """지금까지(모든 Day) 체크한 것을 역량 영역별로 모은다."""
-    sc = visible_scopes(role)
-    rows = c.execute(f"""SELECT i.*, k.status, k.note FROM ck_items i
-                         LEFT JOIN ck_checks k ON k.item_id=i.id AND k.user_id=?
-                         WHERE i.active=1 AND i.scope IN ({','.join('?' * len(sc))}) ORDER BY i.ord""",
-                     (uid, *sc)).fetchall()
+def mode_match(mode: str, r) -> bool:
+    st = r["status"] if r is not None else None
+    if mode == "review":
+        return st in (0, 1)
+    if mode == "hard":
+        return st == 0
+    if mode == "blank":
+        return st is None
+    return True
+
+
+def area_summary(items, lat: dict, hist: Optional[dict] = None) -> list:
+    """역량 영역별로 최신 상태를 모은다."""
     out = OrderedDict((n, {**a, 2: [], 1: [], 0: [], None: []}) for n, a in AREAS.items())
-    for r in rows:
-        a = out.setdefault(r["area"], {"name": r["area"], "course": "", "desc": "", 2: [], 1: [], 0: [], None: []})
-        a[r["status"] if r["status"] in (0, 1, 2) else None].append(r)
+    for it in items:
+        r = lat.get(it["id"])
+        st = r["status"] if r is not None and r["status"] in (0, 1, 2) else None
+        a = out.setdefault(it["area"], {"name": it["area"], "course": "", "desc": "", 2: [], 1: [], 0: [], None: []})
+        row = dict(it)
+        row["note"] = (r["note"] if r is not None else "") or ""
+        row["last_date"] = r["check_date"] if r is not None else ""
+        row["hist"] = [h for h in (hist or {}).get(it["id"], []) if h["status"] is not None]
+        a[st].append(row)
     res = []
     for a in out.values():
         a["tot"] = sum(len(a[k]) for k in (2, 1, 0, None))
         if a["tot"]:
             a["pct"] = round(len(a[2]) * 100 / a["tot"])
-            a["days"] = sorted({r["day"] for k in (2, 1, 0, None) for r in a[k]})
             res.append(a)
     return res
 
 
-# ================================================================ 학생
+# ================================================================ 학생: 로그인
 
 @router.get("")
 @router.get("/")
@@ -467,6 +560,8 @@ def logout():
     return r
 
 
+# ================================================================ 학생: 체크
+
 @router.get("/me")
 def me(request: Request):
     with db() as c:
@@ -474,15 +569,32 @@ def me(request: Request):
         if not u:
             return go("/")
         day = pick_day(request)
-        items = user_items(c, day, u["role"])
-        checks = {r["item_id"]: r for r in c.execute("SELECT * FROM ck_checks WHERE user_id=?", (u["id"],))}
+        mode = request.query_params.get("mode", "all")
+        mode = mode if mode in MODES else "all"
+        cdate = valid_date(request.query_params.get("date")) or today()
+
+        lat = latest_map(c, u["id"])
+        hist = history_map(c, u["id"])
+        all_items = items_for(c, day, u["role"])
+        counts = {m: sum(1 for it in all_items if mode_match(m, lat.get(it["id"]))) for m in MODES}
+        items = [it for it in all_items if mode_match(mode, lat.get(it["id"]))]
+
+        on_date = {k: next((h for h in v if h["check_date"] == cdate), None) for k, v in hist.items()}
         sections = OrderedDict()
         for it in items:
-            sections.setdefault(it["section"], {"title": it["section_title"], "scope": it["scope"], "items": []})
-            sections[it["section"]]["items"].append(it)
-        day_prog = {d: progress(c, u["id"], user_items(c, d, u["role"])) for d in DAYS}
-    return page(request, "me.html", u=u, day=day, sections=sections, checks=checks,
-                prog=day_prog.get(day, {"total": 0, 2: 0, 1: 0, 0: 0}), day_prog=day_prog, areas=AREAS)
+            key = it["section"]
+            sections.setdefault(key, {"title": it["section_title"], "day": it["day"], "scope": it["scope"], "items": []})
+            sections[key]["items"].append(it)
+
+        day_prog = {d: progress(items_for(c, d, u["role"]), lat) for d in DAYS}
+        day_prog[0] = progress(items_for(c, 0, u["role"]), lat)
+        prog = day_prog.get(day, {"total": 0, 2: 0, 1: 0, 0: 0})
+        dates = [r["check_date"] for r in c.execute(
+            "SELECT DISTINCT check_date FROM ck_entries WHERE user_id=? ORDER BY check_date DESC", (u["id"],))]
+        done_on_date = sum(1 for it in all_items if (on_date.get(it["id"]) or {"status": None})["status"] is not None)
+    return page(request, "me.html", u=u, day=day, mode=mode, cdate=cdate, sections=sections,
+                lat=lat, hist=hist, on_date=on_date, prog=prog, day_prog=day_prog, counts=counts,
+                dates=dates, done_on_date=done_on_date, total_view=len(all_items), areas=AREAS)
 
 
 @router.get("/me/summary")
@@ -491,11 +603,22 @@ def summary(request: Request):
         u = current_user(request, c)
         if not u:
             return go("/")
-        areas = area_summary(c, u["id"], u["role"])
+        items = items_for(c, 0, u["role"])
+        lat = latest_map(c, u["id"])
+        hist = history_map(c, u["id"])
+        areas = area_summary(items, lat, hist)
+        dates = [r["check_date"] for r in c.execute(
+            "SELECT DISTINCT check_date FROM ck_entries WHERE user_id=? ORDER BY check_date", (u["id"],))]
     tot = sum(a["tot"] for a in areas)
     can = sum(len(a[2]) for a in areas)
     mid = sum(len(a[1]) for a in areas)
-    return page(request, "summary.html", u=u, areas=areas, tot=tot, can=can, mid=mid)
+    # 처음 체크보다 올라간 항목
+    grew = []
+    for it in items:
+        hs = [h for h in hist.get(it["id"], []) if h["status"] is not None]
+        if len(hs) >= 2 and hs[-1]["status"] > hs[0]["status"]:
+            grew.append({"it": it, "first": hs[0], "last": hs[-1]})
+    return page(request, "summary.html", u=u, areas=areas, tot=tot, can=can, mid=mid, grew=grew, dates=dates)
 
 
 @router.post("/api/check")
@@ -514,27 +637,50 @@ async def api_check(request: Request):
         it = c.execute("SELECT * FROM ck_items WHERE id=? AND active=1", (iid,)).fetchone()
         if not it or it["scope"] not in visible_scopes(u["role"]):
             return JSONResponse({"ok": False, "error": "항목을 찾을 수 없습니다."}, status_code=404)
-        cur = c.execute("SELECT * FROM ck_checks WHERE user_id=? AND item_id=?", (u["id"], iid)).fetchone()
+        cdate = valid_date(data.get("date"))
+        if not cdate:
+            return JSONResponse({"ok": False, "error": "점검 날짜가 올바르지 않습니다 (오늘 이후는 고를 수 없습니다)."}, status_code=400)
+
+        cur = c.execute("SELECT * FROM ck_entries WHERE user_id=? AND item_id=? AND check_date=?",
+                        (u["id"], iid, cdate)).fetchone()
         old_status = cur["status"] if cur else None
         old_note = (cur["note"] if cur else "") or ""
-        status = data.get("status", old_status) if "status" in data else old_status
-        if status is not None:
-            try:
-                status = int(status)
-            except (TypeError, ValueError):
-                status = -1
-            if status not in STATUS:
-                return JSONResponse({"ok": False, "error": "상태 값이 올바르지 않습니다."}, status_code=400)
-        note = str(data.get("note", old_note) or "").strip()[:300]
+        status = old_status
+        if "status" in data:
+            status = data["status"]
+            if status is not None:
+                try:
+                    status = int(status)
+                except (TypeError, ValueError):
+                    status = -1
+                if status not in STATUS:
+                    return JSONResponse({"ok": False, "error": "상태 값이 올바르지 않습니다."}, status_code=400)
+        note = str(data.get("note", old_note) if "note" in data else old_note).strip()[:300]
         t = now()
-        c.execute("""INSERT INTO ck_checks (user_id, item_id, status, note, updated_at) VALUES (?,?,?,?,?)
-                     ON CONFLICT(user_id, item_id) DO UPDATE SET status=excluded.status,
-                       note=excluded.note, updated_at=excluded.updated_at""", (u["id"], iid, status, note, t))
+        if status is None and not note:
+            c.execute("DELETE FROM ck_entries WHERE user_id=? AND item_id=? AND check_date=?", (u["id"], iid, cdate))
+        else:
+            c.execute("""INSERT INTO ck_entries (user_id, item_id, check_date, status, note, updated_at)
+                         VALUES (?,?,?,?,?,?)
+                         ON CONFLICT(user_id, item_id, check_date) DO UPDATE SET status=excluded.status,
+                           note=excluded.note, updated_at=excluded.updated_at""",
+                      (u["id"], iid, cdate, status, note, t))
         if status != old_status or note != old_note:
-            c.execute("INSERT INTO ck_log (user_id, item_id, old_status, new_status, note, at) VALUES (?,?,?,?,?,?)",
-                      (u["id"], iid, old_status, status, note, t))
-        p = progress(c, u["id"], user_items(c, it["day"], u["role"]))
-    return {"ok": True, "status": status, "note": note,
+            c.execute("""INSERT INTO ck_log (user_id, item_id, check_date, old_status, new_status, note, at)
+                         VALUES (?,?,?,?,?,?,?)""", (u["id"], iid, cdate, old_status, status, note, t))
+
+        try:
+            view_day = int(data.get("view_day", it["day"]))
+        except (TypeError, ValueError):
+            view_day = it["day"]
+        lat = latest_map(c, u["id"])
+        p = progress(items_for(c, view_day if view_day in DAYS or view_day == 0 else it["day"], u["role"]), lat)
+        hs = c.execute("SELECT * FROM ck_entries WHERE user_id=? AND item_id=? ORDER BY check_date",
+                       (u["id"], iid)).fetchall()
+        lr = lat.get(iid)
+    return {"ok": True, "status": status, "note": note, "date": cdate,
+            "latest": {"s": lr["status"], "d": lr["check_date"], "md": mmdd(lr["check_date"])} if lr else None,
+            "history": hist_json(hs),
             "progress": {"total": p["total"], "s2": p[2], "s1": p[1], "s0": p[0]}}
 
 
@@ -580,16 +726,21 @@ def in_scope(item, user) -> bool:
 def admin(request: Request):
     if not is_admin(request):
         return go("/admin/login")
-    day = pick_day(request)
+    day = pick_day(request, allow_all=False)
     team = request.query_params.get("team", "")
+    asof = valid_date(request.query_params.get("asof")) or today()
     with db() as c:
         teams = [r["team"] for r in c.execute(
             "SELECT DISTINCT team FROM ck_users WHERE team IS NOT NULL AND team<>'' ORDER BY team")]
         users = c.execute("SELECT * FROM ck_users" + (" WHERE team=?" if team else "") + " ORDER BY team, role, name",
                           (team,) if team else ()).fetchall()
         items = c.execute("SELECT * FROM ck_items WHERE active=1 AND day=? ORDER BY ord", (day,)).fetchall()
-        chk = {(r["user_id"], r["item_id"]): r for r in c.execute(
-            "SELECT k.* FROM ck_checks k JOIN ck_items i ON i.id=k.item_id WHERE i.day=?", (day,))}
+        all_items = c.execute("SELECT * FROM ck_items WHERE active=1 ORDER BY ord").fetchall()
+        chk = latest_all(c, asof)
+        on_day = {(r["user_id"], r["item_id"]) for r in c.execute(
+            "SELECT user_id, item_id FROM ck_entries WHERE check_date=? AND status IS NOT NULL", (asof,))}
+        dates = [r["check_date"] for r in c.execute(
+            "SELECT check_date, COUNT(DISTINCT user_id) n FROM ck_entries GROUP BY check_date ORDER BY check_date DESC LIMIT 30")]
 
         stats = []
         for n, it in enumerate(items, 1):
@@ -597,7 +748,7 @@ def admin(request: Request):
             cnt = {2: 0, 1: 0, 0: 0, None: 0}
             for u in targets:
                 r = chk.get((u["id"], it["id"]))
-                cnt[r["status"] if r and r["status"] in (0, 1, 2) else None] += 1
+                cnt[r["status"] if r is not None and r["status"] in (0, 1, 2) else None] += 1
             stats.append({"n": n, "it": it, "tot": len(targets), "c": cnt,
                           "pct": round(cnt[2] * 100 / len(targets)) if targets else None})
         weak = sorted([s for s in stats if s["tot"]],
@@ -605,17 +756,20 @@ def admin(request: Request):
 
         rows = []
         for u in users:
-            cells, p = [], {2: 0, 1: 0, 0: 0, "tot": 0}
+            cells, p = [], {2: 0, 1: 0, 0: 0, "tot": 0, "today": 0}
             for it in items:
                 if not in_scope(it, u):
                     cells.append(None)
                     continue
                 p["tot"] += 1
                 r = chk.get((u["id"], it["id"]))
-                st = r["status"] if r else None
+                st = r["status"] if r is not None else None
                 if st in (0, 1, 2):
                     p[st] += 1
-                cells.append({"st": st, "note": (r["note"] if r else "") or ""})
+                fresh = (u["id"], it["id"]) in on_day
+                p["today"] += 1 if fresh else 0
+                cells.append({"st": st, "note": (r["note"] if r is not None else "") or "",
+                              "d": r["check_date"] if r is not None else "", "fresh": fresh})
             rows.append({"u": u, "cells": cells, "p": p})
 
         by_team = defaultdict(list)
@@ -635,13 +789,19 @@ def admin(request: Request):
                     miss.append({"n": n, "it": it, "sts": sts})
             gaps.append({"team": t, "members": members, "miss": miss})
 
-        area_rows = [{"u": u, "a": {a["name"]: a for a in area_summary(c, u["id"], u["role"])}} for u in users]
+        area_rows = []
+        for u in users:
+            lat_u = {k[1]: v for k, v in chk.items() if k[0] == u["id"]}
+            its = [it for it in all_items if in_scope(it, u)]
+            area_rows.append({"u": u, "a": {a["name"]: a for a in area_summary(its, lat_u)}})
+
         log = c.execute("""SELECT l.*, u.name, u.team, i.text, i.day FROM ck_log l
                            JOIN ck_users u ON u.id=l.user_id JOIN ck_items i ON i.id=l.item_id
                            ORDER BY l.id DESC LIMIT 40""").fetchall()
-    return page(request, "admin.html", "admin", day=day, team=team, teams=teams, users=users,
-                items=items, stats=stats, weak=weak, rows=rows, gaps=gaps, log=log,
-                area_rows=area_rows, areas=AREAS)
+        joined = len({k[0] for k in on_day})
+    return page(request, "admin.html", "admin", day=day, team=team, teams=teams, users=users, asof=asof,
+                items=items, stats=stats, weak=weak, rows=rows, gaps=gaps, log=log, dates=dates,
+                joined=joined, area_rows=area_rows, areas=AREAS)
 
 
 @router.get("/admin/users")
@@ -649,7 +809,9 @@ def admin_users(request: Request):
     if not is_admin(request):
         return go("/admin/login")
     with db() as c:
-        users = c.execute("SELECT * FROM ck_users ORDER BY team, role, name").fetchall()
+        users = c.execute("""SELECT u.*, (SELECT COUNT(DISTINCT check_date) FROM ck_entries e WHERE e.user_id=u.id) AS n_dates,
+                                    (SELECT MAX(check_date) FROM ck_entries e WHERE e.user_id=u.id) AS last_date
+                             FROM ck_users u ORDER BY team, role, name""").fetchall()
     return page(request, "admin_users.html", "admin", users=users)
 
 
@@ -725,29 +887,44 @@ async def admin_reload_items(request: Request):
 
 @router.get("/admin/export.csv")
 def admin_export(request: Request):
+    """kind=history: 모든 점검 기록(날짜별) / kind=latest: 학생×항목 현재 상태"""
     if not is_admin(request):
         return go("/admin/login")
     day = request.query_params.get("day", "")
-    q = """SELECT u.name, u.team, u.role, i.day, i.scope, i.area, i.section_title, i.id AS item_id, i.text,
-                  k.status, k.note, k.updated_at
-           FROM ck_users u JOIN ck_items i ON i.active=1
-           LEFT JOIN ck_checks k ON k.user_id=u.id AND k.item_id=i.id"""
-    args: tuple = ()
-    if day.isdigit():
-        q += " WHERE i.day=?"
-        args = (int(day),)
-    q += " ORDER BY u.team, u.name, i.ord"
+    kind = request.query_params.get("kind", "history")
     buf = io.StringIO()
     w = csv.writer(buf)
-    w.writerow(["이름", "조", "역할", "Day", "역량 영역", "구분", "항목ID", "항목", "상태", "메모", "수정 시각"])
     with db() as c:
-        for r in c.execute(q, args):
-            if r["scope"] not in visible_scopes(r["role"]):
-                continue
-            w.writerow([r["name"], r["team"] or "", ROLES.get(r["role"], ""), r["day"], r["area"],
-                        r["section_title"], r["item_id"], r["text"], STATUS.get(r["status"], "미응답"),
-                        r["note"] or "", r["updated_at"] or ""])
-    fn = f"checklist_day{day}.csv" if day.isdigit() else "checklist_all.csv"
+        if kind == "latest":
+            asof = valid_date(request.query_params.get("asof")) or today()
+            chk = latest_all(c, asof)
+            w.writerow(["기준 날짜", "이름", "조", "역할", "Day", "역량 영역", "구분", "항목ID", "항목",
+                        "현재 상태", "마지막 점검 날짜", "메모"])
+            q = "SELECT * FROM ck_items WHERE active=1" + (" AND day=?" if day.isdigit() else "") + " ORDER BY ord"
+            items = c.execute(q, (int(day),) if day.isdigit() else ()).fetchall()
+            for u in c.execute("SELECT * FROM ck_users ORDER BY team, name"):
+                for it in items:
+                    if not in_scope(it, u):
+                        continue
+                    r = chk.get((u["id"], it["id"]))
+                    w.writerow([asof, u["name"], u["team"] or "", ROLES.get(u["role"], ""), it["day"], it["area"],
+                                it["section_title"], it["id"], it["text"],
+                                STATUS.get(r["status"]) if r is not None else "미응답",
+                                r["check_date"] if r is not None else "", (r["note"] if r is not None else "") or ""])
+        else:
+            w.writerow(["점검 날짜", "이름", "조", "역할", "Day", "역량 영역", "구분", "항목ID", "항목",
+                        "상태", "메모", "저장 시각"])
+            q = """SELECT e.*, u.name, u.team, u.role, i.day, i.area, i.section_title, i.text
+                   FROM ck_entries e JOIN ck_users u ON u.id=e.user_id JOIN ck_items i ON i.id=e.item_id"""
+            args: tuple = ()
+            if day.isdigit():
+                q += " WHERE i.day=?"
+                args = (int(day),)
+            for r in c.execute(q + " ORDER BY u.team, u.name, i.ord, e.check_date", args):
+                w.writerow([r["check_date"], r["name"], r["team"] or "", ROLES.get(r["role"], ""), r["day"], r["area"],
+                            r["section_title"], r["item_id"], r["text"], STATUS.get(r["status"], "-"),
+                            r["note"] or "", r["updated_at"]])
+    fn = f"checklist_{kind}" + (f"_day{day}" if day.isdigit() else "") + ".csv"
     return Response("﻿" + buf.getvalue(), media_type="text/csv; charset=utf-8",
                     headers={"Content-Disposition": f"attachment; filename={fn}"})
 

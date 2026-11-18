@@ -6,7 +6,7 @@
   <div>
     <p class="eyebrow">INSTRUCTOR</p>
     <h1>자가진단 현황</h1>
-    <p class="ck-sub">학생 {{ users|length }}명 · {{ days[day] }} 항목 {{ items|length }}개</p>
+    <p class="ck-sub">학생 {{ users|length }}명 · {{ days[day] }} 항목 {{ items|length }}개 · <b>{{ asof }}</b>까지의 최근 상태 · 이날 점검한 학생 <b>{{ joined }}명</b></p>
   </div>
   <form method="post" action="{{ P }}/admin/reload-items">
     <input type="hidden" name="csrf" value="{{ csrf }}" />
@@ -16,17 +16,21 @@
 
 <div class="ck-filter">
   <nav class="ck-days small">
-    {% for d, title in days.items() %}<a href="?day={{ d }}&team={{ team }}" class="{{ 'on' if d == day }}">{{ title.split('·')[0] }}</a>{% endfor %}
+    {% for d, title in days.items() %}<a href="?day={{ d }}&team={{ team }}&asof={{ asof }}" class="{{ 'on' if d == day }}">{{ title.split('·')[0] }}</a>{% endfor %}
   </nav>
-  <form method="get">
+  <form method="get" class="ck-filter-form">
     <input type="hidden" name="day" value="{{ day }}" />
     <select name="team" onchange="this.form.submit()">
       <option value="">전체 조</option>
       {% for t in teams %}<option value="{{ t }}" {{ 'selected' if t == team }}>{{ t }}</option>{% endfor %}
     </select>
+    <label class="ck-asof">기준 날짜 <input type="date" name="asof" value="{{ asof }}" max="{{ today }}" onchange="this.form.submit()" /></label>
   </form>
-  <a class="ck-btn ghost" href="{{ P }}/admin/export.csv?day={{ day }}">이 Day CSV</a>
+  <a class="ck-btn ghost" href="{{ P }}/admin/export.csv?kind=latest&day={{ day }}&asof={{ asof }}">현재 상태 CSV</a>
+  <a class="ck-btn ghost" href="{{ P }}/admin/export.csv?kind=history&day={{ day }}">날짜별 기록 CSV</a>
 </div>
+{% if dates %}<p class="ck-hint ck-datechips">점검이 있었던 날짜 ·
+  {% for d in dates %}<a href="?day={{ day }}&team={{ team }}&asof={{ d }}" class="{{ 'on' if d == asof }}">{{ mmdd(d) }}</a>{% endfor %}</p>{% endif %}
 
 <section class="ck-section">
   <h2>① 항목별 약점 <small>'혼자 할 수 있다' 비율이 낮은 순 · 다음 날 다시 짚을 곳</small></h2>
@@ -61,18 +65,18 @@
       <tr>
         <td class="nowrap">{{ r.u.team or '-' }}</td>
         <td class="nowrap"><b>{{ r.u.name }}</b> <small>{{ (roles.get(r.u.role, '') or '')[:2] }}</small></td>
-        <td class="nowrap">{{ r.p[2] }} / {{ r.p.tot }}</td>
+        <td class="nowrap">{{ r.p[2] }} / {{ r.p.tot }}{% if r.p.today %} <small class="fresh">이날 {{ r.p.today }}</small>{% endif %}</td>
         {% for cell in r.cells %}
           {% set it = items[loop.index0] %}
           {% if cell is none %}<td class="m-na"></td>
-          {% else %}<td class="m-{{ cell.st if cell.st is not none else 'n' }}" title="{{ loop.index }}. {{ it.text }}{% if cell.note %}&#10;메모: {{ cell.note }}{% endif %}">{% if cell.note %}•{% endif %}</td>{% endif %}
+          {% else %}<td class="m-{{ cell.st if cell.st is not none else 'n' }}{{ ' fresh' if cell.fresh }}" title="{{ loop.index }}. {{ it.text }}{% if cell.d %}&#10;마지막 점검: {{ cell.d }}{% endif %}{% if cell.note %}&#10;메모: {{ cell.note }}{% endif %}">{% if cell.note %}•{% endif %}</td>{% endif %}
         {% endfor %}
       </tr>
     {% endfor %}
     </tbody>
   </table>
   </div>
-  <p class="ck-legend small"><span><i class="s2"></i>혼자 가능</span><span><i class="s1"></i>자료 보면</span><span><i class="s0"></i>아직</span><span><i class="sn"></i>미응답</span><span>• 메모 있음 · 빈칸은 해당 역할이 아닌 항목</span></p>
+  <p class="ck-legend small"><span><i class="s2"></i>혼자 가능</span><span><i class="s1"></i>자료 보면</span><span><i class="s0"></i>아직</span><span><i class="sn"></i>미응답</span><span><i class="fr"></i>기준 날짜에 점검함</span><span>• 메모 있음 · 빈칸은 해당 역할이 아닌 항목</span></p>
 </section>
 
 <section class="ck-section">
@@ -92,7 +96,7 @@
 </section>
 
 <section class="ck-section">
-  <h2>④ 역량 영역별 누적 <small>지금까지 모든 Day · '혼자 가능' 비율</small></h2>
+  <h2>④ 역량 영역별 누적 <small>모든 Day · 기준 날짜까지의 최근 상태 · '혼자 가능' 비율</small></h2>
   <div class="ck-tablewrap">
   <table class="ck-table ck-heat">
     <thead><tr><th>조</th><th>이름</th>{% for name in areas %}<th>{{ name }}</th>{% endfor %}</tr></thead>
@@ -115,7 +119,7 @@
   <h2>⑤ 최근 변화</h2>
   <ul class="ck-log">
   {% for l in log %}
-    <li><time>{{ l.at[5:16] }}</time><b>{{ l.name }}</b> <small>{{ l.team or '' }}</small>
+    <li><time>{{ l.at[5:16] }}</time>{% if l.check_date and l.check_date != l.at[:10] %}<small class="muted">({{ mmdd(l.check_date) }} 기록)</small> {% endif %}<b>{{ l.name }}</b> <small>{{ l.team or '' }}</small>
       <span class="ck-day">D{{ l.day }}</span>{{ l.text | replace('나는 ', '') | truncate(60) }}
       <span class="ck-chg">{{ {2:'✅',1:'🟡',0:'⬜'}.get(l.old_status, '·') }} → {{ {2:'✅',1:'🟡',0:'⬜'}.get(l.new_status, '·') }}</span>
       {% if l.note %}<em>{{ l.note }}</em>{% endif %}</li>

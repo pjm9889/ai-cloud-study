@@ -12,8 +12,21 @@
   <div><b class="big">{{ can }}</b><span>혼자 할 수 있다</span></div>
   <div><b class="big mid">{{ mid }}</b><span>자료를 보면 할 수 있다</span></div>
   <div><b class="big">{{ tot }}</b><span>전체 항목</span></div>
+  <div><b class="big grow">{{ grew|length }}</b><span>처음보다 올라간 항목</span></div>
   <div class="ck-total-bar"><div class="ck-bar"><i class="s2" style="width:{{ (can * 100 / tot) if tot else 0 }}%"></i><i class="s1" style="width:{{ (mid * 100 / tot) if tot else 0 }}%"></i></div></div>
 </div>
+
+{% if dates %}<p class="ck-hint">점검한 날짜 {{ dates|length }}일 · {% for d in dates %}{{ mmdd(d) }}{{ ', ' if not loop.last }}{% endfor %}</p>{% endif %}
+
+{% if grew %}
+<section class="ck-card ck-grew">
+  <h2>📈 처음 체크했을 때보다 올라간 것</h2>
+  <ul>
+    {% for g in grew %}<li><span class="ck-day">D{{ g.it.day }}</span>{{ g.it.text | replace('나는 ', '') }}
+      <span class="ck-chg">{{ mmdd(g.first.check_date) }} {{ icon[g.first.status] }} → {{ mmdd(g.last.check_date) }} {{ icon[g.last.status] }}</span></li>{% endfor %}
+  </ul>
+</section>
+{% endif %}
 
 <div class="ck-areas">
 {% for a in areas %}
@@ -30,7 +43,7 @@
 
     {% if a[2] %}
     <ul class="ck-can">
-      {% for r in a[2] %}<li><span class="ck-day">D{{ r.day }}</span>{{ r.text | replace('나는 ', '') }}</li>{% endfor %}
+      {% for r in a[2] %}<li><span class="ck-day">D{{ r.day }}</span><span>{{ r.text | replace('나는 ', '') }}{% if r.hist|length > 1 %}<em class="trail">{% for h in r.hist %}{{ mmdd(h.check_date) }} {{ icon[h.status] }}{{ ' → ' if not loop.last }}{% endfor %}</em>{% endif %}</span></li>{% endfor %}
     </ul>
     {% else %}
     <p class="ck-empty small">아직 '혼자 할 수 있다'로 체크한 항목이 없습니다.</p>
@@ -40,10 +53,11 @@
     <details class="ck-todo">
       <summary>다음에 다시 볼 것 {{ (a[1]|length) + (a[0]|length) + (a[none]|length) }}개</summary>
       <ul>
-        {% for r in a[1] %}<li><span class="ck-day">D{{ r.day }}</span>🟡 {{ r.text | replace('나는 ', '') }}{% if r.note %}<em>{{ r.note }}</em>{% endif %}</li>{% endfor %}
-        {% for r in a[0] %}<li><span class="ck-day">D{{ r.day }}</span>⬜ {{ r.text | replace('나는 ', '') }}{% if r.note %}<em>{{ r.note }}</em>{% endif %}</li>{% endfor %}
+        {% for r in a[1] %}<li><span class="ck-day">D{{ r.day }}</span>🟡 {{ r.text | replace('나는 ', '') }}<em>{{ mmdd(r.last_date) }} 기준{% if r.note %} · {{ r.note }}{% endif %}</em></li>{% endfor %}
+        {% for r in a[0] %}<li><span class="ck-day">D{{ r.day }}</span>⬜ {{ r.text | replace('나는 ', '') }}<em>{{ mmdd(r.last_date) }} 기준{% if r.note %} · {{ r.note }}{% endif %}</em></li>{% endfor %}
         {% for r in a[none] %}<li class="muted"><span class="ck-day">D{{ r.day }}</span>미응답 · {{ r.text | replace('나는 ', '') }}</li>{% endfor %}
       </ul>
+      <p class="ck-hint"><a href="{{ P }}/me?day=0&mode=review">🟡·⬜ 항목만 모아 다시 점검하기 →</a></p>
     </details>
     {% endif %}
   </section>

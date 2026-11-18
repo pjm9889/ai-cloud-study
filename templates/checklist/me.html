@@ -1,26 +1,51 @@
 {% extends "checklist/_layout.html" %}
-{% block title %}{{ days[day] }}{% endblock %}
+{% block title %}{{ days[day] if day else '전체 Day' }}{% endblock %}
 {% block nav %}{% with active='me' %}{% include "checklist/_nav_user.html" %}{% endwith %}{% endblock %}
+{% macro qs(d=None, m=None, dt=None) -%}
+?day={{ day if d is none else d }}&mode={{ mode if m is none else m }}&date={{ cdate if dt is none else dt }}
+{%- endmacro %}
 {% block content %}
 <section class="ck-head">
   <p class="eyebrow">{{ u.team or '' }}{% if u.team %} · {% endif %}{{ roles.get(u.role, '역할 미지정') }}</p>
   <h1>{{ u.name }}님, GPT 없이 할 수 있나요?</h1>
-  <p class="ck-sub">검색 없이, AI 도움 없이 <b>내 손으로</b> 할 수 있는지 솔직하게 고르세요. 언제든 다시 바꿀 수 있고, 바뀐 기록은 성장 기록으로 남습니다.</p>
+  <p class="ck-sub">검색 없이, AI 도움 없이 <b>내 손으로</b> 할 수 있는지 솔직하게 고르세요. 같은 항목을 다른 날짜에 다시 체크하면 날짜별로 기록이 쌓이고, <b>가장 최근 기록이 지금의 내 상태</b>가 됩니다.</p>
 </section>
+
+<!-- 점검 날짜 · 점검 방식 -->
+<div class="ck-card ck-controls">
+  <form method="get" class="ck-date">
+    <input type="hidden" name="day" value="{{ day }}" />
+    <input type="hidden" name="mode" value="{{ mode }}" />
+    <label>점검 날짜
+      <input type="date" name="date" value="{{ cdate }}" max="{{ today }}" onchange="this.form.submit()" />
+    </label>
+    {% if cdate != today %}<a class="ck-today" href="{{ qs(dt=today) }}">오늘로</a>{% endif %}
+    <span class="ck-hint">이 날짜에 체크한 항목 <b id="donedate">{{ done_on_date }}</b> / {{ total_view }}</span>
+  </form>
+  <div class="ck-modes">
+    <span class="lbl">점검 방식</span>
+    {% for m, label in modes.items() %}
+      <a href="{{ qs(m=m) }}" class="{{ 'on' if m == mode }}">{{ label }} <small>{{ counts[m] }}</small></a>
+    {% endfor %}
+  </div>
+  {% if cdate != today %}<p class="ck-warn">지금 <b>{{ cdate }}</b> 날짜의 기록을 고치고 있습니다.</p>{% endif %}
+</div>
 
 <nav class="ck-days">
   {% for d, title in days.items() %}
   {% set p = day_prog[d] %}
-  <a href="?day={{ d }}" class="{{ 'on' if d == day }}">
+  <a href="{{ qs(d=d) }}" class="{{ 'on' if d == day }}">
     <b>{{ title.split('·')[0] }}</b>
-    <small>{{ p[2] }} / {{ p.total }}</small>
+    <small>{% if day_dates.get(d) %}{{ mmdd(day_dates[d]) }} · {% endif %}✅ {{ p[2] }} / {{ p.total }}</small>
   </a>
   {% endfor %}
+  {% set p0 = day_prog[0] %}
+  <a href="{{ qs(d=0) }}" class="{{ 'on' if day == 0 }}"><b>전체 Day</b><small>✅ {{ p0[2] }} / {{ p0.total }}</small></a>
 </nav>
 
-<div class="ck-progress ck-card" id="prog" data-total="{{ prog.total }}">
+<div class="ck-progress ck-card" id="prog" data-total="{{ prog.total }}" data-day="{{ day }}">
   <div class="ck-progress-top">
-    <strong>{{ days[day] }}</strong>
+    <strong>{{ days[day] if day else '전체 Day' }} · 지금 내 상태</strong>
     <span><b id="p2">{{ prog[2] }}</b> / {{ prog.total }} 혼자 할 수 있다</span>
   </div>
   <div class="ck-bar">
@@ -38,58 +63,95 @@
 
 {% for key, sec in sections.items() %}
 <section class="ck-section">
-  <h2>{{ sec.title }}</h2>
+  <h2>{% if day == 0 %}<span class="ck-day">D{{ sec.day }}</span> {% endif %}{{ sec.title }}</h2>
   {% for it in sec['items'] %}
-  {% set ck = checks.get(it.id) %}
-  {% set st = ck.status if ck else none %}
+  {% set od = on_date.get(it.id) %}
+  {% set st = od.status if od else none %}
+  {% set lt = lat.get(it.id) %}
+  {% set hs = hist.get(it.id, []) %}
   <article class="ck-item {{ 'st' ~ st if st is not none }}" data-id="{{ it.id }}">
     <div class="ck-item-text">
       <p>{{ it.text }}</p>
       <span class="ck-area">{{ it.area }}</span>
+      <span class="ck-hist">
+        {% for h in hs if h.status is not none %}<span class="h s{{ h.status }}{{ ' cur' if h.check_date == cdate }}" title="{{ h.check_date }} · {{ status[h.status] }}{% if h.note %} · {{ h.note }}{% endif %}">{{ mmdd(h.check_date) }} {{ icon[h.status] }}</span>{% endfor %}
+      </span>
+      {% if lt and lt.check_date != cdate and st is none %}<span class="ck-prev">지난번 {{ mmdd(lt.check_date) }} {{ icon[lt.status] }} {{ status[lt.status] }} → 이 날짜에 다시 골라 보세요</span>{% endif %}
     </div>
     <div class="ck-choices" role="group" aria-label="자가진단">
       <button type="button" data-s="2" class="c2 {{ 'on' if st == 2 }}">✅ 혼자 할 수 있다</button>
       <button type="button" data-s="1" class="c1 {{ 'on' if st == 1 }}">🟡 자료 보면</button>
       <button type="button" data-s="0" class="c0 {{ 'on' if st == 0 }}">⬜ 아직</button>
     </div>
-    <details class="ck-note" {{ 'open' if ck and ck.note }}>
-      <summary>메모</summary>
-      <input type="text" maxlength="300" placeholder="예: compose는 되는데 healthcheck는 아직" value="{{ ck.note if ck and ck.note else '' }}" />
+    <details class="ck-note" {{ 'open' if od and od.note }}>
+      <summary>메모 ({{ mmdd(cdate) }})</summary>
+      <input type="text" maxlength="300" placeholder="예: compose는 되는데 healthcheck는 아직" value="{{ od.note if od and od.note else '' }}" />
     </details>
   </article>
   {% endfor %}
 </section>
 {% else %}
-<p class="ck-empty">이 Day에는 아직 항목이 없습니다.</p>
+<div class="ck-card ck-emptybox">
+  {% if mode == 'all' %}이 Day에는 아직 항목이 없습니다.
+  {% elif mode == 'blank' %}미응답 항목이 없습니다. 모두 한 번 이상 체크했어요.
+  {% else %}다시 볼 항목이 없습니다. 지금 기준으로 모두 '혼자 할 수 있다'예요 👏{% endif %}
+  <p><a href="{{ qs(m='all') }}">전체 항목 보기</a></p>
+</div>
 {% endfor %}
 
 <p class="ck-next"><a class="ck-btn" href="{{ P }}/me/summary">지금까지 할 수 있게 된 것 보기 →</a></p>
+<p class="ck-hint center">버튼을 한 번 더 누르면 이 날짜의 선택이 지워집니다.</p>
 {% endblock %}
 
 {% block script %}
 <script>
 (function () {
-  const total = +document.getElementById("prog").dataset.total || 0;
+  const prog = document.getElementById("prog");
+  const total = +prog.dataset.total || 0, viewDay = +prog.dataset.day;
+  const CDATE = "{{ cdate }}";
+  const ICON = {2: "✅", 1: "🟡", 0: "⬜"};
+  const LABEL = {2: "혼자 할 수 있다", 1: "자료를 보면 할 수 있다", 0: "아직 어렵다"};
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
   function paintProgress(p) {
-    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
     set("p2", p.s2); set("c2", p.s2); set("c1", p.s1); set("c0", p.s0);
     set("cn", p.total - p.s2 - p.s1 - p.s0);
-    const bar = document.querySelectorAll(".ck-bar i");
+    const bar = document.querySelectorAll("#prog .ck-bar i");
     [p.s2, p.s1, p.s0].forEach((v, i) => bar[i].style.width = (total ? v * 100 / total : 0) + "%");
   }
+  function paintHistory(art, hist) {
+    const box = art.querySelector(".ck-hist");
+    box.innerHTML = "";
+    hist.filter(h => h.s !== null).forEach(h => {
+      const s = document.createElement("span");
+      s.className = "h s" + h.s + (h.d === CDATE ? " cur" : "");
+      s.title = h.d + " · " + LABEL[h.s] + (h.n ? " · " + h.n : "");
+      s.textContent = h.md + " " + ICON[h.s];
+      box.appendChild(s);
+    });
+    const prev = art.querySelector(".ck-prev"); if (prev) prev.remove();
+  }
+  function updateDoneCount() {
+    set("donedate", document.querySelectorAll(".ck-item .ck-choices button.on").length +
+      (+document.getElementById("donedate").dataset.hidden || 0));
+  }
+  const doneEl = document.getElementById("donedate");
+  doneEl.dataset.hidden = (+doneEl.textContent) - document.querySelectorAll(".ck-item .ck-choices button.on").length;
+
   async function save(art, body) {
     art.classList.add("saving");
     try {
       const r = await fetch(CK.P + "/api/check", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-CSRF-Token": CK.csrf },
-        body: JSON.stringify(Object.assign({ item_id: art.dataset.id }, body)),
+        body: JSON.stringify(Object.assign({ item_id: art.dataset.id, date: CDATE, view_day: viewDay }, body)),
       });
       const j = await r.json();
       if (!j.ok) { alert(j.error || "저장하지 못했습니다."); if (r.status === 401) location.href = CK.P + "/"; return; }
       art.className = "ck-item" + (j.status !== null ? " st" + j.status : "");
       art.querySelectorAll(".ck-choices button").forEach(b => b.classList.toggle("on", +b.dataset.s === j.status));
+      paintHistory(art, j.history);
       paintProgress(j.progress);
+      updateDoneCount();
       art.classList.add("saved"); setTimeout(() => art.classList.remove("saved"), 700);
     } catch (e) {
       alert("저장하지 못했습니다. 네트워크를 확인하세요.");
@@ -99,7 +161,7 @@
   }
   document.querySelectorAll(".ck-item").forEach(art => {
     art.querySelectorAll(".ck-choices button").forEach(b =>
-      b.addEventListener("click", () => save(art, { status: +b.dataset.s })));
+      b.addEventListener("click", () => save(art, { status: b.classList.contains("on") ? null : +b.dataset.s })));
     const inp = art.querySelector(".ck-note input");
     let last = inp.value;
     inp.addEventListener("change", () => { if (inp.value !== last) { last = inp.value; save(art, { note: inp.value }); } });

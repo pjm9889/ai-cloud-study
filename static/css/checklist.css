@@ -163,3 +163,42 @@ td .ck-link { padding:2px 6px; font-size:12px; }
   .header-inner { gap:16px; flex-wrap:wrap; padding:10px 0; }
   .main-nav { gap:14px; flex-wrap:wrap; }
 }
+
+/* 날짜별 재점검 */
+.ck-controls { display:grid; gap:12px; margin-bottom:16px; }
+.ck-date { display:flex; flex-wrap:wrap; align-items:center; gap:14px; margin:0; }
+.ck-date label, .ck-asof { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:800; color:#3a4b61; }
+.ck-date input[type=date], .ck-asof input[type=date] { font:inherit; font-size:14px; padding:7px 10px; border:1px solid #cbd7e3; border-radius:6px; color:var(--ink); }
+.ck-today { font-size:13px; color:var(--blue); font-weight:700; text-decoration:underline; }
+.ck-modes { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.ck-modes .lbl { font-size:13px; font-weight:800; color:#3a4b61; margin-right:4px; }
+.ck-modes a { padding:7px 12px; border:1px solid #cbd7e3; border-radius:999px; background:#fff; font-size:13px; font-weight:700; color:#52647b; }
+.ck-modes a small { margin-left:3px; color:var(--muted); font-weight:500; }
+.ck-modes a.on { background:var(--ink); border-color:var(--ink); color:#fff; }
+.ck-modes a.on small { color:#c9d6e4; }
+.ck-warn { margin:0; padding:8px 12px; border-radius:6px; background:#fff6e0; color:#8a5a00; font-size:13px; }
+.ck-hist { display:inline-flex; flex-wrap:wrap; gap:4px; margin-left:6px; vertical-align:middle; }
+.ck-hist .h { padding:1px 6px; border-radius:4px; font-size:11px; font-weight:700; background:#f1f4f8; color:#52647b; }
+.ck-hist .h.s2 { background:#e3f5ed; color:#11724f; }
+.ck-hist .h.s1 { background:#fdf3dc; color:#8a5a00; }
+.ck-hist .h.s0 { background:#eceff3; color:#52647b; }
+.ck-hist .h.cur { outline:2px solid var(--blue); outline-offset:-1px; }
+.ck-prev { display:block; margin-top:6px; font-size:12.5px; color:#8a5a00; }
+.ck-emptybox { text-align:center; color:#3a4b61; padding:30px; }
+.ck-emptybox a { color:var(--blue); text-decoration:underline; font-size:14px; }
+.ck-hint.center { text-align:center; margin-top:8px; }
+.ck-total .big.grow { color:var(--blue); }
+.ck-total { grid-template-columns:repeat(4, auto) 1fr; }
+.ck-grew { margin-bottom:18px; }
+.ck-grew ul { margin:0; padding:0; list-style:none; font-size:14px; }
+.ck-grew li { display:flex; flex-wrap:wrap; gap:8px; padding:6px 0; border-bottom:1px dashed #eef1f5; align-items:center; }
+.ck-chg { margin-left:auto; font-size:12.5px; font-weight:700; color:#3a4b61; white-space:nowrap; }
+.ck-can li span:last-child { display:block; }
+.ck-can em.trail { display:block; color:var(--muted); font-style:normal; font-size:11.5px; }
+.ck-filter-form { display:flex; gap:10px; align-items:center; }
+.ck-datechips a { display:inline-block; margin:0 2px; padding:2px 8px; border-radius:4px; background:#fff; border:1px solid #dde4ec; font-weight:700; }
+.ck-datechips a.on { background:var(--blue); color:#fff; border-color:var(--blue); }
+.ck-matrix td.fresh { box-shadow:inset 0 0 0 2px #0f3d73; }
+.ck-legend i.fr { background:#fff; box-shadow:inset 0 0 0 2px #0f3d73; }
+small.fresh { color:var(--blue); font-weight:700; }
+@media (max-width: 760px) { .ck-total { grid-template-columns:repeat(2, 1fr); } }
