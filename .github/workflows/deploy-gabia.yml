@@ -20,10 +20,15 @@ jobs:
         shell: bash
         run: |
           test -s app.py
+          test -s main.py
           test -s requirements.txt
           test -s templates/home.html
           test -s templates/guide.html
           test -s data/site.json
+          test -s checklist_routes.py
+          test -s data/checklist_items.yaml
+          test -s static/css/checklist.css
+          test -n "$(find templates/checklist -maxdepth 1 -type f -name '*.html' -print -quit)"
 
       - name: Upload files over SSH/SCP
         shell: bash
@@ -42,7 +47,7 @@ jobs:
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-            "mkdir -p -- '$GABIA_TARGET_DIR' && cd '$GABIA_TARGET_DIR' && curl -fsSL 'https://github.com/pjm9889/ai-cloud-study/archive/refs/heads/main.zip' -o /tmp/ai-cloud-study-main.zip && python3 -c 'import os,pathlib,zipfile; p=\"/tmp/ai-cloud-study-main.zip\"; z=zipfile.ZipFile(p); prefix=z.namelist()[0].split(\"/\",1)[0]+\"/\"; wanted=(\"templates/home.html\",\"lecture_materials/index.html\",\"lecture_materials/part-a.html\",\"lecture_materials/part-b.html\",\"lecture_materials/B1/\",\"lecture_materials/B2/\",\"lecture_materials/B3/\",\"lecture_materials/B4/\"); [pathlib.Path(w).unlink() for w in (\"lecture_materials/B1\",\"lecture_materials/B2\",\"lecture_materials/B3\",\"lecture_materials/B4\") if pathlib.Path(w).is_file()]; [(pathlib.Path(r:=n[len(prefix):]).parent.mkdir(parents=True,exist_ok=True), pathlib.Path(r).write_bytes(z.read(n))) for n in z.namelist() if n.startswith(prefix) and not n.endswith(\"/\") and any(n[len(prefix):]==w or n[len(prefix):].startswith(w) for w in wanted)]; z.close(); os.remove(p)'"
+            "mkdir -p -- '$GABIA_TARGET_DIR' && cd '$GABIA_TARGET_DIR' && curl -fsSL 'https://github.com/pjm9889/ai-cloud-study/archive/refs/heads/main.zip' -o /tmp/ai-cloud-study-main.zip && python3 -c 'import os,pathlib,zipfile; p=\"/tmp/ai-cloud-study-main.zip\"; z=zipfile.ZipFile(p); prefix=z.namelist()[0].split(\"/\",1)[0]+\"/\"; wanted=(\"main.py\",\"requirements.txt\",\"checklist_routes.py\",\"templates/home.html\",\"templates/checklist/\",\"static/css/checklist.css\",\"data/checklist_items.yaml\",\"lecture_materials/index.html\",\"lecture_materials/part-a.html\",\"lecture_materials/part-b.html\",\"lecture_materials/B1/\",\"lecture_materials/B2/\",\"lecture_materials/B3/\",\"lecture_materials/B4/\"); [pathlib.Path(w).unlink() for w in (\"lecture_materials/B1\",\"lecture_materials/B2\",\"lecture_materials/B3\",\"lecture_materials/B4\") if pathlib.Path(w).is_file()]; [(pathlib.Path(r:=n[len(prefix):]).parent.mkdir(parents=True,exist_ok=True), pathlib.Path(r).write_bytes(z.read(n))) for n in z.namelist() if n.startswith(prefix) and not n.endswith(\"/\") and any(n[len(prefix):]==w or n[len(prefix):].startswith(w) for w in wanted)]; z.close(); os.remove(p)'"
       - name: Restart FastAPI application
         shell: bash
         env:
@@ -58,7 +63,7 @@ jobs:
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-            "cd '$GABIA_TARGET_DIR'; set +e; python3 -m pip install --user -r requirements.txt; python3 -c 'import main, uvicorn; print(\"imports ok\")'; supervisorctl stop all; sleep 2; setsid python3 -m uvicorn main:app --host 0.0.0.0 --port 8080 > app.log 2>&1 < /dev/null & sleep 4; exit 0"
+            "cd '$GABIA_TARGET_DIR'; set -e; python3 -m pip install --user -r requirements.txt; python3 -c 'import main, uvicorn; print(\"imports ok\")'; supervisorctl stop all || true; sleep 2; setsid python3 -m uvicorn main:app --host 0.0.0.0 --port 8080 > app.log 2>&1 < /dev/null & sleep 4"
 
       - name: Verify running application
         shell: bash
@@ -76,7 +81,7 @@ jobs:
             -o HostKeyAlgorithms=+ssh-rsa \
             -o PubkeyAuthentication=no \
             -p "$GABIA_PORT" "$GABIA_USERNAME@$GABIA_HOST" \
-            "cd '$GABIA_TARGET_DIR' && (curl -fsS http://127.0.0.1:8080/a1-m1 | grep -q 'A1-M1' || (echo '--- remote directory ---'; pwd; ls -la; echo '--- main markers ---'; grep -n 'A1_M1_FILE\|public_a1_m1' main.py || true; echo '--- processes ---'; ps -ef | grep -E 'python|uvicorn' | grep -v grep || true; echo '--- app.log ---'; tail -80 app.log 2>/dev/null || true; exit 1))"
+            "cd '$GABIA_TARGET_DIR' && test \"$(curl -fsS -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/checklist/)\" = 200 && test \"$(curl -fsS http://127.0.0.1:8080/checklist/ | grep -c 'GPT 없이')\" -ge 1 && test \"$(curl -fsS -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/checklist/admin/login)\" = 200 && test \"$(curl -fsS -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/static/css/checklist.css)\" = 200 && test \"$(curl -fsS -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/)\" = 200 && test \"$(curl -fsS -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/guide)\" = 200 && test \"$(curl -fsS -o /dev/null -w '%{http_code}' http://127.0.0.1:8080/a1-m1)\" = 200 && test -f data/checklist.db && python3 -c 'import os; print(\"ADMIN_PASSWORD set:\", bool(os.getenv(\"ADMIN_PASSWORD\"))); print(\"CHECKLIST_COOKIE_SECURE:\", os.getenv(\"CHECKLIST_COOKIE_SECURE\", \"<unset>\")); print(\"CHECKLIST_SECRET set:\", bool(os.getenv(\"CHECKLIST_SECRET\")))' || (echo '--- remote directory ---'; pwd; find data -maxdepth 1 -type f -printf '%f\\n' 2>/dev/null || true; echo '--- processes ---'; ps -ef | grep -E 'python|uvicorn' | grep -v grep || true; echo '--- app.log ---'; tail -80 app.log 2>/dev/null || true; exit 1)"
 
       - name: Collect Gabia diagnostics
         if: always()

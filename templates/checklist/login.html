@@ -1,0 +1,16 @@
+{% extends "checklist/_layout.html" %}
+{% block title %}로그인{% endblock %}
+{% block content %}
+<section class="ck-auth">
+  <p class="eyebrow">SELF CHECK</p>
+  <h1>오늘, GPT 없이 어디까지 할 수 있나요?</h1>
+  <p class="ck-sub">Day별 작업이 끝나면 내가 <b>혼자</b> 할 수 있는 것을 체크합니다. 체크가 쌓이면 과정 전체에서 내가 할 수 있게 된 것이 영역별로 정리됩니다.</p>
+  <form method="post" action="{{ P }}/login" class="ck-card ck-form">
+    <label>이름<input name="name" required autocomplete="username" placeholder="강사가 등록한 이름" /></label>
+    <label>비밀번호<input name="password" type="password" autocomplete="current-password" placeholder="처음이면 비워 두세요" /></label>
+    <button class="ck-btn">들어가기</button>
+    <p class="ck-hint">처음 들어오면 이름만 입력하세요. 다음 화면에서 내 비밀번호를 정합니다.</p>
+  </form>
+  <p class="ck-foot"><a href="{{ P }}/admin/login">강사 화면</a></p>
+</section>
+{% endblock %}

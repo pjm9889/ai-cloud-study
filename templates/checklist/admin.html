@@ -1,0 +1,127 @@
+{% extends "checklist/_layout.html" %}
+{% block title %}강사 · 현황{% endblock %}
+{% block nav %}{% with active='admin' %}{% include "checklist/_nav_admin.html" %}{% endwith %}{% endblock %}
+{% block content %}
+<section class="ck-head row">
+  <div>
+    <p class="eyebrow">INSTRUCTOR</p>
+    <h1>자가진단 현황</h1>
+    <p class="ck-sub">학생 {{ users|length }}명 · {{ days[day] }} 항목 {{ items|length }}개</p>
+  </div>
+  <form method="post" action="{{ P }}/admin/reload-items">
+    <input type="hidden" name="csrf" value="{{ csrf }}" />
+    <button class="ck-btn ghost">항목 파일 다시 읽기</button>
+  </form>
+</section>
+
+<div class="ck-filter">
+  <nav class="ck-days small">
+    {% for d, title in days.items() %}<a href="?day={{ d }}&team={{ team }}" class="{{ 'on' if d == day }}">{{ title.split('·')[0] }}</a>{% endfor %}
+  </nav>
+  <form method="get">
+    <input type="hidden" name="day" value="{{ day }}" />
+    <select name="team" onchange="this.form.submit()">
+      <option value="">전체 조</option>
+      {% for t in teams %}<option value="{{ t }}" {{ 'selected' if t == team }}>{{ t }}</option>{% endfor %}
+    </select>
+  </form>
+  <a class="ck-btn ghost" href="{{ P }}/admin/export.csv?day={{ day }}">이 Day CSV</a>
+</div>
+
+<section class="ck-section">
+  <h2>① 항목별 약점 <small>'혼자 할 수 있다' 비율이 낮은 순 · 다음 날 다시 짚을 곳</small></h2>
+  <div class="ck-tablewrap">
+  <table class="ck-table">
+    <thead><tr><th>#</th><th>항목</th><th>영역</th><th class="w-bar">혼자 가능</th><th>✅</th><th>🟡</th><th>⬜</th><th>미응답</th></tr></thead>
+    <tbody>
+    {% for s in weak %}
+      <tr>
+        <td class="num">{{ s.n }}</td>
+        <td><span class="ck-scope sc-{{ s.it.scope }}">{{ scopes[s.it.scope] }}</span> {{ s.it.text }}</td>
+        <td class="muted nowrap">{{ s.it.area }}</td>
+        <td><div class="ck-bar thin"><i class="s2" style="width:{{ s.pct }}%"></i><i class="s1" style="width:{{ s.c[1] * 100 / s.tot }}%"></i></div><small>{{ s.pct }}%</small></td>
+        <td class="num">{{ s.c[2] }}</td><td class="num">{{ s.c[1] }}</td><td class="num">{{ s.c[0] }}</td><td class="num muted">{{ s.c[none] }}</td>
+      </tr>
+    {% else %}
+      <tr><td colspan="8" class="ck-empty">학생이 없거나 항목이 없습니다.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section class="ck-section">
+  <h2>② 학생 × 항목 <small>칸에 마우스를 올리면 항목과 메모가 보입니다</small></h2>
+  <div class="ck-tablewrap">
+  <table class="ck-matrix">
+    <thead><tr><th>조</th><th>이름</th><th>혼자 가능</th>
+      {% for it in items %}<th title="{{ it.text }}">{{ loop.index }}</th>{% endfor %}</tr></thead>
+    <tbody>
+    {% for r in rows %}
+      <tr>
+        <td class="nowrap">{{ r.u.team or '-' }}</td>
+        <td class="nowrap"><b>{{ r.u.name }}</b> <small>{{ (roles.get(r.u.role, '') or '')[:2] }}</small></td>
+        <td class="nowrap">{{ r.p[2] }} / {{ r.p.tot }}</td>
+        {% for cell in r.cells %}
+          {% set it = items[loop.index0] %}
+          {% if cell is none %}<td class="m-na"></td>
+          {% else %}<td class="m-{{ cell.st if cell.st is not none else 'n' }}" title="{{ loop.index }}. {{ it.text }}{% if cell.note %}&#10;메모: {{ cell.note }}{% endif %}">{% if cell.note %}•{% endif %}</td>{% endif %}
+        {% endfor %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <p class="ck-legend small"><span><i class="s2"></i>혼자 가능</span><span><i class="s1"></i>자료 보면</span><span><i class="s0"></i>아직</span><span><i class="sn"></i>미응답</span><span>• 메모 있음 · 빈칸은 해당 역할이 아닌 항목</span></p>
+</section>
+
+<section class="ck-section">
+  <h2>③ 조별 빈칸 <small>짝 모두 '혼자 가능'이 아닌 공통 항목 · 서로 가르쳐 줄 수 없는 곳</small></h2>
+  <div class="ck-gaps">
+  {% for gp in gaps %}
+    <div class="ck-card">
+      <h3>{{ gp.team }} <small>{{ gp.members | map(attribute='name') | join(', ') }}</small></h3>
+      {% if gp.miss %}
+      <ul>{% for m in gp.miss %}<li><span class="ck-day">{{ m.n }}</span>{{ m.it.text | replace('나는 ', '') }}</li>{% endfor %}</ul>
+      {% else %}<p class="ck-empty small">빈칸 없음</p>{% endif %}
+    </div>
+  {% else %}
+    <p class="ck-empty">조에 2명 이상 등록된 곳이 없습니다.</p>
+  {% endfor %}
+  </div>
+</section>
+
+<section class="ck-section">
+  <h2>④ 역량 영역별 누적 <small>지금까지 모든 Day · '혼자 가능' 비율</small></h2>
+  <div class="ck-tablewrap">
+  <table class="ck-table ck-heat">
+    <thead><tr><th>조</th><th>이름</th>{% for name in areas %}<th>{{ name }}</th>{% endfor %}</tr></thead>
+    <tbody>
+    {% for r in area_rows %}
+      <tr>
+        <td class="nowrap">{{ r.u.team or '-' }}</td><td class="nowrap"><b>{{ r.u.name }}</b></td>
+        {% for name in areas %}
+          {% set a = r.a.get(name) %}
+          {% if a %}<td style="--p:{{ a.pct }}" class="h">{{ a.pct }}%</td>{% else %}<td class="muted">-</td>{% endif %}
+        {% endfor %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section class="ck-section">
+  <h2>⑤ 최근 변화</h2>
+  <ul class="ck-log">
+  {% for l in log %}
+    <li><time>{{ l.at[5:16] }}</time><b>{{ l.name }}</b> <small>{{ l.team or '' }}</small>
+      <span class="ck-day">D{{ l.day }}</span>{{ l.text | replace('나는 ', '') | truncate(60) }}
+      <span class="ck-chg">{{ {2:'✅',1:'🟡',0:'⬜'}.get(l.old_status, '·') }} → {{ {2:'✅',1:'🟡',0:'⬜'}.get(l.new_status, '·') }}</span>
+      {% if l.note %}<em>{{ l.note }}</em>{% endif %}</li>
+  {% else %}
+    <li class="ck-empty">아직 기록이 없습니다.</li>
+  {% endfor %}
+  </ul>
+</section>
+{% endblock %}

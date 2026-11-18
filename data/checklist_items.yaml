@@ -1,0 +1,162 @@
+# 자가진단 체크리스트 항목
+#
+# - Day 2, Day 3 항목은 days 아래에 같은 형식으로 추가합니다.
+# - id는 한 번 정하면 바꾸지 않습니다 (체크 기록이 id로 연결됩니다). 문장(text)은 고쳐도 됩니다.
+# - 항목을 지우면 화면에서 숨겨지고, 이미 체크한 기록은 DB에 남습니다.
+# - scope: common(👥 공통) / rec(🔍 기록 담당) / doc(📘 문서 담당) / peer(🔁 상대 영역)
+# - area: 역량 영역. 섹션에 적으면 섹션 전체에, 항목에 적으면 그 항목에만 적용됩니다.
+# - 파일을 고친 뒤 강사 화면의 [항목 다시 읽기]를 누르면 반영됩니다.
+
+areas:
+  - name: 컨테이너·배포
+    course: "Docker·K3s·Helm · A1-M6 · A2-M5 · A4-M2"
+    desc: "서비스를 띄우고, 옮기고, 다시 살리는 힘"
+  - name: 검색·색인
+    course: "BoW·TF-IDF·BM25 (A1-M3) · OpenSearch·벡터·Hybrid·RRF (A2-M3)"
+    desc: "찾고 싶은 것을 빠르고 정확하게 찾게 만드는 힘"
+  - name: 데이터 설계
+    course: "CSV 규칙 원본 (A1) · 인덱스 매핑 · MySQL 이력 (A1-M6)"
+    desc: "데이터를 보고, 쓰임에 맞는 구조로 담는 힘"
+  - name: 문서 처리·RAG 평가
+    course: "청킹 (A2 · B1-M2) · RAG 평가 (A2-M4) · PDF·OCR (Part C)"
+    desc: "문서를 검색 가능한 조각으로 만들고, 숫자로 확인하는 힘"
+  - name: LLM 도구 호출
+    course: "OpenAI SDK 직접 호출 (A2-M3) · Python 실행 제어 (A3)"
+    desc: "LLM이 쓸 도구를 설계하고, 비용과 근거를 챙기는 힘"
+  - name: 에이전트 설계
+    course: "LangGraph State·Node·Edge·HITL (B2)"
+    desc: "판단 흐름을 상태와 갈림길로 설계하는 힘"
+  - name: 장애 대응·운영
+    course: "오류·복구 (A3-M4) · 운영·장애 (A4)"
+    desc: "고장을 재현하고, 원인을 찾고, 기록으로 남기는 힘"
+  - name: 협업·설계 문서
+    course: "인터페이스 정의서·설계서 (시스템 엔지니어 산출물)"
+    desc: "약속을 정하고, 남이 읽을 수 있게 남기는 힘"
+
+days:
+  - day: 1
+    title: "Day 1 · 계약, 검색 계층, 에이전트 뼈대"
+    sections:
+      - key: d1-infra
+        scope: common
+        title: "👥 공통 · 인프라 0단계 (docker compose)"
+        area: 컨테이너·배포
+        items:
+          - id: d1-inf-01
+            text: 나는 이미지와 컨테이너의 차이를 설명할 수 있다.
+          - id: d1-inf-02
+            text: 나는 OpenSearch · Dashboards · Postgres를 띄우는 docker-compose.yml을 처음부터 작성할 수 있다.
+          - id: d1-inf-03
+            text: 나는 compose 파일의 image, environment, ports, volumes, depends_on이 각각 무슨 일을 하는지 설명할 수 있다.
+          - id: d1-inf-04
+            text: 나는 "15432:5432"에서 어느 쪽이 내 PC이고 어느 쪽이 컨테이너인지 말할 수 있다.
+          - id: d1-inf-05
+            text: 나는 앱을 내 PC에서 실행할 때와 컨테이너로 실행할 때 OpenSearch 주소가 왜 다른지 설명할 수 있다.
+          - id: d1-inf-06
+            text: 나는 docker compose down과 down -v의 차이를 알고, 데이터를 지우지 않고 다시 띄울 수 있다.
+          - id: d1-inf-07
+            text: 나는 docker compose ps, logs, exec로 컨테이너 상태와 로그를 직접 확인할 수 있다.
+          - id: d1-inf-08
+            area: 장애 대응·운영
+            text: 나는 port is already allocated, Connection refused, max_map_count too low 오류를 보고 원인을 찾아 고칠 수 있다.
+          - id: d1-inf-09
+            area: 검색·색인
+            text: 나는 OpenSearch가 yellow로 나와도 단일 노드에서는 정상인 이유를 설명할 수 있다.
+          - id: d1-inf-10
+            area: 장애 대응·운영
+            text: 나는 깨 보기에서 찾은 장애를 증상 → 확인 명령과 출력 → 원인 → 조치 → 재발 방지 순서로 RUNBOOK에 쓸 수 있다.
+
+      - key: d1-design
+        scope: common
+        title: "👥 공통 · 도구 계약과 에이전트 설계"
+        area: 에이전트 설계
+        items:
+          - id: d1-des-01
+            area: 협업·설계 문서
+            text: 나는 도구 계약을 먼저 정하고 가짜 도구(mocks.py)를 쓰는 이유를 설명할 수 있다.
+          - id: d1-des-02
+            area: 협업·설계 문서
+            text: 나는 도구 4개(get_process_tree, get_process_activity, get_host_timeline, search_playbook)의 입력과 출력을 보지 않고 말할 수 있다.
+          - id: d1-des-03
+            area: LLM 도구 호출
+            text: 나는 결과에 event_id와 source를 넣기로 한 이유를 설명할 수 있다.
+          - id: d1-des-04
+            text: 나는 에이전트 상태(State)에 무엇을 담는지 말할 수 있다.
+          - id: d1-des-05
+            text: 나는 조사 → 도구 → 판정 → 가드레일 → 권고 → 승인 → 리포트 흐름을 화이트보드에 직접 그릴 수 있다.
+          - id: d1-des-06
+            text: 나는 갈림길마다 최대 횟수를 두는 이유와, 위험한 조치는 승인에서 멈추는 이유를 설명할 수 있다.
+          - id: d1-des-07
+            text: 나는 가짜 알림을 넣고 그래프가 끝까지 흐르는지 테스트로 확인할 수 있다.
+          - id: d1-des-08
+            area: LLM 도구 호출
+            text: 나는 도구 호출(🔍)과 RAG(📘)의 차이를 내 말로 설명할 수 있다.
+
+      - key: d1-rec
+        scope: rec
+        title: "🔍 기록 담당 · 조사 도구"
+        area: 데이터 설계
+        items:
+          - id: d1-rec-01
+            text: 나는 시뮬레이터로 데이터를 만들고, 공격 시나리오 하나를 시간순으로 따라갈 수 있다.
+          - id: d1-rec-02
+            text: 나는 pid와 ppid로 부모와 자식 프로세스를 직접 찾아갈 수 있다.
+          - id: d1-rec-03
+            text: 나는 인덱스 템플릿에서 칸마다 keyword, text, date, long, ip를 골라 쓸 수 있고, 왜 그 타입인지 설명할 수 있다.
+          - id: d1-rec-04
+            area: 검색·색인
+            text: 나는 명령줄을 text와 keyword 둘 다로 저장하는 이유를 설명할 수 있다.
+          - id: d1-rec-05
+            area: 검색·색인
+            text: 나는 기록을 OpenSearch에 넣고, 들어간 개수를 _cat/indices나 Dashboards로 확인할 수 있다.
+          - id: d1-rec-06
+            area: LLM 도구 호출
+            text: 나는 조사 도구 3개를 직접 구현하고 테스트를 통과시킬 수 있다.
+          - id: d1-rec-07
+            text: 나는 프로세스 족보를 찾을 때 host를 함께 조건으로 써야 하는 이유를 설명할 수 있다.
+          - id: d1-rec-08
+            area: LLM 도구 호출
+            text: 나는 도구 결과를 요약하는 이유와, docstring을 신경 써서 쓰는 이유를 설명할 수 있다.
+          - id: d1-rec-09
+            area: LLM 도구 호출
+            text: 나는 credential_dump 알림 하나를 도구 결과만 보고 직접 판정할 수 있다.
+
+      - key: d1-doc
+        scope: doc
+        title: "📘 문서 담당 · 플레이북 검색"
+        area: 문서 처리·RAG 평가
+        items:
+          - id: d1-doc-01
+            text: 나는 9개 PDF를 파싱하고, 요소 종류와 개수를 보고 어떤 문서가 잘 안 읽히는지 말할 수 있다.
+          - id: d1-doc-02
+            text: 나는 스캔본(06번)에서 글자가 거의 나오지 않는 이유를 설명할 수 있다.
+          - id: d1-doc-03
+            text: 나는 Header, Footer를 걸러내는 코드를 직접 쓸 수 있고, 왜 거르는지 설명할 수 있다.
+          - id: d1-doc-04
+            text: 나는 chunk_by_title()이 청크를 어떻게 나누는지, max_characters를 크게·작게 잡으면 무엇이 달라지는지 설명할 수 있다.
+          - id: d1-doc-05
+            text: 나는 청크에 출처 정보(파일, 페이지, 요소 종류, 표 HTML)를 남길 수 있다.
+          - id: d1-doc-06
+            area: 데이터 설계
+            text: 나는 kb-playbooks 인덱스 매핑(본문, 벡터, 출처 칸)을 직접 작성할 수 있다.
+          - id: d1-doc-07
+            area: 검색·색인
+            text: 나는 키워드 검색과 벡터 검색이 각각 어떤 질문에 강한지 예를 들어 설명할 수 있다.
+          - id: d1-doc-08
+            area: 검색·색인
+            text: 나는 RRF가 점수 대신 순위를 쓰는 이유를 설명하고, 점수를 손으로 계산할 수 있다.
+          - id: d1-doc-09
+            text: 나는 Recall@3이 무엇인지 설명하고, 첫 측정 결과를 해석할 수 있다 (지금 틀리는 게 정상인 문항 포함).
+          - id: d1-doc-10
+            area: 검색·색인
+            text: 나는 "격리는 누가 승인해?"를 검색해 관련 정책 조각이 나오는 것을 직접 보여 줄 수 있다.
+
+      - key: d1-peer
+        scope: peer
+        title: "🔁 상대 영역 · 짝이 설명해 준 것"
+        area: 협업·설계 문서
+        items:
+          - id: d1-peer-01
+            text: 나는 짝이 만든 도구(또는 검색)의 결과가 어떻게 생겼는지 필드 이름까지 말할 수 있다.
+          - id: d1-peer-02
+            text: 나는 짝의 결과를 에이전트가 받으면 무엇을 할 수 있는지 설명할 수 있다.

@@ -17,6 +17,7 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 from gpt_module import GPTModule
 from naver_blog_routes import router as naver_blog_router
+from checklist_routes import router as checklist_router
 
 BASE = Path(__file__).resolve().parent; DB_PATH = BASE / 'data' / 'sessions.db'; CATEGORY_PATH = BASE / 'data' / 'category_rules.json'; DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 app = FastAPI(title='BSSBU 프로젝트 허브'); gpt = GPTModule()
@@ -29,6 +30,7 @@ LECTURE_ROOT = BASE / 'lecture_materials'
 CURRICULUM_FILE = LECTURE_ROOT / '최종쿼리큘럼.html'
 A1_M1_FILE = LECTURE_ROOT / 'A1' / 'A1-M1_고전적 w3c 검사 체험.html'
 app.include_router(naver_blog_router)
+app.include_router(checklist_router)
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', '')
 
 class SessionPayload(BaseModel):

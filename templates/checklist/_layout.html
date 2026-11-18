@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}자가진단{% endblock %} | 자가진단 체크리스트</title>
+  <link rel="stylesheet" href="/static/css/site.css?v=20261020-2" />
+  <link rel="stylesheet" href="/static/css/checklist.css?v=20261118-1" />
+</head>
+<body class="ck">
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="logo" href="/"><span class="brand-mark">AI</span><span>자가진단</span></a>
+      <nav class="main-nav ck-nav" aria-label="자가진단 메뉴">{% block nav %}{% endblock %}</nav>
+    </div>
+  </header>
+  <main class="container ck-main">
+    {% if msg %}<div class="ck-flash ok">{{ msg }}</div>{% endif %}
+    {% if err %}<div class="ck-flash err">{{ err }}</div>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  <script>window.CK = { P: "{{ P }}", csrf: "{{ csrf }}" };</script>
+  {% block script %}{% endblock %}
+</body>
+</html>

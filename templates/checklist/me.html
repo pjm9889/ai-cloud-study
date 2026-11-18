@@ -1,0 +1,109 @@
+{% extends "checklist/_layout.html" %}
+{% block title %}{{ days[day] }}{% endblock %}
+{% block nav %}{% with active='me' %}{% include "checklist/_nav_user.html" %}{% endwith %}{% endblock %}
+{% block content %}
+<section class="ck-head">
+  <p class="eyebrow">{{ u.team or '' }}{% if u.team %} · {% endif %}{{ roles.get(u.role, '역할 미지정') }}</p>
+  <h1>{{ u.name }}님, GPT 없이 할 수 있나요?</h1>
+  <p class="ck-sub">검색 없이, AI 도움 없이 <b>내 손으로</b> 할 수 있는지 솔직하게 고르세요. 언제든 다시 바꿀 수 있고, 바뀐 기록은 성장 기록으로 남습니다.</p>
+</section>
+
+<nav class="ck-days">
+  {% for d, title in days.items() %}
+  {% set p = day_prog[d] %}
+  <a href="?day={{ d }}" class="{{ 'on' if d == day }}">
+    <b>{{ title.split('·')[0] }}</b>
+    <small>{{ p[2] }} / {{ p.total }}</small>
+  </a>
+  {% endfor %}
+</nav>
+
+<div class="ck-progress ck-card" id="prog" data-total="{{ prog.total }}">
+  <div class="ck-progress-top">
+    <strong>{{ days[day] }}</strong>
+    <span><b id="p2">{{ prog[2] }}</b> / {{ prog.total }} 혼자 할 수 있다</span>
+  </div>
+  <div class="ck-bar">
+    <i class="s2" style="width:{{ (prog[2] * 100 / prog.total) if prog.total else 0 }}%"></i>
+    <i class="s1" style="width:{{ (prog[1] * 100 / prog.total) if prog.total else 0 }}%"></i>
+    <i class="s0" style="width:{{ (prog[0] * 100 / prog.total) if prog.total else 0 }}%"></i>
+  </div>
+  <div class="ck-legend">
+    <span><i class="s2"></i>혼자 할 수 있다 <b id="c2">{{ prog[2] }}</b></span>
+    <span><i class="s1"></i>자료를 보면 할 수 있다 <b id="c1">{{ prog[1] }}</b></span>
+    <span><i class="s0"></i>아직 어렵다 <b id="c0">{{ prog[0] }}</b></span>
+    <span class="muted">미응답 <b id="cn">{{ prog.total - prog[2] - prog[1] - prog[0] }}</b></span>
+  </div>
+</div>
+
+{% for key, sec in sections.items() %}
+<section class="ck-section">
+  <h2>{{ sec.title }}</h2>
+  {% for it in sec['items'] %}
+  {% set ck = checks.get(it.id) %}
+  {% set st = ck.status if ck else none %}
+  <article class="ck-item {{ 'st' ~ st if st is not none }}" data-id="{{ it.id }}">
+    <div class="ck-item-text">
+      <p>{{ it.text }}</p>
+      <span class="ck-area">{{ it.area }}</span>
+    </div>
+    <div class="ck-choices" role="group" aria-label="자가진단">
+      <button type="button" data-s="2" class="c2 {{ 'on' if st == 2 }}">✅ 혼자 할 수 있다</button>
+      <button type="button" data-s="1" class="c1 {{ 'on' if st == 1 }}">🟡 자료 보면</button>
+      <button type="button" data-s="0" class="c0 {{ 'on' if st == 0 }}">⬜ 아직</button>
+    </div>
+    <details class="ck-note" {{ 'open' if ck and ck.note }}>
+      <summary>메모</summary>
+      <input type="text" maxlength="300" placeholder="예: compose는 되는데 healthcheck는 아직" value="{{ ck.note if ck and ck.note else '' }}" />
+    </details>
+  </article>
+  {% endfor %}
+</section>
+{% else %}
+<p class="ck-empty">이 Day에는 아직 항목이 없습니다.</p>
+{% endfor %}
+
+<p class="ck-next"><a class="ck-btn" href="{{ P }}/me/summary">지금까지 할 수 있게 된 것 보기 →</a></p>
+{% endblock %}
+
+{% block script %}
+<script>
+(function () {
+  const total = +document.getElementById("prog").dataset.total || 0;
+  function paintProgress(p) {
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set("p2", p.s2); set("c2", p.s2); set("c1", p.s1); set("c0", p.s0);
+    set("cn", p.total - p.s2 - p.s1 - p.s0);
+    const bar = document.querySelectorAll(".ck-bar i");
+    [p.s2, p.s1, p.s0].forEach((v, i) => bar[i].style.width = (total ? v * 100 / total : 0) + "%");
+  }
+  async function save(art, body) {
+    art.classList.add("saving");
+    try {
+      const r = await fetch(CK.P + "/api/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-CSRF-Token": CK.csrf },
+        body: JSON.stringify(Object.assign({ item_id: art.dataset.id }, body)),
+      });
+      const j = await r.json();
+      if (!j.ok) { alert(j.error || "저장하지 못했습니다."); if (r.status === 401) location.href = CK.P + "/"; return; }
+      art.className = "ck-item" + (j.status !== null ? " st" + j.status : "");
+      art.querySelectorAll(".ck-choices button").forEach(b => b.classList.toggle("on", +b.dataset.s === j.status));
+      paintProgress(j.progress);
+      art.classList.add("saved"); setTimeout(() => art.classList.remove("saved"), 700);
+    } catch (e) {
+      alert("저장하지 못했습니다. 네트워크를 확인하세요.");
+    } finally {
+      art.classList.remove("saving");
+    }
+  }
+  document.querySelectorAll(".ck-item").forEach(art => {
+    art.querySelectorAll(".ck-choices button").forEach(b =>
+      b.addEventListener("click", () => save(art, { status: +b.dataset.s })));
+    const inp = art.querySelector(".ck-note input");
+    let last = inp.value;
+    inp.addEventListener("change", () => { if (inp.value !== last) { last = inp.value; save(art, { note: inp.value }); } });
+  });
+})();
+</script>
+{% endblock %}

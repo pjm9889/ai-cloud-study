@@ -1,0 +1,54 @@
+{% extends "checklist/_layout.html" %}
+{% block title %}지금까지 정리{% endblock %}
+{% block nav %}{% with active='summary' %}{% include "checklist/_nav_user.html" %}{% endwith %}{% endblock %}
+{% block content %}
+<section class="ck-head">
+  <p class="eyebrow">MY GROWTH</p>
+  <h1>{{ u.name }}님이 지금까지 혼자 할 수 있게 된 것</h1>
+  <p class="ck-sub">지금까지 Day마다 체크한 내용을 과정의 역량 영역별로 모았습니다. 영역마다 과정의 어느 부분과 이어지는지도 함께 적었습니다.</p>
+</section>
+
+<div class="ck-total ck-card">
+  <div><b class="big">{{ can }}</b><span>혼자 할 수 있다</span></div>
+  <div><b class="big mid">{{ mid }}</b><span>자료를 보면 할 수 있다</span></div>
+  <div><b class="big">{{ tot }}</b><span>전체 항목</span></div>
+  <div class="ck-total-bar"><div class="ck-bar"><i class="s2" style="width:{{ (can * 100 / tot) if tot else 0 }}%"></i><i class="s1" style="width:{{ (mid * 100 / tot) if tot else 0 }}%"></i></div></div>
+</div>
+
+<div class="ck-areas">
+{% for a in areas %}
+  <section class="ck-card ck-areacard">
+    <header>
+      <div>
+        <h2>{{ a.name }}</h2>
+        {% if a.desc %}<p class="ck-desc">{{ a.desc }}</p>{% endif %}
+      </div>
+      <div class="ck-pct"><b>{{ a.pct }}%</b><small>{{ a[2]|length }} / {{ a.tot }}</small></div>
+    </header>
+    <div class="ck-bar thin"><i class="s2" style="width:{{ a.pct }}%"></i><i class="s1" style="width:{{ (a[1]|length) * 100 / a.tot }}%"></i></div>
+    {% if a.course %}<p class="ck-course">과정 연결 · {{ a.course }}</p>{% endif %}
+
+    {% if a[2] %}
+    <ul class="ck-can">
+      {% for r in a[2] %}<li><span class="ck-day">D{{ r.day }}</span>{{ r.text | replace('나는 ', '') }}</li>{% endfor %}
+    </ul>
+    {% else %}
+    <p class="ck-empty small">아직 '혼자 할 수 있다'로 체크한 항목이 없습니다.</p>
+    {% endif %}
+
+    {% if a[1] or a[0] or a[none] %}
+    <details class="ck-todo">
+      <summary>다음에 다시 볼 것 {{ (a[1]|length) + (a[0]|length) + (a[none]|length) }}개</summary>
+      <ul>
+        {% for r in a[1] %}<li><span class="ck-day">D{{ r.day }}</span>🟡 {{ r.text | replace('나는 ', '') }}{% if r.note %}<em>{{ r.note }}</em>{% endif %}</li>{% endfor %}
+        {% for r in a[0] %}<li><span class="ck-day">D{{ r.day }}</span>⬜ {{ r.text | replace('나는 ', '') }}{% if r.note %}<em>{{ r.note }}</em>{% endif %}</li>{% endfor %}
+        {% for r in a[none] %}<li class="muted"><span class="ck-day">D{{ r.day }}</span>미응답 · {{ r.text | replace('나는 ', '') }}</li>{% endfor %}
+      </ul>
+    </details>
+    {% endif %}
+  </section>
+{% else %}
+  <p class="ck-empty">아직 항목이 없습니다.</p>
+{% endfor %}
+</div>
+{% endblock %}

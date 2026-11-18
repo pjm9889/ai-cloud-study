@@ -1,0 +1,11 @@
+{% extends "checklist/_layout.html" %}
+{% block title %}강사 로그인{% endblock %}
+{% block content %}
+<section class="ck-auth">
+  <h1>강사 화면</h1>
+  <form method="post" class="ck-card ck-form">
+    <label>관리자 비밀번호<input name="password" type="password" required autocomplete="current-password" /></label>
+    <button class="ck-btn">들어가기</button>
+  </form>
+</section>
+{% endblock %}

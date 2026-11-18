@@ -11,3 +11,7 @@ Thumbs.db
 *.pem
 *.pem.pub
 public/
+
+# 자가진단 체크리스트 (운영 데이터·서명 키)
+data/checklist.db
+data/.checklist_secret
